@@ -1,11 +1,22 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-Installation
-------------
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "README-"
+)
+```
+
+## Installation
 
 You can install [isoreader](http://www.github.com/KopfLab/isoreader) and isoprocessorCUB from GitHub using the `devtools` package:
 
-``` r
+```{r gh-installation, eval = FALSE}
 install.packages("devtools") # only if you don't have this installed yet
 devtools::install_github("KopfLab/isoreader")
 devtools::install_github("KopfLab/isoprocessorCUB")
