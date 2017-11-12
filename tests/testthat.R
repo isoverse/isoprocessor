@@ -1,5 +1,6 @@
 library(testthat)
-library(isoviewer)
+library(isoprocessorCUB)
+library(rlang)
 library(dplyr)
 
 test_check("isoprocessorCUB")

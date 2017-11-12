@@ -1,9 +1,12 @@
 #' @keywords internal
 "_PACKAGE"
 
-#' @import dplyr
-#' @import tidyr
-#' @importFrom purrr map
+#' @import rlang
+#' @importFrom tidyselect vars_select starts_with ends_with
+#' @importFrom glue glue collapse
+#' @importFrom dplyr mutate select filter as_data_frame
+#' @importFrom tidyr nest
+#' @importFrom purrr map map_lgl map_int map_chr map2 map2_lgl safely
 #' @import stringr
 #' @import ggplot2
 #' @import isoreader
