@@ -13,6 +13,7 @@
 get_column_names <- function(df, ..., n_reqs = list()) {
 
   # df name and data frame test
+  if (missing(df)) stop("no data frame supplied", call. = FALSE)
   df_name <- enquo(df) %>% quo_text()
   df <- enquo(df) %>% eval_tidy()
   if (!is.data.frame(df))
@@ -21,6 +22,8 @@ get_column_names <- function(df, ..., n_reqs = list()) {
   # use a safe version of vars_select to get all the column names
   safe_vars_select <- safely(vars_select)
   cols_quos <- quos(!!!list(...))
+  # make sure to evaluate calls to default
+  cols_quos <- map(cols_quos, function(x) if (quo_is_lang(x) && lang_head(x) == sym("default")) eval_tidy(x) else x)
   cols_results <- map(cols_quos, ~safe_vars_select(names(df), !!!.x))
   ok <- map_lgl(cols_results, ~is.null(.x$error))
   cols <- map(cols_results, ~as.character(.x$result))

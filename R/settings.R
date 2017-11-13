@@ -23,3 +23,60 @@ set_setting <- function(name, value, overwrite = TRUE) {
     options(list(value) %>% setNames(str_c("isoprocessor.", name)))
   return(invisible(value))
 }
+
+
+# default columns =====
+
+#' Set default parameters
+#' Define the default parameters for calculations used in this package.
+#' @param data can be used to include this function call within a pipeline
+#' @param ... named entries for the default parameters (standard or non-standard evaluation supported).
+#' @return invisibly returns the passed in \code{data} object
+#' Names are equivalent to function parameter names and
+#' @export
+set_default_parameters <- function(data = NULL, ...) {
+  def_cols <- quos(...)
+  existing_def_cols <- setting("default_parameters")
+  set_setting("default_parameters", modifyList(existing_def_cols, def_cols))
+  return(invisible(data))
+}
+
+#' @details \code{reset_default_parameters} resets all default function parameters for this package.
+#' @rdname set_default_parameters
+#' @export
+reset_default_parameters <- function(data = NULL) {
+  set_setting("default_parameters", list(), overwrite = TRUE)
+  return(invisible(data))
+}
+
+#' @details \code{get_default_parameters} returns all default function parameters for this package.
+#' @rdname set_default_parameters
+#' @export
+get_default_parameters <- function() {
+  setting("default_parameters")
+}
+
+#' @details \code{show_default_parameters} shows a table with the default function parameters for this package.
+#' @rdname set_default_parameters
+#' @export
+show_default_parameters <- function(data = NULL) {
+  current <- get_default_parameters()
+  if(length(current) == 0) {
+    print(data_frame(parameter = character(0), value = character(0)))
+  } else {
+    data_frame(parameter = names(current), value = map_chr(current, quo_text)) %>%
+      print()
+  }
+  return(invisible(data))
+}
+
+# retrieve a default value
+default <- function(param) {
+  param_quo <- enquo(param)
+  param_name <- param_quo %>% quo_text()
+  current <- get_default_parameters()
+  if (param_name %in% names(current))
+    return(current[[param_name]])
+  else
+    return(param_quo)
+}

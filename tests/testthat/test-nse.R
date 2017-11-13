@@ -5,6 +5,7 @@ test_that("Getting column name finding works correctly", {
   df <- as_data_frame(mtcars)
 
   # basic errors
+  expect_error(get_column_names(), "no data frame supplied")
   expect_error(get_column_names(5), "not a data frame")
   expect_error(get_column_names(df, a = quo(x)), "invalid column")
 
