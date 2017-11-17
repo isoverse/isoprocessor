@@ -14,17 +14,20 @@ test_that("Getting column name finding works correctly", {
   expect_equal(get_column_names(df, a = quo("mpg"), b = quo("wt")), list(a="mpg", b="wt"))
 
   # no columns per identifier
+  expect_error(get_column_names(df, a = quo(mpg), n_reqs = list(a = "wrong")), "unknown number requirement")
   expect_error(get_column_names(df, a = quo(NULL)), "not .* the correct number of columns")
-  expect_error(get_column_names(df, a = quo(NULL), n_reqs = list(a = "1+")), "not .* the correct number of columns")
+  expect_error(get_column_names(df, a = quo(NULL), n_reqs = list(a = "+")), "not .* the correct number of columns")
   expect_equal(get_column_names(df, a = quo(NULL), n_reqs = list(a = "*")), list(a = character(0)))
-  expect_error(get_column_names(df, a = quo(NULL), b = quo(NULL), n_reqs = list(a = "1+")), "not .* the correct number of columns")
+  expect_equal(get_column_names(df, a = quo(NULL), n_reqs = list(a = "?")), list(a = character(0)))
+  expect_equal(get_column_names(df, a = quo(mpg), n_reqs = list(a = "?")), list(a = "mpg"))
+  expect_error(get_column_names(df, a = quo(NULL), b = quo(NULL), n_reqs = list(a = "+")), "not .* the correct number of columns")
 
   # multiple columns in identifier
   expect_error(get_column_names(df, a = quo(c(mpg, wt))), "not .* the correct number of columns")
   expect_equal(get_column_names(df, a = quo(c(mpg, wt)), n_reqs = list(a = "*")), list(a = c("mpg", "wt")))
-  expect_equal(get_column_names(df, a = quo(c(mpg, wt)), n_reqs = list(a = "1+")), list(a = c("mpg", "wt")))
-  expect_error(get_column_names(df, a = quo(c(mpg, wt)), b = quo(c(mpg, wt)), n_reqs = list(a = "1+")), "not .* the correct number of columns")
-  expect_equal(get_column_names(df, a = quo(c(mpg, wt)), b = quo(starts_with("d")), n_reqs = list(a = "1+", b="*")),
+  expect_equal(get_column_names(df, a = quo(c(mpg, wt)), n_reqs = list(a = "+")), list(a = c("mpg", "wt")))
+  expect_error(get_column_names(df, a = quo(c(mpg, wt)), b = quo(c(mpg, wt)), n_reqs = list(a = "+")), "not .* the correct number of columns")
+  expect_equal(get_column_names(df, a = quo(c(mpg, wt)), b = quo(starts_with("d")), n_reqs = list(a = "+", b="*")),
                list(a = c("mpg", "wt"), b = c("disp", "drat")))
 
 })

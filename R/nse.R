@@ -8,7 +8,7 @@
 # @param df the data frame
 # @param ... named quoted variable selection criteria (anything that tidyselect::vars_select supports)
 # @param n_reqs named list to specify how many columns are allowed/required for each selection criterion, default for all that are not specified is 1.
-# Allowed values are a specific number 1,2,3,4, etc. "*" for any number and "1+" for at least one.
+# Allowed values are a specific number 1,2,3,4, etc. "*" for any number, "?" for 0 or 1 and "+" for at least one.
 # @return list of column names for each entry (may contain multiple depending on selection doncitoins)
 get_column_names <- function(df, ..., n_reqs = list()) {
 
@@ -48,21 +48,37 @@ get_column_names <- function(df, ..., n_reqs = list()) {
     glue("column requirements for unknow parameter(s) provided: {collapse(names(n_reqs[missing]), ', ')}") %>%
     stop(call. = FALSE)
 
+  ## reqs lables
   all_n_reqs <- rep(1, length(cols)) %>% as.list() %>% setNames(names(cols)) %>% modifyList(n_reqs) %>% { .[names(cols)] }
+  n_req_types <- c("*" = "any number", "+" = "at least one", "?" = "none or one", "integer" = "the specified number")
+  all_n_req_types <- map_chr(all_n_reqs, function(req) {
+    if (is_integerish(req)) return("integer")
+    else if (req %in% names(n_req_types)) return(req)
+    else return(NA_character_)
+  })
+  if ( any(unknown <- map_lgl(all_n_req_types, is.na))) {
+    n_req_unknown <- map_chr(all_n_reqs[unknown], as.character)
+    glue("unknown number requirement specification(s): '{collapse(n_req_unknown, \"', '\")}'. Allowed are: {collapse(names(n_req_types), ', ')}") %>%
+      stop(call. = FALSE)
+  }
 
+  ## reqs test
   col_meets_reqs <- map2_lgl(cols, all_n_reqs, function(col, req) {
     if (is_integerish(req) && length(col) == as.integer(req)) return(TRUE)
-    else if (req == "1+" && length(col) > 0) return(TRUE)
+    else if (req == "+" && length(col) > 0) return(TRUE)
+    else if (req == "?" && length(col) %in% c(0L, 1L)) return(TRUE)
     else if (req == "*") return(TRUE)
     else return(FALSE)
   })
 
+  ## report missing columns
   if (!all(col_meets_reqs)) {
     n_errors <-
-      sprintf("'%s%s' refers to %d column(s) instead of %s",
+      sprintf("'%s%s' refers to %d column(s) instead of %s (%s)",
               names(cols_quos)[!col_meets_reqs] %>% { ifelse(nchar(.) > 0, str_c(., " = "), .) },
               map_chr(cols_quos[!col_meets_reqs], quo_text),
               map_int(cols[!col_meets_reqs], length),
+              all_n_req_types[!col_meets_reqs],
               map_chr(all_n_reqs[!col_meets_reqs], as.character)) %>%
       collapse("\n- ")
     glue("not all parameters refer to the correct number of columns in data frame '{df_name}':\n- {n_errors}") %>%
