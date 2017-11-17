@@ -84,5 +84,7 @@ default <- function(param) {
 
 # resolve default cols in a list of quos
 resolve_defaults <- function(quos) {
-  map(quos, function(x) if (quo_is_lang(x) && lang_head(x) == sym("default")) eval_tidy(x) else x)
+  resolve_default <- function(x) if (quo_is_lang(x) && lang_head(x) == sym("default")) eval_tidy(x) else x
+  if (is_quosure(quos)) return(resolve_default(quos))
+  else map(quos, resolve_default)
 }

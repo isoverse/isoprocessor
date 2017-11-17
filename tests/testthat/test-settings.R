@@ -22,6 +22,7 @@ test_that("default parameters work properly", {
   expect_equal(eval_tidy(default(c)), NULL)
 
   # resolve defaults in a list of quos
+  expect_equal(resolve_defaults(default(a)), quo(x))
   expect_equal(resolve_defaults(list(default(a), quo(y))), list(quo(x), quo(y)))
 
   # reset and default of default
