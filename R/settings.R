@@ -60,6 +60,7 @@ get_default_parameters <- function() {
 #' @rdname set_default_parameters
 #' @export
 show_default_parameters <- function(data = NULL) {
+  message("Info: package default parameters")
   current <- get_default_parameters()
   if(length(current) == 0) {
     print(data_frame(parameter = character(0), value = character(0)))
@@ -79,4 +80,9 @@ default <- function(param) {
     return(current[[param_name]])
   else
     return(param_quo)
+}
+
+# resolve default cols in a list of quos
+resolve_defaults <- function(quos) {
+  map(quos, function(x) if (quo_is_lang(x) && lang_head(x) == sym("default")) eval_tidy(x) else x)
 }
