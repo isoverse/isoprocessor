@@ -61,7 +61,7 @@ print_data_table <- function(dt, select = everything(), filter = TRUE, ...) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  dt_cols <- get_column_names(!!enquo(dt), select = enquo(select), n_reqs = list(select = "1+"))
+  dt_cols <- get_column_names(!!enquo(dt), select = enquo(select), n_reqs = list(select = "+"))
   filter_quo <- enquo(filter)
 
   # print knitr table
