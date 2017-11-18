@@ -88,6 +88,32 @@ get_column_names <- function(df, ..., n_reqs = list()) {
   return(cols)
 }
 
+# Get new columns names
+# Resolves defaults and checks to make sure that the column name refers to a valid single symbol.
+# @param ... named quos
+# @return list of named strings for each new column
+get_new_column_names <- function(...) {
+  cols_quos <- quos(!!!list(...))
+  # make sure to evaluate calls to default
+  cols_quos <- resolve_defaults(cols_quos)
+  are_text_quos <- map_lgl(cols_quos, ~is.character(quo_expr(.x)))
+  are_symbol_quos <- map_lgl(cols_quos, quo_is_symbol)
+
+  if (!all(ok <- are_text_quos | are_symbol_quos)) {
+    params <-
+      str_c(names(cols_quos)[!ok] %>% { ifelse(nchar(.) > 0, str_c(., " = "), .) },
+            map_chr(cols_quos[!ok], quo_text)) %>%
+      collapse("', '", last = "' and '")
+    if (sum(!ok) > 1)
+      glue("parameters '{params}' do not refer to valid column names") %>% stop(call. = FALSE)
+    else
+      glue("parameter '{params}' does not refer to a valid column name") %>% stop(call. = FALSE)
+  }
+
+  map2_chr(cols_quos, are_text_quos, function(col_quo, is_text)
+    if(is_text) quo_expr(col_quo) else quo_text(col_quo)) %>% as_list()
+}
+
 # Turn a column or set of columns into quosures (a list of quosure objects) for use in tidyverse functions
 # such as group_by, nest, select, rename, etc.
 # @param cols column names

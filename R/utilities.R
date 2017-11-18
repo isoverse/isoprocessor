@@ -86,7 +86,9 @@ nest_data <- function(dt, group_by = NULL, nested = nested_data) {
   nested_col <- resolve_defaults(enquo(nested))
 
   # perform the nest
-  nest(dt, !!!cols_to_quos(dt_cols[c("group_by")], negate = TRUE), .key = !!nested_col)
+  dt %>%
+    as_data_frame() %>% # nest requires tbl
+    nest(!!!cols_to_quos(dt_cols[c("group_by")], negate = TRUE), .key = !!nested_col)
 }
 
 # unnest parts of a data frame without loosing the rest
@@ -96,7 +98,7 @@ unnest_select_data <- function(dt, select = c(), nested = nested_data, keep_othe
   # safety checks and column matching
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   dt_cols <- get_column_names(!!enquo(dt), nested = enquo(nested))
-  dt <- mutate(dt, ..row.. = row_number())
+  dt <- mutate(dt, ..row.. = row_number()) %>% as_data_frame()
   unnested_dt <- unnest(dt, !!as.name(dt_cols$nested))
 
   # figure out what the columns are

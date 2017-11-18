@@ -32,6 +32,16 @@ test_that("Getting column name finding works correctly", {
 
 })
 
+test_that("New column names work correctly", {
+
+  expect_error(get_new_column_names(a = quo(x^2)), "not .* valid column name")
+  expect_error(get_new_column_names(a = quo(x^2), b=quo(y^2)), "not .* valid column name")
+  expect_equal(get_new_column_names(a = quo(x)), list(a = "x"))
+  expect_equal(get_new_column_names(a = quo(default(x))), list(a = "x"))
+  expect_equal(get_new_column_names(a = quo("x")), list(a = "x"))
+  expect_equal(get_new_column_names(a = quo(x), b = quo(default(y)), c = quo("z")), list(a = "x", b = "y", c = "z"))
+
+})
 
 test_that("Column name to quosure conversion works correctly", {
 
