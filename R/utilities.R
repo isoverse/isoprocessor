@@ -72,3 +72,71 @@ print_data_table <- function(dt, select = everything(), filter = TRUE, ...) {
 
   return(invisible(dt))
 }
+
+# nesting ======
+
+# nest data based on the grouping
+# this is basically just an inverse version (in terms of selection) of nest that can handle the sophisticated selection parameters of select
+# @param group_by what to keep out of the nested data (i.e. what to group by), by default nests everything
+nest_data <- function(dt, group_by = NULL, nested = nested_data) {
+
+  # safety checks and column matching
+  if (missing(dt)) stop("no data table supplied", call. = FALSE)
+  dt_cols <- get_column_names(!!enquo(dt), group_by = enquo(group_by), n_reqs = list(group_by = "*"))
+  nested_col <- resolve_defaults(enquo(nested))
+
+  # perform the nest
+  nest(dt, !!!cols_to_quos(dt_cols[c("group_by")], negate = TRUE), .key = !!nested_col)
+}
+
+# unnest parts of a data frame without loosing the rest
+# note that this will lead to row duplication if the unnested variables have multiple entries per row of the \code{dt} data frame
+# @param keep other nested data
+unnest_select_data <- function(dt, select = c(), nested = nested_data, keep_other_nested_data = TRUE) {
+  # safety checks and column matching
+  if (missing(dt)) stop("no data table supplied", call. = FALSE)
+  dt_cols <- get_column_names(!!enquo(dt), nested = enquo(nested))
+  dt <- mutate(dt, ..row.. = row_number())
+  unnested_dt <- unnest(dt, !!as.name(dt_cols$nested))
+
+  # figure out what the columns are
+  original_cols <- setdiff(names(dt), dt_cols$nested)
+  other_nested_cols <- setdiff(original_cols, names(unnested_dt))
+  regular_cols <- setdiff(original_cols, other_nested_cols)
+  select_cols <- get_column_names(unnested_dt, select = enquo(select), n_reqs = list(select = "*"))
+  renesting_cols <- setdiff(names(unnested_dt), c(regular_cols, select_cols$select))
+
+  # renest without the selected parameters
+  if (length(renesting_cols) > 0)
+    renested_dt <- unnested_dt %>% nest_data(group_by = c(regular_cols, select_cols$select), nested = !!as.name(dt_cols$nested))
+  else
+    renested_dt <- unnested_dt # implies complete unnesting
+
+  # merge the extra columns back in
+  if (keep_other_nested_data && length(other_nested_cols) > 0) {
+    renested_dt <- left_join(renested_dt, dt[c("..row..", other_nested_cols)], by = "..row..")
+  }
+
+  # remove the ..row.. again (just used for ID purposes)
+  return(dplyr::select(renested_dt, -..row..))
+}
+
+
+# regressions =====
+
+run_regression <- function(dt, ..., nested = nested_data, calculate_residuals = TRUE) {
+  # note for each model (...), does the calculation, adds a model parameter + fit + residuals row
+  # i.e. you get one row for each calculation
+  # a bit like gather residuals except that it is all in one
+}
+
+run_regression_more <- function(dt, ...) {
+  # this one should do the nesting, regression analyses and unnesting all in one
+
+}
+
+unnest_model_parameters <- function(dt, ..., include_r2 = TRUE, include_rms = TRUE) {
+  # unnest the model estimates as R2 and RMS
+}
+
+

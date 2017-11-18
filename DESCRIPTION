@@ -19,6 +19,8 @@ Imports:
     stringr,
     purrr,
     ggplot2,
+    modelr,
+    investr,
     readxl,
     isoreader
 Suggests:
