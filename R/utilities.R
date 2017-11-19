@@ -112,7 +112,6 @@ unnest_select_data <- function(dt, select = everything(), nested_data = default(
 
   # safety check on whether the select columns exist in the unnested df
   select_cols <- get_column_names(unnested_dt, select = enquo(select), n_reqs = list(select = "*"))
-  if (length(select_cols$select) == 0) return(select(dt, -..row..)) # return the original if nothing to pull out
 
   # renest without the selected parameters
   keep_cols <- c(regular_cols, select_cols$select) %>% unique()
@@ -136,24 +135,37 @@ unnest_select_data <- function(dt, select = everything(), nested_data = default(
 # @param select which coefficient fields to unnest
 unnest_model_coefficients <- function(dt, select = everything(), model_coefs = default(model_coefs),
                                       keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE) {
-  unnest_select_data(dt, select = !!enquo(select), nested_data = !!enquo(model_coefs),
+  unnest_select_data(dt, select = UQ(enquo(select)), nested_data = !!enquo(model_coefs),
                      keep_remaining_nested_data = keep_remaining_nested_data,
                      keep_other_list_data = keep_other_list_data)
 }
 
+# convenience function for unnesting coefficients
+# @param select which coefficient fields to unnest
+unnest_model_summary <- function(dt, select = everything(), model_summary = default(model_summary),
+                                      keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE) {
+  unnest_select_data(dt, select = UQ(enquo(select)), nested_data = !!enquo(model_summary),
+                     keep_remaining_nested_data = keep_remaining_nested_data,
+                     keep_other_list_data = keep_other_list_data)
+}
 
 # regressions =====
 
-# @param nested name of the nested column
-# @param model_name name of the model column (uses the names of ...)
+# run a set of regressions
+# @param model_data the nested model data column
+# @param model_name name of the new model column (uses the names of ...)
+# @param model_fit the new model objects column
+# @param model_coefs the new model coefficients nested data frame column
+# @param model_summary the new model summary nested data frame column
+# @param residual the new residual column in the nested model_data
 # @param residuals resid name of the residuals column
-run_regression <- function(dt, ..., nested_data = default(nested_data),
+run_regression <- function(dt, ..., model_data = default(model_data),
                            model_name = default(model_name), model_fit = default(model_fit),
                            model_coefs = default(model_coefs), model_summary = default(model_summary),
                            residual = default(residual)) {
 
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  dt_cols <- get_column_names(!!enquo(dt), nested_data = enquo(nested_data), type_reqs = list(nested_data = "list"))
+  dt_cols <- get_column_names(!!enquo(dt), model_data = enquo(model_data), type_reqs = list(model_data = "list"))
   dt_new_cols <- get_new_column_names(
     model_name = enquo(model_name), model_fit = enquo(model_fit),
     model_coefs = enquo(model_coefs), model_summary = enquo(model_summary),
@@ -192,7 +204,7 @@ run_regression <- function(dt, ..., nested_data = default(nested_data),
     as_data_frame() %>%
     # evaluation of model
     mutate(
-      !!dt_new_cols$model_fit := map2(model_quo, !!as.name(dt_cols$nested_data), ~eval_tidy(.x, data = .y)),
+      !!dt_new_cols$model_fit := map2(model_quo, !!as.name(dt_cols$model_data), ~eval_tidy(.x, data = .y)),
       !!dt_new_cols$model_coefs := map(
         !!as.name(dt_new_cols$model_fit),
         ~mutate(as_data_frame(tidy(.x)),
@@ -209,7 +221,7 @@ run_regression <- function(dt, ..., nested_data = default(nested_data),
   data_w_models <-
     data_w_models %>%
     mutate(
-      !!dt_cols$nested_data := map2(!!as.name(dt_cols$nested_data), !!as.name(dt_new_cols$model_fit),
+      !!dt_cols$model_data := map2(!!as.name(dt_cols$model_data), !!as.name(dt_new_cols$model_fit),
                                ~add_residuals(.x, .y, var = dt_new_cols$residual))
     )
 
@@ -217,11 +229,11 @@ run_regression <- function(dt, ..., nested_data = default(nested_data),
 }
 
 # run regressions in grouped blocks (uses nest_data and run_regression)
-run_grouped_regression <- function(dt, group_by = NULL, ..., nested_data = default(nested_data)) {
+run_grouped_regression <- function(dt, group_by = NULL, ..., model_data = default(model_data)) {
   # this one should do the nesting, regression analyses all in once
-  nested_data_quo <- enquo(nested_data)
-  nest_data(dt, group_by = !!enquo(group_by), nested_data = !!nested_data_quo) %>%
-    run_regression(..., nested_data = !!nested_data_quo)
+  model_data_quo <- enquo(model_data)
+  nest_data(dt, group_by = !!enquo(group_by), nested_data = !!model_data_quo) %>%
+    run_regression(..., model_data = !!model_data_quo)
 }
 
 

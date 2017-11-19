@@ -63,17 +63,17 @@ test_that("nesting and unnesting functions work properly", {
 test_that("regression functions work properly", {
 
   test_df <- dplyr::data_frame(name = rep(c("a", "b"), 10), x = runif(20), y = runif(20))
-  nested_test_df <- nest_data(test_df, name)
+  nested_test_df <- nest_data(test_df, name, nested_data = model_data)
   expect_error(run_regression(), "no data table supplied")
-  expect_error(run_regression(test_df), "nested_data .* invalid column")
+  expect_error(run_regression(test_df), "model_data .* invalid column")
   expect_error(run_regression(nested_test_df), "no .* models")
   expect_error(run_regression(nested_test_df, m1 = x), "not .* valid model")
-  expect_error(run_regression(nested_test_df, m1 = lm(y ~ x), nested_data = name), "not .* correct column type")
+  expect_error(run_regression(nested_test_df, m1 = lm(y ~ x), model_data = name), "not .* correct column type")
 
   # single model
   expect_s3_class(df_w_models <- nested_test_df %>% run_regression(m1 = lm(y ~ x)) , "tbl")
   expect_equal(nrow(df_w_models), 2L)
-  expect_equal(names(df_w_models), c("name", "nested_data", "model_name", "model_fit", "model_coefs", "model_summary"))
+  expect_equal(names(df_w_models), c("name", "model_data", "model_name", "model_fit", "model_coefs", "model_summary"))
   expect_equal(names(df_w_coefs <- unnest(df_w_models, model_coefs)),
                c("name", "model_name", "term", "estimate", "std.error", "statistic", "p.value", "signif"))
   expect_equal(nrow(df_w_coefs), 2*2)
@@ -86,12 +86,12 @@ test_that("regression functions work properly", {
   expect_equal(df_w_models2$name, c("a", "b", "a", "b"))
   expect_equal(df_w_models2$model_name, c("m1", "m1", "m2", "m2"))
   expect_equal(names(df_w_coefs2 <- unnest_select_data(df_w_models2, select = term, nested_data = model_coefs)),
-               c("name", "model_name", "term", "model_coefs", "nested_data", "model_fit", "model_summary"))
+               c("name", "model_name", "term", "model_coefs", "model_data", "model_fit", "model_summary"))
   expect_equal(nrow(df_w_coefs2), 2*2 + 2*4)
   expect_equal(filter(df_w_coefs2, model_name == "m1")$term %>% unique(), c("(Intercept)", "x"))
   expect_equal(filter(df_w_coefs2, model_name == "m2")$term %>% unique(), c("(Intercept)", "x", "I(x^2)", "x:I(x^2)"))
 
-  # unnest parameters
+  # unnest coefficients
   expect_equal(unnest_model_coefficients(df_w_models, select = c(term, p.value)) %>% names(),
                c("name", "model_name", "term", "p.value"))
   expect_error(unnest_model_coefficients(df_w_models, model_coefs = DNE), "invalid column")
@@ -99,10 +99,14 @@ test_that("regression functions work properly", {
                  unnest_model_coefficients(select = c(term, p.value, signif), model_coefs = my_test) %>% names(),
                c("name", "model_name", "term", "p.value", "signif"))
 
+  # unnest summary
+  expect_equal(unnest_model_summary(df_w_models, select = c(r.squared, p.value)) %>% names(),
+               c("name", "model_name", "r.squared", "p.value"))
+
   # grouped regressions
   expect_s3_class(df_w_models3 <- test_df %>%
                     run_grouped_regression(group_by = name, m1 = lm(y~x),
-                                           nested_data = test1,
+                                           model_data = test1,
                                            model_name = test2,
                                            model_fit = test3,
                                            model_coefs = test4,
