@@ -95,8 +95,9 @@ nest_data <- function(dt, group_by = NULL, nested_data = default(nested_data)) {
 # note that this will lead to row duplication if the unnested variables have multiple entries per row of the \code{dt} data frame
 # @param select which columns to unnest
 # @param nested_data which column to unnest the \code{select} from
-# @param keep_other_nested_data
-unnest_select_data <- function(dt, select = c(), nested_data = default(nested_data), keep_other_nested_data = TRUE) {
+# @param keep_remaining_nested_data whether to keep any remaining parts of the partially unnested data
+# @param keep_other_list_data keep other list data columns (e.g. other data or model columns)
+unnest_select_data <- function(dt, select = everything(), nested_data = default(nested_data), keep_remaining_nested_data = TRUE, keep_other_list_data = TRUE) {
   # safety checks and column matching
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   dt_cols <- get_column_names(!!enquo(dt), nested_data = enquo(nested_data), type_reqs = list(nested_data = "list"))
@@ -114,19 +115,30 @@ unnest_select_data <- function(dt, select = c(), nested_data = default(nested_da
   if (length(select_cols$select) == 0) return(select(dt, -..row..)) # return the original if nothing to pull out
 
   # renest without the selected parameters
-  keep_cols <- c(regular_cols, select_cols$select)
-  if (length(setdiff(names(unnested_dt), keep_cols)) > 0)
+  keep_cols <- c(regular_cols, select_cols$select) %>% unique()
+  if (length(setdiff(names(unnested_dt), keep_cols)) > 0 && keep_remaining_nested_data) {
+    # renest if un-nesting is incomplete (i.e. data remains) and remaining data should be kept
     renested_dt <- unnested_dt %>% nest_data(group_by = keep_cols, nested = !!as.name(dt_cols$nested_data))
-  else
-    renested_dt <- unnested_dt # implies complete unnesting
+  } else
+    renested_dt <- unnested_dt[keep_cols]
 
   # merge the extra columns back in
-  if (keep_other_nested_data && length(list_cols) > 0) {
+  if (keep_other_list_data && length(list_cols) > 0) {
     renested_dt <- left_join(renested_dt, dt[c("..row..", list_cols)], by = "..row..")
   }
 
   # remove the ..row.. again (just used for ID purposes)
   return(dplyr::select(renested_dt, -..row..))
+}
+
+
+# convenience function for unnesting coefficients
+# @param select which coefficient fields to unnest
+unnest_model_coefficients <- function(dt, select = everything(), model_coefs = default(model_coefs),
+                                      keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE) {
+  unnest_select_data(dt, select = !!enquo(select), nested_data = !!enquo(model_coefs),
+                     keep_remaining_nested_data = keep_remaining_nested_data,
+                     keep_other_list_data = keep_other_list_data)
 }
 
 
@@ -166,6 +178,13 @@ run_regression <- function(dt, ..., nested_data = default(nested_data),
     model_quo = lquos
   )
 
+  # check for model names
+  if (any(dups <- duplicated(models[[dt_new_cols$model_name]]))){
+    dup_names <- models[[dt_new_cols$model_name]][dups]
+    glue("regressions with multiple models require unique model names, encountered duplicate name(s) '{collapse(dup_names, \"', '\")}'") %>%
+      stop(call. = FALSE)
+  }
+
   # combination of data and model
   data_w_models <-
     dt %>%
@@ -197,14 +216,16 @@ run_regression <- function(dt, ..., nested_data = default(nested_data),
   return(select(data_w_models, -model_quo))
 }
 
-run_grouped_regression <- function(dt, ...) {
+# run regressions in grouped blocks (uses nest_data and run_regression)
+run_grouped_regression <- function(dt, group_by = NULL, ..., nested_data = default(nested_data)) {
   # this one should do the nesting, regression analyses all in once
-
+  nested_data_quo <- enquo(nested_data)
+  nest_data(dt, group_by = !!enquo(group_by), nested_data = !!nested_data_quo) %>%
+    run_regression(..., nested_data = !!nested_data_quo)
 }
 
-unnest_model_parameters <- function(dt, ..., include_r2 = TRUE, include_rms = TRUE) {
-  # unnest the model estimates as R2 and RMS
-}
+
+# invert regression =====
 
 #' invert the regression for calibration purposes
 invert_regression <- function() {
