@@ -1,8 +1,8 @@
 context("Standard and non-standard evaluation")
 
-test_that("Getting column name finding works correctly", {
+test_that("Getting column names (with # and type requirement checks) works", {
 
-  df <- as_data_frame(mtcars)
+  df <- as_data_frame(mtcars) %>% tibble::rownames_to_column()
 
   # basic errors
   expect_error(get_column_names(), "no data frame supplied")
@@ -30,6 +30,17 @@ test_that("Getting column name finding works correctly", {
   expect_equal(get_column_names(df, a = quo(c(mpg, wt)), b = quo(starts_with("d")), n_reqs = list(a = "+", b="*")),
                list(a = c("mpg", "wt"), b = c("disp", "drat")))
 
+  # type checks
+  expect_error(get_column_names(df, a = quo(mpg), type_reqs = list(a = "DNE")), "unknown type")
+  expect_error(get_column_names(df, a = quo(mpg), type_reqs = list(a = "list")), "not .* the correct column types")
+  expect_error(get_column_names(df, a = quo(mpg), type_reqs = list(a = "integer")), "not .* the correct column types")
+  expect_error(get_column_names(df, a = quo(mpg), type_reqs = list(a = "character")), "not .* the correct column types")
+  expect_error(get_column_names(df, a = quo(c(mpg, rowname)), n_reqs = list(a = "+"), type_reqs = list(a = "character")), "not .* the correct column types")
+  expect_equal(get_column_names(df, a = quo(mpg), type_reqs = list(a = "numeric")), list(a = "mpg"))
+  expect_equal(get_column_names(df, a = quo(c(mpg, cyl)), n_reqs = list(a = "+"), type_reqs = list(a = "numeric")), list(a = c("mpg", "cyl")))
+  expect_equal(get_column_names(df, a = quo(rowname), type_reqs = list(a = "character")), list(a = "rowname"))
+  expect_error(get_column_names(nest(df, -rowname), a = quo(data), type_reqs = list(a = "character")), "not .* the correct column types")
+  expect_equal(get_column_names(nest(df, -rowname), a = quo(data), type_reqs = list(a = "list")), list(a = "data"))
 })
 
 test_that("New column names work correctly", {
