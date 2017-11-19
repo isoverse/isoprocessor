@@ -174,7 +174,15 @@ run_regression <- function(dt, ..., nested_data = default(nested_data),
     # evaluation of model
     mutate(
       !!dt_new_cols$model_fit := map2(model_quo, !!as.name(dt_cols$nested_data), ~eval_tidy(.x, data = .y)),
-      !!dt_new_cols$model_coefs := map(!!as.name(dt_new_cols$model_fit), ~as_data_frame(tidy(.x))),
+      !!dt_new_cols$model_coefs := map(
+        !!as.name(dt_new_cols$model_fit),
+        ~mutate(as_data_frame(tidy(.x)),
+                # add in significant level summary
+                signif = ifelse(p.value < 0.001, "***",
+                                ifelse(p.value < 0.01, "**",
+                                       ifelse(p.value < 0.05, "*",
+                                              ifelse(p.value < 0.1, ".", ""))))
+        )),
       !!dt_new_cols$model_summary := map(!!as.name(dt_new_cols$model_fit), ~as_data_frame(glance(.x)))
     )
 
@@ -189,8 +197,8 @@ run_regression <- function(dt, ..., nested_data = default(nested_data),
   return(select(data_w_models, -model_quo))
 }
 
-run_regression_more <- function(dt, ...) {
-  # this one should do the nesting, regression analyses and unnesting all in one
+run_grouped_regression <- function(dt, ...) {
+  # this one should do the nesting, regression analyses all in once
 
 }
 

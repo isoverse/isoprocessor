@@ -72,7 +72,7 @@ test_that("regression functions work properly", {
   expect_equal(nrow(df_w_models), 2L)
   expect_equal(names(df_w_models), c("name", "nested_data", "model_name", "model_fit", "model_coefs", "model_summary"))
   expect_equal(names(df_w_coefs <- unnest(df_w_models, model_coefs)),
-               c("name", "model_name", "term", "estimate", "std.error", "statistic", "p.value"))
+               c("name", "model_name", "term", "estimate", "std.error", "statistic", "p.value", "signif"))
   expect_equal(nrow(df_w_coefs), 2*2)
   expect_true(all(df_w_coefs$term %in% c("(Intercept)", "x")))
 
