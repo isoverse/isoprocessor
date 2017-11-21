@@ -152,14 +152,17 @@ unnest_model_summary <- function(dt, select = everything(), model_summary = defa
 # regressions =====
 
 # run a set of regressions
+# @param dt data table
+# @param model the regression model or named list of regression models.
+# If a named list is provided, the name(s) will be stored in the \code{model_name} column
 # @param model_data the nested model data column
-# @param model_name name of the new model column (uses the names of ...)
+# @param model_name new column with the model names if any are supplied
 # @param model_fit the new model objects column
 # @param model_coefs the new model coefficients nested data frame column
 # @param model_summary the new model summary nested data frame column
 # @param residual the new residual column in the nested model_data
 # @param residuals resid name of the residuals column
-run_regression <- function(dt, ..., model_data = default(model_data),
+run_regression <- function(dt, model, model_data = default(model_data),
                            model_name = default(model_name), model_fit = default(model_fit),
                            model_coefs = default(model_coefs), model_summary = default(model_summary),
                            residual = default(residual)) {
@@ -172,8 +175,17 @@ run_regression <- function(dt, ..., model_data = default(model_data),
     residual = enquo(residual))
 
   # models
-  lquos <- quos(...)
-  if (length(lquos) == 0) stop("no regression models supplied", call. = FALSE)
+  if (missing(model)) stop("no regression model supplied", call. = FALSE)
+  model_quos <- enquo(model)
+  # resolve list of models
+  if (quo_is_lang(model_quos) && quo_text(lang_head(model_quos)) %in% c("c", "list")) {
+    lquos <- quos(!!!lang_args(model_quos))
+  } else {
+    lquos <- quos(!!!model_quos)
+  }
+
+  # safety checks on models
+  if (length(lquos) == 0) stop("no regression model supplied", call. = FALSE)
   lquos_are_models <- map_lgl(lquos, function(lq) quo_is_lang(lq) && quo_text(lang_head(lq)) %in% c("lm", "glm"))
   if(!all(ok <- lquos_are_models)) {
     params <-
@@ -185,10 +197,16 @@ run_regression <- function(dt, ..., model_data = default(model_data),
     else
       glue("parameter '{params}' does not refer to a valid model (lm or glm)") %>% stop(call. = FALSE)
   }
+
+  # models data frame
   models <- data_frame(
     !!dt_new_cols$model_name := names(lquos),
     model_quo = lquos
   )
+
+  # keep the model name column?
+  if (all(nchar(models[[dt_new_cols$model_name]]) == 0))
+    models[[dt_new_cols$model_name]] <- NULL
 
   # check for model names
   if (any(dups <- duplicated(models[[dt_new_cols$model_name]]))){
@@ -229,11 +247,14 @@ run_regression <- function(dt, ..., model_data = default(model_data),
 }
 
 # run regressions in grouped blocks (uses nest_data and run_regression)
-run_grouped_regression <- function(dt, group_by = NULL, ..., model_data = default(model_data)) {
+# @note is this really used or should it be deprecated?
+run_grouped_regression <- function(dt, group_by = NULL, model = NULL, model_data = default(model_data), ...) {
   # this one should do the nesting, regression analyses all in once
+  if (missing(model)) stop("no model supplied", call. = FALSE)
+  model_quo <- enquo(model)
   model_data_quo <- enquo(model_data)
   nest_data(dt, group_by = !!enquo(group_by), nested_data = !!model_data_quo) %>%
-    run_regression(..., model_data = !!model_data_quo)
+    run_regression(model = UQ(model_quo), model_data = !!model_data_quo, ...)
 }
 
 
