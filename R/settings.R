@@ -9,6 +9,8 @@ isoreader::turn_info_messages_off
 # retrieve package settings, internal function, not exported
 # first checks if the setting exists in the isoreader space, then in the isoprocessor
 setting <- function(name) {
+  name <- enquo(name) %>%
+    quos_to_text(variable = "setting")
   value <- getOption(str_c("isoreader.", name))
   if (is.null(value))
     value <- getOption(str_c("isoprocessor.", name))

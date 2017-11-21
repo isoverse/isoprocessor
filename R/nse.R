@@ -131,23 +131,35 @@ get_column_names <- function(df, ..., n_reqs = list(), type_reqs = list()) {
 get_new_column_names <- function(...) {
   cols_quos <- quos(!!!list(...))
   # make sure to evaluate calls to default
-  cols_quos <- resolve_defaults(cols_quos)
-  are_text_quos <- map_lgl(cols_quos, ~is.character(quo_expr(.x)))
-  are_symbol_quos <- map_lgl(cols_quos, quo_is_symbol)
+  cols_quos %>%
+    resolve_defaults() %>%
+    quos_to_text(variable = "column")
+}
 
-  if (!all(ok <- are_text_quos | are_symbol_quos)) {
+# Convert quo to text accounting for plain text and symbol quos
+quos_to_text <- function(lquos, check_for_validity = TRUE, variable = "variable") {
+  single_quo <- is_quosure(lquos)
+  lquos <- quos(!!!lquos)
+  are_text_quos <- map_lgl(lquos, ~is.character(quo_expr(.x)))
+  are_symbol_quos <- map_lgl(lquos, quo_is_symbol)
+
+  # check for validity
+  if (check_for_validity && !all(ok <- are_text_quos | are_symbol_quos)) {
     params <-
-      str_c(names(cols_quos)[!ok] %>% { ifelse(nchar(.) > 0, str_c(., " = "), .) },
-            map_chr(cols_quos[!ok], quo_text)) %>%
+      str_c(names(lquos)[!ok] %>% { ifelse(nchar(.) > 0, str_c(., " = "), .) },
+            map_chr(lquos[!ok], quo_text)) %>%
       collapse("', '", last = "' and '")
     if (sum(!ok) > 1)
-      glue("parameters '{params}' do not refer to valid column names") %>% stop(call. = FALSE)
+      glue("parameters '{params}' do not refer to valid {variable} names") %>% stop(call. = FALSE)
     else
-      glue("parameter '{params}' does not refer to a valid column name") %>% stop(call. = FALSE)
+      glue("parameter '{params}' does not refer to a valid {variable} name") %>% stop(call. = FALSE)
   }
 
-  map2_chr(cols_quos, are_text_quos, function(col_quo, is_text)
-    if(is_text) quo_expr(col_quo) else quo_text(col_quo)) %>% as_list()
+  text_quos <-
+    map2_chr(lquos, are_text_quos, function(lquo, is_text)
+      if(is_text) quo_expr(lquo) else quo_text(lquo)) %>% as_list()
+  if (single_quo) return(text_quos[[1]])
+  else return(text_quos)
 }
 
 # Turn a column or set of columns into quosures (a list of quosure objects) for use in tidyverse functions
