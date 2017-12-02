@@ -9,7 +9,7 @@ get_standards_calibrations(dt, stds, match_by = default(match_by),
   known = default(known), ampl = default(ampl), keep = default(NULL))
 }
 \arguments{
-\item{dt}{the data table}
+\item{dt}{data table}
 
 \item{stds}{the standards table}
 
@@ -24,7 +24,7 @@ get_standards_calibrations(dt, stds, match_by = default(match_by),
 \item{ampl}{where is the signal amplitude stored?}
 
 \item{keep}{which column(s) to keep beyond the group_by (use c(...) to select multiple).
-Note that if these should be unique across grouping variables, otherwise it will result in multiple lines of the same regression data per group.}
+Note that these should be unique across grouping variables, otherwise it will result in multiple lines of the same regression data per group.}
 }
 \description{
 Calculate calibrations.

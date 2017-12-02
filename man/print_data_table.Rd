@@ -4,7 +4,8 @@
 \alias{print_data_table}
 \title{Print data table}
 \usage{
-print_data_table(dt, select = everything(), filter = TRUE, ...)
+print_data_table(dt, select = everything(), filter = TRUE, func = NULL,
+  ...)
 }
 \arguments{
 \item{dt}{data table}
@@ -13,7 +14,10 @@ print_data_table(dt, select = everything(), filter = TRUE, ...)
 
 \item{filter}{any filter conditions to apply, by default does not filter any}
 
-\item{...}{additional parameters to \link[knitr]{kable}}
+\item{func}{function to use for formatting the reader parameters table, e.g. \code{\link[knitr]{kable}}.
+Note that if the output is in RMarkdown chunks, the chunk option must have \code{results="asis"} for the table to be correctly formatted.}
+
+\item{...}{additional parameters to forward to the \code{func} function}
 }
 \value{
 the passed in data table (for piping)
