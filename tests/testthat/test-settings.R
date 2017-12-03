@@ -20,12 +20,12 @@ test_that("default process parameters work properly", {
   expect_equal(eval_tidy(default(b)), 5)
   expect_equal(eval_tidy(default(c)), NULL)
   expect_equal(iso_get_default_processor_parameters(),
-               data_frame(parameter = c("quiet", "a", "b", "c"),
-                          value = c("FALSE", "x", "5", "NULL")))
+               data_frame(parameter = c("quiet", "print_func", "a", "b", "c"),
+                          value = c("FALSE", "identity", "x", "5", "NULL")))
 
   # reset and default of default
   expect_equal(iso_reset_default_process_parameters(42), 42)
   expect_equal(default(a), quo(a))
-  expect_equal(iso_get_default_processor_parameters(), data_frame(parameter = "quiet", value = "FALSE"))
+  expect_equal(iso_get_default_processor_parameters(), data_frame(parameter = c("quiet", "print_func"), value = c("FALSE", "identity")))
 
 })

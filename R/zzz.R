@@ -6,6 +6,7 @@ initialize_options <- function() {
   options(default_options)
 
   # set default print function
+  # @FIXME: this should probably go into isoreader since it is useful there already
   iso_set_default_process_parameters(print_func = identity)
 }
 

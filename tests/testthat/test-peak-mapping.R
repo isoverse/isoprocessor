@@ -7,7 +7,7 @@ test_that("metadata addition works", {
   expect_error(iso_add_metadata(), "no data table")
   expect_error(iso_add_metadata(data_frame()), "no metadata")
 
-  #iso_add_metadata(data_frame(a=1, b="test"), data_frame(a = 1:5, b="bla"), match_by = c(a, b))
+  # FIXME: continue with proper testing of this function
 
 })
 

@@ -7,6 +7,7 @@
 #' @importFrom dplyr mutate select rename filter as_data_frame left_join anti_join data_frame %>% bind_rows group_by ungroup arrange summarize
 #' @importFrom tidyr nest unnest gather
 #' @importFrom purrr map map_lgl map_int map_chr map2 map2_lgl map2_chr safely
+#' @importFrom ggplot2 ggplot aes aes_string geom_bar geom_point geom_hline theme_bw theme labs element_text %+%
 #' @importFrom stringr str_c str_replace fixed
 #' @importFrom broom tidy glance
 #' @importFrom modelr geom_ref_line add_residuals
