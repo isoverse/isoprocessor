@@ -1,3 +1,103 @@
+# metadata assignment =====
+
+# combine with metadata
+combine_with_metadata <- function(dt, md) {
+  stopifnot(all(c("Identifier 1", "Analysis", "map", "type") %in% names(md)))
+  analysis <- filter(md, !is.na(Analysis))
+  no_analysis <- filter(md, is.na(Analysis))
+  outcome <-
+    bind_rows(
+      if (nrow(analysis) > 0) dt %>% left_join(select(analysis, -`Identifier 1`), by = c("Analysis")) %>% filter(!is.na(map)),
+      if (nrow(no_analysis) > 0) dt %>% left_join(select(no_analysis, -Analysis), by = c("Identifier 1")) %>% filter(!is.na(map))
+    ) %>% arrange(Analysis)
+  # note: FIXME this will not detect issues (need to compare with original)
+  if ( nrow(missing <- filter(outcome, is.na(map))) > 0) {
+    message("Warning: the following analyses do not seem to have a metatdata record:\n",
+            with(missing, sprintf("%s (%s)", `Identifier 1`, Analysis)) %>% str_c(collapse = "\n"))
+  }
+  # note: also add a duplicate check
+  return(outcome)
+}
+
+
+#' Add metadata to data table
+#'
+#' This function adds metadata flexibly by providing the possibility to match_by multiple different columns (paramter \code{match_by}) in sequence.
+#' This is equivalent to applying a set of increasingly more specific matching rules. For each metadata column, only the rows that have a defined non empty ("") value
+#' for that column will be mapped to the data. Each set of metadata can overwrite the previous matches such that the last metadata column defined by \code{match_by}
+#' will overwrite all previous matches for which it applies, even if they have already been a match for a previous column.
+#'
+#' This function also introduces a \code{has_metadata} column that would be typically used afterwards to inspect and/or filter data that has/doesn't have metadata.
+#'
+#' Note that this is a convenience function for easily adding metadata in a rule based way. If a direct \code{\link[dplyr]{join}} is suitable (i.e. if there is direct
+#' 1-to-1 or 1-to-many mapping of a single ID column or several id columns in combination), it will be a lot faster to use the \code{\link[dplyr]{join}}.
+#'
+#' @param dt data frame with the data
+#' @param meatdata data frame with the metadata
+#' @param match_by the column (or columns) to match the metadata by. Used sequently, i.e. if the first column is defined in the metadata,
+#' it will be used first before mapping the remainder of the metadata with the second column, etc. All columns must exist in both the \code{dt}
+#' and \code{metadata} data frames.
+#' @param has_metadata the name for the new column which stores a logical TRUE/FALSE indicating whether the entry in \code{dt} has added metadata
+#' @export
+iso_add_metadata <- function(dt, metadata, match_by = default(match_by), has_metadata = default(has_metadata), quiet = default(quiet)) {
+
+  # safety checks
+  if (missing(dt)) stop("no data table supplied", call. = FALSE)
+  if (missing(metadata)) stop("no metadata supplied", call. = FALSE)
+  dt_cols <- get_column_names(!!enquo(dt), match_by = enquo(match_by), n_reqs = list(match_by = "+"))
+  md_cols <- get_column_names(!!enquo(metadata), match_by = enquo(match_by), n_reqs = list(match_by = "+"))
+  new_cols <- get_new_column_names(has_metadata = enquo(has_metadata))
+
+  # figure out how metadata best maps to the data based on the match_by priority
+  matching_idx <-
+    data_frame(column = md_cols$match_by) %>%
+    # find all filled metadata column indices
+    mutate(
+      priority = 1:n(),
+      # all available metadata for this category
+      mdata_idx = map(column, ~which(!is.na(metadata[[.x]]) & nchar(as.character(metadata[[.x]])) > 0))
+    ) %>%
+    unnest(mdata_idx) %>%
+    mutate(
+      # the data indices that fit the metadata mapping value
+      data_idx = map2(column, mdata_idx, ~which(dt[[.x]] == metadata[[.x]][.y]))
+    ) %>%
+    unnest(data_idx) %>%
+    # figure out which metadata set to use for which data index (based on priority)
+    group_by(data_idx) %>%
+    # the highest priority (last column in match_by) takes precedence
+    filter(priority == max(priority)) %>%
+    # if multiple metadata rows map to the same data_idx --> take the first one encountered
+    filter(mdata_idx == min(mdata_idx)) %>%
+    ungroup()
+
+  # information
+  if(!quiet) {
+    idx_summary <- group_by(matching_idx, column) %>%
+      summarize(md_rows = length(unique(mdata_idx)), data_rows = length(unique(data_idx))) %>%
+      mutate(label = as.character(glue("{md_rows} metadata entries were mapped to {data_rows} data entires via column '{column}'")))
+    glue("Info: metadata added to {nrow(matching_idx)} data rows, {nrow(dt) - nrow(matching_idx)} left without metadata:\n - {collapse(idx_summary$label, '\n - ')}") %>%
+      message()
+  }
+
+  # prepare metadata
+  metadata <- metadata %>%
+    # remove the matching columns (since we already have the index matching)
+    select(!!!cols_to_quos(dt_cols$match_by, negate = TRUE)) %>%
+    # add index column
+    mutate(..mdata_idx.. = 1:n(), ..mdata_present.. = TRUE)
+
+  # do the actual matching
+  dt %>%
+    mutate(..data_idx.. = 1:n()) %>%
+    left_join(select(matching_idx, ..data_idx.. = data_idx, ..mdata_idx.. = mdata_idx), by = "..data_idx..") %>%
+    left_join(metadata, by = "..mdata_idx..") %>%
+    mutate(!!new_cols$has_metadata := !is.na(..mdata_present..)) %>%
+    select(-..data_idx.., -..mdata_idx.., -..mdata_present..)
+}
+
+# peak mapping ======
+
 #' Map peaks based on retention time
 #'
 #' This function makes it easy to map peaks based on peak maps. It reports all peaks including missing peaks and ambiguous peaks.
@@ -5,7 +105,7 @@
 #' peaks that do not have any problems. Note that without this filter, one must proceed with great caution interpreting the ambiguous peaks.
 #'
 #' @param dt data frame with peak data
-#' @param peak_maps data frame with the pak map
+#' @param peak_maps data frame with the peak map
 #' @param file_id the column in dt that holds file id information
 #' @param map_id the column in dt that indicates which map to use for which file
 #' @param compound the column in peak_maps that holds compound information
@@ -22,6 +122,8 @@
 #' (note that this information could also be derived from n_overlapping == 0 but is provided for convenience)
 #' @param n_matches the name for the new column which stores the number of matches each peak has in the peak map
 #' @param n_overlapping the name for the new column which stores the number of overlapping peaks that match the same peak definition
+#' @note: TODO - allow multiple file_id, not just one
+#' @export
 iso_map_peaks <- function(dt, peak_maps, file_id = default(file_id), map_id = default(map_id), compound = default(compound),
                           rt = default(rt), rt_start = default(rt_start), rt_end = default(rt_end), rt_prefix_divider = ":",
                           is_identified = default(is_identified), is_missing = default(is_missing), is_ambiguous = default(is_ambiguous),

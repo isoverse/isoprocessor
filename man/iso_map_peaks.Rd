@@ -15,7 +15,7 @@ iso_map_peaks(dt, peak_maps, file_id = default(file_id),
 \arguments{
 \item{dt}{data frame with peak data}
 
-\item{peak_maps}{data frame with the pak map}
+\item{peak_maps}{data frame with the peak map}
 
 \item{file_id}{the column in dt that holds file id information}
 
@@ -49,4 +49,7 @@ from n_overlapping > 1 | n_matches > 1 but is provided for convenience)
 This function makes it easy to map peaks based on peak maps. It reports all peaks including missing peaks and ambiguous peaks.
 For routine downstream data processing, this function is usually followed by \code{filter(is_identified, !is_missing, !is_ambiguous)} to proceed only with
 peaks that do not have any problems. Note that without this filter, one must proceed with great caution interpreting the ambiguous peaks.
+}
+\note{
+: TODO - allow multiple file_id, not just one
 }

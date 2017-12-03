@@ -1,6 +1,9 @@
 #' @export
 magrittr::`%>%`
 
+# just because it always is very confusing error if the base `filter` is used instead
+#' @export
+dplyr::filter
 
 # information display ====
 
@@ -11,22 +14,33 @@ magrittr::`%>%`
 #' @param dt data table
 #' @param select which columns to select (use c(...) to select multiple), supports all \link[dplyr]{select} syntax
 #' @param filter any filter conditions to apply, by default does not filter any
+#' @param print_func what function to use for printing (makes it easier to switch between different types of output)
+#' @param title whether to provide a title message
+#' @param unique whether to print only unique rows
 #' @inheritParams iso_show_default_processor_parameters
 #' @return the passed in data table (for piping)
 #' @export
-print_data_table <- function(dt, select = everything(), filter = TRUE, func = NULL, ...) {
+iso_print_data_table <- function(dt, select = everything(), filter = TRUE, print_func = default(print_func), title = NULL, unique = TRUE, ...) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   dt_cols <- get_column_names(!!enquo(dt), select = enquo(select), n_reqs = list(select = "+"))
   filter_quo <- enquo(filter)
 
+  # title
+  if (!is.null(title))
+    message(title)
+
   # print knitr table
   print_table <- dt %>% dplyr::filter(!!filter_quo) %>%
     dplyr::select(!!!dt_cols$select)
 
-  if (!is.null(func))
-    print(do.call(func, args = c(list(x = print_table), list(...))))
+  if (unique)
+    print_table <- unique(print_table)
+
+  print_func <- enquo(print_func) %>% resolve_defaults()
+  if (!quo_is_null(print_func))
+    print(do.call(eval_tidy(UQE(print_func)), args = c(list(x = print_table), list(...))))
   else
     print(print_table)
 

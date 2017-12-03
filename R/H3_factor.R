@@ -50,7 +50,7 @@ print_H3_factors <- function(dt, file_id = default(file_id), file_datetime = def
                              H3_factor = default(H3_factor), is_H3_factor_file = default(is_H3_factor_file), ...) {
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   dt_cols <- get_column_names(!!enquo(dt), file_id = enquo(file_id), file_datetime = enquo(file_datetime), H3_factor = enquo(H3_factor))
-  print_data_table(dt, select = c(!!file_id, !!file_datetime, !!H3_factor, n_analyses, low_amp, high_amp), filter = !!is_H3_factor_file, ...)
+  iso_print_data_table(dt, select = c(!!file_id, !!file_datetime, !!H3_factor, n_analyses, low_amp, high_amp), filter = !!is_H3_factor_file, ...)
 }
 
 #' Plot H3 factor

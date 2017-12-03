@@ -58,7 +58,7 @@ iso_set_default_process_parameters <- function(data = NULL, ...) {
 #' @rdname iso_set_default_process_parameters
 #' @export
 iso_reset_default_process_parameters <- function(data = NULL) {
-  set_default("default_parameters", list(), overwrite = TRUE)
+  initialize_options()
   return(invisible(data))
 }
 
@@ -93,11 +93,12 @@ iso_get_default_processor_parameters <- function(data = NULL) {
 #' @param ... additional parameters to forward to the \code{func} function
 #' @family settings functions
 #' @export
-iso_show_default_processor_parameters <- function(data = NULL, func = NULL, ...) {
-  if (!default("quiet")) message("Info: isoprocessor package current default parameters")
+iso_show_default_processor_parameters <- function(data = NULL, print_func = default(print_func), ..., quiet = default(quiet)) {
+  if (!quiet) message("Info: isoprocessor package current default parameters")
 
-  if (!is.null(func))
-    print(do.call(func, args = c(list(x = iso_get_default_processor_parameters()), list(...))))
+  print_func <- enquo(print_func) %>% resolve_defaults()
+  if (!quo_is_null(print_func))
+    print(do.call(eval_tidy(UQE(print_func)), args = c(list(x = iso_get_default_processor_parameters()), list(...))))
   else
     print(iso_get_default_processor_parameters())
 
