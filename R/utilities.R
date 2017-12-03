@@ -49,9 +49,10 @@ iso_print_data_table <- function(dt, select = everything(), filter = TRUE, print
 
 # nesting ======
 
-# nest data based on the grouping
-# this is basically just an inverse version (in terms of selection) of nest that can handle the sophisticated selection parameters of select
-# @param group_by what to keep out of the nested data (i.e. what to group by), by default nests everything
+# note - documented but not exported
+#' nest data based on the grouping
+#' this is basically just an inverse version (in terms of selection) of nest that can handle the sophisticated selection parameters of select
+#' @param group_by what to keep out of the nested data (i.e. what to group by), by default nests everything
 nest_data <- function(dt, group_by = NULL, nested_data = default(nested_data)) {
 
   # safety checks and column matching
@@ -65,17 +66,26 @@ nest_data <- function(dt, group_by = NULL, nested_data = default(nested_data)) {
     nest(!!!cols_to_quos(dt_cols[c("group_by")], negate = TRUE), .key = !!nested_col)
 }
 
-# unnest parts of a data frame without loosing the rest
-# note that this will lead to row duplication if the unnested variables have multiple entries per row of the \code{dt} data frame
-# @param select which columns to unnest
-# @param nested_data which column to unnest the \code{select} from
-# @param keep_remaining_nested_data whether to keep any remaining parts of the partially unnested data
-# @param keep_other_list_data keep other list data columns (e.g. other data or model columns)
-unnest_select_data <- function(dt, select = everything(), nested_data = default(nested_data), keep_remaining_nested_data = TRUE, keep_other_list_data = TRUE) {
+# note - documented but not exported
+#' unnest parts of a data frame without loosing the rest
+#'
+#' note that this will lead to row duplication if the unnested variables have multiple entries per row of the \code{dt} data frame
+#' also note that this will remove rows that have NULL in the nested_data column
+#' @param select which columns to unnest from the nested data
+#' @param nested_data which column to unnest the \code{select} from
+#' @param keep_remaining_nested_data whether to keep any remaining parts of the partially unnested data
+#' @param keep_other_list_data keep other list data columns (e.g. other data or model columns)
+unnest_select_data <- function(dt, select = everything(), nested_data = default(nested_data), keep_remaining_nested_data = TRUE, keep_other_list_data = TRUE, keep_only_unique = TRUE) {
   # safety checks and column matching
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   dt_cols <- get_column_names(!!enquo(dt), nested_data = enquo(nested_data), type_reqs = list(nested_data = "list"))
-  dt <- mutate(dt, ..row.. = row_number()) %>% as_data_frame()
+
+  # add row number and remove NULL columns
+  dt <-
+    dt %>%
+    filter(!map_lgl(UQ(as.name(dt_cols$nested_data)), is.null)) %>%
+    mutate(..row.. = row_number()) %>%
+    as_data_frame()
 
   # keep track of the different types of columns
   list_cols <- dt %>% map_lgl(is_list) %>% { names(.)[.] } %>% { .[.!=dt_cols$nested_data] }
@@ -100,53 +110,61 @@ unnest_select_data <- function(dt, select = everything(), nested_data = default(
     renested_dt <- left_join(renested_dt, dt[c("..row..", list_cols)], by = "..row..")
   }
 
-  # remove the ..row.. again (just used for ID purposes)
-  return(dplyr::select(renested_dt, -..row..))
+  # return
+  renested_dt %>%
+    # make sure no replication if only partial dataframe is unnested and rows are replicated despite remaining unique
+    # includes ..row.. on purpose to make sure no unanticipated row collapes is possible
+    unique() %>%
+    # remove the ..row.. again (just used for ID purposes)
+    dplyr::select(-..row..) %>%
+    return()
 }
 
-
-# convenience function for unnesting coefficients
-# @param select which coefficient fields to unnest
-unnest_model_coefficients <- function(dt, select = everything(), model_coefs = default(model_coefs),
-                                      keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE) {
-  unnest_select_data(dt, select = UQ(enquo(select)), nested_data = !!enquo(model_coefs),
-                     keep_remaining_nested_data = keep_remaining_nested_data,
-                     keep_other_list_data = keep_other_list_data)
-}
-
-# convenience function for unnesting coefficients
-# @param select which coefficient fields to unnest
-unnest_model_summary <- function(dt, select = everything(), model_summary = default(model_summary),
-                                      keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE) {
-  unnest_select_data(dt, select = UQ(enquo(select)), nested_data = !!enquo(model_summary),
+# note - documented but not exported
+#' Unnest model results
+#'
+#' Convenience functions for unnesting model results
+#' @param model_results name of the model results column to unnest
+#' @param select which fields from the selected model result column to unnest
+#' @inheritParams unnest_select_data
+unnest_model_results <- function(dt, model_results, select = everything(),
+                                 keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE) {
+  if (missing(model_results)) stop("specify which model results column to unnest", call. = FALSE)
+  unnest_select_data(dt, select = UQ(enquo(select)), nested_data = !!enquo(model_results),
                      keep_remaining_nested_data = keep_remaining_nested_data,
                      keep_other_list_data = keep_other_list_data)
 }
 
 # regressions =====
 
-# run a set of regressions
-# @param dt data table
-# @param model the regression model or named list of regression models.
-# If a named list is provided, the name(s) will be stored in the \code{model_name} column
-# @param model_data the nested model data column
-# @param model_name new column with the model names if any are supplied
-# @param model_fit the new model objects column
-# @param model_coefs the new model coefficients nested data frame column
-# @param model_summary the new model summary nested data frame column
-# @param residual the new residual column in the nested model_data
-# @param residuals resid name of the residuals column
-run_regression <- function(dt, model, model_data = default(model_data),
+# note - documented but not exported
+#' run a set of regressions
+#'
+#' @param dt data table
+#' @param model the regression model or named list of regression models.
+#' If a named list is provided, the name(s) will be stored in the \code{model_name} column
+#' @param model_data the nested model data column
+#' @param model_filter_condition a filter to apply to the data before running the regression, by default no filter
+#' @param model_name new column with the model names if any are supplied
+#' @param model_fit the new model objects column
+#' @param model_coefs the new model coefficients nested data frame column
+#' @param model_summary the new model summary nested data frame column
+#' @param residual the new residual column in the nested model_data
+#' @param residuals resid name of the residuals column
+#' @param min_n_data_points - the minimum number of data points required for the regression
+run_regression <- function(dt, model, model_data = default(model_data), model_filter_condition = default(),
                            model_name = default(model_name), model_fit = default(model_fit),
                            model_coefs = default(model_coefs), model_summary = default(model_summary),
-                           residual = default(residual)) {
+                           residual = default(residual), min_n_data_points = 2) {
 
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  dt_cols <- get_column_names(!!enquo(dt), model_data = enquo(model_data), type_reqs = list(model_data = "list"))
+  dt_quo <- enquo(dt)
+  dt_cols <- get_column_names(!!dt_quo, model_data = enquo(model_data), type_reqs = list(model_data = "list"))
   dt_new_cols <- get_new_column_names(
     model_name = enquo(model_name), model_fit = enquo(model_fit),
     model_coefs = enquo(model_coefs), model_summary = enquo(model_summary),
     residual = enquo(residual))
+  filter_quo <- enquo(model_filter_condition) %>% resolve_defaults()
 
   # models
   if (missing(model)) stop("no regression model supplied", call. = FALSE)
@@ -178,7 +196,7 @@ run_regression <- function(dt, model, model_data = default(model_data),
     model_quo = lquos
   )
 
-  # keep the model name column?
+  # keep the model name column? not if there isn't a name
   if (all(nchar(models[[dt_new_cols$model_name]]) == 0))
     models[[dt_new_cols$model_name]] <- NULL
 
@@ -191,33 +209,41 @@ run_regression <- function(dt, model, model_data = default(model_data),
 
   # combination of data and model
   data_w_models <-
-    dt %>%
+    eval_tidy(dt_quo) %>%
     merge(models) %>%
     as_data_frame() %>%
     # evaluation of model
     mutate(
-      !!dt_new_cols$model_fit := map2(model_quo, !!as.name(dt_cols$model_data), ~eval_tidy(.x, data = .y)),
-      !!dt_new_cols$model_coefs := map(
-        !!as.name(dt_new_cols$model_fit),
-        ~mutate(as_data_frame(tidy(.x)),
+      ..has_enough_data.. = map_int(!!as.name(dt_cols$model_data), ~nrow(filter(.x, !!filter_quo)) >= min_n_data_points),
+      !!dt_new_cols$model_fit :=
+        pmap(list(m = model_quo, d = !!as.name(dt_cols$model_data), run = ..has_enough_data..),
+             function(m, d, run) if (run) eval_tidy(m, data = filter(d, !!filter_quo)) else NULL),
+      !!dt_new_cols$model_coefs := map2(
+        !!as.name(dt_new_cols$model_fit), ..has_enough_data..,
+        ~if (.y) {
+          mutate(as_data_frame(tidy(.x)),
                 # add in significant level summary
                 signif = ifelse(p.value < 0.001, "***",
                                 ifelse(p.value < 0.01, "**",
                                        ifelse(p.value < 0.05, "*",
-                                              ifelse(p.value < 0.1, ".", ""))))
-        )),
-      !!dt_new_cols$model_summary := map(!!as.name(dt_new_cols$model_fit), ~as_data_frame(glance(.x)))
+                                              ifelse(p.value < 0.1, ".", "")))))
+        } else NULL),
+      !!dt_new_cols$model_summary :=
+        map2(!!as.name(dt_new_cols$model_fit), ..has_enough_data..,
+             ~if (.y) { as_data_frame(glance(.x)) } else { NULL })
     )
 
   # add residuals
   data_w_models <-
     data_w_models %>%
     mutate(
-      !!dt_cols$model_data := map2(!!as.name(dt_cols$model_data), !!as.name(dt_new_cols$model_fit),
-                               ~add_residuals(.x, .y, var = dt_new_cols$residual))
+      !!dt_cols$model_data :=
+        pmap(list(d = !!as.name(dt_cols$model_data), fit = !!as.name(dt_new_cols$model_fit), run = ..has_enough_data..),
+             function(d, fit, run) if (run) add_residuals(d, fit, var = dt_new_cols$residual) else d)
     )
 
-  return(select(data_w_models, -model_quo))
+
+  return(select(data_w_models, -model_quo, -..has_enough_data..))
 }
 
 # run regressions in grouped blocks (uses nest_data and run_regression)
@@ -236,5 +262,6 @@ run_grouped_regression <- function(dt, group_by = NULL, model = NULL, model_data
 
 #' invert the regression for calibration purposes
 invert_regression <- function() {
+  #note I think the residual sum of squares is the same s the deviance
   stop("see inversion_testing.Rmd for code")
 }

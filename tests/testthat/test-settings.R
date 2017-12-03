@@ -3,6 +3,7 @@ context("Settings and default values")
 test_that("info messages can be turned on and off", {
   # functionality exported from isoreader
   expect_message(iso_turn_info_messages_on(), "messages turned on")
+  expect_equal(isoprocessorCUB:::default(), quo())
   expect_false(isoprocessorCUB:::default("quiet"))
   expect_false(isoprocessorCUB:::default(quiet))
   expect_silent(iso_turn_info_messages_off())
