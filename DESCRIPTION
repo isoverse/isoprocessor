@@ -18,6 +18,7 @@ Imports:
     tidyr,
     stringr,
     purrr,
+    forcats,
     ggplot2,
     modelr,
     investr,

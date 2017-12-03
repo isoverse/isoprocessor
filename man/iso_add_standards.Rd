@@ -19,3 +19,6 @@ iso_add_standards(dt, stds, match_by = default(compound),
 \description{
 Add calibration standards
 }
+\note{
+FIXME write unit tests
+}
