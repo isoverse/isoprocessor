@@ -222,5 +222,5 @@ run_grouped_regression <- function(dt, group_by = NULL, model = NULL, model_data
 
 #' invert the regression for calibration purposes
 invert_regression <- function() {
-
+  stop("see inversion_testing.Rmd for code")
 }
