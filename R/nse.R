@@ -54,3 +54,12 @@ cols_to_quos <- function(cols, always_as_list = FALSE, keep_names = FALSE, negat
   if (!always_as_list && length(lquos) == 1) return(lquos[[1]])
   return(lquos)
 }
+
+# Turn column into a list of symbols (this is an alternative to cols_to_quos for functions that can't deal with the quosures)
+cols_to_symbol_list <- function(cols, keep_names = FALSE) {
+  if (!all(ok <- map_lgl(cols, is.character)))
+    stop("can only convert character column names to quos", call. = FALSE)
+  cols <- unlist(cols)
+  if (!keep_names) cols <- unname(cols)
+  return(map(cols, as.name))
+}

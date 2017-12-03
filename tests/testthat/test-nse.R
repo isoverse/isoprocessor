@@ -23,3 +23,12 @@ test_that("Column name to quosure conversion works correctly", {
   expect_equal(cols_to_quos(list(x = "a", y = c("b", "c")), keep_names = TRUE), quos(x = a, y1 = b, y2 = c))
   expect_equal(cols_to_quos(letters[1:3], negate = TRUE), quos(-a, -b, -c))
 })
+
+test_that("Column name to symbol list works correctly", {
+
+  expect_error(cols_to_symbol_list(list(a="test", b=5)), "can only convert character")
+  expect_equal(cols_to_symbol_list(letters[1:3]), list(as.name("a"), as.name("b"), as.name("c")))
+  expect_equal(cols_to_symbol_list(letters[1]), list(as.name("a")))
+  expect_equal(cols_to_symbol_list(list(x="a", y="b", z="c")), list(as.name("a"), as.name("b"), as.name("c")))
+  expect_equal(cols_to_symbol_list(list(x="a", y="b", z="c"), keep_names = TRUE), list(x = as.name("a"), y = as.name("b"), z = as.name("c")))
+})
