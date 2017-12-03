@@ -76,6 +76,8 @@ iso_calibrate_delta <- function(dt, model, is_standard = default(is_standard), c
   dt_quo <- enquo(dt)
   model_quos <- enquo(model)
   filter_quo <- enquo(is_standard) %>% resolve_defaults()
+  resid_quo <- enquo(delta_residual) %>% resolve_defaults()
+  data_quo <- enquo(calibration_data) %>% resolve_defaults()
 
   # information
   if (!quiet) {
@@ -86,16 +88,17 @@ iso_calibrate_delta <- function(dt, model, is_standard = default(is_standard), c
     }
     models <- str_c(names(lquos) %>% { ifelse(nchar(.) > 0, str_c(., " = "), .) }, map_chr(lquos, quo_text))
     plural <- if (length(models) > 1) "s" else ""
-    glue("Info: calculating delta calibration fits based on {length(models)} model{plural} ('{collapse(models, \"', '\")}') for {nrow(dt)} data group(s) with filter '{quo_text(filter_quo)}'") %>% message()
+    glue("Info: calculating delta calibration fits based on {length(models)} model{plural} ('{collapse(models, \"', '\")}') ",
+         "for {nrow(dt)} data group(s) in '{quo_text(data_quo)}' with filter '{quo_text(filter_quo)}'; storing residuals in '{quo_text(resid_quo)}.'") %>% message()
   }
 
   # run regression
   min_n_data_points <- 2
   dt_w_regs <- run_regression(
-    !!dt_quo, model = !!model_quos, model_data = !!enquo(calibration_data), model_filter_condition = !!filter_quo,
+    !!dt_quo, model = !!model_quos, model_data = !!data_quo, model_filter_condition = !!filter_quo,
     model_name = calib_delta_name, model_fit = calib_delta_fit,
     model_coefs = calib_delta_coefs, model_summary = calib_delta_summary,
-    residual = !!enquo(delta_residual), min_n_data_points = min_n_data_points
+    residual = !!resid_quo, min_n_data_points = min_n_data_points
   )
 
   # information on missing regs
@@ -129,7 +132,7 @@ iso_unnest_delta_calib_summary <- function(dt, select = everything(), keep_remai
 #' @details \code{iso_unnest_calib_data} unnests the data
 #' @rdname iso_unnest_model_results
 #' @export
-iso_unnest_calib_data <- function(dt, select = everything(), calibration_data = default(calibration_data), keep_remaining_nested_data = FALSE, keep_other_list_data = TRUE) {
+iso_unnest_calib_data <- function(dt, select = everything(), calibration_data = default(calibration_data), keep_remaining_nested_data = TRUE, keep_other_list_data = TRUE) {
   unnest_model_results(dt, model_results = !!enquo(calibration_data), select = UQ(enquo(select)), keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data)
 }
 

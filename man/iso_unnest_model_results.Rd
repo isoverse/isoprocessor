@@ -14,7 +14,7 @@ iso_unnest_delta_calib_summary(dt, select = everything(),
 
 iso_unnest_calib_data(dt, select = everything(),
   calibration_data = default(calibration_data),
-  keep_remaining_nested_data = FALSE, keep_other_list_data = TRUE)
+  keep_remaining_nested_data = TRUE, keep_other_list_data = TRUE)
 }
 \arguments{
 \item{select}{which fields from the selected model result column to unnest}

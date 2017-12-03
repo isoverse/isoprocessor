@@ -8,6 +8,9 @@ isoreader::iso_turn_info_messages_off
 
 # retrieve package settings, internal function, not exported
 # first checks if the setting exists in the isoreader space, then in the isoprocessor
+# @note: consider providing an option that indicates whether to return the quoted expression or a default value
+# e.g. default(x) that returns quo(x) if x is not set vs. default(x, NULL) that returns quo(NULL) if x is not set
+# @FIXME: alternatively set ALL available parameters in the initialize_options and force parameters to exist
 default <- function(name) {
   if (missing(name)) return(quo())
   name_quo <- enquo(name)

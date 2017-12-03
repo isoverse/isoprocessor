@@ -1,3 +1,5 @@
+# @note: consider setting all available default process parameters here and then only allowing overwrite
+# of those that do exist
 initialize_options <- function() {
   # set default package options (always resets options to force deliberate change of settings)
   default_options <- list(
