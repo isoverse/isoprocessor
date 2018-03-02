@@ -20,6 +20,7 @@ dplyr::filter
 #' @inheritParams iso_show_default_processor_parameters
 #' @return the passed in data table (for piping)
 #' @export
+#' @note this is not working as well as planned - consider removing again or just allowing it to be a simplifying function..
 iso_print_data_table <- function(dt, select = everything(), filter = TRUE, print_func = default(print_func), title = NULL, unique = TRUE, ...) {
 
   # safety checks
@@ -47,6 +48,7 @@ iso_print_data_table <- function(dt, select = everything(), filter = TRUE, print
   return(invisible(dt))
 }
 
+
 # nesting ======
 
 # note - documented but not exported
@@ -64,6 +66,19 @@ nest_data <- function(dt, group_by = NULL, nested_data = default(nested_data)) {
   dt %>%
     as_data_frame() %>% # nest requires tbl
     nest(!!!cols_to_quos(dt_cols[c("group_by")], negate = TRUE), .key = !!nested_col)
+}
+
+#' Remove nested data
+#'
+#' Remove all nested data sets in the data table (e.g. in prep for printing with kable)
+#' @note not unit tested
+#' @export
+iso_remove_nested_data <- function(dt) {
+
+  if (missing(dt)) stop("no data table supplied", call. = FALSE)
+
+  list_cols <- dt %>% map_lgl(is_list)
+  dt[!list_cols]
 }
 
 # note - documented but not exported
@@ -164,7 +179,8 @@ run_regression <- function(dt, model, model_data = default(model_data), model_fi
     model_name = enquo(model_name), model_fit = enquo(model_fit),
     model_coefs = enquo(model_coefs), model_summary = enquo(model_summary),
     residual = enquo(residual))
-  filter_quo <- enquo(model_filter_condition) %>% resolve_defaults()
+  filter_quo <- enquo(model_filter_condition) %>% resolve_defaults() %>%
+    { if(quo_is_missing(.)) quo(TRUE) else . }
 
   # models
   if (missing(model)) stop("no regression model supplied", call. = FALSE)
@@ -214,12 +230,12 @@ run_regression <- function(dt, model, model_data = default(model_data), model_fi
     as_data_frame() %>%
     # evaluation of model
     mutate(
-      ..has_enough_data.. = map_int(!!as.name(dt_cols$model_data), ~nrow(filter(.x, !!filter_quo)) >= min_n_data_points),
+      ..has_enough_data.. = map_int(!!sym(dt_cols$model_data), ~nrow(filter(.x, !!filter_quo)) >= min_n_data_points),
       !!dt_new_cols$model_fit :=
-        pmap(list(m = model_quo, d = !!as.name(dt_cols$model_data), run = ..has_enough_data..),
+        pmap(list(m = model_quo, d = !!sym(dt_cols$model_data), run = ..has_enough_data..),
              function(m, d, run) if (run) eval_tidy(m, data = filter(d, !!filter_quo)) else NULL),
       !!dt_new_cols$model_coefs := map2(
-        !!as.name(dt_new_cols$model_fit), ..has_enough_data..,
+        !!sym(dt_new_cols$model_fit), ..has_enough_data..,
         ~if (.y) {
           mutate(as_data_frame(tidy(.x)),
                 # add in significant level summary
@@ -229,7 +245,7 @@ run_regression <- function(dt, model, model_data = default(model_data), model_fi
                                               ifelse(p.value < 0.1, ".", "")))))
         } else NULL),
       !!dt_new_cols$model_summary :=
-        map2(!!as.name(dt_new_cols$model_fit), ..has_enough_data..,
+        map2(!!sym(dt_new_cols$model_fit), ..has_enough_data..,
              ~if (.y) { as_data_frame(glance(.x)) } else { NULL })
     )
 
@@ -256,7 +272,6 @@ run_grouped_regression <- function(dt, group_by = NULL, model = NULL, model_data
   nest_data(dt, group_by = !!enquo(group_by), nested_data = !!model_data_quo) %>%
     run_regression(model = UQ(model_quo), model_data = !!model_data_quo, ...)
 }
-
 
 # invert regression =====
 
