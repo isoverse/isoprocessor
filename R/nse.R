@@ -46,9 +46,9 @@ cols_to_quos <- function(cols, always_as_list = FALSE, keep_names = FALSE, negat
 
   # whether to negate or not
   if (negate)
-    lquos <- quos(!!!map(cols, ~quo(-!!as.name(.x))))
+    lquos <- quos(!!!map(cols, ~quo(-!!sym(.x))))
   else
-    lquos <- quos(!!!map(cols, as.name))
+    lquos <- quos(!!!map(cols, sym))
 
   # whether to return single elements still as lists
   if (!always_as_list && length(lquos) == 1) return(lquos[[1]])
@@ -61,5 +61,5 @@ cols_to_symbol_list <- function(cols, keep_names = FALSE) {
     stop("can only convert character column names to quos", call. = FALSE)
   cols <- unlist(cols)
   if (!keep_names) cols <- unname(cols)
-  return(map(cols, as.name))
+  return(map(cols, sym))
 }
