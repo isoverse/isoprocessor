@@ -15,7 +15,7 @@ default <- function(name) {
   if (missing(name)) return(quo())
   name_quo <- enquo(name)
   name <- name_quo %>% quos_to_text(variable = "setting")
-  value <- isoreader:::default(!!as.name(name), allow_null = TRUE)
+  value <- isoreader:::default(!!sym(name), allow_null = TRUE)
   if (is.null(value)) # not in isoreader settings
     value <- getOption(str_c("isoprocessor.", name))
   if (is.null(value)) { # not in normal isoprocessor settings
@@ -76,7 +76,7 @@ iso_reset_default_process_parameters <- function(data = NULL) {
 #' @inheritParams iso_set_default_process_parameters
 #' @family settings functions
 #' @export
-iso_get_default_processor_parameters <- function(data = NULL) {
+iso_get_default_processor_parameters <- function() {
   regular_params <- data_frame(parameter = "quiet", value = as.character(default("quiet")))
   func_params <- get_process_parameters()
   if (length(func_params) > 0) {
@@ -97,15 +97,9 @@ iso_get_default_processor_parameters <- function(data = NULL) {
 #' @param ... additional parameters to forward to the \code{func} function
 #' @family settings functions
 #' @export
+#' @note DEPRECATE
 iso_show_default_processor_parameters <- function(data = NULL, print_func = default(print_func), ..., quiet = default(quiet)) {
-  if (!quiet) message("Info: isoprocessor package current default parameters")
 
-  print_func <- enquo(print_func) %>% resolve_defaults()
-  if (!quo_is_null(print_func))
-    print(do.call(eval_tidy(UQE(print_func)), args = c(list(x = iso_get_default_processor_parameters()), list(...))))
-  else
-    print(iso_get_default_processor_parameters())
+  stop("iso_show_default_processor_parameters is deprecated because of confusing behaviour. Please output the default processor parameters using iso_get_default_processor_parameters().", call. = FALSE)
 
-  # for pipeline
-  return(invisible(data))
 }

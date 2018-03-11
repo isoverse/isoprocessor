@@ -23,29 +23,8 @@ dplyr::filter
 #' @note this is not working as well as planned - consider removing again or just allowing it to be a simplifying function..
 iso_print_data_table <- function(dt, select = everything(), filter = TRUE, print_func = default(print_func), title = NULL, unique = TRUE, ...) {
 
-  # safety checks
-  if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  dt_cols <- get_column_names(!!enquo(dt), select = enquo(select), n_reqs = list(select = "+"))
-  filter_quo <- enquo(filter)
+  stop("iso_print_data_table is deprecated because of confusing behaviour. Please print the relevant information directly to console.", call. = FALSE)
 
-  # title
-  if (!is.null(title))
-    message(title)
-
-  # print knitr table
-  print_table <- dt %>% dplyr::filter(!!filter_quo) %>%
-    dplyr::select(!!!dt_cols$select)
-
-  if (unique)
-    print_table <- unique(print_table)
-
-  print_func <- enquo(print_func) %>% resolve_defaults()
-  if (!quo_is_null(print_func))
-    print(do.call(eval_tidy(UQE(print_func)), args = c(list(x = print_table), list(...))))
-  else
-    print(print_table)
-
-  return(invisible(dt))
 }
 
 
@@ -98,7 +77,7 @@ unnest_select_data <- function(dt, select = everything(), nested_data = default(
   # add row number and remove NULL columns
   dt <-
     dt %>%
-    filter(!map_lgl(UQ(as.name(dt_cols$nested_data)), is.null)) %>%
+    filter(!map_lgl(!!sym(dt_cols$nested_data), is.null)) %>%
     mutate(..row.. = row_number()) %>%
     as_data_frame()
 
@@ -107,7 +86,7 @@ unnest_select_data <- function(dt, select = everything(), nested_data = default(
   regular_cols <- setdiff(names(dt), c(list_cols, dt_cols$nested))
 
   # only unnest the main list column
-  unnested_dt <- unnest(dt[c(regular_cols, dt_cols$nested_data)], !!as.name(dt_cols$nested_data))
+  unnested_dt <- unnest(dt[c(regular_cols, dt_cols$nested_data)], !!sym(dt_cols$nested_data))
 
   # safety check on whether the select columns exist in the unnested df
   select_cols <- get_column_names(unnested_dt, select = enquo(select), n_reqs = list(select = "*"))
@@ -116,7 +95,7 @@ unnest_select_data <- function(dt, select = everything(), nested_data = default(
   keep_cols <- c(regular_cols, select_cols$select) %>% unique()
   if (length(setdiff(names(unnested_dt), keep_cols)) > 0 && keep_remaining_nested_data) {
     # renest if un-nesting is incomplete (i.e. data remains) and remaining data should be kept
-    renested_dt <- unnested_dt %>% nest_data(group_by = keep_cols, nested = !!as.name(dt_cols$nested_data))
+    renested_dt <- unnested_dt %>% nest_data(group_by = keep_cols, nested = !!sym(dt_cols$nested_data))
   } else
     renested_dt <- unnested_dt[keep_cols]
 
@@ -145,7 +124,7 @@ unnest_select_data <- function(dt, select = everything(), nested_data = default(
 unnest_model_results <- function(dt, model_results, select = everything(),
                                  keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE) {
   if (missing(model_results)) stop("specify which model results column to unnest", call. = FALSE)
-  unnest_select_data(dt, select = UQ(enquo(select)), nested_data = !!enquo(model_results),
+  unnest_select_data(dt, select = !!(enquo(select)), nested_data = !!enquo(model_results),
                      keep_remaining_nested_data = keep_remaining_nested_data,
                      keep_other_list_data = keep_other_list_data)
 }
@@ -254,7 +233,7 @@ run_regression <- function(dt, model, model_data = default(model_data), model_fi
     data_w_models %>%
     mutate(
       !!dt_cols$model_data :=
-        pmap(list(d = !!as.name(dt_cols$model_data), fit = !!as.name(dt_new_cols$model_fit), run = ..has_enough_data..),
+        pmap(list(d = !!sym(dt_cols$model_data), fit = !!sym(dt_new_cols$model_fit), run = ..has_enough_data..),
              function(d, fit, run) if (run) add_residuals(d, fit, var = dt_new_cols$residual) else d)
     )
 
@@ -270,7 +249,7 @@ run_grouped_regression <- function(dt, group_by = NULL, model = NULL, model_data
   model_quo <- enquo(model)
   model_data_quo <- enquo(model_data)
   nest_data(dt, group_by = !!enquo(group_by), nested_data = !!model_data_quo) %>%
-    run_regression(model = UQ(model_quo), model_data = !!model_data_quo, ...)
+    run_regression(model = !!model_quo, model_data = !!model_data_quo, ...)
 }
 
 # invert regression =====
