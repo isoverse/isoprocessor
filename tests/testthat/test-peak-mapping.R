@@ -9,7 +9,7 @@ test_that("metadata addition works", {
 
   # FIXME: continue with proper testing of this function
 
-  # missing metadta
+  # get missing metadta
   expect_error(iso_get_missing_metadata(), "no data table")
   expect_error(iso_get_missing_metadata(data_frame()), "has_metadata.*unknown column")
   test_data <- data_frame(id = c("A", "B"), has_metadata = c(TRUE, FALSE))
@@ -18,6 +18,11 @@ test_that("metadata addition works", {
                data_frame(my_id = "B"))
   expect_message(iso_get_missing_metadata(test_data), "fetching.*missing metadata")
   expect_silent(iso_get_missing_metadata(test_data, quiet = TRUE))
+
+  # remove missing metadata
+  expect_error(iso_remove_missing_metadata(), "no data table")
+  expect_error(iso_remove_missing_metadata(data_frame()), "has_metadata.*unknown column")
+  expect_equal(iso_remove_missing_metadata(test_data), data_frame(id = "A", has_metadata = TRUE))
 
 })
 

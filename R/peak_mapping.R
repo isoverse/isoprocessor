@@ -17,6 +17,7 @@
 #' @param match_by the column (or columns) to match the metadata by. Used sequently, i.e. if the first column is defined in the metadata, it will be used first before mapping the remainder of the metadata with the second column, etc. All columns must exist in both the \code{dt} and \code{metadata} data frames.
 #' @param has_metadata the name for the new column which stores a logical TRUE/FALSE indicating whether the entry in \code{dt} has added metadata
 #' @return merged data frame with data and metadata and new column defined by parameter \code{has_metadata} that holds information about which rows had metadata matches
+#' @family metadata functions
 #' @export
 iso_add_metadata <- function(dt, metadata, match_by = default(match_by), has_metadata = default(has_metadata), quiet = default(quiet)) {
 
@@ -82,6 +83,7 @@ iso_add_metadata <- function(dt, metadata, match_by = default(match_by), has_met
 #' @param dt data with metadata added
 #' @param select which columns to select for display - use \code{c(...)} to select multiple, supports all \link[dplyr]{select} syntax including renaming columns. Includes all columns by default but this more useful with a smaller subset of identifying columns.
 #' @param has_metadata the name for the column which stores whether an entry in \code{dt} has metadata. Does NOT need to be specified if the default is used for the same paramter in \link{iso_add_metadata}.
+#' @family metadata functions
 #' @export
 iso_get_missing_metadata <- function(dt, select = everything(), has_metadata = default(has_metadata), quiet = default(quiet)) {
 
@@ -89,17 +91,44 @@ iso_get_missing_metadata <- function(dt, select = everything(), has_metadata = d
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   dt_cols <- get_column_names(!!enquo(dt), select = enquo(select), has_metadata = enquo(has_metadata), n_reqs = list(select = "+"))
 
+  # info
   if(!quiet) {
     glue("Info: fetching data entries that are missing metadata") %>%
       message()
   }
 
+  # filtering
   dt %>%
     filter(!(!!sym(dt_cols$has_metadata))) %>%
     dplyr::select(!!!dt_cols$select) %>%
     unique()
 }
 
+
+#' Remove entries with missing metadata
+#'
+#' Continue data processing without data that is missing metadata. This function is typically called after \link{iso_add_metadata} to focus on entries that have metadata.
+#'
+#' @inheritParams iso_get_missing_metadata
+#' @family metadata functions
+#' @export
+iso_remove_missing_metadata <- function(dt, has_metadata = default(has_metadata), quiet = default(quiet)) {
+
+  # safety checks
+  if (missing(dt)) stop("no data table supplied", call. = FALSE)
+  dt_cols <- get_column_names(!!enquo(dt), has_metadata = enquo(has_metadata))
+
+  # filtering
+  dt_out <- filter(dt, !!sym(dt_cols$has_metadata))
+
+  # info
+  if(!quiet) {
+    glue("Info: removing {nrow(dt) - nrow(dt_out)} of {nrow(dt)} data entries because of missing metadata") %>%
+      message()
+  }
+
+  return(dt_out)
+}
 
 
 # peak mapping ======
