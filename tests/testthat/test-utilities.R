@@ -51,7 +51,7 @@ test_that("regression functions work properly", {
   test_df <- dplyr::data_frame(name = rep(c("a", "b"), 10), x = runif(20), y = runif(20))
   nested_test_df <- nest_data(test_df, name, nested_data = model_data)
   expect_error(run_regression(), "no data table supplied")
-  expect_error(run_regression(test_df), "model_data .* unknown column")
+  expect_error(run_regression(test_df), "model_data.* unknown column")
   expect_error(run_regression(nested_test_df), "no .* model")
   expect_error(run_regression(nested_test_df, model = list()), "no .* model")
   expect_error(run_regression(nested_test_df, model = x), "not .* valid model")
