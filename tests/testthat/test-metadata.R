@@ -5,7 +5,7 @@ test_that("metadata addition works", {
   expect_error(iso_add_metadata(), "no data table")
   expect_error(iso_add_metadata(data_frame()), "no metadata")
 
-  # FIXME: continue with proper testing of this function
+  # FIXME: continue with proper testing of this function !!!
 
   # get missing metadta
   expect_error(iso_get_missing_metadata(), "no data table")
@@ -20,6 +20,7 @@ test_that("metadata addition works", {
   # remove missing metadata
   expect_error(iso_remove_missing_metadata(), "no data table")
   expect_error(iso_remove_missing_metadata(data_frame()), "has_metadata.*unknown column")
-  expect_equal(iso_remove_missing_metadata(test_data), data_frame(id = "A", has_metadata = TRUE))
+  expect_equal(iso_remove_missing_metadata(test_data), data_frame(id = "A"))
+  expect_equal(iso_remove_missing_metadata(test_data, remove_has_metadata_column = FALSE), data_frame(id = "A", has_metadata = TRUE))
 
 })

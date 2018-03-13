@@ -64,11 +64,13 @@ iso_map_peaks <- function(dt, peak_maps, file_id = default(file_id), map_id = de
 
   # combine peak map data and file data
   found_peaks <-
-    dt %>%
-    # add unique id per peak for identification simplicity
-    mutate(..peak_id.. = 1:n()) %>%
-    # join in the specific peak maps
-    left_join(maps, by = dt_cols$map_id) %>%
+    maps %>%
+    # right join to keep map columns first
+    right_join(
+      # add unique id per peak for identification simplicity
+      dt %>% mutate(..peak_id.. = 1:n()),
+      by = dt_cols$map_id
+    ) %>%
     # find the peak that the retention time window matches
     mutate(..is_target.. = is.na(..rt_target..) | (!!sym(dt_cols$rt_start) <= ..rt_target.. & !!sym(dt_cols$rt_end) >= ..rt_target..)) %>%
     # figure out which peaks match multiple definitions (n_matches) --> the -1 is because all will match the NA placeholder compound
@@ -139,10 +141,10 @@ iso_map_peaks <- function(dt, peak_maps, file_id = default(file_id), map_id = de
     select(-..is_target.., -..peak_id.., -..rt_target..)%>%
     rename(!!new_cols$n_matches := ..n_matches..,
            !!new_cols$n_overlapping := ..n_overlapping..) %>%
+    # put the file id, map id and compound information at the front
+    select(dt_cols$file_id, dt_cols$map_id, pm_cols$compound, everything()) %>%
     # re-arrange by retention time
-    arrange(!!!map(dt_cols$file_id, sym), !!sym(dt_cols$rt)) %>%
-    # return
-    return()
+    arrange(!!!map(dt_cols$file_id, sym), !!sym(dt_cols$rt))
 }
 
 
@@ -203,9 +205,16 @@ iso_get_problematic_peaks <- function(dt, select = everything(), unidentified = 
 #' Remove peaks that were problematic during peak mapping.
 #'
 #' @inheritParams iso_get_problematic_peaks
+#' @param remove_mapping_info_column whether to automatically remove mapping info columns. If true and:
+#' \itemize{
+#'  \item{\code{remove_unidentified = TRUE} - }{\code{is_identified} column automatically removed}
+#'  \item{\code{remove_missing = TRUE} - }{\code{is_missing} column automatically removed}
+#'  \item{\code{remove_ambiguous = TRUE} - }{\code{is_ambiguous}, \code{n_matches}, and \code{n_overlapping} columns automatically removed}
+#' }
 #' @family peak mapping functions
 #' @export
-iso_remove_problematic_peaks <- function(dt, remove_unidentified = TRUE, remove_missing = TRUE, remove_ambiguous = TRUE, quiet = default(quiet)) {
+iso_remove_problematic_peaks <- function(dt, remove_unidentified = TRUE, remove_missing = TRUE, remove_ambiguous = TRUE,
+                                         remove_mapping_info_columns = TRUE, quiet = default(quiet)) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
@@ -226,6 +235,19 @@ iso_remove_problematic_peaks <- function(dt, remove_unidentified = TRUE, remove_
     glue("Info: removing {nrow(dt) - nrow(dt_out)} of {nrow(dt)} data table entries because of problematic peak identifications ",
          "({collapse(types, sep = ', ', last = ' or ')})") %>%
       message()
+  }
+
+  # remove columns
+  if (remove_mapping_info_columns && remove_unidentified)
+    dt_out <- dt_out %>% select(-!!sym(dt_cols$is_identified))
+  if (remove_mapping_info_columns && remove_missing)
+    dt_out <- dt_out %>% select(-!!sym(dt_cols$is_missing))
+  if (remove_mapping_info_columns && remove_ambiguous) {
+    dt_out <- dt_out %>% select(-!!sym(dt_cols$is_ambiguous))
+    if ("n_matches" %in% names(dt_out))
+      dt_out <- dt_out %>% select(-n_matches)
+    if ("n_overlapping" %in% names(dt_out))
+      dt_out <- dt_out %>% select(-n_overlapping)
   }
 
   return(dt_out)

@@ -79,16 +79,20 @@ test_that("testing that peak mapping works", {
   # get removing problematic peaks
   expect_message(out <- mapped_dt %>% iso_remove_problematic_peaks(), "removing 9 of 12.*\\(unidentified, missing or ambiguous\\)")
   expect_equal(nrow(out), 3L)
+  expect_equal(names(out), select(mapped_dt, -starts_with("is_"), -starts_with("n_")) %>% names())
 
   expect_message(out <- mapped_dt %>% iso_remove_problematic_peaks(remove_ambiguous = FALSE, remove_unidentified = FALSE),
                  "removing 1 of 12.*\\(missing\\)")
   expect_equal(nrow(out), 11L)
+  expect_equal(names(out), select(mapped_dt, -is_missing) %>% names())
 
   expect_message(out <- mapped_dt %>% iso_remove_problematic_peaks(remove_ambiguous = FALSE, remove_missing = FALSE),
                  "removing 1 of 12.*\\(unidentified\\)")
   expect_equal(nrow(out), 11L)
+  expect_equal(names(out), select(mapped_dt, -is_identified) %>% names())
 
   expect_message(out <- mapped_dt %>% iso_remove_problematic_peaks(remove_missing = FALSE, remove_unidentified = FALSE),
                  "removing 7 of 12.*\\(ambiguous\\)")
   expect_equal(nrow(out), 5L)
+  expect_equal(names(out), select(mapped_dt, -is_ambiguous, -starts_with("n_")) %>% names())
 })

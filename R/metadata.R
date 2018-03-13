@@ -67,12 +67,16 @@ iso_add_metadata <- function(dt, metadata, match_by = default(match_by), quiet =
     mutate(..mdata_idx.. = 1:n(), ..mdata_present.. = TRUE)
 
   # do the actual matching
-  dt %>%
-    mutate(..data_idx.. = 1:n()) %>%
-    left_join(select(matching_idx, ..data_idx.. = data_idx, ..mdata_idx.. = mdata_idx), by = "..data_idx..") %>%
+  select(matching_idx, ..data_idx.. = data_idx, ..mdata_idx.. = mdata_idx) %>%
     left_join(metadata, by = "..mdata_idx..") %>%
+    right_join(mutate(dt, ..data_idx.. = 1:n()), by = "..data_idx..") %>%
     mutate(!!new_cols$has_metadata := !is.na(..mdata_present..)) %>%
-    select(-..data_idx.., -..mdata_idx.., -..mdata_present..)
+    # preserve original order
+    arrange(..data_idx..) %>%
+    # remove temp columns
+    select(-..data_idx.., -..mdata_idx.., -..mdata_present..) %>%
+    # keep the matching columns on the left
+    select(dt_cols$match_by, new_cols$has_metadata, everything())
 }
 
 #' Fetch entries with missing metadata
@@ -109,9 +113,10 @@ iso_get_missing_metadata <- function(dt, select = everything(), quiet = default(
 #' Continue data processing without data that is missing metadata. This function is typically called after \link{iso_add_metadata} to focus on entries that have metadata. Requires the \code{has_metadata} column to be present.
 #'
 #' @inheritParams iso_get_missing_metadata
+#' @param remove_has_metadata_column whether to automatically remove the \code{has_metadata} column
 #' @family metadata functions
 #' @export
-iso_remove_missing_metadata <- function(dt, quiet = default(quiet)) {
+iso_remove_missing_metadata <- function(dt, quiet = default(quiet), remove_has_metadata_column = TRUE) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
@@ -125,6 +130,9 @@ iso_remove_missing_metadata <- function(dt, quiet = default(quiet)) {
     glue("Info: removing {nrow(dt) - nrow(dt_out)} of {nrow(dt)} data entries because of missing metadata") %>%
       message()
   }
+
+  if (remove_has_metadata_column)
+    dt_out <- dt_out %>% select(-!!sym(dt_cols$has_metadata))
 
   return(dt_out)
 }
