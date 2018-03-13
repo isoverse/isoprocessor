@@ -61,9 +61,9 @@ test_that("regression functions work properly", {
   expect_s3_class(df_w_models <- nested_test_df %>% run_regression(model = lm(y ~ x)) , "tbl")
   expect_equal(nrow(df_w_models), 2L)
   expect_equal(df_w_models$model_fit[[1]]$residuals %>% length(), filter(test_df, name == "a") %>% nrow())
-  expect_equal(names(df_w_models), c("name", "model_data", "model_fit", "model_coefs", "model_summary"))
+  expect_equal(names(df_w_models), c("name", "model_data", "model_name", "model_fit", "model_coefs", "model_summary"))
   expect_equal(names(df_w_coefs <- unnest(df_w_models, model_coefs)),
-               c("name", "term", "estimate", "std.error", "statistic", "p.value", "signif"))
+               c("name", "model_name", "term", "estimate", "std.error", "statistic", "p.value", "signif"))
   expect_equal(nrow(df_w_coefs), 2*2)
   expect_true(all(df_w_coefs$term %in% c("(Intercept)", "x")))
 
@@ -71,9 +71,11 @@ test_that("regression functions work properly", {
   expect_s3_class(df_w_models <- nested_test_df %>% run_regression(model = lm(y ~ x), model_filter_condition = y < 0.5) , "tbl")
   expect_equal(nrow(df_w_models), 2L)
   expect_equal(df_w_models$model_fit[[1]]$residuals %>% length(), filter(test_df, name == "a", y < 0.5) %>% nrow())
+  expect_equal(df_w_models$model_name, c("lm(y ~ x)", "lm(y ~ x)"))
 
   # multi model
-  expect_error(nested_test_df %>% run_regression(list(m1 = lm(y ~ x), m1 = lm(y ~ x*I(x^2)))), "encountered duplicate name")
+  expect_error(nested_test_df %>% run_regression(list(m1 = lm(y ~ x), m1 = lm(y ~ x*I(x^2)))), "encountered duplicates")
+  expect_error(nested_test_df %>% run_regression(list(lm(y ~ x), lm(y ~ x))), "encountered duplicates")
   expect_s3_class(df_w_models2 <- nested_test_df %>% run_regression(list(m1 = lm(y ~ x), m2 = lm(y ~ x*I(x^2)))) , "tbl")
   expect_equal(nrow(df_w_models2), 4L)
   expect_equal(df_w_models2$name, c("a", "b", "a", "b"))
@@ -87,17 +89,17 @@ test_that("regression functions work properly", {
   # unnest coefficients
   expect_error(unnest_model_results(df_w_models, select = c(term, p.value)), "specify which .* to unnest")
   expect_equal(unnest_model_results(df_w_models, select = c(term, p.value), model_results = model_coefs) %>% names(),
-               c("name", "term", "p.value"))
+               c("name", "model_name", "term", "p.value"))
   expect_equal(unnest_model_results(df_w_models2, select = c(term, p.value), model_results = model_coefs) %>% names(),
                c("name", "model_name", "term", "p.value"))
   expect_error(unnest_model_results(df_w_models, model_results = DNE), "unknown column")
   expect_equal(df_w_models %>% mutate(my_test = model_coefs) %>%
                  unnest_model_results(select = c(term, p.value, signif), model_results = my_test) %>% names(),
-               c("name", "term", "p.value", "signif"))
+               c("name", "model_name", "term", "p.value", "signif"))
 
   # unnest summary
   expect_equal(unnest_model_results(df_w_models, select = c(r.squared, p.value), model_results = model_summary) %>% names(),
-               c("name", "r.squared", "p.value"))
+               c("name", "model_name", "r.squared", "p.value"))
 
   # grouped regressions
   expect_s3_class(df_w_models3 <- test_df %>%

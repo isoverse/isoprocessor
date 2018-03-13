@@ -135,11 +135,10 @@ unnest_model_results <- function(dt, model_results, select = everything(),
 #' run a set of regressions
 #'
 #' @param dt data table
-#' @param model the regression model or named list of regression models.
-#' If a named list is provided, the name(s) will be stored in the \code{model_name} column
+#' @param model the regression model or named list of regression models. If a named list is provided, the name(s) will be stored in the \code{model_name} column instead of the formula.
 #' @param model_data the nested model data column
 #' @param model_filter_condition a filter to apply to the data before running the regression, by default no filter
-#' @param model_name new column with the model names if any are supplied
+#' @param model_name new column with the model formulae or names if supplied
 #' @param model_fit the new model objects column
 #' @param model_coefs the new model coefficients nested data frame column
 #' @param model_summary the new model summary nested data frame column
@@ -186,19 +185,19 @@ run_regression <- function(dt, model, model_data = default(model_data), model_fi
   }
 
   # models data frame
-  models <- data_frame(
-    !!dt_new_cols$model_name := names(lquos),
-    model_quo = lquos
-  )
-
-  # keep the model name column? not if there isn't a name
-  if (all(nchar(models[[dt_new_cols$model_name]]) == 0))
-    models[[dt_new_cols$model_name]] <- NULL
+  models <-
+    data_frame(
+      model_formula = map_chr(lquos, quo_text),
+      !!dt_new_cols$model_name := ifelse(nchar(names(lquos)) > 0, names(lquos), model_formula),
+      model_quo = lquos
+    ) %>%
+    # don't keep separate formula column
+    select(-model_formula)
 
   # check for model names
   if (any(dups <- duplicated(models[[dt_new_cols$model_name]]))){
     dup_names <- models[[dt_new_cols$model_name]][dups]
-    glue("regressions with multiple models require unique model names, encountered duplicate name(s) '{collapse(dup_names, \"', '\")}'") %>%
+    glue("regressions with multiple models require unique model formulae or names (if specified), encountered duplicates: '{collapse(dup_names, \"', '\")}'") %>%
       stop(call. = FALSE)
   }
 
