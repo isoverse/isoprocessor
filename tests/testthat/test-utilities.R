@@ -151,19 +151,23 @@ test_that("inverting regressions work properly", {
   # sample data set
   set.seed(42)
   test_df <- expand.grid(
-    x1 = seq(1,10, length.out = 6),
-    x2 = c(NA_real_, seq(0.2, 1, length.out = 5)),
-    x3 = seq(0, 0.1, length.out = 6)
+    x1 = seq(1,10, length.out = 5),
+    x2 = c(0.1, 0.5, 1),
+    x3 = seq(0, 0.1, length.out = 4)
   ) %>%
     as_data_frame() %>%
     mutate(
-      name = sample(c("a", "b"), replace = TRUE, size = n()),
-      is_standard = sample(c(TRUE, FALSE, FALSE, FALSE), replace = TRUE, size = n()),
-      y = -1 + 5 * x1 + x1*x2*20 + 50 * sqrt(x2) + x3 + rnorm(length(x1), sd = 15)
+      name = c("a", "a", "b", "a", sample(c("a", "b"), replace = TRUE, size = n() - 4)),
+      is_standard = c(rep(FALSE, 4), sample(c(TRUE, FALSE), replace = TRUE, size = n() - 4)),
+      y = -1 + 5 * x1 + x1*x2*20 + 50 * sqrt(x2) + x3 + rnorm(length(x1), sd = 15),
+      # special case: missing data
+      x2 = ifelse(row_number() %in% c(1,2,3), NA_real_, x2),
+      # special case: way outside range
+      #x2 = ifelse(row_number() %in% c(4), 1e20, x2),
+      y = ifelse(row_number() %in% c(4), -1e10, y)
     )
   nested_test_df <- nest_data(test_df, name, nested_data = model_data)
-  #models <- quo(list(m1 = lm(y ~ x1), m2 = lm(y ~ x1 + I(sqrt(x2)) + x1:x2 + x3)))
-  models <- quo(list(m1 = lm(y ~ x1), m2 = lm(y ~ x1 + x2)))
+  models <- quo(list(m1 = lm(y ~ x1), m2 = lm(y ~ x1 + I(sqrt(x2)) + x1:x2 + x3)))
   df_w_models <- nested_test_df %>% run_regression(!!models, model_filter_condition = is_standard)
   df_w_nested_models <- nested_test_df %>% run_regression(!!models, nest_model = TRUE, model_filter_condition = is_standard)
 
@@ -173,6 +177,50 @@ test_that("inverting regressions work properly", {
   expect_error(nested_test_df %>% run_regression(lm(y + x1 ~ x2), model_filter_condition = is_standard) %>% apply_regression(x2),
                "multiple dependent.*not supported")
 
-  df_w_models %>% apply_regression(x1)
-  df_w_nested_models %>% apply_regression(x1, nested_model = TRUE)
+  # missing data or out of range troubles for the different data sets and models
+  expect_warning(df_w_models %>% filter(name == "a", model_name == "m1") %>% apply_regression(x1),
+                 "potential fit is too far outside the calibration range")
+  expect_warning(df_w_models %>% filter(name == "a", model_name == "m2") %>% apply_regression(x1),
+                 "Not enough data.*missing a value")
+  expect_warning(df_w_models %>% filter(name == "a", model_name == "m2") %>% apply_regression(x1),
+                 "potential fit is too far outside the calibration range")
+  expect_warning(df_w_models %>% filter(name == "b", model_name == "m2") %>%
+                   apply_regression(x1),
+                 "Not enough data.*missing a value")
+  expect_silent(out_direct <- df_w_models %>% filter(name == "b", model_name == "m1") %>% apply_regression(x1))
+  expect_silent(out_nested <- df_w_nested_models %>% filter(name == "b", model_name == "m1") %>%
+                   apply_regression(x1, nested_model = TRUE))
+
+  # check return columns
+  expect_equal(names(out_direct),
+               c("name", "model_data", "model_name", "model_enough_data",
+                 "model_fit", "model_range", "model_coefs", "model_summary"))
+  expect_equal(names(out_nested),
+               c("name", "model_data", "model_name", "model_enough_data",
+                 "model_params"))
+  # check nested and unnested equivalency
+  expect_equal(out_direct$model_data[[1]], out_nested$model_data[[1]])
+
+  # check for new columns in the data frame
+  base_cols <- c("x1", "x2", "x3", "is_standard", "y", "residual")
+  expect_equal(names(out_direct$model_data[[1]]), c(base_cols, "pred"))
+  expect_equal(
+    df_w_models %>% filter(name == "b", model_name == "m1") %>%
+      apply_regression(x1, calculate_error = TRUE) %>%
+      { .$model_data[[1]] } %>% names(),
+    c(base_cols, "pred", "pred_se")
+  )
+  expect_false(
+    df_w_models %>% filter(name == "b", model_name == "m1") %>%
+      apply_regression(x1, calculate_error = TRUE) %>%
+      { .$model_data[[1]]$pred_se } %>% is.na() %>% all())
+
+  # custom names
+  expect_equal(
+    df_w_models %>% filter(name == "b", model_name == "m1") %>%
+      apply_regression(x1, calculate_error = TRUE, predict_value = value, predict_error = error) %>%
+      { .$model_data[[1]] } %>% names(),
+    c(base_cols, "value", "error")
+  )
+
 })

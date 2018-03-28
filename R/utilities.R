@@ -193,7 +193,7 @@ run_regression <- function(dt, model, nest_model = FALSE,
       glue("'{params}' do not refer to valid models ",
            "({collapse(supported_models, sep = ', ', last = ' or ')})") %>% stop(call. = FALSE)
     else
-      glue("'{params}' does not refer to a valid models ",
+      glue("'{params}' does not refer to a valid model ",
            "({collapse(supported_models, sep = ', ', last = ' or ')})") %>% stop(call. = FALSE)
   }
 
@@ -337,10 +337,10 @@ run_grouped_regression <- function(dt, group_by = NULL, model = NULL, model_data
 #'
 #' @param dt data table with calibrations
 #' @param predict which value to calculate, must be one of the regression's independent variables
-#' @param calculate_error whether to estimate the standard error from the calibration (using the Wald method)
+#' @param calculate_error whether to estimate the standard error from the calibration (using the Wald method), stores the result in the new \code{predict_error} column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.
 #' @inheritParams run_regression
 #' @param predict_value the new column in the model_data that should hold the predicted value
-#' @param predict_error the new column in the model_data that should hold the error of the predicted value (only relevant if \code{calculate_erorr = TRUE})
+#' @param predict_error the new column in the model_data that should hold the error of the predicted value (only created if \code{calculate_error = TRUE})
 apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error = FALSE,
                               model_data = model_data, model_enough_data = model_enough_data,
                               model_name = model_name, model_fit = model_fit, model_range = model_range, model_params = model_params,
@@ -428,7 +428,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
           function(d, fit, name, x, range, y, other_xs) {
 
             # range
-            range_tolerance_escalation <- c(0) # c(0, 1, 10, 100, 1000)
+            range_tolerance_escalation <- c(0, 1, 10, 100, 1000)
 
             # check for enough data (standard eval to avoid quoting trouble)
             d_enough_data <- rowSums(is.na(d[c(y, other_xs)]) * 1) == 0
@@ -479,6 +479,12 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
                   } else if (is.null(out$error)) {
                     # no error estimates
                     estimate <- out$result
+                  } else if (str_detect(out$error$message, "not found in the search interval")) {
+                    problem <- glue(
+                      "No solution for '{x}' in the interval {range[1] - range_tolerance * diff(range)} ",
+                      "to {range[2] + range_tolerance * diff(range)}, potential fit is too far outside ",
+                      "the calibration range.") %>%
+                      as.character()
                   } else {
                     problem <- out$error$message
                   }
@@ -507,6 +513,11 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
                    " - {collapse(problems$message, sep = '\n - ')}") %>%
                 warning(immediate. = TRUE, call. = FALSE)
 
+            }
+
+            # remove error estimate column if not calculated
+            if (!calculate_error) {
+              d_prediction <- d_prediction %>% select(-!!sym(dt_new_cols$predict_error))
             }
 
             # return combined
