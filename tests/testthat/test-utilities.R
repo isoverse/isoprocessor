@@ -45,6 +45,8 @@ test_that("nesting and unnesting functions work properly", {
 
 })
 
+# regression functions =====
+
 test_that("regression functions work properly", {
 
   set.seed(42)
@@ -61,7 +63,7 @@ test_that("regression functions work properly", {
   expect_s3_class(df_w_models <- nested_test_df %>% run_regression(model = lm(y ~ x)), "tbl")
   expect_equal(nrow(df_w_models), 2L)
   expect_equal(df_w_models$model_fit[[1]]$residuals %>% length(), filter(test_df, name == "a") %>% nrow())
-  expect_equal(names(df_w_models), c("name", "model_data", "model_name", "model_enough_data", "model_fit", "model_coefs", "model_summary"))
+  expect_equal(names(df_w_models), c("name", "model_data", "model_name", "model_enough_data", "model_fit", "model_range", "model_coefs", "model_summary"))
   expect_equal(names(df_w_coefs <- unnest(df_w_models, model_coefs)),
                c("name", "model_name", "model_enough_data", "term", "estimate", "std.error", "statistic", "p.value", "signif"))
   expect_equal(nrow(df_w_coefs), 2*2)
@@ -69,8 +71,8 @@ test_that("regression functions work properly", {
 
   # single model nested outcome
   expect_s3_class(df_w_models <- nested_test_df %>% run_regression(model = lm(y ~ x), nest_model = TRUE), "tbl")
-  expect_equal(names(df_w_models), c("name", "model_data", "model_name", "model_enough_data", "model"))
-  expect_equal(names(unnest(df_w_models, model)), c("name", "model_data", "model_name", "model_enough_data", "model_fit", "model_coefs", "model_summary"))
+  expect_equal(names(df_w_models), c("name", "model_data", "model_name", "model_enough_data", "model_params"))
+  expect_equal(names(unnest(df_w_models, model_params)), c("name", "model_data", "model_name", "model_enough_data", "model_fit", "model_range", "model_coefs", "model_summary"))
 
   # single model with filter
   expect_s3_class(df_w_models <- nested_test_df %>% run_regression(model = lm(y ~ x), model_filter_condition = y < 0.5) , "tbl")
@@ -87,10 +89,10 @@ test_that("regression functions work properly", {
   expect_error(nested_test_df %>% run_regression(list(lm(y ~ x), lm(y ~ x))), "encountered duplicates")
   expect_s3_class(df_w_models2 <- nested_test_df %>% run_regression(list(m1 = lm(y ~ x), m2 = lm(y ~ x*I(x^2)))) , "tbl")
   expect_equal(nrow(df_w_models2), 4L)
-  expect_equal(df_w_models2$name, c("a", "b", "a", "b"))
-  expect_equal(df_w_models2$model_name, c("m1", "m1", "m2", "m2"))
+  expect_equal(df_w_models2$name, c("a", "a", "b", "b"))
+  expect_equal(df_w_models2$model_name, c("m1", "m2", "m1", "m2"))
   expect_equal(names(df_w_coefs2 <- unnest_select_data(df_w_models2, select = term, nested_data = model_coefs)),
-               c("name", "model_name", "model_enough_data", "term", "model_coefs", "model_data", "model_fit", "model_summary"))
+               c("name", "model_name", "model_enough_data", "term", "model_coefs", "model_data", "model_fit", "model_range", "model_summary"))
   expect_equal(nrow(df_w_coefs2), 2*2 + 2*4)
   expect_equal(filter(df_w_coefs2, model_name == "m1")$term %>% unique(), c("(Intercept)", "x"))
   expect_equal(filter(df_w_coefs2, model_name == "m2")$term %>% unique(), c("(Intercept)", "x", "I(x^2)", "x:I(x^2)"))
@@ -118,7 +120,59 @@ test_that("regression functions work properly", {
                                            model_name = test2,
                                            model_enough_data = test3,
                                            model_fit = test4,
-                                           model_coefs = test5,
-                                           model_summary = test6) , "tbl")
-  expect_equal(names(df_w_models3), c("name", "test1", "test2", "test3", "test4", "test5", "test6"))
+                                           model_range = test5,
+                                           model_coefs = test6,
+                                           model_summary = test7) , "tbl")
+  expect_equal(names(df_w_models3), c("name", "test1", "test2", "test3", "test4", "test5", "test6", "test7"))
+})
+
+# inverting regressions =====
+
+test_that("inverting regressions work properly", {
+
+  # parameter errors
+  expect_error(apply_regression(), "no data table supplied")
+  expect_error(apply_regression(data_frame()), "unknown column")
+  expect_error(apply_regression(data_frame(model_name = "test", model_data = TRUE, model_enough_data = TRUE, model_fit = TRUE, model_range = TRUE)),
+               "not.*correct column type")
+  expect_error(apply_regression(data_frame(model_name = "test", model_data = list(), model_enough_data = list(), model_fit = list(), model_range = list())),
+               "not.*correct column type")
+  expect_error(apply_regression(data_frame(), nested_model = TRUE), "unknown column")
+  expect_error(apply_regression(data_frame(model_name = "test", model_data = TRUE, model_enough_data = TRUE, model_params = TRUE), nested_model = TRUE),
+               "not.*correct column type")
+  expect_error(apply_regression(data_frame(model_name = "test", model_data = list(), model_enough_data = list(), model_params = list()), nested_model = TRUE),
+               "not.*correct column type")
+  expect_error(apply_regression(data_frame(model_name = "test", model_data = list(), model_enough_data = TRUE, model_params = list()), nested_model = TRUE),
+               "unknown column")
+  expect_error(apply_regression(data_frame(model_name = "test", model_data = list(42), model_enough_data = TRUE,
+                                            model_params = list(data_frame(model_fit = TRUE, model_range = TRUE))), nested_model = TRUE),
+               "not.*correct column type")
+
+  # sample data set
+  set.seed(42)
+  test_df <- expand.grid(
+    x1 = seq(1,10, length.out = 6),
+    x2 = c(NA_real_, seq(0.2, 1, length.out = 5)),
+    x3 = seq(0, 0.1, length.out = 6)
+  ) %>%
+    as_data_frame() %>%
+    mutate(
+      name = sample(c("a", "b"), replace = TRUE, size = n()),
+      is_standard = sample(c(TRUE, FALSE, FALSE, FALSE), replace = TRUE, size = n()),
+      y = -1 + 5 * x1 + x1*x2*20 + 50 * sqrt(x2) + x3 + rnorm(length(x1), sd = 15)
+    )
+  nested_test_df <- nest_data(test_df, name, nested_data = model_data)
+  #models <- quo(list(m1 = lm(y ~ x1), m2 = lm(y ~ x1 + I(sqrt(x2)) + x1:x2 + x3)))
+  models <- quo(list(m1 = lm(y ~ x1), m2 = lm(y ~ x1 + x2)))
+  df_w_models <- nested_test_df %>% run_regression(!!models, model_filter_condition = is_standard)
+  df_w_nested_models <- nested_test_df %>% run_regression(!!models, nest_model = TRUE, model_filter_condition = is_standard)
+
+  # apply regression
+  expect_error(apply_regression(df_w_models, predict = DNE), "not a regressor.*m1, m2")
+  expect_error(apply_regression(df_w_models, predict = x2), "not a regressor.*m1")
+  expect_error(nested_test_df %>% run_regression(lm(y + x1 ~ x2), model_filter_condition = is_standard) %>% apply_regression(x2),
+               "multiple dependent.*not supported")
+
+  df_w_models %>% apply_regression(x1)
+  df_w_nested_models %>% apply_regression(x1, nested_model = TRUE)
 })
