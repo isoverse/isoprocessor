@@ -339,12 +339,13 @@ run_grouped_regression <- function(dt, group_by = NULL, model = NULL, model_data
 #' @param predict which value to calculate, must be one of the regression's independent variables
 #' @param calculate_error whether to estimate the standard error from the calibration (using the Wald method), stores the result in the new \code{predict_error} column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.
 #' @inheritParams run_regression
-#' @param predict_value the new column in the model_data that should hold the predicted value
-#' @param predict_error the new column in the model_data that should hold the error of the predicted value (only created if \code{calculate_error = TRUE})
+#' @param predict_value the new column in the model_data that holds the predicted value
+#' @param predict_error the new column in the model_data that holds the error of the predicted value (only created if \code{calculate_error = TRUE})
+#' @param predict_in_range the new column in the model_data that holds whether a data entry is within the range of the calibration. Checks whether all dependent and independent variables in the regression model are within the range of the calibration and sets the \code{predict_in_range} flag to FALSE if any(!) of them are not - i.e. this column provides information on whether new values are extrapolated beyond a calibration model and treat the extrapolated ones with the appropriate care. Note that all missing predicted values (due to missing parameters) are also automatically flagged as not in range (\code{predict_in_range} = FALSE).
 apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error = FALSE,
                               model_data = model_data, model_enough_data = model_enough_data,
                               model_name = model_name, model_fit = model_fit, model_range = model_range, model_params = model_params,
-                              predict_value = pred, predict_error = pred_se) {
+                              predict_value = pred, predict_error = pred_se, predict_in_range = pred_in_range) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
@@ -381,10 +382,11 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
   }
 
   # new cols (+predict)
-  dt_new_cols <- get_new_column_names(predict = enquo(predict), predict_value = enquo(predict_value), predict_error = enquo(predict_error))
+  dt_new_cols <- get_new_column_names(predict = enquo(predict), predict_value = enquo(predict_value),
+                                      predict_error = enquo(predict_error), predict_in_range = enquo(predict_in_range))
 
   # check that predict variable is part of all regressions
-  dt_check <-
+  dt <-
     dt %>%
     mutate(
       # only allowing inverting regression for independent variables
@@ -400,14 +402,14 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
     )
 
   # safety checks
-  if (!all(dt_check$.predict_ok)) {
+  if (!all(dt$.predict_ok)) {
     glue("cannot apply regression - variable '{dt_new_cols$predict}' is not a regressor in the following model(s): ",
-         "{collapse(filter(dt_check, !.predict_ok)[[dt_cols$model_name]] %>% unique(), sep = ', ')}") %>%
+         "{collapse(filter(dt, !.predict_ok)[[dt_cols$model_name]] %>% unique(), sep = ', ')}") %>%
       stop(call. = FALSE)
   }
-  if (!all(dt_check$.predict_y_ok)) {
+  if (!all(dt$.predict_y_ok)) {
     glue("cannot apply regression - multiple dependent (y) variables are not supported, problematic model(s): ",
-         "{collapse(filter(dt_check, !.predict_y_ok)[[dt_cols$model_name]] %>% unique(), sep = ', ')}") %>%
+         "{collapse(filter(dt, !.predict_y_ok)[[dt_cols$model_name]] %>% unique(), sep = ', ')}") %>%
       stop(call. = FALSE)
   }
 
@@ -416,8 +418,8 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
   invest_interval_method <- if (calculate_error) "Wald" else "none"
 
   # apply inversion
-  dt_pred <-
-    dt_check %>%
+  dt <-
+    dt %>%
     mutate(
       !!dt_cols$model_data :=
         pmap(
@@ -456,7 +458,6 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
                   # cycle through range tolerance
                   for(range_tolerance in range_tolerance_escalation) {
                     # try to find fit
-                    test2 <<- .[other_xs]
                     out <- safe_invest(
                       fit, y0 = .[[y]], x0.name = x, data = ., newdata = .[other_xs],
                       interval = invest_interval_method,
@@ -521,17 +522,54 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
             }
 
             # return combined
-            left_join(d, d_prediction, by = "..rn..") %>%
+            left_join(d, d_prediction, by = "..rn..")
+          })
+    )
+
+  # test for range issues
+  # NOTE: currently only supported/evaluated for numeric values
+  dt <- dt %>%
+    mutate(
+      !!dt_cols$model_data :=
+        pmap(
+          list(d = !!sym(dt_cols$model_data), ranges = !!sym(dt_cols$model_range), x = .predict_x),
+          function(d, ranges, x) {
+
+            # account for renaming of predicted value
+            ranges <- ranges %>%
+              mutate(var = ifelse(var == x, dt_new_cols$predict_value, var))
+
+            # range information
+            d_range <- d[c("..rn..", unique(ranges$var))] %>%
+              gather(var, value, -..rn..) %>%
+              mutate(value = suppressMessages(as.numeric(value))) %>%
+              filter(!is.na(value)) %>%
+              left_join(ranges, by = "var") %>%
+              mutate(in_range = value >= min & value <= max) %>%
+              group_by(..rn..) %>%
+              summarize(!!dt_new_cols$predict_in_range := all(in_range))
+
+            # return values
+            d %>%
+              # join in ranges
+              left_join(d_range, by = "..rn..") %>%
+              # make sure values that don't have enough data evaluate to FALSE
+              mutate(!!dt_new_cols$predict_in_range :=
+                       ifelse(!..enough_data.., FALSE, !!sym(dt_new_cols$predict_in_range))) %>%
+              # cleanup remove temp columns
               select(-..rn.., -..enough_data.., -..problem..)
           })
-    ) %>%
+    )
+
+  # cleanup
+  dt <- dt %>%
     # remove helper columns
     select(-starts_with(".predict"))
 
   # remove unnested columns if in nested mode
   if (nested_model) {
-    dt_pred <- dt_pred %>% select(-!!sym(dt_cols$model_fit), -!!sym(dt_cols$model_range))
+    dt <- dt %>% select(-!!sym(dt_cols$model_fit), -!!sym(dt_cols$model_range))
   }
 
-  return(dt_pred)
+  return(dt)
 }

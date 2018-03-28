@@ -203,12 +203,12 @@ test_that("inverting regressions work properly", {
 
   # check for new columns in the data frame
   base_cols <- c("x1", "x2", "x3", "is_standard", "y", "residual")
-  expect_equal(names(out_direct$model_data[[1]]), c(base_cols, "pred"))
+  expect_equal(names(out_direct$model_data[[1]]), c(base_cols, "pred", "pred_in_range"))
   expect_equal(
     df_w_models %>% filter(name == "b", model_name == "m1") %>%
       apply_regression(x1, calculate_error = TRUE) %>%
       { .$model_data[[1]] } %>% names(),
-    c(base_cols, "pred", "pred_se")
+    c(base_cols, "pred", "pred_se", "pred_in_range")
   )
   expect_false(
     df_w_models %>% filter(name == "b", model_name == "m1") %>%
@@ -218,9 +218,9 @@ test_that("inverting regressions work properly", {
   # custom names
   expect_equal(
     df_w_models %>% filter(name == "b", model_name == "m1") %>%
-      apply_regression(x1, calculate_error = TRUE, predict_value = value, predict_error = error) %>%
+      apply_regression(x1, calculate_error = TRUE, predict_value = value, predict_error = error, predict_in_range = range) %>%
       { .$model_data[[1]] } %>% names(),
-    c(base_cols, "value", "error")
+    c(base_cols, "value", "error", "range")
   )
 
 })
