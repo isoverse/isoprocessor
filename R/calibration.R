@@ -42,35 +42,180 @@ iso_add_standards <- function(dt, stds, match_by = default(std_match_by), quiet 
 }
 
 #' Prepare data set for calibration
-#' @inheritParams iso_print_data_table
-#' @param stds the standards table
+#'
+#' Nests data set in preparation for calibration calculations. Use the \code{group_by} parameter to group analyses as appropriate for calibration. Use \link{iso_unnest_data} to easily pull out additional columns from the nested data frame in \code{all_data} at any point before, during or after calibration.
+#'
+#' @param dt data table
 #' @param group_by what to group by for indidual calibration calculations (use c(...) to select multiple) - set \code{group_by = NULL} to avoid grouping
-#' @param keep which column(s) to keep beyond the group_by (use c(...) to select multiple). Note that these should be unique across grouping variables, otherwise it will result in multiple lines of the same regression data per group.
-#' @param calibration_data column name for the combined calibration data
-#' @note FIXME write unit tests
+#' @return a nested data set with the \code{group_by} columns out front and the remaining data in a new nested column named \code{all_data}
 #' @export
-iso_prepare_for_calibration <- function(dt, group_by = default(group_by), calibration_data = default(calibration_data), quiet = default(quiet)) {
+iso_prepare_for_calibration <- function(dt, group_by = NULL, quiet = default(quiet)) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   group_quo <- enquo(group_by)
-  calib_quo <- enquo(calibration_data)
+  nested_data_quo <- quo(all_data)
   dt_cols <- get_column_names(!!enquo(dt), group_by = group_quo, n_reqs = list(group_by = "*"))
-  new_cols <- get_new_column_names(calibration_data = calib_quo)
+  new_cols <- get_new_column_names(nested_data = nested_data_quo)
+  if (new_cols$nested_data %in% names(dt))
+    glue("'{new_cols$nested_data}' column already exists, cannot overwrite") %>% stop(call. = FALSE)
 
   if (!quiet) {
     if (length(dt_cols$group_by) > 0)
-      glue("Info: preparing data for calibration by grouping based on '{collapse(dt_cols$group_by, \"', '\", last = \"' and '\")}' and nesting the grouped datasets into '{new_cols$calibration_data}'") %>%
+      glue("Info: preparing data for calibration by grouping based on ",
+           "'{collapse(dt_cols$group_by, \"', '\", last = \"' and '\")}'") %>%
       message()
     else
-      glue("Info: preparing data for calibration by nesting the entire dataset into '{new_cols$calibration_data}'") %>%
+      glue("Info: preparing data for calibration by nesting the entire dataset") %>%
       message()
   }
 
-  return(nest_data(dt, group_by = !!group_quo, nested_data = !!calib_quo))
+  return(nest_data(dt, group_by = !!group_quo, nested_data = !!nested_data_quo))
 }
 
 # CALIBRATIONS -----
+
+# convenience function for common calibration variables
+get_calibration_vars <- function(calibration) {
+  prefix_with_sep <- if (nchar(calibration) > 0) str_c(calibration, "_") else ""
+  list(
+    calib_name = if(calibration != "") as.character(glue("'{calibration}' ")) else "",
+    model_name = str_c(prefix_with_sep, "calib"),
+    model_enough_data = str_c(prefix_with_sep, "calib_ok"),
+    model_params = str_c(prefix_with_sep, "calib_params"),
+    residual = str_c(prefix_with_sep, "resid")
+  )
+}
+
+# convenience function for checking presence of calibration variables
+# @param cols the parts of get_calibration_vars that should be checked
+check_calibration_cols <- function(df, cols) {
+  # df name and data frame test
+  df_name <- enquo(df) %>% quo_text()
+  df <- enquo(df) %>% eval_tidy()
+  if (!is.data.frame(df))
+    glue("parameter {df_name} is not a data frame") %>% stop(call. = FALSE)
+
+  if (length(missing <- setdiff(unlist(cols), names(df))) > 0) {
+    glue("'{collapse(missing, sep = \"', '\", last = \"' and '\")}' refer(s) to unknown column(s) in data frame '{df_name}' - make sure to run iso_generate_calibration() first and to use the same 'calibration' parameter") %>%
+      stop(call. = FALSE)
+  }
+}
+
+#' Generate data calibration
+#'
+#' Generate a calibration for a specific variable based on one or multiple calibration models. Requires properly nested and grouped data, see \link{iso_prepare_for_calibration} for details. Note that to calibrate different variables, separate calls to this function should be issued each with different \code{calibration} names.
+#'
+#' @param dt nested data table with column \code{all_data} (see \link{iso_prepare_for_calibration})
+#' @param model a single regression model or a list of multiple alternative regression models for the calibration. If a named list is provided, the name(s) will be used instead of the formulaes for the model identification column. Note that if multiple models are provided, the entire data table rows will be duplicated to consider the different models in parallel.
+#' @param calibration an informative name for the calibration (could be e.g. \code{"d13C"} or \code{"conc"}). If provided, will be used as a prefix for the new columns generated by this function. This parameter is most useful if there are multiple variables in the data set that need to be calibrated (e.g. multiple delta values, concentration, etc.). If there is only a single variable to calibrate, the \code{calibration} parameter is completely optional and can just be left blank (the default).
+#' @param is_standard column or filter condition to determine which subset of data to actually use for the calibration (default is the \code{is_standard} field introduced by \code{\link{iso_add_standards}}).
+#' @return the data table with the following columns added (prefixed by the \code{calibration} parameter if provided):
+#' \itemize{
+#'   \item{\code{calib}: }{the name of the calibration if provided in the \code{model} parameter, otherwise the formula}
+#'   \item{\code{calib_ok}: }{a TRUE/FALSE column indicating whether there was enough data for calibration to be generated}
+#'   \item{\code{calib_params}: }{a nested dataframe that holds the actual regression model fit, coefficients and summary. These parameters are most easily accessed using the functions \code{\link{iso_unnest_calib_coefs}} and \code{\link{iso_unnest_calib_summary}}, or directly via \code{\link[tidyr]{unnest}}}
+#'   \item{\code{resid} within \code{all_data}: }{a new column within the nested \code{all_data} that holds the residuals for all standards used in the regression model}
+#' }
+#' @export
+iso_generate_calibration <- function(dt, model, calibration = "", is_standard = default(is_standard), quiet = default(quiet)) {
+
+  # safety checks
+  if (missing(dt)) stop("no data table supplied", call. = FALSE)
+  if (missing(model)) stop("no calibration model(s) supplied", call. = FALSE)
+  dt_quo <- enquo(dt)
+  model_quos <- enquo(model)
+  filter_quo <- enquo(is_standard) %>% resolve_defaults()
+  calib_vars <- get_calibration_vars(calibration)
+
+  # information
+  if (!quiet) {
+    if (quo_is_lang(model_quos) && quo_text(lang_head(model_quos)) %in% c("c", "list")) {
+      lquos <- quos(!!!lang_args(model_quos))
+    } else {
+      lquos <- quos(!!!model_quos)
+    }
+    models <- str_c(names(lquos) %>% { ifelse(nchar(.) > 0, str_c(., " = "), .) }, map_chr(lquos, quo_text))
+    plural <- if (length(models) > 1) "s" else ""
+    glue("Info: generating {calib_vars$calib_name}calibration based on {length(models)} model{plural} ('{collapse(models, \"', '\")}') ",
+         "for {nrow(dt)} data group(s) with standards filter '{quo_text(filter_quo)}'. ",
+         "Storing residuals in new column '{calib_vars$residual}'.") %>%
+      message()
+  }
+
+  # run regression
+  dt_w_regs <- run_regression(
+    !!dt_quo, model = !!model_quos, nest_model = TRUE,
+    model_data = all_data, model_filter_condition = !!filter_quo,
+    model_name = !!sym(calib_vars$model_name),
+    model_enough_data = !!sym(calib_vars$model_enough_data),
+    model_params = !!sym(calib_vars$model_params),
+    residual = !!sym(calib_vars$residual),
+    model_fit = model_fit, model_range = model_range, model_coefs = model_coefs, model_summary = model_summary
+  )
+
+  return(dt_w_regs)
+}
+
+
+#' Fetch problematic calibrations
+#'
+#' Fetch data sets that have problematic calibrations (not enough data or another error occured during calibration) for further inspection. This function is typically called after \link{iso_generate_calibration} to inspect problematic data sets. It requires the columns generated by \link{iso_generate_calibration} and the same \code{calibration} parameter used there.
+#'
+#' @inheritParams iso_generate_calibration
+#' @param select which columns to select for display - use \code{c(...)} to select multiple, supports all \link[dplyr]{select} syntax including renaming columns.
+#' @export
+iso_get_problematic_calibrations <- function(dt, calibration = "", select = everything(), quiet = default(quiet)) {
+
+  # safety checks
+  if (missing(dt)) stop("no data table supplied", call. = FALSE)
+  calib_vars <- get_calibration_vars(calibration)
+  check_calibration_cols(!!enquo(dt), calib_vars$model_enough_data)
+  dt_cols <- get_column_names(!!enquo(dt), select = enquo(select), n_reqs = list(select = "+"))
+
+  # fetch
+  dt_out <- dt %>%
+    filter(!(!!sym(calib_vars$model_enough_data))) %>%
+    dplyr::select(!!!c(dt_cols$select))
+
+  if(!quiet) {
+    # note: numbering does not make sense here because of the unique filter
+    if (nrow(dt_out) == 0)
+      glue("Info: there were no problematic calibrations") %>% message()
+    else
+      glue("Info: fetching problematic calibrations ({nrow(dt_out)} of {nrow(dt)})") %>%
+      message()
+  }
+
+  if (nrow(dt_out) == 0)
+    return(invisible(dt_out))
+  else
+    return(dt_out)
+}
+
+# Note: does not have a 'remove_info_colum' feature because it makes it harder to automatically remove problematic models during unnesting
+#' Remove problematic calibrations
+#'
+#' Remove calibrations that were problematic.
+#' @inheritParams iso_generate_calibration
+#' @export
+iso_remove_problematic_calibrations <- function(dt, calibration = "", quiet = default(quiet)) {
+  # safety checks
+  if (missing(dt)) stop("no data table supplied", call. = FALSE)
+  calib_vars <- get_calibration_vars(calibration)
+  check_calibration_cols(!!enquo(dt), calib_vars$model_enough_data)
+
+  # fetch
+  dt_out <- filter(dt, !!sym(calib_vars$model_enough_data))
+
+  if(!quiet) {
+    # note: numbering does not make sense here because of the unique filter
+    glue("Info: removing problematic calibrations ({nrow(dt) - nrow(dt_out)} of {nrow(dt)})") %>%
+      message()
+  }
+
+  return(dt_out)
+}
 
 #' Calibrate delta values
 #'
@@ -177,6 +322,25 @@ iso_calibrate_area <- function(dt, model, is_standard = default(is_standard), ca
 
 # INVERTING CALIBRATION --------
 
+#' Apply calibration
+#'
+#' @param dt nested data table with \code{all_data} and calibration columns (see \link{iso_generate_calibration})
+#' @param predict which value to calculate, must be one of the regression's independent variables
+#' @param calibration name of the calibration to apply, must match the name used in \link{iso_generate_calibration} (if any)
+#' @param calculate_error whether to estimate the standard error from the calibration
+#' @return the data table with the following columns added to the nested \code{all_data} \:
+#' \itemize{
+#'   \item{\code{predict} column with suffix \code{_pred}: }{the predicted value from applying the calibration}
+#'   \item{\code{predict} column with suffix \code{_pred_se}: }{the error of the predicated value propagated from the calibration}
+#' }
+#' @export
+iso_apply_calibration <- function(dt, predict, calibration = "", calculate_error = FALSE, quiet = default(quiet)) {
+
+  # safety checks
+
+
+}
+
 #' Apply delta calibration
 #' @inheritParams iso_calibrate_delta
 #' @param predict which value to calculate, must be one of the regression's independent variables
@@ -262,49 +426,72 @@ iso_apply_delta_calibrations <- function(dt, predict, delta_pred = default(delta
 
 # UNNESTING --------
 
-#' @details \code{iso_unnest_calib_data} unnests the data
-#' @rdname iso_unnest_model_results
-#' @export
-iso_unnest_calib_data <- function(dt, select = everything(), calibration_data = default(calibration_data), keep_remaining_nested_data = TRUE, keep_other_list_data = TRUE) {
-  unnest_model_results(dt, model_results = !!enquo(calibration_data), select = !!(enquo(select)), keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data)
-}
-
-# @note: could consider providing a combined delta_calib_coefs and summary function (similar to how iso_visualize_delta_calib_fits does it)
-#' Retrieve calibration information
+#' Unnest data
 #'
-#' @details \code{iso_unnest_delta_calib_coefs} unnests the regression fit coefficients for the delta calibration
-#' @inheritParams unnest_model_results
-#' @rdname iso_unnest_model_results
-#' @export
-iso_unnest_delta_calib_coefs <- function(dt, select = everything(), keep_remaining_nested_data = FALSE, keep_other_list_data = TRUE) {
-  unnest_model_results(dt, model_results = calib_delta_coefs, select = !!(enquo(select)), keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data)
-}
-
-#' @details \code{iso_unnest_delta_calib_summary} unnests the regression fit summary for the delta calibration
-#' @rdname iso_unnest_model_results
-#' @export
-iso_unnest_delta_calib_summary <- function(dt, select = everything(), keep_remaining_nested_data = FALSE, keep_other_list_data = TRUE) {
-  unnest_model_results(dt, model_results = calib_delta_summary, select = !!(enquo(select)), keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data)
-}
-
-# @note: could consider providing a combined area_calib_coefs and summary function (similar to how iso_visualize_delta_calib_fits does it)
-# @note: maybe combine all these different unnest functions in some way??
-#' Retrieve calibration information
+#' Pull out columns from the \code{all_data} column. Typically used at various points after a dataset is prepared for calibration with \link{iso_prepare_for_calibration}, calibrations are generated with \link{iso_generate_calibration} and/or calibrations are applied with \link{iso_apply_calibration}.
 #'
-#' @details \code{iso_unnest_area_calib_coefs} unnests the regression fit coefficients for the area calibration
-#' @inheritParams unnest_model_results
-#' @rdname iso_unnest_model_results
+#' @inheritParams unnest_model_column
 #' @export
-iso_unnest_area_calib_coefs <- function(dt, select = everything(), keep_remaining_nested_data = FALSE, keep_other_list_data = TRUE) {
-  unnest_model_results(dt, model_results = calib_area_coefs, select = !!(enquo(select)), keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data)
+iso_unnest_data <- function(dt, select = everything(), keep_remaining_nested_data = TRUE, keep_other_list_data = TRUE) {
+  unnest_select_data(dt, select = !!enquo(select), nested_data = all_data, keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data)
 }
 
-#' @details \code{iso_unnest_area_calib_summary} unnests the regression fit summary for the area calibration
-#' @rdname iso_unnest_model_results
+#' Unnest calibration coefficients
+#'
+#' Retrieve calibration coefficients for a calibration. Automatically removes problematic calibrations (see \link{iso_remove_problematic_calibrations}) if any are still present.
+#'
+#' @inheritParams iso_generate_calibration
+#' @inheritParams unnest_model_column
 #' @export
-iso_unnest_area_calib_summary <- function(dt, select = everything(), keep_remaining_nested_data = FALSE, keep_other_list_data = TRUE) {
-  unnest_model_results(dt, model_results = calib_area_summary, select = !!(enquo(select)), keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data)
+iso_unnest_calibration_coefs <- function(dt, calibration = "", select = everything(), keep_remaining_nested_data = FALSE, keep_other_list_data = TRUE) {
+  calib_vars <- get_calibration_vars(calibration)
+  check_calibration_cols(!!enquo(dt), calib_vars$model_params)
+
+  dt %>%
+    # remove problematic calibrations first
+    iso_remove_problematic_calibrations(calibration = calibration, quiet = TRUE) %>%
+    # unnest from the nested data frame
+    unnest_model_column(model_column = model_coefs, nested_model = TRUE, model_params = !!sym(calib_vars$model_params),
+                        select = !!(enquo(select)),
+                        keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data)
 }
 
+#' Unnest calibration summary
+#'
+#' Retrieve summary entries for a calibration. Automatically removes problematic calibrations (see \link{iso_remove_problematic_calibrations}) if any are still present.
+#'
+#' @inheritParams iso_generate_calibration
+#' @inheritParams unnest_model_column
+#' @export
+iso_unnest_calibration_summary <- function(dt, calibration = "", select = everything(), keep_remaining_nested_data = FALSE, keep_other_list_data = TRUE) {
+  calib_vars <- get_calibration_vars(calibration)
+  check_calibration_cols(!!enquo(dt), calib_vars$model_params)
 
+  dt %>%
+    # remove problematic calibrations first
+    iso_remove_problematic_calibrations(calibration = calibration, quiet = TRUE) %>%
+    # unnest from the nested data frame
+    unnest_model_column(model_column = model_summary, nested_model = TRUE, model_params = !!sym(calib_vars$model_params),
+                        select = !!(enquo(select)),
+                        keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data)
+}
 
+#' Unnest calibration range
+#'
+#' Retrieve range information for a calibration. Automatically removes problematic calibrations (see \link{iso_remove_problematic_calibrations}) if any are still present.
+#'
+#' @inheritParams iso_generate_calibration
+#' @inheritParams unnest_model_column
+#' @export
+iso_unnest_calibration_range <- function(dt, calibration = "", select = everything(), keep_remaining_nested_data = FALSE, keep_other_list_data = TRUE) {
+  calib_vars <- get_calibration_vars(calibration)
+  check_calibration_cols(!!enquo(dt), calib_vars$model_params)
+
+  dt %>%
+    # remove problematic calibrations first
+    iso_remove_problematic_calibrations(calibration = calibration, quiet = TRUE) %>%
+    # unnest from the nested data frame
+    unnest_model_column(model_column = model_range, nested_model = TRUE, model_params = !!sym(calib_vars$model_params),
+                        select = !!(enquo(select)),
+                        keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data)
+}
