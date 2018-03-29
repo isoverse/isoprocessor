@@ -84,7 +84,7 @@ iso_add_metadata <- function(dt, metadata, match_by = default(match_by), quiet =
 #' Fetch data table entries that have missing metadata. This function is typically called after \link{iso_add_metadata} to inspect problematic entries. Returns only unique rows, use the \code{select} parameter to select only the most informative columns. Requires the \code{has_metadata} column to be present.
 #'
 #' @param dt data with metadata added
-#' @param select which columns to select for display - use \code{c(...)} to select multiple, supports all \link[dplyr]{select} syntax including renaming columns. Includes all columns by default but this function is more useful with a smaller subset of identifying columns.
+#' @param select which columns to select - use \code{c(...)} to select multiple, supports all \link[dplyr]{select} syntax including renaming columns. Includes all columns by default but this function is more useful with a smaller subset of identifying columns.
 #' @family metadata functions
 #' @export
 iso_get_missing_metadata <- function(dt, select = everything(), quiet = default(quiet)) {
@@ -115,8 +115,9 @@ iso_get_missing_metadata <- function(dt, select = everything(), quiet = default(
 #' @inheritParams iso_get_missing_metadata
 #' @param remove_has_metadata_column whether to automatically remove the \code{has_metadata} column
 #' @family metadata functions
+#' @return the part of the data table that has metadata, with the \code{has_metadata} removed if \code{remove_has_metadata_column = TRUE}
 #' @export
-iso_remove_missing_metadata <- function(dt, quiet = default(quiet), remove_has_metadata_column = TRUE) {
+iso_remove_missing_metadata <- function(dt, remove_has_metadata_column = TRUE, quiet = default(quiet)) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
