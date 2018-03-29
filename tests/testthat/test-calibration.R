@@ -67,6 +67,6 @@ test_that("test that problematic calibrations can be removed properly", {
   expect_equal(out, data_frame(name = "y"))
 
   expect_message(out <- iso_remove_problematic_calibrations(data_frame(name = c("x", "y"), calib_ok = c(TRUE, FALSE))), "removing problematic.*1 of 2")
-  expect_equal(out, data_frame(name = "x", calib_ok = TRUE))
+  expect_equal(out, data_frame(name = "x"))
 
 })
