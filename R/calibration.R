@@ -193,13 +193,13 @@ iso_get_problematic_calibrations <- function(dt, calibration = "", select = ever
     return(dt_out)
 }
 
-# Note: does not have a 'remove_info_colum' feature because it makes it harder to automatically remove problematic models during unnesting
 #' Remove problematic calibrations
 #'
 #' Remove calibrations that were problematic.
 #' @inheritParams iso_generate_calibration
+#' @param remove_calib_ok_column whether to automatically remove the calibration ok (\code{calib_ok}) column after using it to remove problematic calibrations. This helps automatically clean up the data table and remove information that is no longer needed.
 #' @export
-iso_remove_problematic_calibrations <- function(dt, calibration = "", quiet = default(quiet)) {
+iso_remove_problematic_calibrations <- function(dt, calibration = "", remove_calib_ok_column = TRUE, quiet = default(quiet)) {
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   calib_vars <- get_calibration_vars(calibration)
@@ -208,11 +208,14 @@ iso_remove_problematic_calibrations <- function(dt, calibration = "", quiet = de
   # fetch
   dt_out <- filter(dt, !!sym(calib_vars$model_enough_data))
 
-  if(!quiet) {
-    # note: numbering does not make sense here because of the unique filter
+  if(!quiet && nrow(dt_out) != nrow(dt)) {
     glue("Info: removing problematic calibrations ({nrow(dt) - nrow(dt_out)} of {nrow(dt)})") %>%
       message()
   }
+
+  # reomve calib ok column
+  if (remove_calib_ok_column)
+    dt_out <- dt_out %>% select(-!!sym(calib_vars$model_enough_data))
 
   return(dt_out)
 }
@@ -338,97 +341,15 @@ iso_apply_calibration <- function(dt, predict, calibration = "", calculate_error
 
   # safety checks
 
-
+  # CONTINUE HERE
 }
 
-#' Apply delta calibration
-#' @inheritParams iso_calibrate_delta
-#' @param predict which value to calculate, must be one of the regression's independent variables
-#' @param delta_pred what should the name of the new prediction column be?
-#' @export
-iso_apply_delta_calibrations <- function(dt, predict, delta_pred = default(delta_pred), calibration_data = default(calibration_data), quiet = default(quiet)) {
-
-  # safety checks
-  dt_quo <- enquo(dt)
-  if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  if (length(missing <- setdiff(c("calib_delta_fit"), names(dt))) > 0) {
-    glue("missing columns in data table: '{collapse(missing, \"', '\")}'. Make sure to run iso_calibrate_delta() first and keep these columns.") %>%
-      stop(call. = FALSE)
-  }
-
-  # columns
-  dt_cols <- get_column_names(dt_quo, predict = enquo(predict), calibration_data = enquo(calibration_data))
-  dt_cols$calib_fit <- "calib_delta_fit"
-  dt_new_cols <- get_new_column_names(delta_pred = enquo(delta_pred))
-  dt_new_cols$delta_pred_se <- str_c(dt_new_cols$delta_pred, "_se")
-
-  # model details
-  dt_cal <- dt %>%
-    mutate(
-      # find the models' y variables
-      .y_var = map_chr(!!sym(dt_cols$calib_fit), function(m) {
-        y <- all.vars(m$terms[[2]])
-        if (length(y) != 1) stop(glue("incorrect number of dependent variables {length(y)}: {collapse(y)}"))
-        return(y)
-      }),
-      # find the models' auxiliary x variables
-      .k_vars = map2(!!sym(dt_cols$calib_fit), .y_var, function(m, y) {
-        all.vars(m$terms) %>% { .[.!=dt_cols$predict & .!=y] }
-      })
-    )
-
-  # new var to predict
-  x_pred <- "x_pred"
-  x_pred_se <- str_c(x_pred, "_se")
-
-  # independent variable to infer
-  x_var <- "x1"
-  # dependent variable in model
-  y_var <- all.vars(mod$terms[[2]])
-  # other variables in model
-  k_vars <- all.vars(mod$terms) %>% { .[.!=x_var & .!=y_var] }
-
-  if (length(y_var) != 1)
-    stop(glue("incorrect number of dependent variables {length(y_var)}: {collapse(y_var)}"))
-
-  invert_data <-
-    #sample_n(test_data, 10) %>%
-    test_data %>%
-    mutate(x_known = !!sym(x_var)) %>%
-    mutate(.x_min = min(!!sym(x_var), na.rm = TRUE),
-           .x_max = max(!!sym(x_var), na.rm = TRUE)) %>%
-    mutate(..row.. = row_number(y)) %>%
-    nest(-..row.., -.x_min, -.x_max) %>%
-    mutate(
-      result = pmap(
-        list(data = data, xmin = .x_min, xmax = .x_max),
-        function(data, xmin, xmax) {
-          range_tolerance_percent <- 1
-          range_tolerance <- range_tolerance_percent/2 * (xmax - xmin)
-          safe_invest <- safely(invest)
-          out <- safe_invest(mod, y0=data[[y_var]], interval = "Wald", x0.name = x_var,
-                             lower = xmin - range_tolerance, upper = xmax + range_tolerance, extendInt = "yes",
-                             newdata = data[k_vars])
-          if (is.null(out$error)) {
-            return(out$result)
-          } else {
-            warning(out$error$message, immediate. = TRUE, call. = FALSE)
-            return(list(estimate = NA, se = NA))
-          }
-        }),
-      !!x_pred := map_dbl(result, ~.x$estimate),
-      !!x_pred_se := map_dbl(result, ~.x$se)
-    ) %>%
-    select(-result, -..row..) %>%
-    unnest(data)
-
-}
 
 # UNNESTING --------
 
 #' Unnest data
 #'
-#' Pull out columns from the \code{all_data} column. Typically used at various points after a dataset is prepared for calibration with \link{iso_prepare_for_calibration}, calibrations are generated with \link{iso_generate_calibration} and/or calibrations are applied with \link{iso_apply_calibration}.
+#' Pull out columns from the \code{all_data} column. Typically used at various points after a dataset is prepared for calibration with \link{iso_prepare_for_calibration}, calibrations are generated with \link{iso_generate_calibration} and/or calibrations are applied with \link{iso_apply_calibration}. Note that unnesting of data columns that have multiple values per data set leads to row replication.
 #'
 #' @inheritParams unnest_model_column
 #' @export
@@ -438,7 +359,7 @@ iso_unnest_data <- function(dt, select = everything(), keep_remaining_nested_dat
 
 #' Unnest calibration coefficients
 #'
-#' Retrieve calibration coefficients for a calibration. Automatically removes problematic calibrations (see \link{iso_remove_problematic_calibrations}) if any are still present.
+#' Retrieve calibration coefficients for a calibration. Problematic calibrations are silently omitted (use \link{iso_get_problematic_calibtations} and \link{iso_remove_problematic_calibrations} to deal with them more explicitly).
 #'
 #' @inheritParams iso_generate_calibration
 #' @inheritParams unnest_model_column
@@ -447,18 +368,16 @@ iso_unnest_calibration_coefs <- function(dt, calibration = "", select = everythi
   calib_vars <- get_calibration_vars(calibration)
   check_calibration_cols(!!enquo(dt), calib_vars$model_params)
 
-  dt %>%
-    # remove problematic calibrations first
-    iso_remove_problematic_calibrations(calibration = calibration, quiet = TRUE) %>%
-    # unnest from the nested data frame
-    unnest_model_column(model_column = model_coefs, nested_model = TRUE, model_params = !!sym(calib_vars$model_params),
-                        select = !!(enquo(select)),
-                        keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data)
+  unnest_model_column(
+    dt, model_column = model_coefs, nested_model = TRUE, model_params = !!sym(calib_vars$model_params),
+    select = !!(enquo(select)),
+    keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data
+  )
 }
 
 #' Unnest calibration summary
 #'
-#' Retrieve summary entries for a calibration. Automatically removes problematic calibrations (see \link{iso_remove_problematic_calibrations}) if any are still present.
+#' Retrieve summary entries for a calibration. Problematic calibrations are silently omitted (use \link{iso_get_problematic_calibtations} and \link{iso_remove_problematic_calibrations} to deal with them more explicitly).
 #'
 #' @inheritParams iso_generate_calibration
 #' @inheritParams unnest_model_column
@@ -467,18 +386,17 @@ iso_unnest_calibration_summary <- function(dt, calibration = "", select = everyt
   calib_vars <- get_calibration_vars(calibration)
   check_calibration_cols(!!enquo(dt), calib_vars$model_params)
 
-  dt %>%
-    # remove problematic calibrations first
-    iso_remove_problematic_calibrations(calibration = calibration, quiet = TRUE) %>%
-    # unnest from the nested data frame
-    unnest_model_column(model_column = model_summary, nested_model = TRUE, model_params = !!sym(calib_vars$model_params),
-                        select = !!(enquo(select)),
-                        keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data)
+  unnest_model_column(
+    dt,
+    model_column = model_summary, nested_model = TRUE, model_params = !!sym(calib_vars$model_params),
+    select = !!(enquo(select)),
+    keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data
+  )
 }
 
 #' Unnest calibration range
 #'
-#' Retrieve range information for a calibration. Automatically removes problematic calibrations (see \link{iso_remove_problematic_calibrations}) if any are still present.
+#' Retrieve range information for a calibration. Problematic calibrations are silently omitted (use \link{iso_get_problematic_calibtations} and \link{iso_remove_problematic_calibrations} to deal with them more explicitly).
 #'
 #' @inheritParams iso_generate_calibration
 #' @inheritParams unnest_model_column
@@ -487,11 +405,10 @@ iso_unnest_calibration_range <- function(dt, calibration = "", select = everythi
   calib_vars <- get_calibration_vars(calibration)
   check_calibration_cols(!!enquo(dt), calib_vars$model_params)
 
-  dt %>%
-    # remove problematic calibrations first
-    iso_remove_problematic_calibrations(calibration = calibration, quiet = TRUE) %>%
-    # unnest from the nested data frame
-    unnest_model_column(model_column = model_range, nested_model = TRUE, model_params = !!sym(calib_vars$model_params),
-                        select = !!(enquo(select)),
-                        keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data)
+  unnest_model_column(
+    dt,
+    model_column = model_range, nested_model = TRUE, model_params = !!sym(calib_vars$model_params),
+    select = !!(enquo(select)),
+    keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data
+  )
 }
