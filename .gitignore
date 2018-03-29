@@ -35,4 +35,7 @@ vignettes/*.pdf
 
 # Auxiliary package files
 /tmp/
-
+*.pdf
+*.png
+*.jpg
+*.docx
