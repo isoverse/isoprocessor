@@ -56,7 +56,7 @@ nest_data <- function(dt, group_by = NULL, nested_data = nested_data) {
 #' Convenience function to remove nested columns in the data table (e.g. in preparation for printing to console or RMarkdown).
 #' @note not unit tested
 #' @export
-iso_remove_nested_data <- function(dt) {
+iso_remove_list_columns <- function(dt) {
 
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
 
@@ -69,9 +69,9 @@ iso_remove_nested_data <- function(dt) {
 #'
 #' note that this will lead to row duplication if the unnested variables have multiple entries per row of the \code{dt} data frame
 #' also note that this will remove rows that have NULL in the nested_data column
-#' @param select which columns to unnest from the nested data
+#' @param select which columns to unnest - use \code{c(...)} to select multiple, supports all \link[dplyr]{select} syntax including renaming columns. Includes all columns by default (i.e. unnests an entire nested data frame).
 #' @param nested_data which column to unnest the \code{select} from
-#' @param keep_remaining_nested_data whether to keep any remaining parts of the partially unnested data
+#' @param keep_remaining_nested_data whether to keep any remaining parts of the partially unnested data (irrelevant if \code{select = everything()})
 #' @param keep_other_list_data keep other list data columns (e.g. other data or model columns)
 unnest_select_data <- function(dt, select = everything(), nested_data = nested_data, keep_remaining_nested_data = TRUE, keep_other_list_data = TRUE, keep_only_unique = TRUE) {
   # safety checks and column matching
@@ -113,24 +113,59 @@ unnest_select_data <- function(dt, select = everything(), nested_data = nested_d
     # make sure no replication if only partial dataframe is unnested and rows are replicated despite remaining unique
     # includes ..row.. on purpose to make sure no unanticipated row collapes is possible
     unique() %>%
+    # rename the select columns
+    dplyr::rename(!!!select_cols$select) %>%
     # remove the ..row.. again (just used for ID purposes)
-    dplyr::select(-..row..) %>%
-    return()
+    dplyr::select(-..row..)
 }
 
 # note - documented but not exported
-#' Unnest model results
+#' Unnest model results column
 #'
-#' Convenience functions for unnesting model results
-#' @param model_results name of the model results column to unnest
-#' @param select which fields from the selected model result column to unnest
+#' Convenience functions for unnesting model columns (supports both if regression is stored nested or unnested - see \link{run_regression} for details).
+#'
+#' @param model_column name of the model column to unnest
+#' @param nested_model whether the model is nested, if TRUE, must also provide \code{model_params}
+#' @param model_params name of the model params column that holds all the other model columns (if \code{nested_model = TRUE})
 #' @inheritParams unnest_select_data
-unnest_model_results <- function(dt, model_results, select = everything(),
+unnest_model_column <- function(dt, model_column, model_params = model_params, nested_model = FALSE,
+                                 select = everything(),
                                  keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE) {
-  if (missing(model_results)) stop("specify which model results column to unnest", call. = FALSE)
-  unnest_select_data(dt, select = !!(enquo(select)), nested_data = !!enquo(model_results),
+
+  # safety checks
+  if (missing(model_column)) stop("specify which model column to unnest", call. = FALSE)
+  dt_quo <- enquo(dt)
+
+  # deal with nested senarios
+  if (nested_model) {
+    dt_cols <- get_column_names(!!dt_quo, model_params = enquo(model_params), type_reqs = list(model_params = "list"))
+
+    # unnest model params
+    original_cols <- names(dt)
+    dt <- unnest(dt, !!sym(dt_cols$model_params), .drop = FALSE)
+    model_cols <- setdiff(names(dt), original_cols)
+  }
+
+  # unnest model column
+  dt <- unnest_select_data(dt, select = !!enquo(select), nested_data = !!enquo(model_column),
                      keep_remaining_nested_data = keep_remaining_nested_data,
                      keep_other_list_data = keep_other_list_data)
+
+  # deal with nested scenarios
+  if (nested_model && keep_other_list_data) {
+    # rennest model params
+    model_cols <- model_cols[model_cols %in% names(dt)]
+    dt <- dt %>% mutate(..row_id.. = row_number())
+    dt <-
+      inner_join(
+        dt %>% dplyr::select(!!!map(model_cols, ~quo(-!!sym(.x)))),
+        dt %>% dplyr::select(..row_id.., !!!map(model_cols, sym)) %>% nest(-..row_id.., .key = !!dt_cols$model_params),
+        by = "..row_id.."
+      ) %>%
+      dplyr::select(-..row_id..)
+  }
+
+  return(dt)
 }
 
 # regressions =====
@@ -326,7 +361,7 @@ run_grouped_regression <- function(dt, group_by = NULL, model = NULL, model_data
     run_regression(model = !!model_quo, model_data = !!model_data_quo, ...)
 }
 
-# invert regression =====
+# apply regression =====
 
 # note - documented but not exported
 # @FIXME: fix documentation, the inheritance from run_regression is not quite right
