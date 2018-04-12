@@ -147,18 +147,16 @@ test_that("inverting regressions work properly", {
   # parameter errors
   expect_error(apply_regression(), "no data table supplied")
   expect_error(apply_regression(data_frame()), "unknown column")
-  expect_error(apply_regression(data_frame(model_name = "test", model_data = TRUE, model_enough_data = TRUE, model_fit = TRUE, model_range = TRUE)),
-               "not.*correct column type")
-  expect_error(apply_regression(data_frame(model_name = "test", model_data = list(), model_enough_data = list(), model_fit = list(), model_range = list())),
+  expect_error(apply_regression(data_frame(model_name = "test", model_data = TRUE, model_fit = TRUE, model_range = TRUE)),
                "not.*correct column type")
   expect_error(apply_regression(data_frame(), nested_model = TRUE), "unknown column")
   expect_error(apply_regression(data_frame(model_name = "test", model_data = TRUE, model_enough_data = TRUE, model_params = TRUE), nested_model = TRUE),
                "not.*correct column type")
-  expect_error(apply_regression(data_frame(model_name = "test", model_data = list(), model_enough_data = list(), model_params = list()), nested_model = TRUE),
+  expect_error(apply_regression(data_frame(model_name = "test", model_data = list(), model_params = TRUE), nested_model = TRUE),
                "not.*correct column type")
-  expect_error(apply_regression(data_frame(model_name = "test", model_data = list(), model_enough_data = TRUE, model_params = list()), nested_model = TRUE),
+  expect_error(apply_regression(data_frame(model_name = "test", model_data = list(), model_params = list()), nested_model = TRUE),
                "unknown column")
-  expect_error(apply_regression(data_frame(model_name = "test", model_data = list(42), model_enough_data = TRUE,
+  expect_error(apply_regression(data_frame(model_name = "test", model_data = list(42),
                                             model_params = list(data_frame(model_fit = TRUE, model_range = TRUE))), nested_model = TRUE),
                "not.*correct column type")
 

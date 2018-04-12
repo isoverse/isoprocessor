@@ -22,8 +22,6 @@ test_that("test that referencd peak visualization works", {
 
 test_that("visualization works", {
 
-  expect_error(iso_visualize_delta_calib_fits(), "no data table")
-  expect_error(iso_visualize_delta_calib_fits(ggplot2::mpg), "missing columns in data table")
-  # FIXME: continue here, elaborating on all the different error scenarios for the visualization function
+  # @FIXME implement visualization function test
 
 })
