@@ -31,6 +31,53 @@ iso_print_data_table <- function(dt, select = everything(), filter = TRUE, print
 
 }
 
+#' Generate an overview table with the data
+#'
+#' Convenience function to summarize means and standard deviationsfor one or multiple data columns. Use \link[dplyr]{group_by} prior to calling this function to generate the data table for individual subsets of the data. The generated data table always includes an \code{n} column with the number of records per group.
+#'
+#' @param dt data table, can already have a group_by if so desired
+#' @param ... which data columns to include in data overview
+#' @param cutoff the minimum number of records per group in order to include the group
+#' @export
+iso_generate_summary_table <- function(dt, ..., cutoff = 1) {
+
+  # safety checks
+  include <- ensyms(...)
+  if (length(include) == 0)
+    stop("no data columns provided, please select at least 1", call. = FALSE)
+
+  # add n
+  include <- quos(!!!c(sym("n"), include))
+
+  # selects
+  select_quos <- quos(!!!unlist(
+    c(groups(dt),
+      map2(
+        unname(include),
+        names(include),
+        function(col, name) {
+          mean <- str_c(quo_text(col), "_mean")
+          sd <- str_c(quo_text(col), "_sd")
+          mean_name <- if(nchar(name) > 0) str_c(name, "_mean") else mean
+          sd_name <- if(nchar(name) > 0) str_c(name, "_sd") else sd
+          list(sym(mean), sym(sd)) %>% setNames(c(mean_name, sd_name))
+        }
+      ))))
+
+  # generate overview
+  dt %>%
+    mutate(n = n()) %>%
+    summarize_at(include, funs(mean, sd)) %>%
+    # bring in right order
+    select(!!!select_quos) %>%
+    # clean up counts (n)
+    rename(n = n_mean) %>%
+    select(-n_sd) %>%
+    mutate(n = as.integer(n)) %>%
+    filter(n >= cutoff) %>%
+    arrange(desc(n))
+}
+
 
 # nesting ======
 
@@ -176,6 +223,7 @@ unnest_model_column <- function(dt, model_column, model_params = model_params, n
 #' @param dt data table
 #' @param model the regression model or named list of regression models. If a named list is provided, the name(s) will be stored in the \code{model_name} column instead of the formula.
 #' @param nest_model whether to nest the model outcome columns (for easier use in multi model systems), default is FALSE
+#' @param min_n_datapoints the minimum number of data points required for applying the model(s). Note that there is always an additional check to make sure the minimum number of degrees of freedom for each model is met. If the minimum number of degrees of freedom required is not met, the model will/can not be calculated no matter what \code{min_n_datapoints} is set to.
 #' @param model_data the nested model data column
 #' @param model_filter_condition a filter to apply to the data before running the regression (if only a subset of the data is part of the calibration data), by default no filter
 #' @param model_name new column with the model formulae or names if supplied
@@ -186,7 +234,7 @@ unnest_model_column <- function(dt, model_column, model_params = model_params, n
 #' @param model_summary the new model summary nested data frame column
 #' @param model_params the nested model information (only relevant if \code{nest_model = TRUE})
 #' @param residual name of the new residual column in the nested model_data - residuals are only calculated for rows that are part of the regression (as determined by \code{model_filter_condition})
-run_regression <- function(dt, model, nest_model = FALSE,
+run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
                            model_data = model_data, model_filter_condition = NULL,
                            model_name = model_name, model_enough_data = model_enough_data,
                            model_fit = model_fit, model_range = model_range,
@@ -258,7 +306,7 @@ run_regression <- function(dt, model, nest_model = FALSE,
     # evaluation of model
     mutate(
       # check if there is any data
-      !!dt_new_cols$model_enough_data := map_lgl(!!sym(dt_cols$model_data), ~nrow(filter(.x, !!filter_quo)) > 0),
+      !!dt_new_cols$model_enough_data := map_lgl(!!sym(dt_cols$model_data), ~nrow(filter(.x, !!filter_quo)) >= min_n_datapoints),
       # fit the model if there is any data
       !!dt_new_cols$model_fit :=
         pmap(list(m = model_quo, d = !!sym(dt_cols$model_data), run = !!sym(dt_new_cols$model_enough_data)),
@@ -294,11 +342,14 @@ run_regression <- function(dt, model, nest_model = FALSE,
         !!sym(dt_new_cols$model_fit), !!sym(dt_new_cols$model_enough_data),
         ~if (.y) {
           mutate(as_data_frame(tidy(.x)),
-                # add in significant level summary
-                signif = ifelse(p.value < 0.001, "***",
-                                ifelse(p.value < 0.01, "**",
-                                       ifelse(p.value < 0.05, "*",
-                                              ifelse(p.value < 0.1, ".", "")))))
+                 # add in significant level summary
+                 signif = case_when(
+                   p.value < 0.001 ~ "***",
+                   p.value < 0.01 ~ "**",
+                   p.value < 0.05 ~ "*",
+                   p.value < 0.1 ~ ".",
+                   TRUE ~ "-")
+          )
         } else NULL),
       # get the summary
       !!dt_new_cols$model_summary :=
@@ -378,9 +429,11 @@ run_grouped_regression <- function(dt, group_by = NULL, model = NULL, model_data
 #' @param predict_error the new column in the model_data that holds the error of the predicted value (only created if \code{calculate_error = TRUE})
 #' @param predict_in_range the new column in the model_data that holds whether a data entry is within the range of the calibration. Checks whether all dependent and independent variables in the regression model are within the range of the calibration and sets the \code{predict_in_range} flag to FALSE if any(!) of them are not - i.e. this column provides information on whether new values are extrapolated beyond a calibration model and treat the extrapolated ones with the appropriate care. Note that all missing predicted values (due to missing parameters) are also automatically flagged as not in range (\code{predict_in_range} = FALSE).
 apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error = FALSE,
-                              model_data = model_data, model_enough_data = model_enough_data,
-                              model_name = model_name, model_fit = model_fit, model_range = model_range, model_params = model_params,
-                              predict_value = pred, predict_error = pred_se, predict_in_range = pred_in_range) {
+                             model_data = model_data, model_name = model_name,
+                             model_fit = model_fit, model_range = model_range,
+                             model_params = model_params,
+                             predict_value = pred, predict_error = pred_se,
+                             predict_in_range = pred_in_range) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
@@ -390,8 +443,8 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
     # nested model
     dt_cols <- get_column_names(
       !!dt_quo, model_name = enquo(model_name), model_data = enquo(model_data),
-      model_enough_data = enquo(model_enough_data), model_params = enquo(model_params),
-      type_reqs = list(model_name = "character", model_data = "list", model_enough_data = "logical", model_params = "list"))
+      model_params = enquo(model_params),
+      type_reqs = list(model_name = "character", model_data = "list", model_params = "list"))
 
     # check for columns inside nested data
     dt_cols <- c(
@@ -411,9 +464,9 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
   } else {
     # not nested model
     dt_cols <- get_column_names(
-      !!dt_quo, model_data = enquo(model_data), model_enough_data = enquo(model_enough_data),
+      !!dt_quo, model_data = enquo(model_data),
       model_name = enquo(model_name), model_fit = enquo(model_fit), model_range = enquo(model_range),
-      type_reqs = list(model_name = "character", model_data = "list", model_enough_data = "logical", model_fit = "list", model_range = "list"))
+      type_reqs = list(model_name = "character", model_data = "list", model_fit = "list", model_range = "list"))
   }
 
   # new cols (+predict)
@@ -561,7 +614,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
           })
     )
 
-  # test for range issues
+  # test for in_range
   # NOTE: currently only supported/evaluated for numeric values
   dt <- dt %>%
     mutate(
@@ -570,9 +623,14 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
           list(d = !!sym(dt_cols$model_data), ranges = !!sym(dt_cols$model_range), x = .predict_x),
           function(d, ranges, x) {
 
-            # account for renaming of predicted value
+            # @NOTE: should the predicated variable be considered for the 'range' evaluation? I would say no because it leads to unexpected behavior on determining if standards are inside or outside a calibration.
             ranges <- ranges %>%
-              mutate(var = ifelse(var == x, dt_new_cols$predict_value, var))
+              filter(var != x)
+
+            # alternative: do consider the predicted variable
+            # # account for renaming of predicted value
+            # ranges <- ranges %>%
+            #   mutate(var = ifelse(var == x, dt_new_cols$predict_value, var))
 
             # range information
             d_range <- d[c("..rn..", unique(ranges$var))] %>%
