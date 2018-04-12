@@ -32,6 +32,7 @@ get_new_column_names <- function(...) {
 # Convert quo to text accounting for plain text and symbol quos
 quos_to_text <- isoreader:::quos_to_text
 
+# @NOTE: deprecate this with direct calls to map...sym, instead?
 # Turn a column or set of columns into quosures (a list of quosure objects) for use in tidyverse functions
 # such as group_by, nest, select, rename, etc.
 # @param cols column names
