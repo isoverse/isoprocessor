@@ -4,35 +4,41 @@
 \alias{run_regression}
 \title{run a set of regressions}
 \usage{
-run_regression(dt, model, model_data = default(model_data),
-  model_filter_condition = default(), model_name = default(model_name),
-  model_fit = default(model_fit), model_coefs = default(model_coefs),
-  model_summary = default(model_summary), residual = default(residual),
-  min_n_data_points = 2)
+run_regression(dt, model, nest_model = FALSE, min_n_datapoints = 1,
+  model_data = model_data, model_filter_condition = NULL,
+  model_name = model_name, model_enough_data = model_enough_data,
+  model_fit = model_fit, model_range = model_range,
+  model_coefs = model_coefs, model_summary = model_summary,
+  model_params = model_params, residual = residual)
 }
 \arguments{
 \item{dt}{data table}
 
-\item{model}{the regression model or named list of regression models.
-If a named list is provided, the name(s) will be stored in the \code{model_name} column}
+\item{model}{the regression model or named list of regression models. If a named list is provided, the name(s) will be stored in the \code{model_name} column instead of the formula.}
+
+\item{nest_model}{whether to nest the model outcome columns (for easier use in multi model systems), default is FALSE}
+
+\item{min_n_datapoints}{the minimum number of data points required for applying the model(s). Note that there is always an additional check to make sure the minimum number of degrees of freedom for each model is met. If the minimum number of degrees of freedom required is not met, the model will/can not be calculated no matter what \code{min_n_datapoints} is set to.}
 
 \item{model_data}{the nested model data column}
 
-\item{model_filter_condition}{a filter to apply to the data before running the regression, by default no filter}
+\item{model_filter_condition}{a filter to apply to the data before running the regression (if only a subset of the data is part of the calibration data), by default no filter}
 
-\item{model_name}{new column with the model names if any are supplied}
+\item{model_name}{new column with the model formulae or names if supplied}
+
+\item{model_enough_data}{new column with information on whether the model has enough data (based on the required degrees of freedom for the model)}
 
 \item{model_fit}{the new model objects column}
+
+\item{model_range}{the range of each variable in the model}
 
 \item{model_coefs}{the new model coefficients nested data frame column}
 
 \item{model_summary}{the new model summary nested data frame column}
 
-\item{residual}{the new residual column in the nested model_data}
+\item{model_params}{the nested model information (only relevant if \code{nest_model = TRUE})}
 
-\item{min_n_data_points}{- the minimum number of data points required for the regression}
-
-\item{residuals}{resid name of the residuals column}
+\item{residual}{name of the new residual column in the nested model_data - residuals are only calculated for rows that are part of the regression (as determined by \code{model_filter_condition})}
 }
 \description{
 run a set of regressions

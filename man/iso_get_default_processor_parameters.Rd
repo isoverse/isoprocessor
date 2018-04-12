@@ -4,10 +4,7 @@
 \alias{iso_get_default_processor_parameters}
 \title{Get the current default processor parameters}
 \usage{
-iso_get_default_processor_parameters(data = NULL)
-}
-\arguments{
-\item{data}{can be used to include this function call within a pipeline}
+iso_get_default_processor_parameters()
 }
 \description{
 Retrieve a table with all default parameters for the isoprocessor package

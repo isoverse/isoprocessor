@@ -4,23 +4,16 @@
 \alias{iso_prepare_for_calibration}
 \title{Prepare data set for calibration}
 \usage{
-iso_prepare_for_calibration(dt, group_by = default(group_by),
-  calibration_data = default(calibration_data), quiet = default(quiet))
+iso_prepare_for_calibration(dt, group_by = NULL, quiet = default(quiet))
 }
 \arguments{
 \item{dt}{data table}
 
 \item{group_by}{what to group by for indidual calibration calculations (use c(...) to select multiple) - set \code{group_by = NULL} to avoid grouping}
-
-\item{calibration_data}{column name for the combined calibration data}
-
-\item{stds}{the standards table}
-
-\item{keep}{which column(s) to keep beyond the group_by (use c(...) to select multiple). Note that these should be unique across grouping variables, otherwise it will result in multiple lines of the same regression data per group.}
+}
+\value{
+a nested data set with the \code{group_by} columns out front and the remaining data in a new nested column named \code{all_data}
 }
 \description{
-Prepare data set for calibration
-}
-\note{
-FIXME write unit tests
+Nests data set in preparation for calibration calculations. Use the \code{group_by} parameter to group analyses as appropriate for calibration. Use \link{iso_unnest_data} to easily pull out additional columns from the nested data frame in \code{all_data} at any point before, during or after calibration.
 }

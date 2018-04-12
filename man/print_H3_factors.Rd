@@ -6,7 +6,7 @@
 \usage{
 print_H3_factors(dt, file_id = default(file_id),
   file_datetime = default(file_datetime), H3_factor = default(H3_factor),
-  ...)
+  is_H3_factor_file = default(is_H3_factor_file), ...)
 }
 \description{
 Print H3 factor summary

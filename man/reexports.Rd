@@ -24,6 +24,8 @@
 \alias{\%>\%}
 \alias{reexports}
 \alias{filter}
+\alias{reexports}
+\alias{unnest}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -38,5 +40,7 @@ below to see their documentation.
   \item{magrittr}{\code{\link[magrittr]{\%>\%}}}
 
   \item{readr}{\code{\link[readr]{parse_number}}, \code{\link[readr]{parse_logical}}, \code{\link[readr]{parse_integer}}, \code{\link[readr]{parse_double}}, \code{\link[readr]{parse_datetime}}}
+
+  \item{tidyr}{\code{\link[tidyr]{unnest}}}
 }}
 

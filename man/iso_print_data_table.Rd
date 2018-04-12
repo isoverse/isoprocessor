@@ -28,3 +28,6 @@ the passed in data table (for piping)
 \description{
 Convenience function to print a data table as part of a pipe.
 }
+\note{
+this is not working as well as planned - consider removing again or just allowing it to be a simplifying function..
+}

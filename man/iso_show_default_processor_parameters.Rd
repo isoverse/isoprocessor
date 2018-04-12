@@ -18,6 +18,9 @@ Note that if the output is in RMarkdown chunks, the chunk option must have \code
 \description{
 Shows a table with the default function parameters for this package.
 }
+\note{
+DEPRECATE
+}
 \seealso{
 Other settings functions: \code{\link{iso_get_default_processor_parameters}},
   \code{\link{iso_set_default_process_parameters}}

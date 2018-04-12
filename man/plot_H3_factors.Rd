@@ -5,7 +5,8 @@
 \title{Plot H3 factor}
 \usage{
 plot_H3_factors(dt, file_datetime = default(file_datetime),
-  H3_factor = default(H3_factor), color = low_amp,
+  H3_factor = default(H3_factor),
+  is_H3_factor_file = default(is_H3_factor_file), color = low_amp,
   label = default(file_id), date_breaks = "12 hours",
   date_labels = "\%b \%d - \%H:\%m")
 }

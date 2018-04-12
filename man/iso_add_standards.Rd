@@ -4,21 +4,24 @@
 \alias{iso_add_standards}
 \title{Add calibration standards}
 \usage{
-iso_add_standards(dt, stds, match_by = default(compound),
-  is_standard = default(is_standard), quiet = default(quiet))
+iso_add_standards(dt, stds, match_by = default(std_match_by),
+  quiet = default(quiet))
 }
 \arguments{
 \item{dt}{data table}
 
-\item{stds}{the standards table}
+\item{stds}{standards data frame}
 
-\item{match_by}{default is the compound parameter also used in peak mapping}
+\item{match_by}{what column(s) to match the standards by}
 
 \item{is_standard}{new column that holds information about what is a standard and what isn't}
 }
+\value{
+data frame with standards data frame merged in and the following information column added:
+\itemize{
+\item{\code{is standard}: }{a logical TRUE/FALSE indicating which data table entry is a standard}
+}
+}
 \description{
 Add calibration standards
-}
-\note{
-FIXME write unit tests
 }
