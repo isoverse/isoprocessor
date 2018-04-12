@@ -60,7 +60,7 @@ iso_plot_ref_peaks <- function(dt, is_ref_condition, ratio = default(ratio), gro
 #' Visualize calibration coefficients and summary.
 #'
 #' @param x the x axis aesthetic for the calibration parameters, can be datetime, text or numeric
-#' @param include_from_summary which parameters from the fit summary to include
+#' @param select_from_summary which parameters from the fit summary to include, by default includes the adjusted R2 (renamed just \code{R2}) and the root mean square deviation (\code{RMSD}), which R often calls \link[stats]{sigma} or residual standard deviation (often also called residual standard error and root mean square error instead of deviation, or standard error of the regression).
 #' @param color variable to use for color aesthetic for the plot
 #' @param shape variable to use for shape aesthetic for the plot
 #' @param size variable to use for size aesthetic for the plot
@@ -68,7 +68,7 @@ iso_plot_ref_peaks <- function(dt, is_ref_condition, ratio = default(ratio), gro
 #' @param date_labels datetime label pattern for x axis if it is a datetime
 #' @export
 iso_plot_calibration_parameters <- function(dt, calibration = "", x,
-                                       include_from_summary = c(R2 = adj.r.squared, RMS = deviance),
+                                       select_from_summary = c(R2 = adj.r.squared, RMSD = sigma),
                                        color = NULL, shape = NULL, size = NULL,
                                        date_breaks = "2 hours", date_labels = "%d %b %H:%M") {
 
@@ -84,12 +84,11 @@ iso_plot_calibration_parameters <- function(dt, calibration = "", x,
   calib_coefs <- dt %>%
     iso_unnest_calibration_coefs(
       calibration = calibration,
-      select = c(term, estimate, std.error),
       keep_other_list_data = FALSE
     )
 
   # pull out requested summary
-  select_quo <- enquo(include_from_summary)
+  select_quo <- enquo(select_from_summary)
   calib_summary <- dt %>%
     iso_unnest_calibration_summary(
       calibration = calibration,
@@ -103,12 +102,19 @@ iso_plot_calibration_parameters <- function(dt, calibration = "", x,
     calib_summary <- calib_summary %>%
       rename(!!!map(cs_cols$select, sym)) %>%
       gather(term, estimate, !!!map(names(cs_cols$select), sym))
-    visualization_data <- bind_rows(calib_coefs, calib_summary)
+    visualization_data <-
+      bind_rows(calib_coefs, calib_summary)
+
+    # make signif available for use
+    if ("signif" %in% names(visualization_data))
+      visualization_data <- visualization_data %>%
+      mutate(signif = ifelse(is.na(signif), "NA", signif))
+
   } else {
     visualization_data <- calib_coefs
   }
 
-  # check column availability
+  # column quos
   vis_quos <-
     list(x = enquo(x), color = enquo(color), shape = enquo(shape), size = enquo(size))
 
@@ -147,63 +153,101 @@ iso_plot_calibration_parameters <- function(dt, calibration = "", x,
 
 #@ implement me
 iso_plot_calibration_range <- function() {
-
+  stop("sorry, not implmeneted yet", call. = FALSE)
 }
 
 #' Visualize the data
 #'
-#' General purpose visualization function.
+#' General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with \link[ggplot2]{facet_wrap} or \link[ggplot2]{theme} calls).
 #'
 #' @inheritParams iso_map_peaks
 #' @inheritParams iso_visualize_calibration_parameters
 #' @param y which columns to visualize, combine with c()
-#' @param group what to group by, multiple columns allowed (combine with c(...)), usually not necessary if color or other grouping is defined
-#' @param lines whether to plot lines
-#' @param points whether to plot points
+#' @param group what to group by, multiple columns allowed (combine with paste(...)), usually not necessary if groupings are fully defined through other aesthetics
+#' @param y_error an error column for drawing y error bars - if multiple \code{y} are provided, error needs to point to the same number of columns
+#' @param lines whether to plot lines (TRUE by default)
+#' @param points whether to plot points (FALSE by default)
 #' @export
 #' @note should probably make sure that the default columns for gather 'panel' and 'value' do not exist...
 #' @note it would be great to allow renaming of the columns via this (especially the y column)
 #' @export
-iso_visualize_data <- function(dt, x, y, group = NULL, color = NULL, shape = NULL, size = NULL, linetype = NULL, lines = TRUE, points = FALSE) {
+iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, shape = NULL, size = NULL, linetype = NULL, lines = TRUE, points = FALSE) {
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   if (missing(x)) stop("have to provide an x to plot", call. = FALSE)
   if (missing(y)) stop("have to provide at least one column to plot", call. = FALSE)
-  #Fixme, continue here
-  vis_cols <- get_column_names(!!enquo(dt), x = enquo(x), y = enquo(y), group = enquo(group),
-                              color = enquo(color), shape = enquo(shape), linetype = enquo(linetype), size = enquo(size),
-                              n_reqs = list(y = "+", group = "*", color = "?", shape = "?", linetype = "?", size = "?"))
+
+  # quoss
+  vis_quos <-
+    list(dt = enquo(dt),
+         x = enquo(x), y = enquo(y), y_error = enquo(y_error),
+         group = enquo(group),
+         color = enquo(color), shape = enquo(shape),
+         linetype = enquo(linetype), size = enquo(size))
+
+  # check existence of ys and errors
+  dt_cols <- get_column_names(!!vis_quos$dt, y = vis_quos$y, y_error = vis_quos$y_error,
+                              n_reqs = list(y = "+", y_error = "*"))
+
+  # double check same number of ys and errors
+  if (length(dt_cols$y_error) > 0 && length(dt_cols$y) != length(dt_cols$y_error))
+    glue("not the same number of y ({collapse(dt_cols$y, sep = ', ')}) and ",
+         "y_error columns ({collapse(dt_cols$y_error, sep = ', ')}) provided") %>%
+    stop(call. = FALSE)
 
   # gather data
-  visualization_data <- gather(dt, panel, value, !!!cols_to_quos(vis_cols$y))
+  dt$..row_id.. <- 1:nrow(dt)
+  visualization_data <- gather(dt, panel, y_value, !!!map(dt_cols$y, sym))
 
-  # group quos (cols_to_quos does not work in this instance since it )
-  group_quos <- quo(str_c(!!!cols_to_symbol_list(vis_cols$group)))
+  # y_errors
+  if (length(dt_cols$y_error) > 0) {
+    y_error_data <- gather(dt, panel_y_error, y_error, !!!map(dt_cols$y_error, sym))
+    visualization_data <-
+      visualization_data %>%
+      left_join(
+        data_frame(panel = dt_cols$y, panel_y_error = dt_cols$y_error),
+        by = "panel"
+      ) %>%
+      left_join(
+        select(y_error_data, ..row_id.., panel_y_error, y_error),
+        by = "panel_y_error"
+      ) %>%
+      select(-panel_y_error)
+  }
 
   # generate plot
   p <- visualization_data %>%
     # make sure panel factor is in order
     mutate(panel = as_factor(panel)) %>%
-    filter(!is.na(value)) %>%
+    filter(!is.na(y_value)) %>%
     ggplot() +
-    aes_q(x = sym(vis_cols$x), y = sym("value"),
-          group = if(!is_empty(vis_cols$group)) group_quos else NULL,
-          color = if(!is_empty(vis_cols$color)) sym(vis_cols$color) else NULL,
-          shape = if(!is_empty(vis_cols$shape)) sym(vis_cols$shape) else NULL,
-          linetype = if(!is_empty(vis_cols$linetype)) sym(vis_cols$linetype) else NULL,
-          size = if(!is_empty(vis_cols$size)) sym(vis_cols$size) else NULL
+    # aesthetics
+    aes(x = !!vis_quos$x, y = y_value,
+        group = !!if(!quo_is_null(vis_quos$group)) vis_quos$group else quo(),
+        color = !!if(!quo_is_null(vis_quos$color)) vis_quos$color else quo(),
+        shape = !!if(!quo_is_null(vis_quos$shape)) vis_quos$shape else quo(),
+        linetype = !!if(!quo_is_null(vis_quos$linetype)) vis_quos$linetype else quo(),
+        size = !!if(!quo_is_null(vis_quos$size)) vis_quos$size else quo()
     ) +
     facet_wrap(~panel, ncol = 1, scales = "free_y") +
     theme_bw() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
     theme(plot.margin = margin(10, 5, 15, 20)) +
     labs(y="")
 
+  # y error bars
+  if (length(dt_cols$y_error) > 0) {
+    p <- p + geom_errorbar(
+      data = function(df) filter(df, !is.na(y_error)),
+      mapping = aes(ymin = y_value - y_error, ymax = y_value + y_error),
+      width = 0)
+  }
+
   # lines and points
   if (lines) {
     p <- p + geom_line()
   }
   if (points) {
-    p <- p + { if (is_empty(vis_cols$size)) geom_point(size = 4) else geom_point() }
+    p <- p +  { if (quo_is_null(vis_quos$size)) geom_point(size = 4) else geom_point() }
   }
 
   return(p)
