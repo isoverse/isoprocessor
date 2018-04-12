@@ -114,11 +114,11 @@ check_calibration_cols <- function(df, cols) {
 #' \itemize{
 #'   \item{\code{calib}: }{the name of the calibration if provided in the \code{model} parameter, otherwise the formula}
 #'   \item{\code{calib_ok}: }{a TRUE/FALSE column indicating whether there was enough data for calibration to be generated}
-#'   \item{\code{calib_params}: }{a nested dataframe that holds the actual regression model fit, coefficients and summary. These parameters are most easily accessed using the functions \code{\link{iso_unnest_calib_coefs}} and \code{\link{iso_unnest_calib_summary}}, or directly via \code{\link[tidyr]{unnest}}}
+#'   \item{\code{calib_params}: }{a nested dataframe that holds the actual regression model fit, coefficients, summary and data range. These parameters are most easily accessed using the functions \code{\link{iso_unnest_calibration_coefs}}, \code{\link{iso_unnest_calibration_summary}}, \code{\link{iso_unnest_calibration_parameters}}, \code{\link{iso_unnest_calibration_range}}, or directly via \code{\link[tidyr]{unnest}}}
 #'   \item{\code{resid} within \code{all_data}: }{a new column within the nested \code{all_data} that holds the residuals for all standards used in the regression model}
 #' }
 #' @export
-iso_generate_calibration <- function(dt, model, calibration = "", is_standard = default(is_standard), quiet = default(quiet)) {
+iso_generate_calibration <- function(dt, model, calibration = "", is_standard = default(is_standard), min_n_datapoints = 2, quiet = default(quiet)) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
@@ -145,7 +145,8 @@ iso_generate_calibration <- function(dt, model, calibration = "", is_standard = 
 
   # run regression
   dt_w_regs <- run_regression(
-    !!dt_quo, model = !!model_quos, nest_model = TRUE,
+    dt = dt, model = !!model_quos, nest_model = TRUE,
+    min_n_datapoints = min_n_datapoints,
     model_data = all_data, model_filter_condition = !!filter_quo,
     model_name = !!sym(calib_vars$model_name),
     model_enough_data = !!sym(calib_vars$model_enough_data),
@@ -220,128 +221,66 @@ iso_remove_problematic_calibrations <- function(dt, calibration = "", remove_cal
   return(dt_out)
 }
 
-#' Calibrate delta values
-#'
-#' Before running this function, make sure to group the data appropriately by running \code{\link{iso_prepare_for_calibration}}.
-#'
-#' @inheritParams iso_prepare_for_calibration
-#' @param model one or more models to run delta calibration with
-#' @param is_standard column or filter condition to determine which data to use for the calibration (default is the field introduced by \code{\link{iso_add_standards}})
-#' @param delta_residual name of the new column for keeping track of the residuals of the calibration model
-#' @export
-iso_calibrate_delta <- function(dt, model, is_standard = default(is_standard), calibration_data = default(calibration_data), delta_residual = default(delta_residual), quiet = default(quiet)) {
-
-  # safety checks
-  if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  if (missing(model)) stop("no calibration model(s) supplied", call. = FALSE)
-  dt_quo <- enquo(dt)
-  model_quos <- enquo(model)
-  filter_quo <- enquo(is_standard) %>% resolve_defaults()
-  resid_quo <- enquo(delta_residual) %>% resolve_defaults()
-  data_quo <- enquo(calibration_data) %>% resolve_defaults()
-
-  # information
-  if (!quiet) {
-    if (quo_is_lang(model_quos) && quo_text(lang_head(model_quos)) %in% c("c", "list")) {
-      lquos <- quos(!!!lang_args(model_quos))
-    } else {
-      lquos <- quos(!!!model_quos)
-    }
-    models <- str_c(names(lquos) %>% { ifelse(nchar(.) > 0, str_c(., " = "), .) }, map_chr(lquos, quo_text))
-    plural <- if (length(models) > 1) "s" else ""
-    glue("Info: calculating delta calibration fits based on {length(models)} model{plural} ('{collapse(models, \"', '\")}') ",
-         "for {nrow(dt)} data group(s) in '{quo_text(data_quo)}' with filter '{quo_text(filter_quo)}'; storing residuals in '{quo_text(resid_quo)}'.") %>% message()
-  }
-
-  # run regression
-  min_n_data_points <- 2
-  dt_w_regs <- run_regression(
-    !!dt_quo, model = !!model_quos, model_data = !!data_quo, model_filter_condition = !!filter_quo,
-    model_name = calib_delta_name, model_fit = calib_delta_fit,
-    model_coefs = calib_delta_coefs, model_summary = calib_delta_summary,
-    residual = !!resid_quo, min_n_data_points = min_n_data_points
-  )
-
-  # information on missing regs
-  missing_regs <- dt_w_regs %>% filter(map_lgl(calib_delta_fit, is.null))
-  if (nrow(missing_regs) > 0) {
-    glue("{nrow(missing_regs)} out of {nrow(dt)} data group(s) did not have enough data (<{min_n_data_points} records) for a regression fit") %>%
-      warning(immediate. = TRUE, call. = FALSE)
-  }
-
-  return(dt_w_regs)
-}
-
-
-#' Calibrate area values
-#'
-#' Before running this function, make sure to group the data appropriately by running \code{\link{iso_prepare_for_calibration}}.
-#'
-#' @inheritParams iso_calibrate_delta
-#' @note not unit tested yet!
-#' @export
-iso_calibrate_area <- function(dt, model, is_standard = default(is_standard), calibration_data = default(calibration_data), area_residual = default(area_residual), quiet = default(quiet)) {
-
-  # safety checks
-  if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  if (missing(model)) stop("no calibration model(s) supplied", call. = FALSE)
-  dt_quo <- enquo(dt)
-  model_quos <- enquo(model)
-  filter_quo <- enquo(is_standard) %>% resolve_defaults()
-  resid_quo <- enquo(area_residual) %>% resolve_defaults()
-  data_quo <- enquo(calibration_data) %>% resolve_defaults()
-
-  # information
-  if (!quiet) {
-    if (quo_is_lang(model_quos) && quo_text(lang_head(model_quos)) %in% c("c", "list")) {
-      lquos <- quos(!!!lang_args(model_quos))
-    } else {
-      lquos <- quos(!!!model_quos)
-    }
-    models <- str_c(names(lquos) %>% { ifelse(nchar(.) > 0, str_c(., " = "), .) }, map_chr(lquos, quo_text))
-    plural <- if (length(models) > 1) "s" else ""
-    glue("Info: calculating area calibration fits based on {length(models)} model{plural} ('{collapse(models, \"', '\")}') ",
-         "for {nrow(dt)} data group(s) in '{quo_text(data_quo)}' with filter '{quo_text(filter_quo)}'; storing residuals in '{quo_text(resid_quo)}'.") %>% message()
-  }
-
-  # run regression
-  min_n_data_points <- 2
-  dt_w_regs <- run_regression(
-    !!dt_quo, model = !!model_quos, model_data = !!data_quo, model_filter_condition = !!filter_quo,
-    model_name = calib_area_name, model_fit = calib_area_fit,
-    model_coefs = calib_area_coefs, model_summary = calib_area_summary,
-    residual = !!resid_quo, min_n_data_points = min_n_data_points
-  )
-
-  # information on missing regs
-  missing_regs <- dt_w_regs %>% filter(map_lgl(calib_area_fit, is.null))
-  if (nrow(missing_regs) > 0) {
-    glue("{nrow(missing_regs)} out of {nrow(dt)} data group(s) did not have enough data (<{min_n_data_points} records) for a regression fit") %>%
-      warning(immediate. = TRUE, call. = FALSE)
-  }
-
-  return(dt_w_regs)
-}
-
 # INVERTING CALIBRATION --------
 
 #' Apply calibration
 #'
+#' @inheritParams apply_regression
 #' @param dt nested data table with \code{all_data} and calibration columns (see \link{iso_generate_calibration})
-#' @param predict which value to calculate, must be one of the regression's independent variables
 #' @param calibration name of the calibration to apply, must match the name used in \link{iso_generate_calibration} (if any)
-#' @param calculate_error whether to estimate the standard error from the calibration
 #' @return the data table with the following columns added to the nested \code{all_data} \:
 #' \itemize{
 #'   \item{\code{predict} column with suffix \code{_pred}: }{the predicted value from applying the calibration}
-#'   \item{\code{predict} column with suffix \code{_pred_se}: }{the error of the predicated value propagated from the calibration}
+#'   \item{\code{predict} column with suffix \code{_pred_se}: }{the error of the predicated value propagated from the calibration. Only created if \code{calculate_error = TRUE}.}
+#'   \item{\code{predict} column with suffix \code{_pred_in_range}: }{reports whether a data entry is within the range of the calibration by checking whether ALL dependent and independent variables in the regression model are within the range of the calibration - is set to FALSE if any(!) of them are not - i.e. this column provides information on whether new values are extrapolated beyond a calibration model and treat the extrapolated ones with the appropriate care. Note that all missing predicted values (due to missing parameters) are also automatically flagged as not in range}
 #' }
 #' @export
 iso_apply_calibration <- function(dt, predict, calibration = "", calculate_error = FALSE, quiet = default(quiet)) {
 
   # safety checks
+  if (missing(dt)) stop("no data table supplied", call. = FALSE)
+  if (missing(predict)) stop("no variable to predict specified", call. = FALSE)
+  dt_quo <- enquo(dt)
+  pred_quo <- enquo(predict)
+  pred_col_quo <- pred_quo %>% quo_text() %>% str_c("_pred") %>% sym()
+  pred_se_col_quo <- pred_quo %>% quo_text() %>% str_c("_pred_se") %>% sym()
+  pred_se_in_range_quo <- pred_quo %>% quo_text() %>% str_c("_pred_in_range") %>% sym()
+  calib_vars <- get_calibration_vars(calibration)
+  check_calibration_cols(!!dt_quo, calib_vars$model_params)
 
-  # CONTINUE HERE
+  # information
+  if (!quiet) {
+    glue("Info: applying {calib_vars$calib_name}calibration ",
+         "to infer '{quo_text(pred_quo)}' for {nrow(dt)} data group(s); ",
+         "storing resulting value in new column '{quo_text(pred_col_quo)}'") %>%
+      message(appendLF = FALSE)
+    if (calculate_error)
+      glue(" and estimated error in new column '{quo_text(pred_se_col_quo)}'") %>%
+      message(appendLF = FALSE)
+
+    message(". This may take a moment... ", appendLF = FALSE)
+  }
+
+  # apply regression
+  dt_out <- apply_regression(
+    dt = dt,
+    predict = !!pred_quo,
+    nested_model = TRUE,
+    calculate_error = calculate_error,
+    model_data = all_data,
+    model_name = !!sym(calib_vars$model_name),
+    model_fit = model_fit,
+    model_range = model_range,
+    model_params = !!sym(calib_vars$model_params),
+    predict_value = !!pred_col_quo,
+    predict_error = !!pred_se_col_quo,
+    predict_in_range = !!pred_se_in_range_quo
+  )
+
+  if (!quiet)
+    message("finished.")
+
+  return(dt_out)
 }
 
 
@@ -355,6 +294,32 @@ iso_apply_calibration <- function(dt, predict, calibration = "", calculate_error
 #' @export
 iso_unnest_data <- function(dt, select = everything(), keep_remaining_nested_data = TRUE, keep_other_list_data = TRUE) {
   unnest_select_data(dt, select = !!enquo(select), nested_data = all_data, keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data)
+}
+
+#' Unnest calibration parameters
+#'
+#' Convenience function to unnest both calibration coefficients (\link{iso_unnest_calibration_coefs}) and calibration summary (\link{iso_unnest_calibration_summary}) columns in a single step.
+#' @inheritParams iso_unnest_calibration_coefs
+#' @inheritParams iso_unnest_calibration_summary
+#' @param select_from_coefs which columns from the fit coeffiencts to include, supports full dplyr syntax including renaming
+#' @param select_from_summary which columns from the fit summary to include, supports full dplyr syntax including renaming
+#' @export
+iso_unnest_calibration_parameters <-
+  function(dt, calibration = "",
+           select_from_coefs = everything(), select_from_summary = everything(),
+           keep_remaining_nested_data = FALSE, keep_other_list_data = TRUE) {
+
+    dt %>%
+      # unnest calibration coefs
+      iso_unnest_calibration_coefs(
+        calibration = calibration,
+        select = !!enquo(select_from_coefs)) %>%
+      # unnest calibration summary
+      iso_unnest_calibration_summary(
+        calibration = calibration,
+        select = !!enquo(select_from_summary),
+        keep_remaining_nested_data = keep_remaining_nested_data,
+        keep_other_list_data = keep_other_list_data)
 }
 
 #' Unnest calibration coefficients
