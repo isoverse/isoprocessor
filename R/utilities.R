@@ -428,12 +428,14 @@ run_grouped_regression <- function(dt, group_by = NULL, model = NULL, model_data
 #' @param predict_value the new column in the model_data that holds the predicted value
 #' @param predict_error the new column in the model_data that holds the error of the predicted value (only created if \code{calculate_error = TRUE})
 #' @param predict_in_range the new column in the model_data that holds whether a data entry is within the range of the calibration. Checks whether all dependent and independent variables in the regression model are within the range of the calibration and sets the \code{predict_in_range} flag to FALSE if any(!) of them are not - i.e. this column provides information on whether new values are extrapolated beyond a calibration model and treat the extrapolated ones with the appropriate care. Note that all missing predicted values (due to missing parameters) are also automatically flagged as not in range (\code{predict_in_range} = FALSE).
+#' @param predict_range vector of 2 numbers, if provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the \code{predict_range} is usually only necessary if the calibration range should be extrapolated significantely.
 apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error = FALSE,
                              model_data = model_data, model_name = model_name,
                              model_fit = model_fit, model_range = model_range,
                              model_params = model_params,
                              predict_value = pred, predict_error = pred_se,
-                             predict_in_range = pred_in_range) {
+                             predict_in_range = pred_in_range,
+                             predict_range = NULL) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
@@ -518,6 +520,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
           function(d, fit, name, x, range, y, other_xs) {
 
             # range
+            if(!is.null(predict_range)) range <- predict_range
             range_tolerance_escalation <- c(0, 1, 10, 100, 1000)
 
             # check for enough data (standard eval to avoid quoting trouble)
@@ -572,7 +575,8 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
                     problem <- glue(
                       "No solution for '{x}' in the interval {range[1] - range_tolerance * diff(range)} ",
                       "to {range[2] + range_tolerance * diff(range)}, potential fit is too far outside ",
-                      "the calibration range.") %>%
+                      "the calibration range",
+                      "- consider manually adjusting parameter 'predict_range'.") %>%
                       as.character()
                   } else {
                     problem <- out$error$message

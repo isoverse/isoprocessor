@@ -11,7 +11,7 @@
 #' }
 #' @family calibration functions
 #' @export
-iso_add_standards <- function(dt, stds, match_by = default(std_match_by), quiet = default(quiet)) {
+iso_add_standards <- function(dt, stds, match_by = default(std_match_by), is_standard = is_standard, quiet = default(quiet)) {
 
   # make sure params supplied
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
@@ -20,7 +20,7 @@ iso_add_standards <- function(dt, stds, match_by = default(std_match_by), quiet 
   # column names allowing standard and NSE
   dt_cols <- get_column_names(!!enquo(dt), match_by = enquo(match_by), n_reqs = list(match_by = "+"))
   stds_cols <- get_column_names(!!enquo(stds), match_by = enquo(match_by), n_reqs = list(match_by = "+"))
-  new_cols <- get_new_column_names(is_standard = quo(is_standard))
+  new_cols <- get_new_column_names(is_standard = enquo(is_standard))
 
   # select standards
   stds <- mutate(stds, ..marker.. = TRUE)
@@ -235,7 +235,8 @@ iso_remove_problematic_calibrations <- function(dt, calibration = "", remove_cal
 #'   \item{\code{predict} column with suffix \code{_pred_in_range}: }{reports whether a data entry is within the range of the calibration by checking whether ALL dependent and independent variables in the regression model are within the range of the calibration - is set to FALSE if any(!) of them are not - i.e. this column provides information on whether new values are extrapolated beyond a calibration model and treat the extrapolated ones with the appropriate care. Note that all missing predicted values (due to missing parameters) are also automatically flagged as not in range}
 #' }
 #' @export
-iso_apply_calibration <- function(dt, predict, calibration = "", calculate_error = FALSE, quiet = default(quiet)) {
+iso_apply_calibration <- function(dt, predict, calibration = "", predict_range = NULL,
+                                  calculate_error = FALSE, quiet = default(quiet)) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
@@ -274,7 +275,8 @@ iso_apply_calibration <- function(dt, predict, calibration = "", calculate_error
     model_params = !!sym(calib_vars$model_params),
     predict_value = !!pred_col_quo,
     predict_error = !!pred_se_col_quo,
-    predict_in_range = !!pred_se_in_range_quo
+    predict_in_range = !!pred_se_in_range_quo,
+    predict_range = predict_range
   )
 
   if (!quiet)

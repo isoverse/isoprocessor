@@ -5,7 +5,7 @@
 \title{Add calibration standards}
 \usage{
 iso_add_standards(dt, stds, match_by = default(std_match_by),
-  quiet = default(quiet))
+  is_standard = is_standard, quiet = default(quiet))
 }
 \arguments{
 \item{dt}{data table}

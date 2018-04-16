@@ -4,7 +4,7 @@
 \alias{iso_apply_calibration}
 \title{Apply calibration}
 \usage{
-iso_apply_calibration(dt, predict, calibration = "",
+iso_apply_calibration(dt, predict, calibration = "", predict_range = NULL,
   calculate_error = FALSE, quiet = default(quiet))
 }
 \arguments{
@@ -13,6 +13,8 @@ iso_apply_calibration(dt, predict, calibration = "",
 \item{predict}{which value to calculate, must be one of the regression's independent variables}
 
 \item{calibration}{name of the calibration to apply, must match the name used in \link{iso_generate_calibration} (if any)}
+
+\item{predict_range}{vector of 2 numbers, if provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the \code{predict_range} is usually only necessary if the calibration range should be extrapolated significantely.}
 
 \item{calculate_error}{whether to estimate the standard error from the calibration (using the Wald method), stores the result in the new \code{predict_error} column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.}
 }

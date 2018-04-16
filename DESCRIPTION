@@ -1,7 +1,7 @@
 Package: isoprocessorCUB
 Title: CU Boulder IRMS data processor
 Description: CU Boulder specific version of the standard IRMS data processor
-Version: 0.2.0.9000
+Version: 0.2.1.9000
 Authors@R: person("Sebastian", "Kopf", email = "sebastian.kopf@colorado.edu",
     role = c("aut", "cre"))
 URL: https://github.com/kopflab/isoprocessorCUB
