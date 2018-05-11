@@ -161,9 +161,10 @@ iso_plot_calibration_range <- function() {
 #' General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with \link[ggplot2]{facet_wrap} or \link[ggplot2]{theme} calls).
 #'
 #' @inheritParams iso_map_peaks
-#' @inheritParams iso_visualize_calibration_parameters
+#' @inheritParams iso_plot_calibration_parameters
 #' @param y which columns to visualize, combine with c()
 #' @param group what to group by, multiple columns allowed (combine with paste(...)), usually not necessary if groupings are fully defined through other aesthetics
+#' @param linetype variable to use for linetype aesthetic for the plot
 #' @param y_error an error column for drawing y error bars - if multiple \code{y} are provided, error needs to point to the same number of columns
 #' @param lines whether to plot lines (TRUE by default)
 #' @param points whether to plot points (FALSE by default)
