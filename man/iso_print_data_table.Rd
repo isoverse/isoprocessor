@@ -26,7 +26,7 @@ iso_print_data_table(dt, select = everything(), filter = TRUE,
 the passed in data table (for piping)
 }
 \description{
-Convenience function to print a data table as part of a pipe.
+This function is DEPRECATED and will be removed in a future version.
 }
 \note{
 this is not working as well as planned - consider removing again or just allowing it to be a simplifying function..

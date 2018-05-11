@@ -38,3 +38,8 @@ install.packages("devtools") # only if you don't have this installed yet
 devtools::install_github("KopfLab/isoreader")
 devtools::install_github("KopfLab/isoprocessor")
 ```
+
+## Functionality
+
+ - for a full reference of all available functions, see the **[Function Reference](https://kopflab.github.io/isoprocessor/reference/)**
+ - specific examples on how to use isoprocessor are in the works and will be available soon

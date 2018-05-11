@@ -1,13 +1,16 @@
 # tools for active package development
 
+all: vignettes docu check
+
+docu:
+	Rscript -e "devtools::document(roclets=c('rd', 'collate', 'namespace'))"
+	Rscript -e "pkgdown::build_site()"
+
 vignettes:
 	Rscript -e "devtools::build_vignettes()"
 
 check:
 	Rscript -e "devtools::check()"
-
-document:
-	Rscript -e "devtools::check_doc()"
 
 auto_test:
 	R -q -e "rm(list = ls()); testthat::auto_test_package()"

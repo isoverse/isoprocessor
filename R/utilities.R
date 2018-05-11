@@ -13,7 +13,7 @@ tidyr::unnest
 
 #' Print data table
 #'
-#' Convenience function to print a data table as part of a pipe.
+#' This function is DEPRECATED and will be removed in a future version.
 #'
 #' @param dt data table
 #' @param select which columns to select (use c(...) to select multiple), supports all \link[dplyr]{select} syntax

@@ -1,0 +1,83 @@
+title: isoprocessor
+url: http://kopflab.github.io/isoprocessor/
+template:
+  params:
+    bootswatch: simplex
+    toc_float: true
+
+home:
+  strip_header: true
+
+navbar:
+  title: isoprocessor
+  type: default
+  left:
+  - text: "Reference"
+    href: reference/index.html
+  right:
+  - icon: fa-github fa-lg
+    href: https://github.com/kopflab/isoprocessor
+
+
+reference:
+- title: Metadata
+  desc: >
+    Functions to easily add metadata to a data table.
+  contents:
+   - iso_add_metadata
+   - iso_get_missing_metadata
+   - iso_remove_missing_metadata
+- title: Peak mapping
+  desc: >
+    Functions to easily map data table peaks by retention time.
+  contents:
+   - iso_map_peaks
+   - iso_get_problematic_peaks
+   - iso_remove_problematic_peaks
+- title: Calibration
+  desc: >
+    Functions to calibrate data.
+  contents:
+  - iso_add_standards
+  - iso_prepare_for_calibration
+  - iso_generate_calibration
+  - iso_apply_calibration
+  - iso_get_problematic_calibrations
+  - iso_remove_problematic_calibrations
+- title: Unpacking calibration models
+  desc: >
+    Generic base functions, can be adapted for non-standard applications.
+  contents:
+  - iso_unnest_calibration_coefs
+  - iso_unnest_calibration_parameters
+  - iso_unnest_calibration_range
+  - iso_unnest_calibration_summary
+  - iso_unnest_data
+- title: Visualization
+  desc: >
+    Visualization functions.
+  contents:
+  - iso_get_default_processor_parameters
+  - iso_plot_ref_peaks
+  - iso_plot_calibration_parameters
+  - iso_plot_data
+- title: Reporting
+  desc: >
+    Reporting functions.
+  contents:
+  - iso_generate_summary_table
+  - iso_remove_list_columns
+- title: Package settings
+  desc: >
+
+  contents:
+  - iso_set_default_process_parameters
+  - iso_show_default_processor_parameters
+- title: Under the hood
+  desc: >
+    Generic base functions, can be adapted for non-standard applications.
+  contents:
+  - run_regression
+  - apply_regression
+  - unnest_select_data
+  - unnest_model_column
