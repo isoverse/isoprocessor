@@ -1,7 +1,7 @@
 library(testthat)
-library(isoprocessorCUB)
+library(isoprocessor)
 library(rlang)
 library(dplyr)
 library(ggplot2)
 
-test_check("isoprocessorCUB")
+test_check("isoprocessor")

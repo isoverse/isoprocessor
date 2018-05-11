@@ -1,11 +1,11 @@
-Package: isoprocessorCUB
-Title: CU Boulder IRMS data processor
-Description: CU Boulder specific version of the standard IRMS data processor
+Package: isoprocessor
+Title: IRMS data processor
+Description: Data processing and reduction pipelines for isotope ratio mass spectrometry (IRMS) data
 Version: 0.2.1.9000
 Authors@R: person("Sebastian", "Kopf", email = "sebastian.kopf@colorado.edu",
     role = c("aut", "cre"))
-URL: https://github.com/kopflab/isoprocessorCUB
-BugReports: https://github.com/kopflab/isoprocessorCUB/issues
+URL: https://github.com/kopflab/isoprocessor
+BugReports: https://github.com/kopflab/isoprocessor/issues
 Depends: R (>= 3.3.0)
 Imports:
     methods,

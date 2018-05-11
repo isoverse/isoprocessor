@@ -11,11 +11,21 @@ iso_plot_data(dt, x, y, y_error = NULL, group = NULL, color = NULL,
 \arguments{
 \item{dt}{data frame with peak data}
 
+\item{x}{the x axis aesthetic for the calibration parameters, can be datetime, text or numeric}
+
 \item{y}{which columns to visualize, combine with c()}
 
 \item{y_error}{an error column for drawing y error bars - if multiple \code{y} are provided, error needs to point to the same number of columns}
 
 \item{group}{what to group by, multiple columns allowed (combine with paste(...)), usually not necessary if groupings are fully defined through other aesthetics}
+
+\item{color}{variable to use for color aesthetic for the plot}
+
+\item{shape}{variable to use for shape aesthetic for the plot}
+
+\item{size}{variable to use for size aesthetic for the plot}
+
+\item{linetype}{variable to use for linetype aesthetic for the plot}
 
 \item{lines}{whether to plot lines (TRUE by default)}
 
