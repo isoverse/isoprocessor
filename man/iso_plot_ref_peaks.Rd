@@ -4,18 +4,20 @@
 \alias{iso_plot_ref_peaks}
 \title{Plot reference peaks}
 \usage{
-iso_plot_ref_peaks(dt, is_ref_condition, ratio = default(ratio),
-  group_id = default(group_id), within_group = FALSE)
+iso_plot_ref_peaks(dt, ratio, group_id, is_ref_condition, is_ref_used = NULL,
+  within_group = FALSE)
 }
 \arguments{
-\item{is_ref_condition}{condition to identify which of the peaks are reference peaks}
+\item{ratio}{which ratio column(s) to compare for the reference peaks}
 
-\item{ratio}{which ratio column(s) to compare across the reference peaks}
+\item{group_id}{group identifier column(s) to clarify which peaks belongs to a single analysis - first column in group id is used for x axis labels}
 
-\item{group_id}{group identifier column(s) to clarify which peaks belongs together - first column in group id is used for x axis labels}
+\item{is_ref_condition}{condition to identify which of the peaks are reference peaks. Must be a column or expression that evaluates to a logical (TRUE/FALSE).}
+
+\item{is_ref_used}{[optional] parameter to identify which of the reference peaks (\code{is_ref_condition}) are actually used for ratio/ratio calculations. Must be a column or expresion that evaluates to a logical (TRUE/FALSE). If this parameter is provided, the used reference peaks are higlight in solid while the other peaks are slightly opaque.}
 
 \item{within_group}{whether to visualize the deviation within the specified group or across all groups}
 }
 \description{
-Visualize how consistent the reference peaks across a serious of samples.
+Visualize how consistent the reference peaks are across a serious of samples.
 }

@@ -1,28 +1,59 @@
 
 #' Plot reference peaks
 #'
-#' Visualize how consistent the reference peaks across a serious of samples.
+#' Visualize how consistent the reference peaks are across a serious of samples.
 #'
-#' @param is_ref_condition condition to identify which of the peaks are reference peaks
-#' @param ratio which ratio column(s) to compare across the reference peaks
-#' @param group_id group identifier column(s) to clarify which peaks belongs together - first column in group id is used for x axis labels
+#' @param ratio which ratio column(s) to compare for the reference peaks (can be multiple)
+#' @param group_id group identifier column(s) to clarify which peaks belongs to a single analysis - first column in group id is used for x axis labels
+#' @param is_ref_condition condition to identify which of the peaks are reference peaks. Must be a column or expression that evaluates to a logical (TRUE/FALSE).
+#' @param is_ref_used [optional] parameter to identify which of the reference peaks (\code{is_ref_condition}) are actually used for ratio/ratio calculations. Must be a column or expresion that evaluates to a logical (TRUE/FALSE). If this parameter is provided, the used reference peaks are higlight in solid while the other peaks are slightly opaque.
 #' @param within_group whether to visualize the deviation within the specified group or across all groups
 #' @export
-iso_plot_ref_peaks <- function(dt, is_ref_condition, ratio = default(ratio), group_id = default(group_id), within_group = FALSE) {
+iso_plot_ref_peaks <- function(dt, ratio, group_id, is_ref_condition, is_ref_used = NULL, within_group = FALSE) {
 
-  if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  if (missing(is_ref_condition)) stop("no condition as to what constitutes a reference peak provided", call. = FALSE)
-  dt_cols <- get_column_names(!!enquo(dt), ratio = enquo(ratio), group_id = enquo(group_id),
+  # safety checks
+  param_quos <-
+    list(dt = enquo(dt), ratio = enquo(ratio), group_id = enquo(group_id),
+         is_ref_condition = enquo(is_ref_condition), is_ref_used = enquo(is_ref_used))
+
+  check_params <-
+    c(
+      dt = "no data table supplied",
+      ratio = "no ratio column to compare reference peaks provided",
+      group_id = "no grouping column(s) provided to identify individual analyses",
+      is_ref_condition = "no condition as to what constitutes a reference peak provided"
+    )
+  missing <- param_quos[names(check_params)] %>% map_lgl(quo_is_missing)
+
+  if (any(missing)) {
+    glue("missing parameter(s) '{collapse(names(check_params)[missing], sep = \"', '\")}':\n",
+         " - {collapse(check_params[missing], sep = '\n - ')}") %>%
+      stop(call. = FALSE)
+  }
+
+  # columns
+  dt_cols <- get_column_names(!!enquo(dt), ratio = param_quos$ratio, group_id = param_quos$group_id,
                               n_reqs = list(group_id = "+", ratio = "+"))
-  ref_quo <- enquo(is_ref_condition)
 
   refs <- dt %>%
-    filter(!!ref_quo)
+    filter(!!param_quos$is_ref_condition)
 
   if (nrow(refs) == 0)
     stop("no data to visualize, check your data table and is_ref_condition filter", call. = FALSE)
 
   refs <- refs %>%
+    # ref is used
+    {
+      if (!quo_is_null(param_quos$is_ref_used))
+        refs %>%
+          mutate(is_ref_used = !!param_quos$is_ref_used %>%
+                   as.logical() %>%
+                   ifelse("yes", "no") %>%
+                   factor(levels = c("yes", "no")))
+      else
+        .
+    } %>%
+    # gather
     gather(ratio, value, !!!dt_cols$ratio) %>%
     # calculate deviation across all runs
     group_by(ratio) %>%
@@ -46,6 +77,14 @@ iso_plot_ref_peaks <- function(dt, is_ref_condition, ratio = default(ratio), gro
     labs(x = "Analysis", fill = "Ref. peak #", y = "Deviation from total average [permil]") +
     facet_wrap(~ratio, ncol = 1, scales = "free_y")
 
+  # ref is used
+  if (!quo_is_null(param_quos$is_ref_used)) {
+    p <- p %+% aes(alpha = is_ref_used) +
+      scale_alpha_discrete(range = c(1, 0.5)) +
+      labs(alpha = "Ref. peak used")
+  }
+
+  # within group
   if (within_group) {
     # vs. average within group
     p <- p %+%
