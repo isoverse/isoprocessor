@@ -166,10 +166,11 @@ iso_plot_calibration_parameters <- function(dt, calibration = "", x,
     mutate(term = as_factor(term)) %>%
     filter(!is.na(estimate)) %>%
     ggplot() +
-    aes(x = !!vis_quos$x, y = estimate,
-        color = !!if(!quo_is_null(vis_quos$color)) vis_quos$color else quo(),
-        shape = !!if(!quo_is_null(vis_quos$shape)) vis_quos$shape else quo(),
-        size = !!if(!quo_is_null(vis_quos$size)) vis_quos$size else quo()
+    aes_q(
+        x = vis_quos$x, y = sym("estimate"),
+        color = if(!quo_is_null(vis_quos$color)) vis_quos$color else NULL,
+        shape = if(!quo_is_null(vis_quos$shape)) vis_quos$shape else NULL,
+        size = if(!quo_is_null(vis_quos$size)) vis_quos$size else NULL
     ) +
     geom_errorbar(data = function(df) filter(df,!is.na(std.error)),
                   map = aes(ymin = estimate - std.error, ymax = estimate + std.error), width = 0, size = 1) +
@@ -192,7 +193,7 @@ iso_plot_calibration_parameters <- function(dt, calibration = "", x,
 
 #@ implement me
 iso_plot_calibration_range <- function() {
-  stop("sorry, not implmeneted yet", call. = FALSE)
+  stop("sorry, not implemented yet", call. = FALSE)
 }
 
 #' Visualize the data
@@ -250,7 +251,7 @@ iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, 
       ) %>%
       left_join(
         select(y_error_data, ..row_id.., panel_y_error, y_error),
-        by = "panel_y_error"
+        by = c("..row_id..", "panel_y_error")
       ) %>%
       select(-panel_y_error)
   }
@@ -262,12 +263,12 @@ iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, 
     filter(!is.na(y_value)) %>%
     ggplot() +
     # aesthetics
-    aes(x = !!vis_quos$x, y = y_value,
-        group = !!if(!quo_is_null(vis_quos$group)) vis_quos$group else quo(),
-        color = !!if(!quo_is_null(vis_quos$color)) vis_quos$color else quo(),
-        shape = !!if(!quo_is_null(vis_quos$shape)) vis_quos$shape else quo(),
-        linetype = !!if(!quo_is_null(vis_quos$linetype)) vis_quos$linetype else quo(),
-        size = !!if(!quo_is_null(vis_quos$size)) vis_quos$size else quo()
+    aes_q(x = vis_quos$x, y = sym("y_value"),
+        group = if(!quo_is_null(vis_quos$group)) vis_quos$group else NULL,
+        color = if(!quo_is_null(vis_quos$color)) vis_quos$color else NULL,
+        shape = if(!quo_is_null(vis_quos$shape)) vis_quos$shape else NULL,
+        linetype = if(!quo_is_null(vis_quos$linetype)) vis_quos$linetype else NULL,
+        size = if(!quo_is_null(vis_quos$size)) vis_quos$size else NULL
     ) +
     facet_wrap(~panel, ncol = 1, scales = "free_y") +
     theme_bw() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +

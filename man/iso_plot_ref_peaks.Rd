@@ -8,7 +8,7 @@ iso_plot_ref_peaks(dt, ratio, group_id, is_ref_condition, is_ref_used = NULL,
   within_group = FALSE)
 }
 \arguments{
-\item{ratio}{which ratio column(s) to compare for the reference peaks}
+\item{ratio}{which ratio column(s) to compare for the reference peaks (can be multiple)}
 
 \item{group_id}{group identifier column(s) to clarify which peaks belongs to a single analysis - first column in group id is used for x axis labels}
 
