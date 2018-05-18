@@ -10,6 +10,7 @@ http://kopflab.github.io/isoprocessor//reference/iso_get_problematic_calibration
 http://kopflab.github.io/isoprocessor//reference/iso_get_problematic_peaks.html
 http://kopflab.github.io/isoprocessor//reference/iso_map_peaks.html
 http://kopflab.github.io/isoprocessor//reference/iso_plot_calibration_parameters.html
+http://kopflab.github.io/isoprocessor//reference/iso_plot_calibration_range.html
 http://kopflab.github.io/isoprocessor//reference/iso_plot_data.html
 http://kopflab.github.io/isoprocessor//reference/iso_plot_ref_peaks.html
 http://kopflab.github.io/isoprocessor//reference/iso_prepare_for_calibration.html

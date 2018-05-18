@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Print data table — iso_print_data_table • isoprocessor</title>
+<title>Visualize the calibration range — iso_plot_calibration_range • isoprocessor</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -25,9 +25,9 @@
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-<meta property="og:title" content="Print data table — iso_print_data_table" />
+<meta property="og:title" content="Visualize the calibration range — iso_plot_calibration_range" />
 
-<meta property="og:description" content="This function is DEPRECATED and will be removed in a future version." />
+<meta property="og:description" content="This function visualizes the calibration range for each regression model (separate panels) as it is constrained in the chosen x and y variables (most commonly measures of delta value and signal strength) by showing analysis points within the calibration range in solid and all others slighly opaque, as well as by drawing a rectangle around the calibration range. Note that if one of the chosen dimensions (x or y) is not part of the calibration for a model but the other dimension is, it simply shows two lines bracketing the samples in the dimension that is part of the calibration. Also note that the rectangular interpretation of calibration range in this plot is a visual simplification, technically the range is polygonal and maybe be more than 2 dimensional for more complex regression models." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -87,57 +87,41 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Print data table</h1>
-    <small>Source: <a href='https://github.com/kopflab/isoprocessor/blob/master/R/utilities.R'><code>R/utilities.R</code></a></small>
+    <h1>Visualize the calibration range</h1>
+    <small>Source: <a href='https://github.com/kopflab/isoprocessor/blob/master/R/visualization.R'><code>R/visualization.R</code></a></small>
     </div>
 
     
-    <p>This function is DEPRECATED and will be removed in a future version.</p>
+    <p>This function visualizes the calibration range for each regression model (separate panels) as it is constrained in the chosen x and y variables (most commonly measures of delta value and signal strength) by showing analysis points within the calibration range in solid and all others slighly opaque, as well as by drawing a rectangle around the calibration range. Note that if one of the chosen dimensions (x or y) is not part of the calibration for a model but the other dimension is, it simply shows two lines bracketing the samples in the dimension that is part of the calibration. Also note that the rectangular interpretation of calibration range in this plot is a visual simplification, technically the range is polygonal and maybe be more than 2 dimensional for more complex regression models.</p>
     
 
-    <pre class="usage"><span class='fu'>iso_print_data_table</span>(<span class='no'>dt</span>, <span class='kw'>select</span> <span class='kw'>=</span> <span class='fu'>everything</span>(), <span class='kw'>filter</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>print_func</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>print_func</span>), <span class='kw'>title</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>unique</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='no'>...</span>)</pre>
+    <pre class="usage"><span class='fu'>iso_plot_calibration_range</span>(<span class='no'>dt</span>, <span class='kw'>calibration</span> <span class='kw'>=</span> <span class='st'>""</span>, <span class='no'>x</span>, <span class='no'>y</span>, <span class='kw'>color</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>shape</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>size</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>dt</th>
-      <td><p>data table</p></td>
+      <th>x</th>
+      <td><p>the x-axis column for visualizing the calibration range, typically a measure of signal strength (amplitude or area) that is part of the/some calibration regression models</p></td>
     </tr>
     <tr>
-      <th>select</th>
-      <td><p>which columns to select (use c(...) to select multiple), supports all <a href='http://dplyr.tidyverse.org/reference/select.html'>select</a> syntax</p></td>
+      <th>y</th>
+      <td><p>the y-axis column for visualizing the calibration range, typically a measure of the isotopic value (ratio or delta) that is part of the calibration regression models</p></td>
     </tr>
     <tr>
-      <th>filter</th>
-      <td><p>any filter conditions to apply, by default does not filter any</p></td>
+      <th>color</th>
+      <td><p>variable to use for color aesthetic for the plot</p></td>
     </tr>
     <tr>
-      <th>print_func</th>
-      <td><p>what function to use for printing (makes it easier to switch between different types of output)</p></td>
+      <th>shape</th>
+      <td><p>variable to use for shape aesthetic for the plot</p></td>
     </tr>
     <tr>
-      <th>title</th>
-      <td><p>whether to provide a title message</p></td>
-    </tr>
-    <tr>
-      <th>unique</th>
-      <td><p>whether to print only unique rows</p></td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td><p>additional parameters to forward to the <code>func</code> function</p></td>
+      <th>size</th>
+      <td><p>variable to use for size aesthetic for the plot</p></td>
     </tr>
     </table>
-    
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
-
-    <p>the passed in data table (for piping)</p>
-    
-    <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
-
-    <p>this is not working as well as planned - consider removing again or just allowing it to be a simplifying function..</p>
     
 
   </div>
@@ -145,11 +129,7 @@
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
-      <li><a href="#value">Value</a></li>
-
-      <li><a href="#note">Note</a></li>
-          </ul>
+                </ul>
 
   </div>
 </div>

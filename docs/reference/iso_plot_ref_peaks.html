@@ -27,7 +27,7 @@
 <script src="../pkgdown.js"></script>
 <meta property="og:title" content="Plot reference peaks — iso_plot_ref_peaks" />
 
-<meta property="og:description" content="Visualize how consistent the reference peaks across a serious of samples." />
+<meta property="og:description" content="Visualize how consistent the reference peaks are across a serious of samples." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -57,7 +57,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.1.9000</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.5.9000</span>
       </span>
     </div>
 
@@ -92,26 +92,30 @@
     </div>
 
     
-    <p>Visualize how consistent the reference peaks across a serious of samples.</p>
+    <p>Visualize how consistent the reference peaks are across a serious of samples.</p>
     
 
-    <pre class="usage"><span class='fu'>iso_plot_ref_peaks</span>(<span class='no'>dt</span>, <span class='no'>is_ref_condition</span>, <span class='kw'>ratio</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>ratio</span>),
-  <span class='kw'>group_id</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>group_id</span>), <span class='kw'>within_group</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+    <pre class="usage"><span class='fu'>iso_plot_ref_peaks</span>(<span class='no'>dt</span>, <span class='no'>ratio</span>, <span class='no'>group_id</span>, <span class='no'>is_ref_condition</span>, <span class='kw'>is_ref_used</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>within_group</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>is_ref_condition</th>
-      <td><p>condition to identify which of the peaks are reference peaks</p></td>
-    </tr>
-    <tr>
       <th>ratio</th>
-      <td><p>which ratio column(s) to compare across the reference peaks</p></td>
+      <td><p>which ratio column(s) to compare for the reference peaks (can be multiple)</p></td>
     </tr>
     <tr>
       <th>group_id</th>
-      <td><p>group identifier column(s) to clarify which peaks belongs together - first column in group id is used for x axis labels</p></td>
+      <td><p>group identifier column(s) to clarify which peaks belongs to a single analysis - first column in group id is used for x axis labels</p></td>
+    </tr>
+    <tr>
+      <th>is_ref_condition</th>
+      <td><p>condition to identify which of the peaks are reference peaks. Must be a column or expression that evaluates to a logical (TRUE/FALSE).</p></td>
+    </tr>
+    <tr>
+      <th>is_ref_used</th>
+      <td><p>[optional] parameter to identify which of the reference peaks (<code>is_ref_condition</code>) are actually used for ratio/ratio calculations. Must be a column or expresion that evaluates to a logical (TRUE/FALSE). If this parameter is provided, the used reference peaks are higlight in solid while the other peaks are slightly opaque.</p></td>
     </tr>
     <tr>
       <th>within_group</th>
