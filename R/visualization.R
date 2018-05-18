@@ -166,12 +166,10 @@ iso_plot_calibration_parameters <- function(dt, calibration = "", x,
     mutate(term = as_factor(term)) %>%
     filter(!is.na(estimate)) %>%
     ggplot() +
-    aes_q(
-        x = vis_quos$x, y = sym("estimate"),
-        color = if(!quo_is_null(vis_quos$color)) vis_quos$color else NULL,
-        shape = if(!quo_is_null(vis_quos$shape)) vis_quos$shape else NULL,
-        size = if(!quo_is_null(vis_quos$size)) vis_quos$size else NULL
-    ) +
+    aes_q(x = vis_quos$x, y = sym("estimate")) +
+    { if(!quo_is_null(vis_quos$color)) aes_q(color = vis_quos$color) } +
+    { if(!quo_is_null(vis_quos$shape)) aes_q(shape = vis_quos$shape) } +
+    { if(!quo_is_null(vis_quos$size)) aes_q(size = vis_quos$size) } +
     geom_errorbar(data = function(df) filter(df,!is.na(std.error)),
                   map = aes(ymin = estimate - std.error, ymax = estimate + std.error), width = 0, size = 1) +
     { if (quo_is_null(vis_quos$size)) geom_point(size = 4) else geom_point() } +
@@ -191,10 +189,87 @@ iso_plot_calibration_parameters <- function(dt, calibration = "", x,
   return(p)
 }
 
-#@ implement me
-iso_plot_calibration_range <- function() {
-  stop("sorry, not implemented yet", call. = FALSE)
+#' Visualize the calibration range
+#'
+#' This function visualizes the calibration range as it is constrained in the chosen x and y variables by coloring the background blue (within range) and red (not in range).
+#'
+#' @export
+iso_plot_calibration_range <- function(dt, calibration = "", x, y, color = NULL, shape = NULL, size = NULL) {
+
+  # safety checks
+  if (missing(dt)) stop("no data table supplied", call. = FALSE)
+  if (missing(x)) stop("have to provide an x to plot", call. = FALSE)
+  if (missing(y)) stop("have to provide at least one column to plot", call. = FALSE)
+
+  # quos
+  vis_quos <- list(dt = enquo(dt), x = enquo(x), y = enquo(y),
+                   color = enquo(color), size = enquo(size), shape = enquo(shape))
+
+  # check for model parameters
+  calib_vars <- isoprocessor:::get_calibration_vars(calibration)
+  isoprocessor:::check_calibration_cols(!!vis_quos$dt, calib_vars$model_params)
+
+  # data
+  dt <- dt %>% mutate(..rowid.. = row_number())
+  data <- dt %>% iso_unnest_data()
+
+  # check existence of x and y
+  dt_cols <- isoprocessor:::get_column_names(data, x = vis_quos$x, y = vis_quos$y)
+
+  # ranges
+  ranges <- dt %>% iso_unnest_calibration_range(calibration = calibration)
+  xrange <- ranges %>% filter(var == dt_cols$x) %>% select(..rowid.., xmin = min, xmax = max)
+  yrange <- ranges %>% filter(var == dt_cols$y) %>% select(..rowid.., ymin = min, ymax = max)
+  data <- data %>%
+    # facet
+    mutate(panel = !!sym(calib_vars$model_name)) %>%
+    # ranges
+    left_join(xrange, by = "..rowid..") %>%
+    left_join(yrange, by = "..rowid..") %>%
+    mutate(xmin = ifelse(is.na(xmin), -Inf, xmin),
+           xmax = ifelse(is.na(xmax), Inf, xmax),
+           ymin = ifelse(is.na(ymin), -Inf, ymin),
+           ymax = ifelse(is.na(ymax), Inf, ymax))
+  # note on ranges: ideally with alpha = 0.5 but then have to make sure each rectangle
+  # is only drawn once which is tricky if unclear which columns are grouping columns
+  # would have to make unique based on all columns that have only 1 entry for each ..rowid..
+
+  # color
+  if (!quo_is_null(vis_quos$color))
+    data <- data %>% mutate(color = !!vis_quos$color)
+
+
+  # shape
+  if (!quo_is_null(vis_quos$shape))
+    data <- data %>% mutate(shape = !!vis_quos$shape)
+
+  # size
+  if (!quo_is_null(vis_quos$size))
+    data <- data %>% mutate(size = !!vis_quos$size)
+
+  # plot
+  data %>%
+    ggplot() +
+    aes_q(x = vis_quos$x, y = vis_quos$y) +
+    { if(!quo_is_null(vis_quos$color)) aes(color = color) } +
+    { if(!quo_is_null(vis_quos$shape)) aes(shape = shape) } +
+    { if(!quo_is_null(vis_quos$size)) aes(size = size) } +
+    # out of range area
+    geom_rect(
+      mapping = aes(xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf,
+                    color = NULL, fill = "out of range")) +
+    # in range area
+    geom_rect(
+      mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
+                    color = NULL, fill = "in range")) +
+    # range line
+                    { if (quo_is_null(vis_quos$size)) geom_point(size = 4) else geom_point() } +
+    scale_fill_manual("calibration range", values = c("#B3CDE3", "#FBB4AE")) +
+    theme_bw() +
+    guides(color = guide_legend(override.aes = list(fill = "white", shape = 15, size = 5))) +
+    facet_wrap(~panel)
 }
+
 
 #' Visualize the data
 #'
@@ -263,13 +338,12 @@ iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, 
     filter(!is.na(y_value)) %>%
     ggplot() +
     # aesthetics
-    aes_q(x = vis_quos$x, y = sym("y_value"),
-        group = if(!quo_is_null(vis_quos$group)) vis_quos$group else NULL,
-        color = if(!quo_is_null(vis_quos$color)) vis_quos$color else NULL,
-        shape = if(!quo_is_null(vis_quos$shape)) vis_quos$shape else NULL,
-        linetype = if(!quo_is_null(vis_quos$linetype)) vis_quos$linetype else NULL,
-        size = if(!quo_is_null(vis_quos$size)) vis_quos$size else NULL
-    ) +
+    aes_q(x = vis_quos$x, y = sym("y_value")) +
+    { if(!quo_is_null(vis_quos$group)) aes_q(group = vis_quos$group) } +
+    { if(!quo_is_null(vis_quos$color)) aes_q(color = vis_quos$color) } +
+    { if(!quo_is_null(vis_quos$shape)) aes_q(shape = vis_quos$shape) } +
+    { if(!quo_is_null(vis_quos$linetype)) aes_q(linetype = vis_quos$linetype) } +
+    { if(!quo_is_null(vis_quos$size)) aes_q(size = vis_quos$size) } +
     facet_wrap(~panel, ncol = 1, scales = "free_y") +
     theme_bw() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
     theme(plot.margin = margin(10, 5, 15, 20)) +
