@@ -191,8 +191,10 @@ iso_plot_calibration_parameters <- function(dt, calibration = "", x,
 
 #' Visualize the calibration range
 #'
-#' This function visualizes the calibration range as it is constrained in the chosen x and y variables by coloring the background blue (within range) and red (not in range).
-#'
+#' This function visualizes the calibration range for each regression model (separate panels) as it is constrained in the chosen x and y variables (most commonly measures of delta value and signal strength) by showing analysis points within the calibration range in solid and all others slighly opaque, as well as by drawing a rectangle around the calibration range. Note that if one of the chosen dimensions (x or y) is not part of the calibration for a model but the other dimension is, it simply shows two lines bracketing the samples in the dimension that is part of the calibration. Also note that the rectangular interpretation of calibration range in this plot is a visual simplification, technically the range is polygonal and maybe be more than 2 dimensional for more complex regression models.
+#' @inheritParams iso_plot_calibration_parameters
+#' @param x the x-axis column for visualizing the calibration range, typically a measure of signal strength (amplitude or area) that is part of the/some calibration regression models
+#' @param y the y-axis column for visualizing the calibration range, typically a measure of the isotopic value (ratio or delta) that is part of the calibration regression models
 #' @export
 iso_plot_calibration_range <- function(dt, calibration = "", x, y, color = NULL, shape = NULL, size = NULL) {
 
@@ -226,10 +228,14 @@ iso_plot_calibration_range <- function(dt, calibration = "", x, y, color = NULL,
     # ranges
     left_join(xrange, by = "..rowid..") %>%
     left_join(yrange, by = "..rowid..") %>%
-    mutate(xmin = ifelse(is.na(xmin), -Inf, xmin),
-           xmax = ifelse(is.na(xmax), Inf, xmax),
-           ymin = ifelse(is.na(ymin), -Inf, ymin),
-           ymax = ifelse(is.na(ymax), Inf, ymax))
+    mutate(
+      xmin = ifelse(is.na(xmin), -Inf, xmin),
+      xmax = ifelse(is.na(xmax), Inf, xmax),
+      ymin = ifelse(is.na(ymin), -Inf, ymin),
+      ymax = ifelse(is.na(ymax), Inf, ymax),
+      x_in_range = !!sym(dt_cols$x) >= xmin & !!sym(dt_cols$x) <= xmax,
+      y_in_range = !!sym(dt_cols$y) >= ymin & !!sym(dt_cols$y) <= ymax,
+      in_range = x_in_range & y_in_range)
   # note on ranges: ideally with alpha = 0.5 but then have to make sure each rectangle
   # is only drawn once which is tricky if unclear which columns are grouping columns
   # would have to make unique based on all columns that have only 1 entry for each ..rowid..
@@ -250,25 +256,29 @@ iso_plot_calibration_range <- function(dt, calibration = "", x, y, color = NULL,
   # plot
   data %>%
     ggplot() +
-    aes_q(x = vis_quos$x, y = vis_quos$y) +
+    aes_q(x = vis_quos$x, y = vis_quos$y, alpha = sym("in_range")) +
     { if(!quo_is_null(vis_quos$color)) aes(color = color) } +
     { if(!quo_is_null(vis_quos$shape)) aes(shape = shape) } +
     { if(!quo_is_null(vis_quos$size)) aes(size = size) } +
-    # out of range area
-    geom_rect(
-      mapping = aes(xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf,
-                    color = NULL, fill = "out of range")) +
     # in range area
     geom_rect(
       mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
-                    color = NULL, fill = "in range")) +
-    # range line
-                    { if (quo_is_null(vis_quos$size)) geom_point(size = 4) else geom_point() } +
-    scale_fill_manual("calibration range", values = c("#B3CDE3", "#FBB4AE")) +
+                    color = NULL, fill = NULL),
+      color = "black", fill = NA) +
+    scale_alpha_discrete(
+      "calibration range",
+      breaks = c(FALSE, TRUE),
+      labels = function(x) ifelse(x, "in range", "out of range"),
+      range = c(0.4, 1)) +
+    guides(
+      color = guide_legend(override.aes = list(fill = "white", linetype = 0)),
+      alpha = guide_legend(override.aes = list(fill = "white", linetype = 0))) +
+    # points
+      { if (quo_is_null(vis_quos$size)) geom_point(size = 4) else geom_point() } +
     theme_bw() +
-    guides(color = guide_legend(override.aes = list(fill = "white", shape = 15, size = 5))) +
     facet_wrap(~panel)
 }
+
 
 
 #' Visualize the data
