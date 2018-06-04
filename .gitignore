@@ -39,3 +39,7 @@ vignettes/*.pdf
 *.png
 *.jpg
 *.docx
+
+# documentation
+!/docs/*
+
