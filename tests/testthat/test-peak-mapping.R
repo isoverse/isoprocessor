@@ -5,7 +5,7 @@ context("Peak mapping")
 test_that("testing that peak mapping works", {
 
   expect_error(iso_map_peaks(), "no data table")
-  expect_error(iso_map_peaks(data_frame()), "no peak maps")
+  expect_error(iso_map_peaks(data_frame()), "no peak map*")
 
   # data table
   my_dt <- data_frame(

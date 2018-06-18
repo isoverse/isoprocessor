@@ -12,7 +12,9 @@ test_that("test that referencd peak visualization works", {
 
   # simple generation tests
   expect_true((p <- iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = TRUE, ratio = displ, group_id = model)) %>% ggplot2::is.ggplot())
-  expect_equal(p$mapping, list(fill = sym("ref_peak_nr"), x = sym("model"), y = sym("total_delta_deviation")) %>% { class(.) <- "uneval"; . })
+  expect_true("ref_peak_nr" %in% as.character(p$mapping$fill))
+  expect_true("model" %in% as.character(p$mapping$x))
+  expect_true("total_delta_deviation" %in% as.character(p$mapping$y))
   expect_true(iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = TRUE, ratio = c(displ, hwy), group_id = model) %>% ggplot2::is.ggplot())
   expect_true(iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = cyl > 6, ratio = c(displ, hwy), group_id = model) %>% ggplot2::is.ggplot())
 

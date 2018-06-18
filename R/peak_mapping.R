@@ -24,13 +24,14 @@
 #' }
 #' @family peak mapping functions
 #' @export
-iso_map_peaks <- function(dt, peak_maps, file_id = default(file_id), map_id = default(map_id), compound = default(compound),
-                          rt = default(rt), rt_start = default(rt_start), rt_end = default(rt_end), rt_prefix_divider = ":",
-                          quiet = default(quiet)) {
+iso_map_peaks <- function(
+  dt, peak_maps, file_id = default(file_id), map_id = default(map_id), compound = default(compound),
+  rt = default(rt), rt_start = default(rt_start), rt_end = default(rt_end), rt_prefix_divider = ":",
+  quiet = default(quiet)) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  if (missing(peak_maps)) stop("no peak maps supplied", call. = FALSE)
+  if (missing(peak_maps)) stop("no peak map(s) supplied", call. = FALSE)
   dt_cols <- get_column_names(!!enquo(dt), file_id = enquo(file_id), map_id = enquo(map_id), rt = enquo(rt), rt_start = enquo(rt_start), rt_end = enquo(rt_end),
                               n_reqs = list(file_id = "+"))
   pm_cols <- get_column_names(!!enquo(peak_maps), compound = enquo(compound))
