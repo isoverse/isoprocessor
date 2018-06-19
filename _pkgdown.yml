@@ -12,7 +12,7 @@ home:
 development:
   mode: unreleased
   version_label: danger
-  version_tooltip: "release candidate"
+  version_tooltip: "in active development"
 
 navbar:
   title: isoprocessor
