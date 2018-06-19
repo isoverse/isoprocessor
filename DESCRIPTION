@@ -20,6 +20,7 @@ Imports:
     purrr,
     forcats,
     ggplot2,
+    broom,
     modelr,
     investr,
     readxl,
