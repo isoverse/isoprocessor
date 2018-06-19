@@ -21,17 +21,23 @@
 <!-- clipboard.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js" integrity="sha384-cV+rhyOuRHc9Ub/91rihWcGmMmCXDeksTtCihMupQHSsi8GIIRDG0ThDc3HGQFJ3" crossorigin="anonymous"></script>
 
+<!-- sticky kit -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
+
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
-<script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
+
+
+
 <meta property="og:title" content="Add metadata to data table — iso_add_metadata" />
 
 <meta property="og:description" content="This function adds metadata flexibly by providing the possibility to match_by multiple different columns (paramter match_by) in sequence.
-This is equivalent to applying a set of increasingly more specific matching rules. For each metadata column, only the rows that have a defined non empty ("") value
+This is equivalent to applying a set of increasingly more specific matching rules. For each metadata column, only the rows that have a defined non empty (&quot;&quot;) value
 for that column will be mapped to the data. Each set of metadata can overwrite the previous matches such that the last metadata column defined by match_by
 will overwrite all previous matches for which it applies, even if they have already been a match for a previous column." />
 <meta name="twitter:card" content="summary" />
+
 
 
 <!-- mathjax -->
@@ -43,7 +49,15 @@ will overwrite all previous matches for which it applies, even if they have alre
 <![endif]-->
 
 
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-106138361-4"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
+  gtag('config', 'UA-106138361-4');
+</script>
 
   </head>
 
@@ -60,7 +74,7 @@ will overwrite all previous matches for which it applies, even if they have alre
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.5.9000</span>
+        <span class="label label-danger" data-toggle="tooltip" data-placement="bottom" title="release candidate">0.2.6.9000</span>
       </span>
     </div>
 
@@ -91,15 +105,18 @@ will overwrite all previous matches for which it applies, even if they have alre
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Add metadata to data table</h1>
-    <small>Source: <a href='https://github.com/kopflab/isoprocessor/blob/master/R/metadata.R'><code>R/metadata.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/kopflab/isoprocessor/blob/master/R/metadata.R'><code>R/metadata.R</code></a></small>
+    <div class="hidden name"><code>iso_add_metadata.Rd</code></div>
     </div>
 
+    <div class="ref-description">
     
     <p>This function adds metadata flexibly by providing the possibility to match_by multiple different columns (paramter <code>match_by</code>) in sequence.
 This is equivalent to applying a set of increasingly more specific matching rules. For each metadata column, only the rows that have a defined non empty ("") value
 for that column will be mapped to the data. Each set of metadata can overwrite the previous matches such that the last metadata column defined by <code>match_by</code>
 will overwrite all previous matches for which it applies, even if they have already been a match for a previous column.</p>
     
+    </div>
 
     <pre class="usage"><span class='fu'>iso_add_metadata</span>(<span class='no'>dt</span>, <span class='no'>metadata</span>, <span class='kw'>match_by</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>match_by</span>),
   <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))</pre>

@@ -21,14 +21,20 @@
 <!-- clipboard.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js" integrity="sha384-cV+rhyOuRHc9Ub/91rihWcGmMmCXDeksTtCihMupQHSsi8GIIRDG0ThDc3HGQFJ3" crossorigin="anonymous"></script>
 
+<!-- sticky kit -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
+
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
-<script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
+
+
+
 <meta property="og:title" content="Visualize the calibration range — iso_plot_calibration_range" />
 
 <meta property="og:description" content="This function visualizes the calibration range for each regression model (separate panels) as it is constrained in the chosen x and y variables (most commonly measures of delta value and signal strength) by showing analysis points within the calibration range in solid and all others slighly opaque, as well as by drawing a rectangle around the calibration range. Note that if one of the chosen dimensions (x or y) is not part of the calibration for a model but the other dimension is, it simply shows two lines bracketing the samples in the dimension that is part of the calibration. Also note that the rectangular interpretation of calibration range in this plot is a visual simplification, technically the range is polygonal and maybe be more than 2 dimensional for more complex regression models." />
 <meta name="twitter:card" content="summary" />
+
 
 
 <!-- mathjax -->
@@ -40,7 +46,15 @@
 <![endif]-->
 
 
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-106138361-4"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
+  gtag('config', 'UA-106138361-4');
+</script>
 
   </head>
 
@@ -57,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.5.9000</span>
+        <span class="label label-danger" data-toggle="tooltip" data-placement="bottom" title="release candidate">0.2.6.9000</span>
       </span>
     </div>
 
@@ -88,12 +102,15 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Visualize the calibration range</h1>
-    <small>Source: <a href='https://github.com/kopflab/isoprocessor/blob/master/R/visualization.R'><code>R/visualization.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/kopflab/isoprocessor/blob/master/R/visualization.R'><code>R/visualization.R</code></a></small>
+    <div class="hidden name"><code>iso_plot_calibration_range.Rd</code></div>
     </div>
 
+    <div class="ref-description">
     
     <p>This function visualizes the calibration range for each regression model (separate panels) as it is constrained in the chosen x and y variables (most commonly measures of delta value and signal strength) by showing analysis points within the calibration range in solid and all others slighly opaque, as well as by drawing a rectangle around the calibration range. Note that if one of the chosen dimensions (x or y) is not part of the calibration for a model but the other dimension is, it simply shows two lines bracketing the samples in the dimension that is part of the calibration. Also note that the rectangular interpretation of calibration range in this plot is a visual simplification, technically the range is polygonal and maybe be more than 2 dimensional for more complex regression models.</p>
     
+    </div>
 
     <pre class="usage"><span class='fu'>iso_plot_calibration_range</span>(<span class='no'>dt</span>, <span class='kw'>calibration</span> <span class='kw'>=</span> <span class='st'>""</span>, <span class='no'>x</span>, <span class='no'>y</span>, <span class='kw'>color</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>shape</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>size</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>

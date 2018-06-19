@@ -3,10 +3,16 @@ url: http://kopflab.github.io/isoprocessor/
 template:
   params:
     bootswatch: simplex
+    ganalytics: UA-106138361-4
     toc_float: true
 
 home:
   strip_header: true
+
+development:
+  mode: unreleased
+  version_label: danger
+  version_tooltip: "release candidate"
 
 navbar:
   title: isoprocessor
