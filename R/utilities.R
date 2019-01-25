@@ -1,3 +1,5 @@
+# general helper functions ========
+
 #' @export
 magrittr::`%>%`
 
@@ -8,6 +10,14 @@ dplyr::filter
 # because it is super helpful for dealing with the isoprocessor nested data types
 #' @export
 tidyr::unnest
+
+# collapse helper to deal with naming change in the glue package
+collapse <- function(...) {
+  if (exists("glue_collapse", where=asNamespace("glue"), mode="function"))
+    glue::glue_collapse(...)
+  else
+    glue::collapse(...)
+}
 
 # information display ====
 
@@ -94,7 +104,7 @@ nest_data <- function(dt, group_by = NULL, nested_data = nested_data) {
 
   # perform the nest
   dt %>%
-    as_data_frame() %>% # nest requires tbl
+    as_tibble() %>% # nest requires tbl
     nest(!!!map(dt_cols$group_by, ~quo(-!!sym(.x))), .key = !!nested_col)
 }
 
@@ -130,7 +140,7 @@ unnest_select_data <- function(dt, select = everything(), nested_data = nested_d
     dt %>%
     filter(!map_lgl(!!sym(dt_cols$nested_data), is.null)) %>%
     mutate(..row.. = row_number()) %>%
-    as_data_frame()
+    as_tibble()
 
   # keep track of the different types of columns
   list_cols <- dt %>% map_lgl(is_list) %>% { names(.)[.] } %>% { .[.!=dt_cols$nested_data] }
@@ -282,7 +292,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
 
   # models data frame
   models <-
-    data_frame(
+    tibble(
       model_formula = map_chr(lquos, quo_text),
       !!dt_new_cols$model_name := ifelse(nchar(names(lquos)) > 0, names(lquos), model_formula),
       model_quo = lquos
@@ -302,7 +312,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
     eval_tidy(dt_quo) %>%
     mutate(..group_id.. = row_number()) %>% # for easier sorting
     merge(models) %>%
-    as_data_frame() %>%
+    as_tibble() %>%
     # evaluation of model
     mutate(
       # check if there is any data
@@ -327,7 +337,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
                  #   map(~if (is.numeric(.x)) { as.numeric(range(.x)) } else { c(NA_real_, NA_real_) })
 
                  # all variables
-                 data_frame(
+                 tibble(
                    var = all.vars(fit$terms),
                    dependent = var %in% all.vars(fit$terms[[2]]),
                    min = map_dbl(var, ~filter(d, !!filter_quo)[[.x]] %>%
@@ -341,7 +351,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
       !!dt_new_cols$model_coefs := map2(
         !!sym(dt_new_cols$model_fit), !!sym(dt_new_cols$model_enough_data),
         ~if (.y) {
-          mutate(as_data_frame(tidy(.x)),
+          mutate(as_tibble(tidy(.x)),
                  # add in significant level summary
                  signif = case_when(
                    p.value < 0.001 ~ "***",
@@ -354,7 +364,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
       # get the summary
       !!dt_new_cols$model_summary :=
         map2(!!sym(dt_new_cols$model_fit), !!sym(dt_new_cols$model_enough_data),
-             ~if (.y) { as_data_frame(glance(.x)) } else { NULL })
+             ~if (.y) { as_tibble(glance(.x)) } else { NULL })
     )
 
   # warnings
@@ -589,7 +599,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
                 }
 
                 # return data
-                data_frame(
+                tibble(
                   !!dt_new_cols$predict_value := estimate,
                   !!dt_new_cols$predict_error := se,
                   ..problem.. = problem

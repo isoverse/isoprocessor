@@ -5,10 +5,10 @@ context("Peak mapping")
 test_that("testing that peak mapping works", {
 
   expect_error(iso_map_peaks(), "no data table")
-  expect_error(iso_map_peaks(data_frame()), "no peak map*")
+  expect_error(iso_map_peaks(tibble()), "no peak map*")
 
   # data table
-  my_dt <- data_frame(
+  my_dt <- tibble(
     file_id = rep(c("a", "b", "c"), each = 3),
     map_id = rep(c("a_map", "bc_map", "bc_map"), each = 3),
     #            X+Y,   Z,  NA,   X, Y+Z,   Z,   X,   X,   Z
@@ -18,7 +18,7 @@ test_that("testing that peak mapping works", {
   )
 
   # maps
-  my_peak_maps <- data_frame(
+  my_peak_maps <- tibble(
     compound = c("X", "Y", "Z"),
     other_info = c(TRUE, FALSE, FALSE),
     `rt:a_map` = c(1.1, 1.3, 4.2),
@@ -35,7 +35,7 @@ test_that("testing that peak mapping works", {
 
   # check that it all assembles properly
   expect_equal(mapped_dt <- iso_map_peaks(my_dt, my_peak_maps),
-               data_frame(
+               tibble(
                  file_id = c("a", "a", "a", "a", "b", "b", "b", "b", "c", "c", "c", "c"),
                  map_id = c("a_map", "a_map", "a_map", "a_map", "bc_map", "bc_map", "bc_map", "bc_map", "bc_map", "bc_map", "bc_map", "bc_map"),
                  rt = c(1.1, 1.1, 4, 5.8, 1.5, 5, 5, 5.8, 1.5, 2, 4.4, 5.5),
@@ -57,18 +57,18 @@ test_that("testing that peak mapping works", {
 
   # test get problematic peaks
   expect_error(iso_get_problematic_peaks(), "no data table")
-  expect_error(iso_get_problematic_peaks(data_frame()), "unknown columns")
+  expect_error(iso_get_problematic_peaks(tibble()), "unknown columns")
   expect_error(iso_get_problematic_peaks(mapped_dt, select = c()), "not.*correct number")
 
   expect_message(out <- mapped_dt %>% iso_get_problematic_peaks(
     select = c(file_id, rt, compound), ambiguous = FALSE, missing = TRUE, unidentified = FALSE),
     "fetching 1.*\\(missing\\)")
-  expect_equal(out, data_frame(file_id = "c", rt = 4.4, compound = "Y", problem = "missing"))
+  expect_equal(out, tibble(file_id = "c", rt = 4.4, compound = "Y", problem = "missing"))
 
   expect_message(out <- mapped_dt %>% iso_get_problematic_peaks(
     select = c(file_id, rt, compound), ambiguous = FALSE, missing = FALSE, unidentified = TRUE),
     "fetching 1.*\\(unidentified\\)")
-  expect_equal(out, data_frame(file_id = "a", rt = 5.8, compound = NA_character_, problem = "unidentified"))
+  expect_equal(out, tibble(file_id = "a", rt = 5.8, compound = NA_character_, problem = "unidentified"))
 
   expect_message(out <- mapped_dt %>% iso_get_problematic_peaks(
     select = c(file_id, rt, compound), ambiguous = TRUE, missing = FALSE, unidentified = FALSE),

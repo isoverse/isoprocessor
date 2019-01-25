@@ -29,7 +29,7 @@ iso_add_metadata <- function(dt, metadata, match_by = default(match_by), quiet =
 
   # figure out how metadata best maps to the data based on the match_by priority
   matching_idx <-
-    data_frame(column = md_cols$match_by) %>%
+    tibble(column = md_cols$match_by) %>%
     # find all filled metadata column indices
     mutate(
       priority = 1:n(),

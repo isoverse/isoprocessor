@@ -42,7 +42,7 @@ iso_map_peaks <- function(
     # ignore empty rows (safety precaution)
     filter(!is.na(!!sym(pm_cols$compound))) %>%
     # add NA compound to map undefined peaks
-    bind_rows(data_frame(compound = NA)) %>% unique() %>%
+    bind_rows(tibble(compound = NA)) %>% unique() %>%
     # gather map retention times
     gather(..map_id.., ..rt_target.., starts_with(dt_cols$rt)) %>%
     # replace the rt prefix to get to the actual map name

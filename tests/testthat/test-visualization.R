@@ -5,7 +5,7 @@ context("Visualization")
 test_that("test that referencd peak visualization works", {
 
   expect_error(iso_plot_ref_peaks(), "no data table")
-  expect_error(iso_plot_ref_peaks(data_frame()), "no condition.*reference peak")
+  expect_error(iso_plot_ref_peaks(tibble()), "no condition.*reference peak")
   expect_error(iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = TRUE), "missing parameter.*ratio.*group_id.*")
   expect_error(iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = TRUE, ratio = displ, group_id = DNE), "group_id.*unknown column")
   expect_error(iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = cyl > 100, ratio = displ, group_id = model), "no data")

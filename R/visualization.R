@@ -208,15 +208,15 @@ iso_plot_calibration_range <- function(dt, calibration = "", x, y, color = NULL,
                    color = enquo(color), size = enquo(size), shape = enquo(shape))
 
   # check for model parameters
-  calib_vars <- isoprocessor:::get_calibration_vars(calibration)
-  isoprocessor:::check_calibration_cols(!!vis_quos$dt, calib_vars$model_params)
+  calib_vars <- get_calibration_vars(calibration)
+  check_calibration_cols(!!vis_quos$dt, calib_vars$model_params)
 
   # data
   dt <- dt %>% mutate(..rowid.. = row_number())
   data <- dt %>% iso_unnest_data()
 
   # check existence of x and y
-  dt_cols <- isoprocessor:::get_column_names(data, x = vis_quos$x, y = vis_quos$y)
+  dt_cols <- get_column_names(data, x = vis_quos$x, y = vis_quos$y)
 
   # ranges
   ranges <- dt %>% iso_unnest_calibration_range(calibration = calibration)
@@ -331,7 +331,7 @@ iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, 
     visualization_data <-
       visualization_data %>%
       left_join(
-        data_frame(panel = dt_cols$y, panel_y_error = dt_cols$y_error),
+        tibble(panel = dt_cols$y, panel_y_error = dt_cols$y_error),
         by = "panel"
       ) %>%
       left_join(

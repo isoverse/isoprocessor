@@ -77,12 +77,12 @@ iso_reset_default_process_parameters <- function(data = NULL) {
 #' @family settings functions
 #' @export
 iso_get_default_processor_parameters <- function() {
-  regular_params <- data_frame(parameter = "quiet", value = as.character(default("quiet")))
+  regular_params <- tibble(parameter = "quiet", value = as.character(default("quiet")))
   func_params <- get_process_parameters()
   if (length(func_params) > 0) {
     bind_rows(
       regular_params,
-      data_frame(parameter = names(func_params), value = map_chr(func_params, quo_text))
+      tibble(parameter = names(func_params), value = map_chr(func_params, quo_text))
     ) %>% return()
   } else
     return(regular_params)
