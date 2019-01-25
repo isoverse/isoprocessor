@@ -4,8 +4,9 @@
 \alias{iso_unnest_calibration_summary}
 \title{Unnest calibration summary}
 \usage{
-iso_unnest_calibration_summary(dt, calibration = "", select = everything(),
-  keep_remaining_nested_data = FALSE, keep_other_list_data = TRUE)
+iso_unnest_calibration_summary(dt, calibration = "",
+  select = everything(), keep_remaining_nested_data = FALSE,
+  keep_other_list_data = TRUE)
 }
 \arguments{
 \item{dt}{nested data table with column \code{all_data} (see \link{iso_prepare_for_calibration})}

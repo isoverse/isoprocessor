@@ -68,13 +68,19 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.2.6.9000</span>
+        <span class="label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.0</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
+  <a href="../articles/dual_inlet.html">Dual Inlet</a>
+</li>
+<li>
+  <a href="../articles/continuous_flow.html">Continuous Flow</a>
+</li>
+<li>
   <a href="../reference/index.html">Reference</a>
 </li>
       </ul>
@@ -110,6 +116,32 @@
     </colgroup>
 
     <tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-calculation-functions" class="hasAnchor"><a href="#section-calculation-functions" class="anchor"></a>Calculation functions</h2>
+          <p class="section-desc"><p>These functions provide tools to easily calculate ratios, scale time and convert signal units.</p></p>
+        </th>
+      </tr>
+      <tr>
+        
+        <td>
+          <p><code><a href="iso_calculate_ratios.html">iso_calculate_ratios()</a></code> </p>
+        </td>
+        <td><p>Calculate ratios</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="iso_convert_signals.html">iso_convert_signals()</a></code> </p>
+        </td>
+        <td><p>Convert signal units in continuous flow and dual inlet files</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="iso_convert_time.html">iso_convert_time()</a></code> </p>
+        </td>
+        <td><p>Convert time units in continuous flow files</p></td>
+      </tr>
+    </tbody><tbody>
       <tr>
         <th colspan="2">
           <h2 id="section-metadata" class="hasAnchor"><a href="#section-metadata" class="anchor"></a>Metadata</h2>
@@ -253,9 +285,21 @@
       <tr>
         
         <td>
-          <p><code><a href="iso_get_default_processor_parameters.html">iso_get_default_processor_parameters()</a></code> </p>
+          <p><code><a href="iso_plot_raw_data.html">iso_plot_raw_data()</a></code> </p>
         </td>
-        <td><p>Get the current default processor parameters</p></td>
+        <td><p>Plot raw data from isoreader files</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="iso_plot_continuous_flow_data.html">iso_plot_continuous_flow_data()</a></code> </p>
+        </td>
+        <td><p>Plot chromatogram from continuous flow data</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="iso_plot_dual_inlet_data.html">iso_plot_dual_inlet_data()</a></code> </p>
+        </td>
+        <td><p>Plot mass data from dual inlet files</p></td>
       </tr><tr>
         
         <td>
@@ -315,6 +359,12 @@ Define the default parameters for calculations used in this package.</p></td>
           <p><code><a href="iso_show_default_processor_parameters.html">iso_show_default_processor_parameters()</a></code> </p>
         </td>
         <td><p>Show the current default processor parameters</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="iso_get_default_processor_parameters.html">iso_get_default_processor_parameters()</a></code> </p>
+        </td>
+        <td><p>Get the current default processor parameters</p></td>
       </tr>
     </tbody><tbody>
       <tr>
@@ -355,6 +405,7 @@ Define the default parameters for calculations used in this package.</p></td>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
+      <li><a href="#section-calculation-functions">Calculation functions</a></li>
       <li><a href="#section-metadata">Metadata</a></li>
       <li><a href="#section-peak-mapping">Peak mapping</a></li>
       <li><a href="#section-calibration">Calibration</a></li>

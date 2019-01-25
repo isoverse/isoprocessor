@@ -71,13 +71,19 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.2.6.9000</span>
+        <span class="label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.0</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
+  <a href="../articles/dual_inlet.html">Dual Inlet</a>
+</li>
+<li>
+  <a href="../articles/continuous_flow.html">Continuous Flow</a>
+</li>
+<li>
   <a href="../reference/index.html">Reference</a>
 </li>
       </ul>
@@ -142,7 +148,7 @@
     <p>the data table with the following columns added (prefixed by the <code>calibration</code> parameter if provided):</p><ul>
 <li><p><code>calib</code>: the name of the calibration if provided in the <code>model</code> parameter, otherwise the formula</p></li>
 <li><p><code>calib_ok</code>: a TRUE/FALSE column indicating whether there was enough data for calibration to be generated</p></li>
-<li><p><code>calib_params</code>: a nested dataframe that holds the actual regression model fit, coefficients, summary and data range. These parameters are most easily accessed using the functions <code><a href='iso_unnest_calibration_coefs.html'>iso_unnest_calibration_coefs</a></code>, <code><a href='iso_unnest_calibration_summary.html'>iso_unnest_calibration_summary</a></code>, <code><a href='iso_unnest_calibration_parameters.html'>iso_unnest_calibration_parameters</a></code>, <code><a href='iso_unnest_calibration_range.html'>iso_unnest_calibration_range</a></code>, or directly via <code><a href='http://www.rdocumentation.org/packages/tidyr/topics/unnest'>unnest</a></code></p></li>
+<li><p><code>calib_params</code>: a nested dataframe that holds the actual regression model fit, coefficients, summary and data range. These parameters are most easily accessed using the functions <code><a href='iso_unnest_calibration_coefs.html'>iso_unnest_calibration_coefs</a></code>, <code><a href='iso_unnest_calibration_summary.html'>iso_unnest_calibration_summary</a></code>, <code><a href='iso_unnest_calibration_parameters.html'>iso_unnest_calibration_parameters</a></code>, <code><a href='iso_unnest_calibration_range.html'>iso_unnest_calibration_range</a></code>, or directly via <code><a href='https://tidyr.tidyverse.org/reference/unnest.html'>unnest</a></code></p></li>
 <li><p><code>resid</code> within <code>all_data</code>: a new column within the nested <code>all_data</code> that holds the residuals for all standards used in the regression model</p></li>
 </ul>
 

@@ -4,8 +4,8 @@
 \alias{iso_plot_ref_peaks}
 \title{Plot reference peaks}
 \usage{
-iso_plot_ref_peaks(dt, ratio, group_id, is_ref_condition, is_ref_used = NULL,
-  within_group = FALSE)
+iso_plot_ref_peaks(dt, ratio, group_id, is_ref_condition,
+  is_ref_used = NULL, within_group = FALSE)
 }
 \arguments{
 \item{ratio}{which ratio column(s) to compare for the reference peaks (can be multiple)}

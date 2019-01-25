@@ -33,3 +33,4 @@ Note that this is a convenience function for easily adding metadata in a rule ba
 Other metadata functions: \code{\link{iso_get_missing_metadata}},
   \code{\link{iso_remove_missing_metadata}}
 }
+\concept{metadata functions}

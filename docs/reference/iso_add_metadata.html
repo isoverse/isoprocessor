@@ -74,13 +74,19 @@ will overwrite all previous matches for which it applies, even if they have alre
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.2.6.9000</span>
+        <span class="label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.0</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
+  <a href="../articles/dual_inlet.html">Dual Inlet</a>
+</li>
+<li>
+  <a href="../articles/continuous_flow.html">Continuous Flow</a>
+</li>
+<li>
   <a href="../reference/index.html">Reference</a>
 </li>
       </ul>
@@ -145,8 +151,8 @@ will overwrite all previous matches for which it applies, even if they have alre
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>This function also introduces a <code>has_metadata</code> column that would be typically used afterwards to inspect and/or filter data that has/doesn't have metadata. For routine downstream data processing, this function is thus usually followed by <code><a href='iso_get_missing_metadata.html'>iso_get_missing_metadata</a></code> to inspect which entries are missing metadata and <code><a href='iso_remove_missing_metadata.html'>iso_remove_missing_metadata</a></code> to proceed only with entries that do have metadata assigned.</p>
-<p>Note that this is a convenience function for easily adding metadata in a rule based way. If a direct <code><a href='http://dplyr.tidyverse.org/reference/join.html'>join</a></code> is suitable (i.e. if there is direct
-1-to-1 or 1-to-many mapping of a single ID column or several id columns in combination), it will be a lot faster to use the <code><a href='http://dplyr.tidyverse.org/reference/join.html'>join</a></code>.</p>
+<p>Note that this is a convenience function for easily adding metadata in a rule based way. If a direct <code><a href='https://dplyr.tidyverse.org/reference/join.html'>join</a></code> is suitable (i.e. if there is direct
+1-to-1 or 1-to-many mapping of a single ID column or several id columns in combination), it will be a lot faster to use the <code><a href='https://dplyr.tidyverse.org/reference/join.html'>join</a></code>.</p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 

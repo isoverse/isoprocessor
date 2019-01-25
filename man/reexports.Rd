@@ -4,27 +4,16 @@
 \name{reexports}
 \alias{reexports}
 \alias{extract_substring}
-\alias{reexports}
 \alias{extract_word}
-\alias{reexports}
 \alias{parse_number}
-\alias{reexports}
 \alias{parse_logical}
-\alias{reexports}
 \alias{parse_integer}
-\alias{reexports}
 \alias{parse_double}
-\alias{reexports}
 \alias{parse_datetime}
-\alias{reexports}
 \alias{iso_turn_info_messages_on}
-\alias{reexports}
 \alias{iso_turn_info_messages_off}
-\alias{reexports}
 \alias{\%>\%}
-\alias{reexports}
 \alias{filter}
-\alias{reexports}
 \alias{unnest}
 \title{Objects exported from other packages}
 \keyword{internal}

@@ -5,8 +5,8 @@
 \title{Visualize calibration parameters}
 \usage{
 iso_plot_calibration_parameters(dt, calibration = "", x,
-  select_from_summary = c(R2 = adj.r.squared, RMSD = sigma), color = NULL,
-  shape = NULL, size = NULL, date_breaks = "2 hours",
+  select_from_summary = c(R2 = adj.r.squared, RMSD = sigma),
+  color = NULL, shape = NULL, size = NULL, date_breaks = "2 hours",
   date_labels = "\%d \%b \%H:\%M")
 }
 \arguments{

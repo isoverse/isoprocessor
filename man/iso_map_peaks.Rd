@@ -47,3 +47,4 @@ For routine downstream data processing, this function is usually followed by \co
 Other peak mapping functions: \code{\link{iso_get_problematic_peaks}},
   \code{\link{iso_remove_problematic_peaks}}
 }
+\concept{peak mapping functions}

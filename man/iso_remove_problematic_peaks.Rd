@@ -25,3 +25,4 @@ Remove peaks that were problematic during peak mapping.
 Other peak mapping functions: \code{\link{iso_get_problematic_peaks}},
   \code{\link{iso_map_peaks}}
 }
+\concept{peak mapping functions}

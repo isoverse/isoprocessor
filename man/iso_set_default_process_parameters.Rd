@@ -30,3 +30,4 @@ Define the default parameters for calculations used in this package.
 Other settings functions: \code{\link{iso_get_default_processor_parameters}},
   \code{\link{iso_show_default_processor_parameters}}
 }
+\concept{settings functions}

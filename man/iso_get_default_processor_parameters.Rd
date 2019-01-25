@@ -17,3 +17,4 @@ For a piping compatible version of this function, see \link{iso_show_default_pro
 Other settings functions: \code{\link{iso_set_default_process_parameters}},
   \code{\link{iso_show_default_processor_parameters}}
 }
+\concept{settings functions}

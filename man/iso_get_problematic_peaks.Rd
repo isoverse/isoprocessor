@@ -4,8 +4,9 @@
 \alias{iso_get_problematic_peaks}
 \title{Fetch problematic peaks}
 \usage{
-iso_get_problematic_peaks(dt, select = everything(), unidentified = TRUE,
-  missing = TRUE, ambiguous = TRUE, quiet = default(quiet))
+iso_get_problematic_peaks(dt, select = everything(),
+  unidentified = TRUE, missing = TRUE, ambiguous = TRUE,
+  quiet = default(quiet))
 }
 \arguments{
 \item{dt}{data table with mapped peaks. Requires the \code{is_identified}, \code{is_missing} and \code{is_ambiguous} columns to be present.}
@@ -28,3 +29,4 @@ Fetch peaks that were problematic during peak mapping. This function is typicall
 Other peak mapping functions: \code{\link{iso_map_peaks}},
   \code{\link{iso_remove_problematic_peaks}}
 }
+\concept{peak mapping functions}

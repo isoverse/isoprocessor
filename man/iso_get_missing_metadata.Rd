@@ -4,7 +4,8 @@
 \alias{iso_get_missing_metadata}
 \title{Fetch entries with missing metadata}
 \usage{
-iso_get_missing_metadata(dt, select = everything(), quiet = default(quiet))
+iso_get_missing_metadata(dt, select = everything(),
+  quiet = default(quiet))
 }
 \arguments{
 \item{dt}{data with metadata added}
@@ -18,3 +19,4 @@ Fetch data table entries that have missing metadata. This function is typically 
 Other metadata functions: \code{\link{iso_add_metadata}},
   \code{\link{iso_remove_missing_metadata}}
 }
+\concept{metadata functions}
