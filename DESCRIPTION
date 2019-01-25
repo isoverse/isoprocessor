@@ -6,7 +6,9 @@ Authors@R: person("Sebastian", "Kopf", email = "sebastian.kopf@colorado.edu",
     role = c("aut", "cre"))
 URL: https://github.com/kopflab/isoprocessor
 BugReports: https://github.com/kopflab/isoprocessor/issues
-Depends: R (>= 3.3.0)
+Depends: 
+    R (>= 3.3.0),
+    isoreader
 Imports:
     methods,
     stats,
@@ -24,8 +26,7 @@ Imports:
     broom,
     modelr,
     investr,
-    readxl,
-    isoreader
+    readxl
 Suggests:
     testthat,
     knitr,

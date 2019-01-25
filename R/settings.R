@@ -95,6 +95,7 @@ iso_get_default_processor_parameters <- function() {
 #' @param func function to use for formatting the reader parameters table, e.g. \code{\link[knitr]{kable}}.
 #' Note that if the output is in RMarkdown chunks, the chunk option must have \code{results="asis"} for the table to be correctly formatted.
 #' @param ... additional parameters to forward to the \code{func} function
+#' @param quiet whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.
 #' @family settings functions
 #' @export
 #' @note DEPRECATE
