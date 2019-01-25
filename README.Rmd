@@ -18,7 +18,6 @@ version <- as.character(packageVersion("isoprocessor"))
 
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/isoprocessor)](https://cran.r-project.org/package=isoprocessor)
 [![Git_Hub_Version](https://img.shields.io/badge/GitHub-`r version`-orange.svg?style=flat-square)](/commits)
-[![Last-Update](https://img.shields.io/badge/updated-`r gsub('-', '--', Sys.Date())`-yellowgreen.svg)](/commits)
 [![Build Status](https://travis-ci.org/KopfLab/turnoveR.svg?branch=master)](https://travis-ci.org/KopfLab/isoprocessor)
 [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/KopfLab/isoprocessor?branch=master&svg=true)](https://ci.appveyor.com/project/KopfLab/isoprocessor)
 [![Binder](https://img.shields.io/badge/launch-RStudio-blue.svg)](https://mybinder.org/v2/gh/KopfLab/isoprocessor/binder?urlpath=rstudio)

@@ -4,9 +4,7 @@
 # isoprocessor <a href='https://isoreader.kopflab.org'><img src='man/figures/isoprocessor_logo_thumb.png' align="right" height="138.5"/></a>
 
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/isoprocessor)](https://cran.r-project.org/package=isoprocessor)
-[![Git\_Hub\_Version](https://img.shields.io/badge/GitHub-0.2.7.9000-orange.svg?style=flat-square)](/commits)
-[![Last-Update](https://img.shields.io/badge/updated-2019--01--25-yellowgreen.svg)](/commits)
-[![Documentation](https://img.shields.io/badge/docs-online-green.svg)](https://kopflab.github.io/isoprocessor/)
+[![Git\_Hub\_Version](https://img.shields.io/badge/GitHub-0.3.0-orange.svg?style=flat-square)](/commits)
 [![Build
 Status](https://travis-ci.org/KopfLab/turnoveR.svg?branch=master)](https://travis-ci.org/KopfLab/isoprocessor)
 [![AppVeyor Build
@@ -19,13 +17,15 @@ Status](https://ci.appveyor.com/api/projects/status/github/KopfLab/isoprocessor?
 This package provides broad functionality for IRMS data processing and
 reduction pipelines.
 
-Existing functionality includes easy-to-use, highly flexible data
-calibration and visualization pipelines for continuous flow data with
-additional tools on H3 factor calculation, peak detection, baseline
-correction and dual inlet pipelines forthcoming. All implemented
-functions are well documented and ready for use. However, since this
-package is still in active development some syntax and function names
-may still change.
+Existing functionality includes signal conversion (voltage to current
+and back), time scaling (continuous flow chromatograms), isotope ratio
+calculations, delta value calculations, as well as easy-to-use highly
+flexible data calibration and visualization pipelines for continuous
+flow data. Additional tools on O17 corrections, H3 factor calculation,
+peak detection, baseline correction, etc are in the works. All
+implemented functions are well documented and ready for use. However,
+since this package is still in active development some syntax and
+function names may still change.
 
 ## Installation
 
@@ -49,8 +49,14 @@ devtools::install_github("KopfLab/isoprocessor")
 
   - for a full reference of all available functions, see the **[Function
     Reference](https://kopflab.github.io/isoprocessor/reference/)**
-  - specific examples on how to use isoprocessor are in the works and
-    will be available soon
+  - for an example of how to work with continuos flow data, see the
+    vignette on **[Continuous
+    Flow](https://kopflab.github.io/isoprocessor/articles/continuous_flow.html)**
+  - for an example of how to work with dual inlet data, see the vignette
+    on **[Dual
+    Inlet](https://kopflab.github.io/isoprocessor/articles/dual_inlet.html)**
+  - additional vignettes on data reduction and calibration are in the
+    works
 
 ## Open Source
 
