@@ -5,6 +5,7 @@
 
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/isoprocessor)](https://cran.r-project.org/package=isoprocessor)
 [![Git\_Hub\_Version](https://img.shields.io/badge/GitHub-0.3.0-orange.svg?style=flat-square)](/commits)
+[![Documentation](https://img.shields.io/badge/docs-online-green.svg)](https://kopflab.github.io/isoprocessor/)
 [![Build
 Status](https://travis-ci.org/KopfLab/turnoveR.svg?branch=master)](https://travis-ci.org/KopfLab/isoprocessor)
 [![AppVeyor Build
