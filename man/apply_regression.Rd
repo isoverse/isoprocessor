@@ -4,8 +4,9 @@
 \alias{apply_regression}
 \title{invert a regression for calibration purposes}
 \usage{
-apply_regression(dt, predict, nested_model = FALSE, calculate_error = FALSE,
-  model_data = model_data, model_name = model_name, model_fit = model_fit,
+apply_regression(dt, predict, nested_model = FALSE,
+  calculate_error = FALSE, model_data = model_data,
+  model_name = model_name, model_fit = model_fit,
   model_range = model_range, model_params = model_params,
   predict_value = pred, predict_error = pred_se,
   predict_in_range = pred_in_range, predict_range = NULL)

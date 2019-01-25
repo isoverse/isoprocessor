@@ -16,6 +16,15 @@
     <loc>http://kopflab.github.io/isoprocessor//reference/iso_apply_calibration.html</loc>
   </url>
   <url>
+    <loc>http://kopflab.github.io/isoprocessor//reference/iso_calculate_ratios.html</loc>
+  </url>
+  <url>
+    <loc>http://kopflab.github.io/isoprocessor//reference/iso_convert_signals.html</loc>
+  </url>
+  <url>
+    <loc>http://kopflab.github.io/isoprocessor//reference/iso_convert_time.html</loc>
+  </url>
+  <url>
     <loc>http://kopflab.github.io/isoprocessor//reference/iso_generate_calibration.html</loc>
   </url>
   <url>
@@ -43,7 +52,16 @@
     <loc>http://kopflab.github.io/isoprocessor//reference/iso_plot_calibration_range.html</loc>
   </url>
   <url>
+    <loc>http://kopflab.github.io/isoprocessor//reference/iso_plot_continuous_flow_data.html</loc>
+  </url>
+  <url>
     <loc>http://kopflab.github.io/isoprocessor//reference/iso_plot_data.html</loc>
+  </url>
+  <url>
+    <loc>http://kopflab.github.io/isoprocessor//reference/iso_plot_dual_inlet_data.html</loc>
+  </url>
+  <url>
+    <loc>http://kopflab.github.io/isoprocessor//reference/iso_plot_raw_data.html</loc>
   </url>
   <url>
     <loc>http://kopflab.github.io/isoprocessor//reference/iso_plot_ref_peaks.html</loc>
@@ -110,5 +128,11 @@
   </url>
   <url>
     <loc>http://kopflab.github.io/isoprocessor//reference/unnest_select_data.html</loc>
+  </url>
+  <url>
+    <loc>http://kopflab.github.io/isoprocessor//articles/continuous_flow.html</loc>
+  </url>
+  <url>
+    <loc>http://kopflab.github.io/isoprocessor//articles/dual_inlet.html</loc>
   </url>
 </urlset>

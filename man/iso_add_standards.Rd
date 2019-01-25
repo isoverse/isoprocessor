@@ -25,3 +25,4 @@ data frame with standards data frame merged in and the following information col
 \description{
 Add calibration standards
 }
+\concept{calibration functions}

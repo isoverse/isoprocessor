@@ -22,3 +22,4 @@ Continue data processing without data that is missing metadata. This function is
 Other metadata functions: \code{\link{iso_add_metadata}},
   \code{\link{iso_get_missing_metadata}}
 }
+\concept{metadata functions}

@@ -4,7 +4,8 @@
 \alias{iso_prepare_for_calibration}
 \title{Prepare data set for calibration}
 \usage{
-iso_prepare_for_calibration(dt, group_by = NULL, quiet = default(quiet))
+iso_prepare_for_calibration(dt, group_by = NULL,
+  quiet = default(quiet))
 }
 \arguments{
 \item{dt}{data table}

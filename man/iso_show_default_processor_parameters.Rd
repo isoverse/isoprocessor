@@ -12,6 +12,8 @@ iso_show_default_processor_parameters(data = NULL,
 
 \item{...}{additional parameters to forward to the \code{func} function}
 
+\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
+
 \item{func}{function to use for formatting the reader parameters table, e.g. \code{\link[knitr]{kable}}.
 Note that if the output is in RMarkdown chunks, the chunk option must have \code{results="asis"} for the table to be correctly formatted.}
 }
@@ -25,3 +27,4 @@ DEPRECATE
 Other settings functions: \code{\link{iso_get_default_processor_parameters}},
   \code{\link{iso_set_default_process_parameters}}
 }
+\concept{settings functions}

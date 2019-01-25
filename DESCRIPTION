@@ -1,14 +1,14 @@
 Package: isoprocessor
 Title: IRMS data processor
 Description: Data processing and reduction pipelines for isotope ratio mass spectrometry (IRMS) data
-Version: 0.2.7.9000
+Version: 0.3.0
 Authors@R: person("Sebastian", "Kopf", email = "sebastian.kopf@colorado.edu",
     role = c("aut", "cre"))
 URL: https://github.com/kopflab/isoprocessor
 BugReports: https://github.com/kopflab/isoprocessor/issues
 Depends: 
     R (>= 3.3.0),
-    isoreader
+    isoreader (>= 1.0.1)
 Imports:
     methods,
     stats,

@@ -134,7 +134,7 @@ iso_convert_signals <- function(iso_files, to, R, R_units = NA, quiet = default(
       } else {
         R <- iso_file$method_info$resistors %>%
           mutate(R_name = str_c("R", mass)) %>%
-          select(R_name, R.Ohm) %>% deframe()
+          select(R_name, R.Ohm) %>% tibble::deframe()
         R_units <- "Ohm"
       }
     }
@@ -148,7 +148,7 @@ iso_convert_signals <- function(iso_files, to, R, R_units = NA, quiet = default(
   convert_signal_problems <- problems(iso_files) %>% filter(func == func)
   if (!quiet && nrow(convert_signal_problems) > 0) {
     sprintf("Warning: encountered %d problem(s) during signal conversion (%d total problems):",
-            nrow(convert_signal_problems), n_problems(iso_files)) %>%
+            nrow(convert_signal_problems), isoreader:::n_problems(iso_files)) %>%
     message()
     print(convert_signal_problems)
     cat("\n")

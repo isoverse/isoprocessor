@@ -18,7 +18,11 @@ navbar:
   title: isoprocessor
   type: default
   left:
-  - text: "Reference"
+  - text: Dual Inlet
+    href: articles/dual_inlet.html
+  - text: Continuous Flow
+    href: articles/continuous_flow.html
+  - text: Reference
     href: reference/index.html
   right:
   - icon: fa-github fa-lg
@@ -26,6 +30,14 @@ navbar:
 
 
 reference:
+- title: Calculation functions
+  desc: >
+    These functions provide tools to easily calculate ratios, scale time and convert signal units.
+  contents:
+  - '`iso_calculate_ratios`'
+  - '`iso_convert_signals`'
+  - '`iso_convert_time`'
+
 - title: Metadata
   desc: >
     Functions to easily add metadata to a data table.
@@ -59,26 +71,32 @@ reference:
   - iso_unnest_calibration_range
   - iso_unnest_calibration_summary
   - iso_unnest_data
+
 - title: Visualization
   desc: >
     Visualization functions.
   contents:
-  - iso_get_default_processor_parameters
+  - iso_plot_raw_data
+  - iso_plot_continuous_flow_data
+  - iso_plot_dual_inlet_data
   - iso_plot_ref_peaks
   - iso_plot_calibration_parameters
   - iso_plot_data
+
 - title: Reporting
   desc: >
     Reporting functions.
   contents:
   - iso_generate_summary_table
   - iso_remove_list_columns
+
 - title: Package settings
   desc: >
-
   contents:
   - iso_set_default_process_parameters
   - iso_show_default_processor_parameters
+  - iso_get_default_processor_parameters
+
 - title: Under the hood
   desc: >
     Generic base functions, can be adapted for non-standard applications.

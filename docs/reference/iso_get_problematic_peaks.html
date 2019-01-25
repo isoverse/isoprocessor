@@ -71,13 +71,19 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.2.6.9000</span>
+        <span class="label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.0</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
+  <a href="../articles/dual_inlet.html">Dual Inlet</a>
+</li>
+<li>
+  <a href="../articles/continuous_flow.html">Continuous Flow</a>
+</li>
+<li>
   <a href="../reference/index.html">Reference</a>
 </li>
       </ul>
@@ -112,8 +118,9 @@
     
     </div>
 
-    <pre class="usage"><span class='fu'>iso_get_problematic_peaks</span>(<span class='no'>dt</span>, <span class='kw'>select</span> <span class='kw'>=</span> <span class='fu'>everything</span>(), <span class='kw'>unidentified</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>missing</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>ambiguous</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))</pre>
+    <pre class="usage"><span class='fu'>iso_get_problematic_peaks</span>(<span class='no'>dt</span>, <span class='kw'>select</span> <span class='kw'>=</span> <span class='fu'>everything</span>(),
+  <span class='kw'>unidentified</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>missing</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>ambiguous</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -124,7 +131,7 @@
     </tr>
     <tr>
       <th>select</th>
-      <td><p>which columns to select - use <code>c(...)</code> to select multiple, supports all <a href='http://dplyr.tidyverse.org/reference/select.html'>select</a> syntax including renaming columns. Includes all columns by default but this function is more useful with a smaller subset of identifying columns.</p></td>
+      <td><p>which columns to select - use <code>c(...)</code> to select multiple, supports all <a href='https://dplyr.tidyverse.org/reference/select.html'>select</a> syntax including renaming columns. Includes all columns by default but this function is more useful with a smaller subset of identifying columns.</p></td>
     </tr>
     <tr>
       <th>unidentified</th>

@@ -4,8 +4,9 @@
 \alias{iso_apply_calibration}
 \title{Apply calibration}
 \usage{
-iso_apply_calibration(dt, predict, calibration = "", predict_range = NULL,
-  calculate_error = FALSE, quiet = default(quiet))
+iso_apply_calibration(dt, predict, calibration = "",
+  predict_range = NULL, calculate_error = FALSE,
+  quiet = default(quiet))
 }
 \arguments{
 \item{dt}{nested data table with \code{all_data} and calibration columns (see \link{iso_generate_calibration})}
