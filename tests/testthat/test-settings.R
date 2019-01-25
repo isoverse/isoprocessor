@@ -3,12 +3,12 @@ context("Settings and default values")
 test_that("info messages can be turned on and off", {
   # functionality exported from isoreader
   expect_message(iso_turn_info_messages_on(), "messages turned on")
-  expect_equal(isoprocessorCUB:::default(), quo())
-  expect_false(isoprocessorCUB:::default("quiet"))
-  expect_false(isoprocessorCUB:::default(quiet))
+  expect_equal(default(), quo())
+  expect_false(default("quiet"))
+  expect_false(default(quiet))
   expect_silent(iso_turn_info_messages_off())
-  expect_true(isoprocessorCUB:::default("quiet"))
-  expect_true(isoprocessorCUB:::default(quiet))
+  expect_true(default("quiet"))
+  expect_true(default(quiet))
 })
 
 
@@ -21,12 +21,12 @@ test_that("default process parameters work properly", {
   expect_equal(eval_tidy(default(b)), 5)
   expect_equal(eval_tidy(default(c)), NULL)
   expect_equal(iso_get_default_processor_parameters(),
-               data_frame(parameter = c("quiet", "a", "b", "c"),
+               tibble(parameter = c("quiet", "a", "b", "c"),
                           value = c("FALSE", "x", "5", "NULL")))
 
   # reset and default of default
   expect_equal(iso_reset_default_process_parameters(42), 42)
   expect_equal(default(a), quo(a))
-  expect_equal(iso_get_default_processor_parameters(), data_frame(parameter = c("quiet"), value = c("FALSE")))
+  expect_equal(iso_get_default_processor_parameters(), tibble(parameter = c("quiet"), value = c("FALSE")))
 
 })
