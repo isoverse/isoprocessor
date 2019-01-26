@@ -354,10 +354,10 @@ calculations &lt;-
     ## 2. linearly extrapolated ref ratio at all retention times
     ref_ratio_at_Rt = 
       lm(y ~ x, 
-         data = data_frame(
+         data = tibble(
            x = Rt[`Is Ref.?` == 1], 
            y = `rR 66SO2/64SO2 new`[`Is Ref.?` == 1])) %&gt;% 
-      predict(newdata = data_frame(x = Rt)) %&gt;% 
+      predict(newdata = tibble(x = Rt)) %&gt;% 
       as.numeric(),
     ## 3. resulting calculated 66/64 ratio (note that since these relie on rR only, the whole resistor shenanegans are not actually necessary)
     `R 66SO2/64SO2 new` = `rR 66SO2/64SO2 new` / ref_ratio_at_Rt * `Rps 66SO2/64SO2 new`,

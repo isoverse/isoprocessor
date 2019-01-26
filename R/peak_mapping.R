@@ -14,6 +14,7 @@
 #' @param rt_start the column in dt that holds start of peak retention times
 #' @param rt_end the column in dt that holds end of peak retention times
 #' @param rt_prefix_divider the divider after the retention time column prefix in peak_maps to identify the map id values (e.g. "rt:map_id_value")
+#' @inheritParams iso_show_default_processor_parameters
 #' @return data frame with mapped peaks and the following information columns:
 #' \itemize{
 #' \item{\code{is_identified}: }{a logical TRUE/FALSE indicating peaks that have been successfully identified (includes missing peaks from the peak map!) (note that this information could also be derived from !is.na(compound) but is provided for convenience)}
@@ -42,7 +43,7 @@ iso_map_peaks <- function(
     # ignore empty rows (safety precaution)
     filter(!is.na(!!sym(pm_cols$compound))) %>%
     # add NA compound to map undefined peaks
-    bind_rows(data_frame(compound = NA)) %>% unique() %>%
+    bind_rows(tibble(compound = NA)) %>% unique() %>%
     # gather map retention times
     gather(..map_id.., ..rt_target.., starts_with(dt_cols$rt)) %>%
     # replace the rt prefix to get to the actual map name
@@ -158,6 +159,7 @@ iso_map_peaks <- function(
 #' @param unidentified whether to include peaks that are problematics because they are unidentified
 #' @param missing whether to include peaks that are problematics because they are missing
 #' @param ambiguous whether to include peaks that are problematics because they are ambiguously identified
+#' @inheritParams iso_show_default_processor_parameters
 #' @return data table with rows for problematic peaks and the \code{select}-identified columns
 #' @family peak mapping functions
 #' @export

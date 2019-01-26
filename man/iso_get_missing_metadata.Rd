@@ -4,12 +4,15 @@
 \alias{iso_get_missing_metadata}
 \title{Fetch entries with missing metadata}
 \usage{
-iso_get_missing_metadata(dt, select = everything(), quiet = default(quiet))
+iso_get_missing_metadata(dt, select = everything(),
+  quiet = default(quiet))
 }
 \arguments{
 \item{dt}{data with metadata added}
 
 \item{select}{which columns to select - use \code{c(...)} to select multiple, supports all \link[dplyr]{select} syntax including renaming columns. Includes all columns by default but this function is more useful with a smaller subset of identifying columns.}
+
+\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
 }
 \description{
 Fetch data table entries that have missing metadata. This function is typically called after \link{iso_add_metadata} to inspect problematic entries. Returns only unique rows, use the \code{select} parameter to select only the most informative columns. Requires the \code{has_metadata} column to be present.
@@ -18,3 +21,4 @@ Fetch data table entries that have missing metadata. This function is typically 
 Other metadata functions: \code{\link{iso_add_metadata}},
   \code{\link{iso_remove_missing_metadata}}
 }
+\concept{metadata functions}

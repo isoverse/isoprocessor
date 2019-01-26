@@ -14,6 +14,7 @@ To set messaging and caching parameters see \code{\link[isoreader]{iso_info_mess
 For a piping compatible version of this function, see \link{iso_show_default_processor_parameters}.
 }
 \seealso{
-Other settings functions: \code{\link{iso_set_default_process_parameters}},
+Other settings functions: \code{\link{iso_set_default_processor_parameters}},
   \code{\link{iso_show_default_processor_parameters}}
 }
+\concept{settings functions}

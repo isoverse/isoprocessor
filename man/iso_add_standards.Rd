@@ -15,6 +15,8 @@ iso_add_standards(dt, stds, match_by = default(std_match_by),
 \item{match_by}{what column(s) to match the standards by}
 
 \item{is_standard}{new column that holds information about what is a standard and what isn't}
+
+\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
 }
 \value{
 data frame with standards data frame merged in and the following information column added:
@@ -25,3 +27,4 @@ data frame with standards data frame merged in and the following information col
 \description{
 Add calibration standards
 }
+\concept{calibration functions}

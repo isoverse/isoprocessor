@@ -4,8 +4,9 @@
 \alias{apply_regression}
 \title{invert a regression for calibration purposes}
 \usage{
-apply_regression(dt, predict, nested_model = FALSE, calculate_error = FALSE,
-  model_data = model_data, model_name = model_name, model_fit = model_fit,
+apply_regression(dt, predict, nested_model = FALSE,
+  calculate_error = FALSE, model_data = model_data,
+  model_name = model_name, model_fit = model_fit,
   model_range = model_range, model_params = model_params,
   predict_value = pred, predict_error = pred_se,
   predict_in_range = pred_in_range, predict_range = NULL)
@@ -14,6 +15,8 @@ apply_regression(dt, predict, nested_model = FALSE, calculate_error = FALSE,
 \item{dt}{data table with calibrations}
 
 \item{predict}{which value to calculate, must be one of the regression's independent variables}
+
+\item{nested_model}{whether the model is nested, if TRUE, must also provide \code{model_params}}
 
 \item{calculate_error}{whether to estimate the standard error from the calibration (using the Wald method), stores the result in the new \code{predict_error} column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.}
 

@@ -5,11 +5,15 @@
 \title{Visualize calibration parameters}
 \usage{
 iso_plot_calibration_parameters(dt, calibration = "", x,
-  select_from_summary = c(R2 = adj.r.squared, RMSD = sigma), color = NULL,
-  shape = NULL, size = NULL, date_breaks = "2 hours",
+  select_from_summary = c(R2 = adj.r.squared, RMSD = sigma),
+  color = NULL, shape = NULL, size = NULL, date_breaks = "2 hours",
   date_labels = "\%d \%b \%H:\%M")
 }
 \arguments{
+\item{dt}{data table}
+
+\item{calibration}{name of the calibration, must match the name used in \link{iso_generate_calibration} (if any)}
+
 \item{x}{the x axis aesthetic for the calibration parameters, can be datetime, text or numeric}
 
 \item{select_from_summary}{which parameters from the fit summary to include, by default includes the adjusted R2 (renamed just \code{R2}) and the root mean square deviation (\code{RMSD}), which R often calls \link[stats]{sigma} or residual standard deviation (often also called residual standard error and root mean square error instead of deviation, or standard error of the regression).}

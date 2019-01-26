@@ -11,6 +11,8 @@ iso_remove_missing_metadata(dt, remove_has_metadata_column = TRUE,
 \item{dt}{data with metadata added}
 
 \item{remove_has_metadata_column}{whether to automatically remove the \code{has_metadata} column}
+
+\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
 }
 \value{
 the part of the data table that has metadata, with the \code{has_metadata} removed if \code{remove_has_metadata_column = TRUE}
@@ -22,3 +24,4 @@ Continue data processing without data that is missing metadata. This function is
 Other metadata functions: \code{\link{iso_add_metadata}},
   \code{\link{iso_get_missing_metadata}}
 }
+\concept{metadata functions}

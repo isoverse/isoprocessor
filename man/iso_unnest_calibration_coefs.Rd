@@ -4,8 +4,9 @@
 \alias{iso_unnest_calibration_coefs}
 \title{Unnest calibration coefficients}
 \usage{
-iso_unnest_calibration_coefs(dt, calibration = "", select = everything(),
-  keep_remaining_nested_data = FALSE, keep_other_list_data = TRUE)
+iso_unnest_calibration_coefs(dt, calibration = "",
+  select = everything(), keep_remaining_nested_data = FALSE,
+  keep_other_list_data = TRUE)
 }
 \arguments{
 \item{dt}{nested data table with column \code{all_data} (see \link{iso_prepare_for_calibration})}
@@ -19,5 +20,5 @@ iso_unnest_calibration_coefs(dt, calibration = "", select = everything(),
 \item{keep_other_list_data}{keep other list data columns (e.g. other data or model columns)}
 }
 \description{
-Retrieve calibration coefficients for a calibration. Problematic calibrations are silently omitted (use \link{iso_get_problematic_calibtations} and \link{iso_remove_problematic_calibrations} to deal with them more explicitly).
+Retrieve calibration coefficients for a calibration. Problematic calibrations are silently omitted (use \link{iso_get_problematic_calibrations} and \link{iso_remove_problematic_calibrations} to deal with them more explicitly).
 }

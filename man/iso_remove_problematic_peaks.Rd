@@ -11,6 +11,8 @@ iso_remove_problematic_peaks(dt, remove_unidentified = TRUE,
 \arguments{
 \item{dt}{data table with mapped peaks. Requires the \code{is_identified}, \code{is_missing} and \code{is_ambiguous} columns to be present.}
 
+\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
+
 \item{remove_mapping_info_column}{whether to automatically remove mapping info columns. If true and:
 \itemize{
  \item{\code{remove_unidentified = TRUE} - }{\code{is_identified} column automatically removed}
@@ -25,3 +27,4 @@ Remove peaks that were problematic during peak mapping.
 Other peak mapping functions: \code{\link{iso_get_problematic_peaks}},
   \code{\link{iso_map_peaks}}
 }
+\concept{peak mapping functions}
