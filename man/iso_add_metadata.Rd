@@ -13,6 +13,8 @@ iso_add_metadata(dt, metadata, match_by = default(match_by),
 \item{metadata}{data frame with the metadata}
 
 \item{match_by}{the column (or columns) to match the metadata by. Used sequently, i.e. if the first column is defined in the metadata, it will be used first before mapping the remainder of the metadata with the second column, etc. All columns must exist in both the \code{dt} and \code{metadata} data frames.}
+
+\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
 }
 \value{
 merged data frame with data and metadata and new column logical (TRUE/FALSE) \code{has_metadata} that holds information about which rows had metadata matches.

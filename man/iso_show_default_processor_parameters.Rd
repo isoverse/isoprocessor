@@ -25,6 +25,6 @@ DEPRECATE
 }
 \seealso{
 Other settings functions: \code{\link{iso_get_default_processor_parameters}},
-  \code{\link{iso_set_default_process_parameters}}
+  \code{\link{iso_set_default_processor_parameters}}
 }
 \concept{settings functions}

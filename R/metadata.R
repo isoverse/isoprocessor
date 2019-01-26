@@ -15,6 +15,7 @@
 #' @param dt data frame with the data
 #' @param metadata data frame with the metadata
 #' @param match_by the column (or columns) to match the metadata by. Used sequently, i.e. if the first column is defined in the metadata, it will be used first before mapping the remainder of the metadata with the second column, etc. All columns must exist in both the \code{dt} and \code{metadata} data frames.
+#' @inheritParams iso_show_default_processor_parameters
 #' @return merged data frame with data and metadata and new column logical (TRUE/FALSE) \code{has_metadata} that holds information about which rows had metadata matches.
 #' @family metadata functions
 #' @export
@@ -85,6 +86,7 @@ iso_add_metadata <- function(dt, metadata, match_by = default(match_by), quiet =
 #'
 #' @param dt data with metadata added
 #' @param select which columns to select - use \code{c(...)} to select multiple, supports all \link[dplyr]{select} syntax including renaming columns. Includes all columns by default but this function is more useful with a smaller subset of identifying columns.
+#' @inheritParams iso_show_default_processor_parameters
 #' @family metadata functions
 #' @export
 iso_get_missing_metadata <- function(dt, select = everything(), quiet = default(quiet)) {

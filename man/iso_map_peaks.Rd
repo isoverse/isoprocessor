@@ -28,6 +28,8 @@ iso_map_peaks(dt, peak_maps, file_id = default(file_id),
 \item{rt_end}{the column in dt that holds end of peak retention times}
 
 \item{rt_prefix_divider}{the divider after the retention time column prefix in peak_maps to identify the map id values (e.g. "rt:map_id_value")}
+
+\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
 }
 \value{
 data frame with mapped peaks and the following information columns:

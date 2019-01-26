@@ -384,6 +384,7 @@ iso_plot_dual_inlet_data <- function(
 #'
 #' Visualize how consistent the reference peaks are across a serious of samples.
 #'
+#' @inheritParams iso_prepare_for_calibration
 #' @param ratio which ratio column(s) to compare for the reference peaks (can be multiple)
 #' @param group_id group identifier column(s) to clarify which peaks belongs to a single analysis - first column in group id is used for x axis labels
 #' @param is_ref_condition condition to identify which of the peaks are reference peaks. Must be a column or expression that evaluates to a logical (TRUE/FALSE).
@@ -481,6 +482,8 @@ iso_plot_ref_peaks <- function(dt, ratio, group_id, is_ref_condition, is_ref_use
 #'
 #' Visualize calibration coefficients and summary.
 #'
+#' @inheritParams iso_prepare_for_calibration
+#' @param calibration name of the calibration, must match the name used in \link{iso_generate_calibration} (if any)
 #' @param x the x axis aesthetic for the calibration parameters, can be datetime, text or numeric
 #' @param select_from_summary which parameters from the fit summary to include, by default includes the adjusted R2 (renamed just \code{R2}) and the root mean square deviation (\code{RMSD}), which R often calls \link[stats]{sigma} or residual standard deviation (often also called residual standard error and root mean square error instead of deviation, or standard error of the regression).
 #' @param color variable to use for color aesthetic for the plot

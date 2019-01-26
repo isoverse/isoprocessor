@@ -8,6 +8,10 @@ iso_plot_calibration_range(dt, calibration = "", x, y, color = NULL,
   shape = NULL, size = NULL)
 }
 \arguments{
+\item{dt}{data table}
+
+\item{calibration}{name of the calibration, must match the name used in \link{iso_generate_calibration} (if any)}
+
 \item{x}{the x-axis column for visualizing the calibration range, typically a measure of signal strength (amplitude or area) that is part of the/some calibration regression models}
 
 \item{y}{the y-axis column for visualizing the calibration range, typically a measure of the isotopic value (ratio or delta) that is part of the calibration regression models}
