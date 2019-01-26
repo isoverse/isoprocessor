@@ -18,6 +18,8 @@ iso_get_problematic_peaks(dt, select = everything(),
 \item{missing}{whether to include peaks that are problematics because they are missing}
 
 \item{ambiguous}{whether to include peaks that are problematics because they are ambiguously identified}
+
+\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
 }
 \value{
 data table with rows for problematic peaks and the \code{select}-identified columns

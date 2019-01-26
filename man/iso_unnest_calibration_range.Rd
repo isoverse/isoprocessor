@@ -20,5 +20,5 @@ iso_unnest_calibration_range(dt, calibration = "",
 \item{keep_other_list_data}{keep other list data columns (e.g. other data or model columns)}
 }
 \description{
-Retrieve range information for a calibration. Problematic calibrations are silently omitted (use \link{iso_get_problematic_calibtations} and \link{iso_remove_problematic_calibrations} to deal with them more explicitly).
+Retrieve range information for a calibration. Problematic calibrations are silently omitted (use \link{iso_get_problematic_calibrations} and \link{iso_remove_problematic_calibrations} to deal with them more explicitly).
 }

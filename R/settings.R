@@ -51,17 +51,17 @@ get_process_parameters <- function() {
 #' Names are equivalent to function parameter names and
 #' @family settings functions
 #' @export
-iso_set_default_process_parameters <- function(data = NULL, ...) {
+iso_set_default_processor_parameters <- function(data = NULL, ...) {
   def_cols <- quos(...)
   existing_def_cols <- get_process_parameters()
   set_default("default_parameters", modifyList(existing_def_cols, def_cols))
   return(invisible(data))
 }
 
-#' @details \code{iso_reset_default_process_parameters} resets all default function parameters for this package.
-#' @rdname iso_set_default_process_parameters
+#' @details \code{iso_reset_default_processor_parameters} resets all default function parameters for this package.
+#' @rdname iso_set_default_processor_parameters
 #' @export
-iso_reset_default_process_parameters <- function(data = NULL) {
+iso_reset_default_processor_parameters <- function(data = NULL) {
   initialize_options()
   return(invisible(data))
 }
@@ -73,7 +73,6 @@ iso_reset_default_process_parameters <- function(data = NULL) {
 #' To set processor parameters, see \code{\link{iso_set_default_processor_parameters}}.
 #' To set messaging and caching parameters see \code{\link[isoreader]{iso_info_messages}}.
 #' For a piping compatible version of this function, see \link{iso_show_default_processor_parameters}.
-#' @inheritParams iso_set_default_process_parameters
 #' @family settings functions
 #' @export
 iso_get_default_processor_parameters <- function() {
@@ -91,7 +90,7 @@ iso_get_default_processor_parameters <- function() {
 #' Show the current default processor parameters
 #'
 #' Shows a table with the default function parameters for this package.
-#' @inheritParams iso_set_default_process_parameters
+#' @inheritParams iso_set_default_processor_parameters
 #' @param func function to use for formatting the reader parameters table, e.g. \code{\link[knitr]{kable}}.
 #' Note that if the output is in RMarkdown chunks, the chunk option must have \code{results="asis"} for the table to be correctly formatted.
 #' @param ... additional parameters to forward to the \code{func} function

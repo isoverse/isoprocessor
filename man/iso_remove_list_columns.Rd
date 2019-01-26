@@ -6,6 +6,9 @@
 \usage{
 iso_remove_list_columns(dt)
 }
+\arguments{
+\item{dt}{data table}
+}
 \description{
 Convenience function to remove nested columns in the data table (e.g. in preparation for printing to console or RMarkdown).
 }

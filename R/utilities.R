@@ -111,6 +111,7 @@ nest_data <- function(dt, group_by = NULL, nested_data = nested_data) {
 #' Remove nested data
 #'
 #' Convenience function to remove nested columns in the data table (e.g. in preparation for printing to console or RMarkdown).
+#' @inheritParams iso_prepare_for_calibration
 #' @note not unit tested
 #' @export
 iso_remove_list_columns <- function(dt) {
@@ -435,6 +436,7 @@ run_grouped_regression <- function(dt, group_by = NULL, model = NULL, model_data
 #' @param predict which value to calculate, must be one of the regression's independent variables
 #' @param calculate_error whether to estimate the standard error from the calibration (using the Wald method), stores the result in the new \code{predict_error} column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.
 #' @inheritParams run_regression
+#' @inheritParams unnest_model_column
 #' @param predict_value the new column in the model_data that holds the predicted value
 #' @param predict_error the new column in the model_data that holds the error of the predicted value (only created if \code{calculate_error = TRUE})
 #' @param predict_in_range the new column in the model_data that holds whether a data entry is within the range of the calibration. Checks whether all dependent and independent variables in the regression model are within the range of the calibration and sets the \code{predict_in_range} flag to FALSE if any(!) of them are not - i.e. this column provides information on whether new values are extrapolated beyond a calibration model and treat the extrapolated ones with the appropriate care. Note that all missing predicted values (due to missing parameters) are also automatically flagged as not in range (\code{predict_in_range} = FALSE).

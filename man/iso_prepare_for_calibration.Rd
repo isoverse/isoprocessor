@@ -11,6 +11,8 @@ iso_prepare_for_calibration(dt, group_by = NULL,
 \item{dt}{data table}
 
 \item{group_by}{what to group by for indidual calibration calculations (use c(...) to select multiple) - set \code{group_by = NULL} to avoid grouping}
+
+\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
 }
 \value{
 a nested data set with the \code{group_by} columns out front and the remaining data in a new nested column named \code{all_data}

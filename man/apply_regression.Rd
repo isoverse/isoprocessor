@@ -16,6 +16,8 @@ apply_regression(dt, predict, nested_model = FALSE,
 
 \item{predict}{which value to calculate, must be one of the regression's independent variables}
 
+\item{nested_model}{whether the model is nested, if TRUE, must also provide \code{model_params}}
+
 \item{calculate_error}{whether to estimate the standard error from the calibration (using the Wald method), stores the result in the new \code{predict_error} column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.}
 
 \item{model_data}{the nested model data column}
