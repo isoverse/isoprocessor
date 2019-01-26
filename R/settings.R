@@ -73,7 +73,6 @@ iso_reset_default_process_parameters <- function(data = NULL) {
 #' To set processor parameters, see \code{\link{iso_set_default_processor_parameters}}.
 #' To set messaging and caching parameters see \code{\link[isoreader]{iso_info_messages}}.
 #' For a piping compatible version of this function, see \link{iso_show_default_processor_parameters}.
-#' @inheritParams iso_set_default_process_parameters
 #' @family settings functions
 #' @export
 iso_get_default_processor_parameters <- function() {
