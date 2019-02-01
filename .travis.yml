@@ -8,7 +8,7 @@ cache: packages
 bioc_packages:
   - rhdf5
 r_github_packages:
-  - KopfLab/isoreader
+  - isoverse/isoreader
 r:
   - oldrel
   - release

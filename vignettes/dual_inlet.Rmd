@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-Isoprocessor supports several plotting and data conversion functions specifically for dual inlet data. This vignette shows some of the functionality for dual inlet files read by the [isoreader package](https://isoprocessor.kopflab.org) (see the [corresponding vignette](https://isoreader.kopflab.org/articles/dual_inlet.html) for details on data retrieval, storage and export). 
+Isoprocessor supports several plotting and data conversion functions specifically for dual inlet data. This vignette shows some of the functionality for dual inlet files read by the [isoreader package](http://isoprocessor.isoverse.org) (see the [corresponding vignette](http://isoreader.isoverse.org/articles/dual_inlet.html) for details on data retrieval, storage and export). 
 
 ```{r, warning=FALSE, message=FALSE}
 # load isoreader and isoprocessor packages

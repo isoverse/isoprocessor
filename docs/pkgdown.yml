@@ -5,6 +5,6 @@ articles:
   continuous_flow: continuous_flow.html
   dual_inlet: dual_inlet.html
 urls:
-  reference: http://kopflab.github.io/isoprocessor//reference
-  article: http://kopflab.github.io/isoprocessor//articles
+  reference: http://isoprocessor.isoverse.org//reference
+  article: http://isoprocessor.isoverse.org//articles
 

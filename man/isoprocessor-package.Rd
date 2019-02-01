@@ -13,8 +13,8 @@ Data processing and reduction pipelines for isotope ratio mass spectrometry (IRM
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/kopflab/isoprocessor}
-  \item Report bugs at \url{https://github.com/kopflab/isoprocessor/issues}
+  \item \url{https://github.com/isoverse/isoprocessor}
+  \item Report bugs at \url{https://github.com/isoverse/isoprocessor/issues}
 }
 
 }
