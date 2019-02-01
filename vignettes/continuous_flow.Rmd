@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-Isoprocessor supports several plotting and data conversion functions specifically for continuous flow data. This vignette shows some of the functionality for continuous flow files read by the [isoreader package](http://isoprocessor.isoverse.org) (see the [corresponding vignette](http://isoreader.isoverse.org/articles/continuous_flow.html) for details on data retrieval, storage and export). 
+Isoprocessor supports several plotting and data conversion functions specifically for continuous flow data. This vignette shows some of the functionality for continuous flow files read by the [isoreader package](http://isoreader.isoverse.org) (see the [corresponding vignette](http://isoreader.isoverse.org/articles/continuous_flow.html) for details on data retrieval, storage and export). 
 
 ```{r, warning=FALSE, message=FALSE}
 # load isoreader and isoprocessor packages
