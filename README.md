@@ -55,6 +55,10 @@ devtools::install_github("isoverse/isoprocessor")
   - for an example of how to work with dual inlet data, see the vignette
     on **[Dual
     Inlet](http://isoprocessor.isoverse.org/articles/dual_inlet.html)**
+  - for an example of how Isodat in particular calculates isotope ratios
+    for standard continuous flow and dual inlet data, see the **[Isodat
+    calculations
+    notebook](http://isoprocessor.isoverse.org/other/how_isodat_calculates_R.html)**
   - additional vignettes on data reduction and calibration are in the
     works
 
@@ -68,4 +72,8 @@ GPL-2.
 ## isoverse <a href='http://www.isoverse.org'><img src='man/figures/isoverse_logo_thumb.png' align="right" height="138.5"/></a>
 
 This package is part of the isoverse suite of data tools for stable
-isotopes.
+isotopes. If you like the functionality that isoverse packages provide
+to the geochemical community, please help us spread the word and include
+an isoverse or individual package logo on one of your posters or slides.
+All logos are posted in high resolution in the main [isoverse
+repository](https://github.com/isoverse/isoverse/tree/master/man/figures).
