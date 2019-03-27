@@ -41,51 +41,53 @@ iso_print_data_table <- function(dt, select = everything(), filter = TRUE, print
 
 }
 
-#' Generate an overview table with the data
+#' Alias for summarize data table
+#' @param ... deprecated
+#' @export
+iso_generate_summary_table <- function(...) {
+  warning("this function was renamed --> calling iso_generate_summary_table() instead",
+          immediate. = TRUE, call. = FALSE)
+  iso_generate_summary_table(...)
+}
+
+# FIXME: write units tests
+#' Summarize a data table
 #'
-#' Convenience function to summarize means and standard deviationsfor one or multiple data columns. Use \link[dplyr]{group_by} prior to calling this function to generate the data table for individual subsets of the data. The generated data table always includes an \code{n} column with the number of records per group.
+#' Convenience function to summarize means and standard deviations for one or multiple data columns. Use \link[dplyr]{group_by} prior to calling this function to generate the data table for individual subsets of the data. The generated data table always includes an \code{n} column with the number of records per group. If no column(s) are specified, will automatically summarize all columns except for the grouping columns.
 #'
 #' @param dt data table, can already have a group_by if so desired
-#' @param ... which data columns to include in data overview
+#' @param ... which data columns to include in data overview. All \link[dplyr]{select} style syntax is supported (including on the fly renaming). If no columns are specified, will summarize all numeric columns (excluding any grouping columns).
 #' @param cutoff the minimum number of records per group in order to include the group
 #' @export
-iso_generate_summary_table <- function(dt, ..., cutoff = 1) {
+iso_summarize_data_table <- function(dt, ..., cutoff = 1) {
 
-  # safety checks
-  include <- ensyms(...)
-  if (length(include) == 0)
+  # get column selectors
+  dots <- quos(...)
+  if (length(dots) == 0) dots <- quos(everything())
+
+  # find columns
+  grp_vars <- dplyr::group_vars(dt) %>% { setNames(., .) }
+  vars <- tidyselect::vars_select(names(dt), !!!dots) %>%
+    # exclude grouping variables
+    { .[!. %in% grp_vars] } %>%
+    # only numeric
+    { .[purrr::map_lgl(., ~is.numeric(dt[[.x]]))] }
+
+  # safety check
+  if (length(vars) == 0)
     stop("no data columns provided, please select at least 1", call. = FALSE)
 
-  # add n
-  include <- quos(!!!c(sym("n"), include))
+  # generate mutate quos
+  summarize_funcs <-
+    tibble(var = names(vars)) %>% tidyr::crossing(tibble(func = c("mean", "sd"))) %>%
+    dplyr::mutate(name = paste(var, func)) %>%
+    with(purrr::map2(var, func, ~quo((!!.y)(!!sym(.x)))) %>% setNames(name))
 
-  # selects
-  select_quos <- quos(!!!unlist(
-    c(groups(dt),
-      map2(
-        unname(include),
-        names(include),
-        function(col, name) {
-          mean <- str_c(quo_text(col), "_mean")
-          sd <- str_c(quo_text(col), "_sd")
-          mean_name <- if(nchar(name) > 0) str_c(name, "_mean") else mean
-          sd_name <- if(nchar(name) > 0) str_c(name, "_sd") else sd
-          list(sym(mean), sym(sd)) %>% setNames(c(mean_name, sd_name))
-        }
-      ))))
-
-  # generate overview
+  # generate summary
   dt %>%
-    mutate(n = n()) %>%
-    summarize_at(include, funs(mean, sd)) %>%
-    # bring in right order
-    select(!!!select_quos) %>%
-    # clean up counts (n)
-    rename(n = n_mean) %>%
-    select(-n_sd) %>%
-    mutate(n = as.integer(n)) %>%
-    filter(n >= cutoff) %>%
-    arrange(desc(n))
+    dplyr::select(!!!c(grp_vars, vars)) %>%
+    dplyr::summarize(n = n(), !!!summarize_funcs) %>%
+    dplyr::filter(n >= cutoff)
 }
 
 
