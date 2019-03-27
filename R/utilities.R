@@ -47,7 +47,7 @@ iso_print_data_table <- function(dt, select = everything(), filter = TRUE, print
 iso_generate_summary_table <- function(...) {
   warning("this function was renamed --> calling iso_generate_summary_table() instead",
           immediate. = TRUE, call. = FALSE)
-  iso_generate_summary_table(...)
+  iso_summarize_data_table(...)
 }
 
 # FIXME: write units tests
