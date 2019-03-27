@@ -1,7 +1,5 @@
 # peak mapping ======
 
-default <- isoprocessor:::default
-
 #' Map peaks based on retention time
 #'
 #' This function makes it easy to map peaks based on peak maps. It reports all peaks including missing peaks and ambiguous peaks by adding a set of information columns for each entry (\code{is_identified}, \code{is_missing}, \code{is_ambiguous}, \code{n_matches}, \code{n_overlapping}).
