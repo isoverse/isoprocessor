@@ -81,7 +81,7 @@ iso_summarize_data_table <- function(dt, ..., cutoff = 1) {
   summarize_funcs <-
     tibble(var = names(vars)) %>% tidyr::crossing(tibble(func = c("mean", "sd"))) %>%
     dplyr::mutate(name = paste(var, func)) %>%
-    with(purrr::map2(var, func, ~quo((!!.y)(!!sym(.x)))) %>% setNames(name))
+    with(purrr::map2(var, func, ~quo((!!.y)(!!sym(.x), na.rm = TRUE))) %>% setNames(name))
 
   # generate summary
   dt %>%
