@@ -1,5 +1,7 @@
 # peak mapping ======
 
+default <- isoprocessor:::default
+
 #' Map peaks based on retention time
 #'
 #' This function makes it easy to map peaks based on peak maps. It reports all peaks including missing peaks and ambiguous peaks by adding a set of information columns for each entry (\code{is_identified}, \code{is_missing}, \code{is_ambiguous}, \code{n_matches}, \code{n_overlapping}).
@@ -33,10 +35,9 @@ iso_map_peaks <- function(
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   if (missing(peak_maps)) stop("no peak map(s) supplied", call. = FALSE)
-  dt_cols <- get_column_names(!!enquo(dt), file_id = enquo(file_id), map_id = enquo(map_id), rt = enquo(rt), rt_start = enquo(rt_start), rt_end = enquo(rt_end),
-                              n_reqs = list(file_id = "+"))
-  pm_cols <- get_column_names(!!enquo(peak_maps), compound = enquo(compound))
-  new_cols <- get_new_column_names(is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous), n_matches = quo(n_matches), n_overlapping = quo(n_overlapping))
+  dt_cols <- isoreader:::get_column_names(!!enquo(dt), file_id = enquo(file_id), map_id = enquo(map_id), rt = enquo(rt), rt_start = enquo(rt_start), rt_end = enquo(rt_end), n_reqs = list(file_id = "+"))
+  pm_cols <- isoreader:::get_column_names(!!enquo(peak_maps), compound = enquo(compound))
+  new_cols <- isoprocessor:::get_new_column_names(is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous), n_matches = quo(n_matches), n_overlapping = quo(n_overlapping))
 
   # read peak maps
   maps <- peak_maps %>%
@@ -54,13 +55,13 @@ iso_map_peaks <- function(
 
   # safety check --> look for data entries without peak maps
   if ( nrow(missing <- filter(dt, is.na(!!sym(dt_cols$map_id)))) > 0 ) {
-    glue("cannot proceed - {nrow(missing)} data table entries do not have a map defined in the '{dt_cols$map_id}' column. Make sure to remove entries with missing map metadata first.") %>%
+    glue::glue("cannot proceed - {nrow(missing)} data table entries do not have a map defined in the '{dt_cols$map_id}' column. Make sure to remove entries with missing map metadata first.") %>%
       stop(call. = FALSE)
   }
 
   # safety check --> look for missing maps
   if (length(missing <- setdiff(unique(dt[[dt_cols$map_id]]), maps[[dt_cols$map_id]])) > 0) {
-    glue("the following maps are referenced in the data table but do not exist in the peak maps: '{collapse(missing, \"', '\")}'. Available peak maps: '{collapse(unique(maps[[dt_cols$map_id]]), \"', '\")}'") %>%
+    glue::glue("the following maps are referenced in the data table but do not exist in the peak maps: '{collapse(missing, \"', '\")}'. Available peak maps: '{collapse(unique(maps[[dt_cols$map_id]]), \"', '\")}'") %>%
       stop(call. = FALSE)
   }
 
@@ -124,18 +125,19 @@ iso_map_peaks <- function(
     n_multiple_and_overlapping <- ambiguous %>% filter(..n_overlapping.. > 1 & ..n_matches.. > 1) %>% simplification
     n_multiple_matches <- ambiguous %>% filter(..n_overlapping.. <= 1 & ..n_matches.. > 1) %>% simplification
     n_overlapping_matches <- ambiguous %>% filter(..n_overlapping.. > 1 & ..n_matches.. <= 1) %>% simplification
-    glue("Info: {n_matched_peaks} of {nrow(dt)} peaks in {n_files} files were successfully mapped",
-         "{if (n_ambiguous_peaks > 0) str_c(' but ', n_ambiguous_peaks, ' of these are ambiguous') }. ",
-         "{if (n_unidentified_peaks > 0) str_c(n_unidentified_peaks, ' peak(s) could not be mapped. ')}",
-         "{if (n_missing_matches > 0) str_c(n_missing_matches, ' expected peak(s) are missing.')}") %>%
+    glue::glue(
+      "Info: {n_matched_peaks} of {nrow(dt)} peaks in {n_files} files were successfully mapped",
+      if (n_ambiguous_peaks > 0) str_c(' but ', n_ambiguous_peaks, ' of these are ambiguous. ') else '. ',
+      if (n_unidentified_peaks > 0) str_c(n_unidentified_peaks, ' peak(s) could not be mapped. ') else '',
+      if (n_missing_matches > 0) str_c(n_missing_matches, ' expected peak(s) are missing.') else '',
+      if (n_multiple_matches > 0)
+        "\n\t- {n_multiple_matches} were ambiguous because of multiple matching peak assignments" else '',
+      if (n_overlapping_matches > 0)
+        "\n\t- {n_overlapping_matches} were ambiguous because of overlapping peaks that fit the same assignment" else '',
+      if (n_multiple_and_overlapping > 0)
+        "\n\t- {n_multiple_and_overlapping} were ambiguous because of both multiple as well as overlapping peak assignments" else ''
+    ) %>%
       message()
-
-    if (n_multiple_matches > 0)
-      glue("      - {n_multiple_matches} were ambiguous because of multiple matching peak assignments") %>% message()
-    if (n_overlapping_matches > 0)
-      glue("      - {n_overlapping_matches} were ambiguous because of overlapping peaks that fit the same assignment") %>% message()
-    if (n_multiple_and_overlapping > 0)
-      glue("      - {n_multiple_and_overlapping} were ambiguous because of both multiple as well as overlapping peak assignments") %>% message()
   }
 
   all_data %>%
@@ -195,7 +197,7 @@ iso_get_problematic_peaks <- function(dt, select = everything(), unidentified = 
     if (unidentified) types <- c(types, "unidentified")
     if (missing) types <- c(types, "missing")
     if (ambiguous) types <- c(types, "ambiguous")
-    glue("Info: fetching {nrow(dt_out)} of {nrow(dt)} data table entries with problematic peak identifications ",
+    glue::glue("Info: fetching {nrow(dt_out)} of {nrow(dt)} data table entries with problematic peak identifications ",
          "({collapse(types, sep = ', ', last = ' or ')})") %>%
       message()
   }
@@ -235,7 +237,7 @@ iso_remove_problematic_peaks <- function(dt, remove_unidentified = TRUE, remove_
     if (remove_unidentified) types <- c(types, "unidentified")
     if (remove_missing) types <- c(types, "missing")
     if (remove_ambiguous) types <- c(types, "ambiguous")
-    glue("Info: removing {nrow(dt) - nrow(dt_out)} of {nrow(dt)} data table entries because of problematic peak identifications ",
+    glue::glue("Info: removing {nrow(dt) - nrow(dt_out)} of {nrow(dt)} data table entries because of problematic peak identifications ",
          "({collapse(types, sep = ', ', last = ' or ')})") %>%
       message()
   }
