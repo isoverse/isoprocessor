@@ -6,15 +6,13 @@
 \alias{isoprocessor-package}
 \title{isoprocessor: IRMS data processor}
 \description{
-\if{html}{\figure{logo.png}{options: align='right'}}
-
 Data processing and reduction pipelines for isotope ratio mass spectrometry (IRMS) data
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/isoverse/isoprocessor}
-  \item Report bugs at \url{https://github.com/isoverse/isoprocessor/issues}
+  \item \url{https://github.com/kopflab/isoprocessor}
+  \item Report bugs at \url{https://github.com/kopflab/isoprocessor/issues}
 }
 
 }

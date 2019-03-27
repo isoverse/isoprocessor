@@ -87,7 +87,7 @@ reference:
   desc: >
     Reporting functions.
   contents:
-  - iso_generate_summary_table
+  - iso_summarize_data_table
   - iso_remove_list_columns
 
 - title: Package settings

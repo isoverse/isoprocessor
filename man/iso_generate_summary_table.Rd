@@ -2,17 +2,13 @@
 % Please edit documentation in R/utilities.R
 \name{iso_generate_summary_table}
 \alias{iso_generate_summary_table}
-\title{Generate an overview table with the data}
+\title{Alias for summarize data table}
 \usage{
-iso_generate_summary_table(dt, ..., cutoff = 1)
+iso_generate_summary_table(...)
 }
 \arguments{
-\item{dt}{data table, can already have a group_by if so desired}
-
-\item{...}{which data columns to include in data overview}
-
-\item{cutoff}{the minimum number of records per group in order to include the group}
+\item{...}{deprecated}
 }
 \description{
-Convenience function to summarize means and standard deviationsfor one or multiple data columns. Use \link[dplyr]{group_by} prior to calling this function to generate the data table for individual subsets of the data. The generated data table always includes an \code{n} column with the number of records per group.
+Alias for summarize data table
 }
