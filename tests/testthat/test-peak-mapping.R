@@ -39,7 +39,7 @@ test_that("testing that peak mapping works", {
                  file_id = c("a", "a", "a", "a", "b", "b", "b", "b", "c", "c", "c", "c"),
                  map_id = c("a_map", "a_map", "a_map", "a_map", "bc_map", "bc_map", "bc_map", "bc_map", "bc_map", "bc_map", "bc_map", "bc_map"),
                  compound = c("X", "Y" , "Z", NA, "X", "Y", "Z", "Z", "X", "X", "Y", "Z"),
-                 peak_info = c("X or Y? (1.1)", "X or Y? (1.1)", "Z (4)", "?? (5.8)", "X (1.5)", "Y or Z? (5)", "Y or Z? (5)", "Z? (5.8)", "X? (1.5)", "X? (2)", "Y (4.4?)", "Z (5.5)"),
+                 peak_info = c("X or Y? (1.1)", "X or Y? (1.1)", "Z (4)", "?? (5.8)", "X (1.5)", "Y or Z? (5)", "Y or Z? (5)", "Z? (5.8)", "X? (1.5)", "X? (2)", "Y (4.4??)", "Z (5.5)"),
                  rt = c(1.1, 1.1, 4, 5.8, 1.5, 5, 5, 5.8, 1.5, 2, 4.4, 5.5),
                  rt_start = c(0.9, 0.9, 3.8, 5.6, 1, 4.4, 4.4, 5.4, 1.1, 1.6, NA, 5.5),
                  rt_end = c(1.3, 1.3, 4.2, 6, 2, 5.6, 5.6, 6.2, 1.9, 2.4, NA, 5.5),
@@ -64,7 +64,7 @@ test_that("testing that peak mapping works", {
   expect_message(out <- mapped_dt %>% iso_get_problematic_peaks(
     select = c(file_id, rt, compound), ambiguous = FALSE, missing = TRUE, unidentified = FALSE),
     "fetching 1.*\\(missing\\)")
-  expect_equal(out, tibble(file_id = "c", rt = 4.4, compound = "Y", peak_info = "Y (4.4?)", problem = "missing"))
+  expect_equal(out, tibble(file_id = "c", rt = 4.4, compound = "Y", peak_info = "Y (4.4??)", problem = "missing"))
 
   expect_message(out <- mapped_dt %>% iso_get_problematic_peaks(
     select = c(file_id, rt, compound), ambiguous = FALSE, missing = FALSE, unidentified = TRUE),
@@ -105,7 +105,7 @@ test_that("testing that peak mapping works", {
       expected = c(2L, 3L, 4L),
       found = 3L,
       problematic = c(2L, 2L, 3L),
-      peak_info = c("X or Y? (1.1), Z (4), ?? (5.8)", "X (1.5), Y or Z? (5), Z? (5.8)", "X? (1.5), X? (2), Y (4.4?), Z (5.5)")
+      peak_info = c("X or Y? (1.1), Z (4), ?? (5.8)", "X (1.5), Y or Z? (5), Z? (5.8)", "X? (1.5), X? (2), Y (4.4??), Z (5.5)")
     )
   )
 
@@ -116,7 +116,7 @@ test_that("testing that peak mapping works", {
       expected = 1:3,
       found = c(2L, 2L, 2L),
       problematic = c(2L, 2L, 3L),
-      peak_info = c("X or Y? (1.1), ?? (5.8)", "Y or Z? (5), Z? (5.8)", "X? (1.5), X? (2), Y (4.4?)")
+      peak_info = c("X or Y? (1.1), ?? (5.8)", "Y or Z? (5), Z? (5.8)", "X? (1.5), X? (2), Y (4.4??)")
     )
   )
 

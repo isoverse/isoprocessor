@@ -17,7 +17,7 @@
 #' @inheritParams iso_show_default_processor_parameters
 #' @return data frame with mapped peaks and the following information columns:
 #' \itemize{
-#' \iten{\code{peak_info}: }{a label for the peak with its name and retention time plus indicators of any ambiguity in identification in the form of \code{'?'} for either compound name or retention time for an expected peak that was not found}
+#' \item{\code{peak_info}: }{a label for the peak with its name and retention time plus indicators of any ambiguity in identification in the form of \code{'?'} for either compound name or retention time for an expected peak that was not found}
 #' \item{\code{is_identified}: }{a logical TRUE/FALSE indicating peaks that have been successfully identified (includes missing peaks from the peak map!) (note that this information could also be derived from !is.na(compound) but is provided for convenience)}
 #' \item{\code{is_missing}: }{a logical TRUE/FALSE indicating peaks that are in the peak map definition but have no matching peak}
 #' \item{\code{is_ambiguous}: }{a logical TRUE/FALSE indicating peaks that are ambiguous in their definition either because they have multiple matches or because they overlap with other, overlapping peaks that were identified the same (note that this information could also be derived from n_overlapping > 1 | n_matches > 1 but is provided for convenience)}
@@ -97,7 +97,7 @@ iso_map_peaks <- function(
         paste0(
           ..peak_info..,
           ifelse(..n_matches.. != 1 | ..n_overlapping.. != 1, "?", ""),
-          " (", signif((!!sym(dt_cols$rt))), ")"
+          " (", signif((!!sym(dt_cols$rt)), digits = 4), ")"
         )
     )
 
@@ -108,7 +108,7 @@ iso_map_peaks <- function(
     filter(!is.na(!!sym(pm_cols$compound))) %>%
     anti_join(found_peaks, by = c(dt_cols$file_id, dt_cols$map_id, pm_cols$compound)) %>%
     mutate(
-      ..peak_info.. = paste0(compound, " (", ..rt_target.., "?)"),
+      ..peak_info.. = paste0(compound, " (", signif(..rt_target.., digits = 4), "??)"),
       ..n_matches.. = 0L,
       ..n_overlapping.. = 0L
     )

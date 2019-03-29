@@ -34,7 +34,7 @@ iso_map_peaks(dt, peak_maps, file_id = default(file_id),
 \value{
 data frame with mapped peaks and the following information columns:
 \itemize{
-\iten{\code{peak_info}: }{a label for the peak with its name and retention time plus indicators of any ambiguity in identification in the form of \code{'?'} for either compound name or retention time for an expected peak that was not found}
+\item{\code{peak_info}: }{a label for the peak with its name and retention time plus indicators of any ambiguity in identification in the form of \code{'?'} for either compound name or retention time for an expected peak that was not found}
 \item{\code{is_identified}: }{a logical TRUE/FALSE indicating peaks that have been successfully identified (includes missing peaks from the peak map!) (note that this information could also be derived from !is.na(compound) but is provided for convenience)}
 \item{\code{is_missing}: }{a logical TRUE/FALSE indicating peaks that are in the peak map definition but have no matching peak}
 \item{\code{is_ambiguous}: }{a logical TRUE/FALSE indicating peaks that are ambiguous in their definition either because they have multiple matches or because they overlap with other, overlapping peaks that were identified the same (note that this information could also be derived from n_overlapping > 1 | n_matches > 1 but is provided for convenience)}
