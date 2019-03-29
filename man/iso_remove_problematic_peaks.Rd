@@ -25,6 +25,7 @@ Remove peaks that were problematic during peak mapping.
 }
 \seealso{
 Other peak mapping functions: \code{\link{iso_get_problematic_peaks}},
-  \code{\link{iso_map_peaks}}
+  \code{\link{iso_map_peaks}},
+  \code{\link{iso_summarize_peak_mappings}}
 }
 \concept{peak mapping functions}

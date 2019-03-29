@@ -17,6 +17,7 @@
 #' @inheritParams iso_show_default_processor_parameters
 #' @return data frame with mapped peaks and the following information columns:
 #' \itemize{
+#' \iten{\code{peak_info}: }{a label for the peak with its name and retention time plus indicators of any ambiguity in identification in the form of \code{'?'} for either compound name or retention time for an expected peak that was not found}
 #' \item{\code{is_identified}: }{a logical TRUE/FALSE indicating peaks that have been successfully identified (includes missing peaks from the peak map!) (note that this information could also be derived from !is.na(compound) but is provided for convenience)}
 #' \item{\code{is_missing}: }{a logical TRUE/FALSE indicating peaks that are in the peak map definition but have no matching peak}
 #' \item{\code{is_ambiguous}: }{a logical TRUE/FALSE indicating peaks that are ambiguous in their definition either because they have multiple matches or because they overlap with other, overlapping peaks that were identified the same (note that this information could also be derived from n_overlapping > 1 | n_matches > 1 but is provided for convenience)}
@@ -35,7 +36,7 @@ iso_map_peaks <- function(
   if (missing(peak_maps)) stop("no peak map(s) supplied", call. = FALSE)
   dt_cols <- isoreader:::get_column_names(!!enquo(dt), file_id = enquo(file_id), map_id = enquo(map_id), rt = enquo(rt), rt_start = enquo(rt_start), rt_end = enquo(rt_end), n_reqs = list(file_id = "+"))
   pm_cols <- isoreader:::get_column_names(!!enquo(peak_maps), compound = enquo(compound))
-  new_cols <- isoprocessor:::get_new_column_names(is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous), n_matches = quo(n_matches), n_overlapping = quo(n_overlapping))
+  new_cols <- isoprocessor:::get_new_column_names(peak_info = quo(peak_info), is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous), n_matches = quo(n_matches), n_overlapping = quo(n_overlapping))
 
   # read peak maps
   maps <- peak_maps %>%
@@ -73,17 +74,32 @@ iso_map_peaks <- function(
       by = dt_cols$map_id
     ) %>%
     # find the peak that the retention time window matches
-    mutate(..is_target.. = is.na(..rt_target..) | (!!sym(dt_cols$rt_start) <= ..rt_target.. & !!sym(dt_cols$rt_end) >= ..rt_target..)) %>%
-    # figure out which peaks match multiple definitions (n_matches) --> the -1 is because all will match the NA placeholder compound
-    group_by(!!!map(dt_cols$file_id, sym), ..peak_id..) %>%
-    mutate(..n_matches.. := as.integer(sum(..is_target..) - 1L)) %>%
-    ungroup() %>%
+    mutate(
+      ..is_target.. = is.na(..rt_target..) | (!!sym(dt_cols$rt_start) <= ..rt_target.. & !!sym(dt_cols$rt_end) >= ..rt_target..),
+      ..peak_info.. = ifelse(!is.na(!!sym(pm_cols$compound)), compound, "?")
+    ) %>%
     # figure out which peak definitions match multiple peaks
     group_by(!!!map(dt_cols$file_id, sym), ..rt_target..) %>%
     mutate(..n_overlapping.. := ifelse(!is.na(!!sym(pm_cols$compound)), sum(..is_target..), 0) %>% as.integer()) %>%
     ungroup() %>%
+    # figure out which peaks match multiple definitions (n_matches) --> the -1 is because all will match the NA placeholder compound
+    group_by(!!!map(dt_cols$file_id, sym), ..peak_id..) %>%
+    mutate(
+      ..n_matches.. := as.integer(sum(..is_target..) - 1L),
+      ..peak_info.. = ifelse(..n_matches.. > 1, paste(na.omit( (!!sym(pm_cols$compound))[..is_target..]), collapse = " or "), ..peak_info..)
+    ) %>%
+    ungroup() %>%
     # only keep definitions that fit
-    filter( ..is_target.., (..n_matches.. >= 1 & ..n_overlapping.. >=1) | (..n_matches.. == 0 & ..n_overlapping.. == 0) )
+    filter( ..is_target.., (..n_matches.. >= 1 & ..n_overlapping.. >=1) | (..n_matches.. == 0 & ..n_overlapping.. == 0) ) %>%
+    # complete file info
+    mutate(
+      ..peak_info.. =
+        paste0(
+          ..peak_info..,
+          ifelse(..n_matches.. != 1 | ..n_overlapping.. != 1, "?", ""),
+          " (", signif((!!sym(dt_cols$rt))), ")"
+        )
+    )
 
   # figure out which peaks are missing based on the expected peaks and the anti_join with the found ones
   missing_peaks <-
@@ -91,7 +107,11 @@ iso_map_peaks <- function(
     left_join(maps, by = dt_cols$map_id) %>%
     filter(!is.na(!!sym(pm_cols$compound))) %>%
     anti_join(found_peaks, by = c(dt_cols$file_id, dt_cols$map_id, pm_cols$compound)) %>%
-    mutate(..n_matches.. = 0L, ..n_overlapping.. = 0L)
+    mutate(
+      ..peak_info.. = paste0(compound, " (", ..rt_target.., "?)"),
+      ..n_matches.. = 0L,
+      ..n_overlapping.. = 0L
+    )
 
   # combine found and missing peaks
   all_data <-
@@ -141,10 +161,12 @@ iso_map_peaks <- function(
   all_data %>%
     # clean up unnecessary columns and rename those with specific names
     select(-..is_target.., -..peak_id.., -..rt_target..)%>%
-    rename(!!new_cols$n_matches := ..n_matches..,
-           !!new_cols$n_overlapping := ..n_overlapping..) %>%
+    rename(
+      !!new_cols$peak_info := ..peak_info..,
+      !!new_cols$n_matches := ..n_matches..,
+      !!new_cols$n_overlapping := ..n_overlapping..) %>%
     # put the file id, map id and compound information at the front
-    select(dt_cols$file_id, dt_cols$map_id, pm_cols$compound, everything()) %>%
+    select(dt_cols$file_id, dt_cols$map_id, pm_cols$compound, new_cols$peak_info, everything()) %>%
     # re-arrange by retention time
     arrange(!!!map(dt_cols$file_id, sym), !!sym(dt_cols$rt))
 }
@@ -152,7 +174,7 @@ iso_map_peaks <- function(
 
 #' Fetch problematic peaks
 #'
-#' Fetch peaks that were problematic during peak mapping. This function is typically called after \link{iso_add_metadata} to inspect problematic entries. Use the \code{select} parameter to select only the most informative columns (always includes a \code{problem} column that identifies why the peak is problematic). Note that peaks that are ambiguous because of multiple potential map matches have a data table entry for each potential match.
+#' Fetch peaks that were problematic during peak mapping. This function is typically called after \link{iso_map_peaks} to inspect problematic entries. Use the \code{select} parameter to select only the most informative columns (always includes at minimum the \code{peak_info} and \code{problem} columns to identify why the peak is problematic). Note that peaks that are ambiguous because of multiple potential map matches have a data table entry for each potential match.
 #'
 #' @inheritParams iso_get_missing_metadata
 #' @param dt data table with mapped peaks. Requires the \code{is_identified}, \code{is_missing} and \code{is_ambiguous} columns to be present.
@@ -186,7 +208,7 @@ iso_get_problematic_peaks <- function(dt, select = everything(), unidentified = 
       )
     ) %>%
     # include type problem column
-    dplyr::select(!!!c(dt_cols$select, "problem"))
+    dplyr::select(!!!c(dt_cols$select, "peak_info", "problem"))
 
 
   # info
@@ -201,6 +223,36 @@ iso_get_problematic_peaks <- function(dt, select = everything(), unidentified = 
   }
 
   return(dt_out)
+}
+
+
+#' Summarize peaks
+#'
+#' Summarize peaks after peak mapping. This function is called after \link{iso_map_peaks} and can be used in combination with \link{iso_get_problematic_peaks} to inspect problematic peaks in particular.
+#'
+#' @inheritParams iso_map_peaks
+#' @return summary data table with one row for each unique combination of the \code{file_id} parameter, the number of expected peaks (\code{expected}), found peaks (\code{found}), and problematic peaks (\code{problematic}), as well as a long text column (\code{peak_info}) listing all the peaks and their retention times
+#' @family peak mapping functions
+#' @export
+iso_summarize_peak_mappings <- function(dt, file_id = default(file_id)) {
+
+  # safety checks
+  if (missing(dt)) stop("no data table supplied", call. = FALSE)
+  dt_cols <-
+    isoreader:::get_column_names(
+      !!enquo(dt), file_id = enquo(file_id), peak_info = quo(peak_info),
+      is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous),
+      n_reqs = list(file_id = "+"))
+
+  dt %>%
+    select(!!!map(dt_cols$file_id, sym), peak_info, is_missing, is_identified, is_ambiguous) %>%
+    group_by(!!!map(dt_cols$file_id, sym)) %>%
+    unique() %>%
+    summarize(
+      expected = sum(is_identified),
+      found = sum(!is_missing),
+      problematic = sum(!is_identified | is_missing | is_ambiguous),
+      peak_info = paste(peak_info, collapse = ", "))
 }
 
 #' Remove problematic peaks

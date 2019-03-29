@@ -25,10 +25,11 @@ iso_get_problematic_peaks(dt, select = everything(),
 data table with rows for problematic peaks and the \code{select}-identified columns
 }
 \description{
-Fetch peaks that were problematic during peak mapping. This function is typically called after \link{iso_add_metadata} to inspect problematic entries. Use the \code{select} parameter to select only the most informative columns (always includes a \code{problem} column that identifies why the peak is problematic). Note that peaks that are ambiguous because of multiple potential map matches have a data table entry for each potential match.
+Fetch peaks that were problematic during peak mapping. This function is typically called after \link{iso_map_peaks} to inspect problematic entries. Use the \code{select} parameter to select only the most informative columns (always includes at minimum the \code{peak_info} and \code{problem} columns to identify why the peak is problematic). Note that peaks that are ambiguous because of multiple potential map matches have a data table entry for each potential match.
 }
 \seealso{
 Other peak mapping functions: \code{\link{iso_map_peaks}},
-  \code{\link{iso_remove_problematic_peaks}}
+  \code{\link{iso_remove_problematic_peaks}},
+  \code{\link{iso_summarize_peak_mappings}}
 }
 \concept{peak mapping functions}

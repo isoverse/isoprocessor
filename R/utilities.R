@@ -372,7 +372,10 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
 
   # warnings
   if ((not_enough <- sum(!data_w_models[[dt_new_cols$model_enough_data]])) > 0)
-    glue("{not_enough} of {nrow(data_w_models)} regressions have insufficient degrees of freedom (not enough data)") %>%
+    glue("{not_enough} of {nrow(data_w_models)} regressions have insufficient ",
+         "degrees of freedom (not enough data given the regression models and/or ",
+         "requested minimum number of data points) - please double check that all",
+         "peaks are mapped correctly ()") %>%
     warning(immediate. = TRUE, call. = FALSE)
 
   # add residuals
