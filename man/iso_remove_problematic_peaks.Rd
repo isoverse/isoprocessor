@@ -2,30 +2,13 @@
 % Please edit documentation in R/peak_mapping.R
 \name{iso_remove_problematic_peaks}
 \alias{iso_remove_problematic_peaks}
-\title{Remove problematic peaks}
+\title{Renamed to iso_remove_problematic_peak_mappings}
 \usage{
-iso_remove_problematic_peaks(dt, remove_unidentified = TRUE,
-  remove_missing = TRUE, remove_ambiguous = TRUE,
-  remove_mapping_info_columns = TRUE, quiet = default(quiet))
+iso_remove_problematic_peaks(...)
 }
 \arguments{
-\item{dt}{data table with mapped peaks. Requires the \code{is_identified}, \code{is_missing} and \code{is_ambiguous} columns to be present.}
-
-\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
-
-\item{remove_mapping_info_column}{whether to automatically remove mapping info columns. If true and:
-\itemize{
- \item{\code{remove_unidentified = TRUE} - }{\code{is_identified} column automatically removed}
- \item{\code{remove_missing = TRUE} - }{\code{is_missing} column automatically removed}
- \item{\code{remove_ambiguous = TRUE} - }{\code{is_ambiguous}, \code{n_matches}, and \code{n_overlapping} columns automatically removed}
-}}
+\item{...}{deprecated}
 }
 \description{
-Remove peaks that were problematic during peak mapping.
+Renamed to iso_remove_problematic_peak_mappings
 }
-\seealso{
-Other peak mapping functions: \code{\link{iso_get_problematic_peaks}},
-  \code{\link{iso_map_peaks}},
-  \code{\link{iso_summarize_peak_mappings}}
-}
-\concept{peak mapping functions}

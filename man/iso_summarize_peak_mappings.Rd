@@ -4,22 +4,33 @@
 \alias{iso_summarize_peak_mappings}
 \title{Summarize peaks}
 \usage{
-iso_summarize_peak_mappings(dt, file_id = default(file_id))
+iso_summarize_peak_mappings(dt, file_id = default(file_id),
+  compound = default(compound), rt = default(rt))
 }
 \arguments{
 \item{dt}{data frame with peak data}
 
 \item{file_id}{the column(s) in dt that uniquely identify a file/set of peaks that belong together}
+
+\item{compound}{the column in peak_maps that holds compound information}
+
+\item{rt}{the column in dt and colum prefix in peak_maps ("rt:...") that holds retention time information}
 }
 \value{
-summary data table with one row for each unique combination of the \code{file_id} parameter, the number of expected peaks (\code{expected}), found peaks (\code{found}), and problematic peaks (\code{problematic}), as well as a long text column (\code{peak_info}) listing all the peaks and their retention times
+summary data table with one row for each unique combination of the \code{file_id} parameter
+\itemize{
+\item{\code{mapped}: }{number of peaks that were identified during the mapping process (out of the total number of peaks in each sample)}
+\item{\code{ambiguous}: }{number of mapped peaks that were ambiguous (out of all the mapped peaks) because they either have multiple matches or because they overlap with other mapped peaks}
+\item{\code{missing}: }{number of peaks that were listed in the peak map but appear to be missing in the sample (out of the total number of peaks listed in the peak map)}
+\item{\code{peak_info}: }{concatenated text with all the peaks and their retention times (with \code{'?'} for unknown peak names, retention times or other ambiguities}
+}
 }
 \description{
-Summarize peaks after peak mapping. This function is called after \link{iso_map_peaks} and can be used in combination with \link{iso_get_problematic_peaks} to inspect problematic peaks in particular.
+Summarize peaks after peak mapping. This function is called after \link{iso_map_peaks} and can be used in combination with \link{iso_get_problematic_peaks} to inspect problematic peaks in particular. For the \code{file_id} parameter, make sure to use the same set or a subset of the columns used to identify individual files in the \link{iso_map_peaks} call before.
 }
 \seealso{
-Other peak mapping functions: \code{\link{iso_get_problematic_peaks}},
+Other peak mapping functions: \code{\link{iso_get_problematic_peak_mappings}},
   \code{\link{iso_map_peaks}},
-  \code{\link{iso_remove_problematic_peaks}}
+  \code{\link{iso_remove_problematic_peak_mappings}}
 }
 \concept{peak mapping functions}

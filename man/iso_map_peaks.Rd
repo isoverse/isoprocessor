@@ -47,8 +47,8 @@ This function makes it easy to map peaks based on peak maps. It reports all peak
 For routine downstream data processing, this function is usually followed by \code{\link{iso_get_problematic_peaks}} to inspect the problematic peaks and \code{\link{iso_remove_problematic_peaks}} to proceed only with peaks that do not have any problems. Note that without this filter, one must proceed with great caution interpreting the ambiguous peaks.
 }
 \seealso{
-Other peak mapping functions: \code{\link{iso_get_problematic_peaks}},
-  \code{\link{iso_remove_problematic_peaks}},
+Other peak mapping functions: \code{\link{iso_get_problematic_peak_mappings}},
+  \code{\link{iso_remove_problematic_peak_mappings}},
   \code{\link{iso_summarize_peak_mappings}}
 }
 \concept{peak mapping functions}

@@ -172,9 +172,18 @@ iso_map_peaks <- function(
 }
 
 
-#' Fetch problematic peaks
+#' Renamed to iso_get_problematic_peak_mappings
+#' @param ... deprecated
+#' @export
+iso_get_problematic_peaks <- function(...) {
+  warning("this function was renamed for clarification --> calling iso_get_problematic_peak_mappings() instead",
+          immediate. = TRUE, call. = FALSE)
+  iso_get_problematic_peak_mappings(...)
+}
+
+#' Fetch problematic peak mappings
 #'
-#' Fetch peaks that were problematic during peak mapping. This function is typically called after \link{iso_map_peaks} to inspect problematic entries. Use the \code{select} parameter to select only the most informative columns (always includes at minimum the \code{peak_info} and \code{problem} columns to identify why the peak is problematic). Note that peaks that are ambiguous because of multiple potential map matches have a data table entry for each potential match.
+#' Fetch peak mappings that were problematic in any way. This function is typically called after \link{iso_map_peaks} to inspect problematic entries. Use the \code{select} parameter to select only the most informative columns (always includes at minimum the \code{peak_info} and \code{problem} columns to identify why the peak is problematic). Note that peaks that are ambiguous because of multiple potential map matches have a data table entry for each potential match.
 #'
 #' @inheritParams iso_get_missing_metadata
 #' @param dt data table with mapped peaks. Requires the \code{is_identified}, \code{is_missing} and \code{is_ambiguous} columns to be present.
@@ -185,7 +194,7 @@ iso_map_peaks <- function(
 #' @return data table with rows for problematic peaks and the \code{select}-identified columns
 #' @family peak mapping functions
 #' @export
-iso_get_problematic_peaks <- function(dt, select = everything(), unidentified = TRUE, missing = TRUE, ambiguous = TRUE, quiet = default(quiet)) {
+iso_get_problematic_peak_mappings <- function(dt, select = everything(), unidentified = TRUE, missing = TRUE, ambiguous = TRUE, quiet = default(quiet)) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
@@ -228,38 +237,77 @@ iso_get_problematic_peaks <- function(dt, select = everything(), unidentified = 
 
 #' Summarize peaks
 #'
-#' Summarize peaks after peak mapping. This function is called after \link{iso_map_peaks} and can be used in combination with \link{iso_get_problematic_peaks} to inspect problematic peaks in particular.
+#' Summarize peaks after peak mapping. This function is called after \link{iso_map_peaks} and can be used in combination with \link{iso_get_problematic_peaks} to inspect problematic peaks in particular. For the \code{file_id} parameter, make sure to use the same set or a subset of the columns used to identify individual files in the \link{iso_map_peaks} call before.
 #'
 #' @inheritParams iso_map_peaks
-#' @return summary data table with one row for each unique combination of the \code{file_id} parameter, the number of expected peaks (\code{expected}), found peaks (\code{found}), and problematic peaks (\code{problematic}), as well as a long text column (\code{peak_info}) listing all the peaks and their retention times
+#' @return summary data table with one row for each unique combination of the \code{file_id} parameter
+#' \itemize{
+#' \item{\code{mapped}: }{number of peaks that were identified during the mapping process (out of the total number of peaks in each sample)}
+#' \item{\code{ambiguous}: }{number of mapped peaks that were ambiguous (out of all the mapped peaks) because they either have multiple matches or because they overlap with other mapped peaks}
+#' \item{\code{missing}: }{number of peaks that were listed in the peak map but appear to be missing in the sample (out of the total number of peaks listed in the peak map)}
+#' \item{\code{peak_info}: }{concatenated text with all the peaks and their retention times (with \code{'?'} for unknown peak names, retention times or other ambiguities}
+#' }
 #' @family peak mapping functions
 #' @export
-iso_summarize_peak_mappings <- function(dt, file_id = default(file_id)) {
+iso_summarize_peak_mappings <- function(dt, file_id = default(file_id), compound = default(compound), rt = default(rt)) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   dt_cols <-
     isoreader:::get_column_names(
-      !!enquo(dt), file_id = enquo(file_id), peak_info = quo(peak_info),
+      dt, file_id = enquo(file_id), peak_info = quo(peak_info),
+      compound = enquo(compound), rt = enquo(rt),
       is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous),
+      n_overlapping = quo(n_overlapping),
       n_reqs = list(file_id = "+"))
 
+  # renames
+  col_renames <- dt_cols[names(dt_cols) != "file_id"] %>% unname() %>% unlist()
+
+  # calculate summary stats
   dt %>%
-    select(!!!map(dt_cols$file_id, sym), peak_info, is_missing, is_identified, is_ambiguous) %>%
+    rename(!!!col_renames) %>%
     group_by(!!!map(dt_cols$file_id, sym)) %>%
-    unique() %>%
+    # generate peak id field for
     summarize(
-      expected = sum(is_identified),
-      found = sum(!is_missing),
-      problematic = sum(!is_identified | is_missing | is_ambiguous),
-      peak_info = paste(peak_info, collapse = ", "))
+      mapped = sprintf(
+        "%d/%d",
+        length(unique(rt[is_identified & !is_missing])),
+        length(unique(rt[!is_missing]))
+        ),
+      ambiguous = sprintf(
+        "%d/%d",
+        length(unique(rt[is_identified & !is_missing & is_ambiguous])),
+        length(unique(rt[is_identified & !is_missing]))
+      ),
+      missing =
+        sprintf(
+          "%d/%d",
+          length(unique(rt[is_identified & is_missing])),
+          # this calculation is a bit complicated because of potentially
+          # identically named compounds and multiple entries for overlapping ones
+          length(unique(paste(compound, rt)[is_identified & n_overlapping <= 1])) +
+            sum(!duplicated(compound[is_identified & n_overlapping > 1]))
+        ),
+      peak_info = paste(unique(peak_info), collapse = ", ")
+    )
+
 }
 
-#' Remove problematic peaks
+#' Renamed to iso_remove_problematic_peak_mappings
+#' @param ... deprecated
+#' @export
+iso_remove_problematic_peaks <- function(...) {
+  warning("this function was renamed for clarification --> calling iso_remove_problematic_peak_mappings() instead",
+          immediate. = TRUE, call. = FALSE)
+  iso_remove_problematic_peak_mappings(...)
+}
+
+#' Remove problematic peak mappings
 #'
-#' Remove peaks that were problematic during peak mapping.
+#' Remove peak mappings that were problematic (unidentified, missing, or ambiguous) during peak mapping.
 #'
-#' @inheritParams iso_get_problematic_peaks
+#' @inheritParams iso_get_problematic_peak_mappings
 #' @param remove_mapping_info_column whether to automatically remove mapping info columns. If true and:
 #' \itemize{
 #'  \item{\code{remove_unidentified = TRUE} - }{\code{is_identified} column automatically removed}
@@ -268,7 +316,7 @@ iso_summarize_peak_mappings <- function(dt, file_id = default(file_id)) {
 #' }
 #' @family peak mapping functions
 #' @export
-iso_remove_problematic_peaks <- function(dt, remove_unidentified = TRUE, remove_missing = TRUE, remove_ambiguous = TRUE,
+iso_remove_problematic_peak_mappings <- function(dt, remove_unidentified = TRUE, remove_missing = TRUE, remove_ambiguous = TRUE,
                                          remove_mapping_info_columns = TRUE, quiet = default(quiet)) {
 
   # safety checks

@@ -57,42 +57,43 @@ test_that("testing that peak mapping works", {
   expect_message(iso_map_peaks(my_dt, my_peak_maps), "1.*ambiguous.*both")
 
   # test get problematic peaks
-  expect_error(iso_get_problematic_peaks(), "no data table")
-  expect_error(iso_get_problematic_peaks(tibble()), "unknown columns")
-  expect_error(iso_get_problematic_peaks(mapped_dt, select = c()), "not.*correct number")
+  expect_warning(try(iso_get_problematic_peaks()), "renamed")
+  expect_error(iso_get_problematic_peak_mappings(), "no data table")
+  expect_error(iso_get_problematic_peak_mappings(tibble()), "unknown columns")
+  expect_error(iso_get_problematic_peak_mappings(mapped_dt, select = c()), "not.*correct number")
 
-  expect_message(out <- mapped_dt %>% iso_get_problematic_peaks(
+  expect_message(out <- mapped_dt %>% iso_get_problematic_peak_mappings(
     select = c(file_id, rt, compound), ambiguous = FALSE, missing = TRUE, unidentified = FALSE),
     "fetching 1.*\\(missing\\)")
   expect_equal(out, tibble(file_id = "c", rt = 4.4, compound = "Y", peak_info = "Y (4.4??)", problem = "missing"))
 
-  expect_message(out <- mapped_dt %>% iso_get_problematic_peaks(
+  expect_message(out <- mapped_dt %>% iso_get_problematic_peak_mappings(
     select = c(file_id, rt, compound), ambiguous = FALSE, missing = FALSE, unidentified = TRUE),
     "fetching 1.*\\(unidentified\\)")
   expect_equal(out, tibble(file_id = "a", rt = 5.8, compound = NA_character_, peak_info = "?? (5.8)", problem = "unidentified"))
 
-  expect_message(out <- mapped_dt %>% iso_get_problematic_peaks(
+  expect_message(out <- mapped_dt %>% iso_get_problematic_peak_mappings(
     select = c(file_id, rt, compound), ambiguous = TRUE, missing = FALSE, unidentified = FALSE),
     "fetching 7.*\\(ambiguous\\)")
   expect_equal(out %>% select(-compound) %>% unique() %>% nrow(), 5L)
-  expect_message(mapped_dt %>% iso_get_problematic_peaks(), "fetching 9.*\\(unidentified, missing or ambiguous\\)")
+  expect_message(mapped_dt %>% iso_get_problematic_peak_mappings(), "fetching 9.*\\(unidentified, missing or ambiguous\\)")
 
   # get removing problematic peaks
-  expect_message(out <- mapped_dt %>% iso_remove_problematic_peaks(), "removing 9 of 12.*\\(unidentified, missing or ambiguous\\)")
+  expect_message(out <- mapped_dt %>% iso_remove_problematic_peak_mappings(), "removing 9 of 12.*\\(unidentified, missing or ambiguous\\)")
   expect_equal(nrow(out), 3L)
   expect_equal(names(out), select(mapped_dt, -starts_with("is_"), -starts_with("n_")) %>% names())
 
-  expect_message(out <- mapped_dt %>% iso_remove_problematic_peaks(remove_ambiguous = FALSE, remove_unidentified = FALSE),
+  expect_message(out <- mapped_dt %>% iso_remove_problematic_peak_mappings(remove_ambiguous = FALSE, remove_unidentified = FALSE),
                  "removing 1 of 12.*\\(missing\\)")
   expect_equal(nrow(out), 11L)
   expect_equal(names(out), select(mapped_dt, -is_missing) %>% names())
 
-  expect_message(out <- mapped_dt %>% iso_remove_problematic_peaks(remove_ambiguous = FALSE, remove_missing = FALSE),
+  expect_message(out <- mapped_dt %>% iso_remove_problematic_peak_mappings(remove_ambiguous = FALSE, remove_missing = FALSE),
                  "removing 1 of 12.*\\(unidentified\\)")
   expect_equal(nrow(out), 11L)
   expect_equal(names(out), select(mapped_dt, -is_identified) %>% names())
 
-  expect_message(out <- mapped_dt %>% iso_remove_problematic_peaks(remove_missing = FALSE, remove_unidentified = FALSE),
+  expect_message(out <- mapped_dt %>% iso_remove_problematic_peak_mappings(remove_missing = FALSE, remove_unidentified = FALSE),
                  "removing 7 of 12.*\\(ambiguous\\)")
   expect_equal(nrow(out), 5L)
   expect_equal(names(out), select(mapped_dt, -is_ambiguous, -starts_with("n_")) %>% names())
@@ -102,20 +103,20 @@ test_that("testing that peak mapping works", {
     iso_summarize_peak_mappings(mapped_dt),
     tibble(
       file_id = c("a", "b", "c"),
-      expected = c(2L, 3L, 4L),
-      found = 3L,
-      problematic = c(2L, 2L, 3L),
+      mapped = c("2/3", "3/3", "3/3"),
+      ambiguous = c("1/2", "2/3", "2/3"),
+      missing = c("0/3", "0/3", "1/3"),
       peak_info = c("X or Y? (1.1), Z (4), ?? (5.8)", "X (1.5), Y or Z? (5), Z? (5.8)", "X? (1.5), X? (2), Y (4.4??), Z (5.5)")
     )
   )
 
   expect_equal(
-    iso_get_problematic_peaks(mapped_dt) %>% iso_summarize_peak_mappings(),
+    iso_get_problematic_peak_mappings(mapped_dt) %>% iso_summarize_peak_mappings(),
     tibble(
       file_id = c("a", "b", "c"),
-      expected = 1:3,
-      found = c(2L, 2L, 2L),
-      problematic = c(2L, 2L, 3L),
+      mapped = c("1/2", "2/2", "2/2"),
+      ambiguous = c("1/1", "2/2", "2/2"),
+      missing = c("0/2", "0/2", "1/2"),
       peak_info = c("X or Y? (1.1), ?? (5.8)", "Y or Z? (5), Z? (5.8)", "X? (1.5), X? (2), Y (4.4??)")
     )
   )
