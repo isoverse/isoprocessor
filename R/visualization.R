@@ -1,3 +1,180 @@
+# helper functions ===
+
+# find the name of the time column and its unit in a data frame
+find_time_column <- function(df) {
+  # time column
+  time_pattern <- "^time\\.(.*)$"
+  time_column <- stringr::str_subset(names(df), time_pattern)
+  if (length(time_column) != 1)
+    stop("unclear which column is the time column, consider an explicit 'iso_convert_time' call, found: ",
+         str_c(time_column, collapse = ", "), call. = FALSE)
+  time_unit <- stringr::str_match(time_column, time_pattern) %>% {.[2] }
+  return(list(column = time_column, unit = time_unit))
+}
+
+# plotting data ====
+
+#' Prepare plotting data from continuous flow files
+#'
+#' This functions helps with the preparation of plotting data from continuous flow data files (i.e. the raw chromatogram data). Call either explicity and pass the result to \code{\link{iso_plot_continuous_flow_data}} or let \code{\link{iso_plot_continuous_flow_data}} take care of preparing the plotting data directly from the \code{iso_files}.
+#'
+#' @param iso_files collection of iso_file objects
+#' @param data which masses and ratios to plot (e.g. c("44", "45", "45/44")), if omitted, all available masses and ratios are plotted. Note that ratios should be calculated using \code{\link{iso_calculate_ratios}} prior to plotting.
+#' @param time_interval which time interval to plot
+#' @param time_interval_units which units the time interval is in, default is "seconds"
+#' @param filter any filter condition to apply to the data beyond the masses/ratio selection (param \code{data}) and time interval (param \code{time_interval}). For details on the available data columns see \link{iso_get_raw_data} with parameters \code{gather = TRUE} and \code{include_file_info = everything()} (i.e. all file info is available for plotting aesthetics).
+#' @param normalize whether to normalize the data (default is FALSE, i.e. no normalization). If TRUE, normalizes each trace across all files (i.e. normalized to the global max/min). This is particularly useful for overlay plotting different mass and/or ratio traces (\code{panel = NULL}). Note that zooming (if \code{zoom} is set) is applied after normalizing.
+#' @param zoom if not set, automatically scales to the maximum range in the selected time_interval in each plotting panel. If set, scales by the indicated factor, i.e. values > 1 are zoom in, values < 1 are zoom out, baseline always remains the bottom anchor point. Note that zooming is always relative to the max in each zoom_group (by default \code{zoom_group = data}, i.e. each trace is zoomed separately). The maximum considered may be outside the visible time window. Note that for \code{zoom_group} other than \code{data} (e.g. \code{file_id} or \code{NULL}), zooming is relative to the max signal across all mass traces. Typically it makes most sense to set the \code{zoom_group} to the same variable as the planned \code{panel} parameter to the plotting function. Lastly, note that zooming only affects masses, ratios are never zoomed.
+#' @family plot functions
+#' @export
+iso_prepare_continuous_flow_plot_data <- function(
+  iso_files, data = c(), include_file_info = NULL,
+  time_interval = c(), time_interval_units = "seconds",
+  filter = NULL,
+  normalize = FALSE, zoom = NULL, zoom_group = data) {
+
+  # safety checks
+  if(!iso_is_continuous_flow(iso_files))
+    stop("can only prepare continuous flow iso_files for plotting", call. = FALSE)
+
+  # global vars
+  # FIXME for CRAN
+
+  # collect raw data
+  raw_data <- iso_get_raw_data(iso_files, gather = TRUE, quiet = TRUE)
+  if (nrow(raw_data) == 0) stop("no raw data in supplied iso_files", call. = FALSE)
+
+  # check for zoom_gruop column(s) existence
+  aes_quos <- list(zoom_group = enquo(zoom_group))
+  aes_cols <- get_column_names(raw_data, zoom_group = aes_quos$zoom_group, n_reqs = list(zoom_group = "*"))
+
+  # only work with desired data (masses and ratios)
+  select_data <- if(length(data) == 0) unique(raw_data$data) else as.character(data)
+  if ( length(missing <- setdiff(select_data, unique(raw_data$data))) > 0 )
+    stop("data not available in the provided iso_files: ", str_c(missing, collapse = ", "), call. = FALSE)
+  raw_data <- dplyr::filter(raw_data, data %in% select_data)
+
+  # time column
+  time_info <- find_time_column(raw_data)
+
+  # time interval
+  if (length(time_interval) == 2) {
+    time_interval <- scale_time(time_interval, to = time_info$unit, from = time_interval_units)
+    raw_data <- mutate(raw_data, time_min = time_interval[1], time_max = time_interval[2])
+  } else if (length(time_interval) > 0 && length(time_interval) != 2) {
+    stop("time interval needs to be a vector with two numeric entries, found: ", str_c(time_interval, collapse = ", "), call. = FALSE)
+  } else {
+    raw_data <- mutate(raw_data, time_min = -Inf, time_max = Inf)
+  }
+  raw_data <- select(raw_data, 1:time_info$column, time_min, time_max, everything())
+
+  # general filter
+  filter_quo <- enquo(filter)
+  if (!quo_is_null(filter_quo)) {
+    raw_data <- dplyr::filter(raw_data, !!filter_quo)
+  }
+
+  # border extrapolation function
+  extrapolate_border <- function(cutoff, border, change, time, value) {
+    cutoff <- unique(cutoff)
+    if (length(cutoff) != 1) stop("problematic cutoff", call. = FALSE)
+    bi <- which(border) # border indices
+    bi2 <- bi + 1 - change[bi] # end point of border
+    bi1 <- bi - change[bi] # start point of border
+    border_time <- (cutoff - value[bi1])/(value[bi2] - value[bi1]) * (time[bi2] - time[bi1]) + time[bi1]
+    time[bi] <- border_time
+    return(time)
+  }
+
+  # normalize data
+  normalize_data <- function(df) {
+    group_by(df, data) %>%
+      mutate(value = (value - min(value, na.rm = TRUE))/
+               (max(value, na.rm = TRUE) - min(value, na.rm = TRUE))) %>%
+      ungroup()
+  }
+
+  # plot data
+  zoom_grouping <- unname(aes_cols$zoom_group)
+  plot_data <-
+    raw_data %>%
+    # make ratio identification simple
+    mutate(is_ratio = category == "ratio") %>%
+    # add units to data for proper grouping
+    mutate(
+      data_wo_units = data,
+      data = ifelse(!is.na(units), str_c(data, " [", units, "]"), data)
+    ) %>%
+    select(1:category, is_ratio, data, data_wo_units, everything()) %>%
+    arrange(!!sym(time_info$column)) %>%
+    # find global zoom cutoffs per group before time filtering (don't consider ratios)
+    {
+      if (!is.null(zoom)) {
+        group_by(., !!!map(zoom_grouping, sym)) %>%
+          mutate(
+            baseline = value[!is_ratio] %>% { if(length(.) == 0) NA else min(.) },
+            max_signal = value[!is_ratio] %>% { if(length(.) == 0) NA else max(.) }) %>%
+          ungroup()
+      } else .
+    } %>%
+    # time filtering
+    { if (length(time_interval) == 2) dplyr::filter(., between(!!sym(time_info$column), time_interval[1], time_interval[2])) else . } %>%
+    # info fields
+    mutate(zoom_cutoff = NA_real_, normalized = FALSE) %>%
+    # normalizing
+    {
+      if (normalize) {
+        normalize_data(.) %>%
+          # zooming always based on the full (0 to 1) interval
+          mutate(baseline = 0, max_signal = 1, normalized = TRUE)
+      } else .
+    } %>%
+    # zooming
+    {
+      if (!is.null(zoom)) {
+        # extrapolate data (multi-panel requires this instead of coord_cartesian)
+        group_by(., file_id, data) %>%
+          # note: this does not do perfectly extrapolating the line when only a single
+          # data point is missing (extrapolation on the tail is missing) because it
+          # would require adding another row to account both for gap and extrapolated
+          mutate(
+            zoom_cutoff = 1/zoom * max_signal + (1 - 1/zoom) * baseline, # cutoffs
+            discard = ifelse(!is_ratio, value > zoom_cutoff, FALSE), # never zoom ratios
+            change = c(0, diff(discard)), # check for where the cutoffs
+            border = change == 1 | c(change[-1], 0) == -1, # identify borders
+            gap = c(0, change[-n()]) == 1, # identify gaps next to one border so ggplot knows the line is interrupted
+            !!sym(time_info$column) := extrapolate_border(zoom_cutoff, border, change, !!sym(time_info$column), value), # calculate time at border
+            value = ifelse(border, zoom_cutoff, ifelse(gap, NA, value)) # assign values
+          ) %>%
+          ungroup() %>%
+          dplyr::filter(!discard | border | gap) %>%
+          select(-discard, -change, -border, -gap)
+          # #%>%
+          # { # re-normalize after zooming if normalizing is turned on
+          #   if (normalize) normalize_data(.) %>% mutate(zoom_cutoff = 1.0)
+          #   else .
+          # }
+      } else .
+    } %>%
+    # switch to factors for proper grouping
+    {
+      data_levels <- tibble::deframe(select(., data, data_wo_units) %>% unique())
+      data_sorting <- sapply(select_data, function(x) which(data_levels == x)) %>% unlist(use.names = F)
+      mutate(.,
+             data = factor(data, levels = names(data_levels)[data_sorting]),
+             data_wo_units = factor(data_wo_units, levels = unique(as.character(data_levels)[data_sorting])))
+    } %>%
+    dplyr::arrange(tp, data)
+
+  # add in file info
+  file_info <- iso_get_file_info(iso_files, select = !!enquo(include_file_info), quiet = TRUE)
+  plot_data <- dplyr::left_join(plot_data, file_info, by = "file_id")
+
+  # return
+  return(plot_data)
+}
+
+
 # raw data plots =====
 
 #' Plot raw data from isoreader files
@@ -27,204 +204,119 @@ iso_plot_raw_data <- function(iso_files, ..., quiet = default(quiet)) {
 }
 
 
-# NOTE: should the color and linetype aesthetics allow any expression?
 #' Plot chromatogram from continuous flow data
 #'
-#' @inheritParams iso_plot_raw_data
-#' @param data which masses and ratios to plot (e.g. c("44", "45", "45/44")), if omitted, all available masses and ratios are plotted. Note that ratios should be calculated using \code{\link{iso_calculate_ratios}} prior to plotting.
-#' @param time_interval which time interval to plot
-#' @param time_interval_units which units the time interval is in, default is "seconds"
-#' @param filter any filter condition to apply to the data beyond the masses/ratio selection (param \code{data}) and time interval (param \code{time_interval}). For details on the available data columns see \link{iso_get_raw_data} with parameters \code{gather = TRUE} and \code{include_file_info = everything()} (i.e. all file info is available for plotting aesthetics).
-#' @param normalize whether to normalize all data (default is FALSE, i.e. no normalization). If TRUE, normalizes each trace across all files. Normalizing always scales such that each trace fills the entire height of the plot area. Note that zooming (if \code{zoom} is set) is applied after normalizing.
-#' @param zoom if not set, automatically scales to the maximum range in the selected time_interval in each panel. If set, scales by the indicated factor, i.e. values > 1 are zoom in, values < 1 are zoom out, baseline always remains the bottom anchor point, zooming is always relative to the max in the plot (even if that is outside visible frame). Note that for overlay plots (\code{panel_bu = "none"}) zooming is relative to the max in each panel (potentially across different data traces). Also note that zooming only affects masses, ratios are not zoomed.
-#' @param panel whether to panel data by anything - any data column is possible (see notes in the \code{filter} parameter) but the most commonly used options are \code{panel = NULL} (overlay all), \code{panel = data} (by mass/ratio data), \code{panel = file_id} (panel by files, alternatively use any appropriate file_info column). The default is panelling by \code{data}.
-#' @param color whether to color data by anything, options are the same as for \code{panel} but the default is \code{file_id} and complex expressions (not just columns) are supported.
-#' @param linetype whether to differentiate data by linetype, options are the same as for \code{panel} but the default is \code{NULL} (i.e. no linetype aesthetic) and complex expressions (not just columns) are supported. Note that a limited number of linetypes (6) is defined by default and the plot will fail if a higher number is required unless specified using \code{\link[ggplot2]{scale_linetype}}.
-#' @param label this is primarily of use for turning these into interactive plots via ggplotly as it present as an additional mousover label. Any unique file identifier is a useful choice, the default is \code{file_id}.
-#' @param ... deprecated parameters
+#' This function provides easy plotting for mass and ratio chromatograms from continuous flow IRMS data. It can be called either directly with a set of \code{iso_file} objects, or with a data frame prepared for plotting chromatographic data (see \code{\link{iso_prepare_continuous_flow_plot_data}}).
+#'
+#' @param ... S3 method placeholder parameters, see class specific functions for details on parameters
 #' @family plot functions
 #' @export
-iso_plot_continuous_flow_data <- function(
+iso_plot_continuous_flow_data <- function(...) {
+  UseMethod("iso_plot_continuous_flow_data")
+}
+
+#' @export
+iso_plot_continuous_flow_data.default <- function(x, ...) {
+  stop("this function is not defined for objects of type '",
+       class(x)[1], "'", call. = FALSE)
+}
+
+#' @inheritParams iso_prepare_continuous_flow_plot_data
+#' @rdname iso_plot_continuous_flow_data
+#' @export
+iso_plot_continuous_flow_data.iso_file_list <- function(
   iso_files, data = c(),
   time_interval = c(), time_interval_units = "seconds",
   filter = NULL,
   normalize = FALSE, zoom = NULL,
-  panel = data, color = file_id, linetype = NULL, label = file_id,
-  ...) {
+  panel = data, color = file_id, linetype = NULL, label = file_id) {
 
   # safety checks
   if(!iso_is_continuous_flow(iso_files))
     stop("iso_plot_continuous_flow_data can only plot continuous flow iso_files", call. = FALSE)
 
-  # check for deprecated parameters
-  dots <- list(...)
-  old <- c("panel_by", "color_by", "linetype_by", "shape_by")
-  if (any(old %in% names(dots))) {
-    glue("deprecated parameter(s): ",
-         "'{collapse(old[old %in% names(dots)], sep=\"', '\")}' ",
-         "- please check the function documentation for details on ",
-         "the updated parameters") %>%
-      stop(call. = FALSE)
-  }
-  if (length(dots) > 0) {
-    glue("unkown parameter(s): ",
-         "'{collapse(names(dots), sep=\"', '\")}' ") %>%
-      stop(call. = FALSE)
-  }
+  # retrieve data (with all info so additional aesthetics are easy to include)
+  panel_quo <- enquo(panel)
+  plot_data <- iso_prepare_continuous_flow_plot_data(
+    iso_files,
+    data = data, include_file_info = everything(),
+    time_interval = time_interval,
+    time_interval_units = time_interval_units,
+    filter = !!enquo(filter),
+    normalize = normalize,
+    zoom = zoom,
+    zoom_group = !!panel_quo
+  )
 
-  # global vars
-  time <- type <- value <- file_id <- category <- data_without_units <- NULL
-  is_ratio <- max_signal <- baseline <- cutoff <- discard <- change <- border <- gap <- NULL
+  # plot
+  iso_plot_continuous_flow_data(
+    plot_data,
+    panel = !!enquo(panel),
+    color = !!enquo(color),
+    linetype = !!enquo(linetype),
+    label = !!enquo(label)
+  )
+}
 
-  # collect raw data
-  raw_data <- iso_get_raw_data(iso_files, gather = TRUE, quiet = TRUE, include_file_info = everything())
-  if (nrow(raw_data) == 0) stop("no raw data in supplied iso_files", call. = FALSE)
+#' @rdname iso_plot_continuous_flow_data
+#' @param dt a data frame of the chromatographic data prepared for plotting (see \code{\link{iso_prepare_continuous_flow_plot_data}})
+#' @param panel whether to panel data by anything - any data column is possible (see notes in the \code{filter} parameter) but the most commonly used options are \code{panel = NULL} (overlay all), \code{panel = data} (by mass/ratio data), \code{panel = file_id} (panel by files, alternatively use any appropriate file_info column). The default is panelling by \code{data}.
+#' @param color whether to color data by anything, options are the same as for \code{panel} but the default is \code{file_id} and complex expressions (not just columns) are supported.
+#' @param linetype whether to differentiate data by linetype, options are the same as for \code{panel} but the default is \code{NULL} (i.e. no linetype aesthetic) and complex expressions (not just columns) are supported. Note that a limited number of linetypes (6) is defined by default and the plot will fail if a higher number is required unless specified using \code{\link[ggplot2]{scale_linetype}}.
+#' @param label this is primarily of use for turning these into interactive plots via ggplotly as it present as an additional mousover label. Any unique file identifier is a useful choice, the default is \code{file_id}.
+#' @export
+iso_plot_continuous_flow_data.data.frame <- function(dt, panel = data, color = file_id, linetype = NULL, label = file_id) {
 
-  # check for column existence and expression evaluation
-  aes_quos <- list(panel = enquo(panel), color = enquo(color),
-                   linetype = enquo(linetype), label = enquo(label))
+  # check for data
+  if (nrow(dt) == 0) stop("no data provided", call. = FALSE)
 
-  aes_cols <- get_column_names(raw_data, panel = aes_quos$panel, n_reqs = list(panel = "?"))
-  isoreader:::check_expressions(raw_data, aes_quos$color, aes_quos$linetype, aes_quos$label)
+  # check for time column
+  time_info <- find_time_column(dt)
 
-  # only work with desired data (masses and ratios)
-  select_data <- if(length(data) == 0) unique(raw_data$data) else as.character(data)
-  if ( length(missing <- setdiff(select_data, unique(raw_data$data))) > 0 )
-    stop("data not available in the provided iso_files: ", str_c(missing, collapse = ", "), call. = FALSE)
-  raw_data <- dplyr::filter(raw_data, data %in% select_data)
+  # quos and other column checks
+  aes_quos <- list(panel = enquo(panel), color = enquo(color), linetype = enquo(linetype), label = enquo(label))
+  aes_cols <- get_column_names(
+    dt, panel = aes_quos$panel,
+    file_id = quo("file_id"),
+    time_min = quo("time_min"), time_max = quo("time_max"),
+    is_ratio = quo("is_ratio"), data = quo("data"), value = quo("value"),
+    n_reqs = list(panel = "?"))
+  isoreader:::check_expressions(dt, aes_quos$color, aes_quos$linetype, aes_quos$label)
 
-  # time column
-  time_pattern <- "^time\\.(.*)$"
-  time_column <- stringr::str_subset(names(raw_data), time_pattern)
-  if (length(time_column) != 1)
-    stop("unclear which column is the time column, consider an explicit 'iso_convert_time' call before plotting, found: ",
-         str_c(time_column, collapse = ", "), call. = FALSE)
-  time_unit <- stringr::str_match(time_column, time_pattern) %>% {.[2] }
-  raw_data$time <- raw_data[[time_column]]
-
-  # time interval
-  if (length(time_interval) == 2) {
-    time_interval <- scale_time(time_interval, to = time_unit, from = time_interval_units)
-  } else if (length(time_interval) > 0 && length(time_interval) != 2)
-    stop("time interval needs to be a vector with two numeric entries, found: ", str_c(time_interval, collapse = ", "), call. = FALSE)
-  time_unit <- sprintf("[%s]", time_unit)
-
-  # general filter
-  filter_quo <- enquo(filter)
-  if (!quo_is_null(filter_quo)) {
-    raw_data <- dplyr::filter(raw_data, !!filter_quo)
-  }
-
-  # border extrapolation function
-  extrapolate_border <- function(cutoff, border, change, time, value) {
-    cutoff <- unique(cutoff)
-    if (length(cutoff) != 1) stop("problematic cutoff", call. = FALSE)
-    bi <- which(border) # border indices
-    bi2 <- bi + 1 - change[bi] # end point of border
-    bi1 <- bi - change[bi] # start point of border
-    border_time <- (cutoff - value[bi1])/(value[bi2] - value[bi1]) * (time[bi2] - time[bi1]) + time[bi1]
-    time[bi] <- border_time
-    return(time)
-  }
-
-  # normalize data
-  normalize_data <- function(df) {
-    group_by(df, data) %>%
-      mutate(value = (value - min(value, na.rm = TRUE))/
-               (max(value, na.rm = TRUE) - min(value, na.rm = TRUE))) %>%
-      ungroup()
-  }
-
-  # plot data
-  zoom_grouping <- unname(aes_cols$panel)
-  plot_data <-
-    raw_data %>%
-    # add units to data for proper grouping
-    mutate(
-      data_without_units = data,
-      data = ifelse(!is.na(units), str_c(data, " [", units, "]"), data)
-    ) %>%
-    # make ratio identification simple
-    mutate(is_ratio = category == "ratio") %>%
-    arrange(time) %>%
-    # find global zoom cutoffs per panel before time filtering (don't consider ratios)
-    {
-      if (!is.null(zoom)) {
-        group_by(., !!sym(zoom_grouping)) %>%
-          mutate(
-            baseline = value[!is_ratio] %>% { if(length(.) == 0) NA else min(.) },
-            max_signal = value[!is_ratio] %>% { if(length(.) == 0) NA else max(.) }) %>%
-          ungroup()
-      } else .
-    } %>%
-    # time filtering
-    { if (length(time_interval) == 2) dplyr::filter(., time >= time_interval[1], time <= time_interval[2]) else . } %>%
-    # normalizing
-    {
-      if (normalize) {
-        normalize_data(.) %>%
-          # zooming always based on the full (0 to 1) interval
-          mutate(baseline = 0, max_signal = 1)
-      } else .
-    } %>%
-    # zooming
-    {
-      if (!is.null(zoom)) {
-        # extrapolate data (multi-panel requires this instead of coord_cartesian)
-        group_by(., file_id, data) %>%
-          mutate(
-            cutoff = 1/zoom * max_signal + (1 - 1/zoom) * baseline, # cutoffs
-            discard = ifelse(!is_ratio, value > cutoff, FALSE), # never zoom ratios
-            change = c(0, diff(discard)), # check for where the cutoffs
-            border = change == 1 | c(change[-1], 0) == -1, # identify borders
-            gap = c(0, change[-n()]) == 1, # identify gaps next to one border so ggplot knows the line is interrupted
-            time = extrapolate_border(cutoff, border, change, time, value), # calculate time at border
-            value = ifelse(border, cutoff, ifelse(gap, NA, value)) # assign values
-          ) %>%
-          ungroup() %>%
-          dplyr::filter(!discard | border | gap) %>%
-          { # re-normalize after zooming if normalizing is turned on
-            if (normalize) normalize_data(.)
-            else .
-          }
-      } else .
-    } %>%
-    # switch to factors for proper grouping
-    mutate(
-      data_with_units = ifelse(!is.na(units), str_c(data, " [", units, "]"), data)
-    ) %>% {
-      data_levels <- tibble::deframe(select(., data, data_without_units) %>% unique())
-      data_sorting <- sapply(select_data, function(x) which(data_levels == x)) %>% unlist(use.names = F)
-      mutate(., data = factor(data, levels = names(data_levels)[data_sorting]))
-    }
+  # find overall plot parameters from data frame
+  normalize <- col_in_df(dt, "normalized") & dt$normalized[1]
+  zoom <- col_in_df(dt, "zoom_cutoff") & !all(is.na(dt$zoom_cutoff[1]))
+  if (col_in_df(dt, "normalize")) stopifnot(all(dt$normalized == dt$normalized[1])) # should be a single value
 
   # generate plot
-  p <- plot_data %>%
-    ggplot() +
-    aes(time, value, group = paste(file_id, data)) +
+  p <- ggplot(dt) +
+    aes(!!sym(time_info$column), value, group = paste(file_id, data)) +
     geom_line() +
-    scale_x_continuous(str_c("Time ", time_unit), expand = c(0, 0)) +
+    scale_x_continuous(str_c("Time ", time_info$unit), expand = c(0, 0)) +
     scale_y_continuous(if(normalize) "Normalized Signal" else "Signal", expand = c(0, 0)) +
     theme_bw()
 
   # zoom ghost points to make sure the zooming frame remains the same (if zoom is set)
-  if (!is.null(zoom)) {
+  if (zoom) {
+    get_column_names(dt, baseline = quo(baseline)) # check that baseline exists
     p <- p +
-      geom_point(data = function(df) group_by_(df, .dots = zoom_grouping) %>%
-                   summarize(time = mean(time, na.omit = TRUE), value = min(baseline, na.omit = TRUE)) %>%
+      geom_point(data = function(df) group_by(df, !!!map(aes_cols$panel, sym)) %>%
+                   summarize(time = mean(!!sym(time_info$column), na.omit = TRUE), value = min(baseline, na.rm = TRUE)) %>%
                    dplyr::filter(!is.na(value)),
                  mapping = aes(x = time, y = value), inherit.aes = FALSE,
                  size = 0, alpha = 1, show.legend = FALSE) +
-      geom_point(data = function(df) group_by_(df, .dots = zoom_grouping) %>%
-                   summarize(time = mean(time, na.omit = TRUE), value = max(cutoff, na.omit = TRUE)) %>%
+      geom_point(data = function(df) group_by(df, !!!map(aes_cols$panel, sym)) %>%
+                   summarize(time = mean(!!sym(time_info$column), na.omit = TRUE), value = max(zoom_cutoff, na.rm = TRUE)) %>%
                    dplyr::filter(!is.na(value)),
-                 mapping =aes(x = time, y = value), inherit.aes = FALSE,
+                 mapping = aes(x = time, y = value), inherit.aes = FALSE,
                  size = 0, alpha = 1, show.legend = FALSE)
   }
 
   # display full time scale
-  if (length(time_interval) == 2)
-    p <- p + expand_limits(x = time_interval)
+  if (!is.infinite(dt$time_min[1]))
+    p <- p + expand_limits(x = dt$time_min[1])
+  if (!is.infinite(dt$time_max[1]))
+    p <- p + expand_limits(x = dt$time_max[1])
 
   # normalize plot y axis
   if (normalize)
@@ -248,6 +340,7 @@ iso_plot_continuous_flow_data <- function(
 
   # return plot
   return(p)
+
 }
 
 #' Plot mass data from dual inlet files
@@ -286,7 +379,7 @@ iso_plot_dual_inlet_data <- function(
   }
 
   # global vars
-  cycle <- value <- type <- data_without_units <- NULL
+  cycle <- value <- type <- data_wo_units <- NULL
 
   # collect raw data
   raw_data <- iso_get_raw_data(iso_files, gather = TRUE, quiet = TRUE, include_file_info = everything())
@@ -330,10 +423,10 @@ iso_plot_dual_inlet_data <- function(
     raw_data %>%
     # data with units and in correct order
     mutate(
-      data_without_units = data,
+      data_wo_units = data,
       data = ifelse(!is.na(units), str_c(data, " [", units, "]"), data)
     ) %>% {
-      data_levels <- tibble::deframe(select(., data, data_without_units) %>% unique())
+      data_levels <- tibble::deframe(select(., data, data_wo_units) %>% unique())
       data_sorting <- sapply(select_data, function(x) which(data_levels == x)) %>% unlist(use.names = F)
       mutate(., data = factor(data, levels = names(data_levels)[data_sorting]))
     }

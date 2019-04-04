@@ -3,6 +3,9 @@
 #' @export
 magrittr::`%>%`
 
+# simple col in df check
+col_in_df <- isoreader:::col_in_df
+
 # just because it always is very confusing error if the base `filter` is used instead
 #' @export
 dplyr::filter

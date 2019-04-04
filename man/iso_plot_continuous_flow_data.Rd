@@ -2,14 +2,23 @@
 % Please edit documentation in R/visualization.R
 \name{iso_plot_continuous_flow_data}
 \alias{iso_plot_continuous_flow_data}
+\alias{iso_plot_continuous_flow_data.iso_file_list}
+\alias{iso_plot_continuous_flow_data.data.frame}
 \title{Plot chromatogram from continuous flow data}
 \usage{
-iso_plot_continuous_flow_data(iso_files, data = c(),
-  time_interval = c(), time_interval_units = "seconds",
+iso_plot_continuous_flow_data(...)
+
+\method{iso_plot_continuous_flow_data}{iso_file_list}(iso_files,
+  data = c(), time_interval = c(), time_interval_units = "seconds",
   filter = NULL, normalize = FALSE, zoom = NULL, panel = data,
-  color = file_id, linetype = NULL, label = file_id, ...)
+  color = file_id, linetype = NULL, label = file_id)
+
+\method{iso_plot_continuous_flow_data}{data.frame}(dt, panel = data,
+  color = file_id, linetype = NULL, label = file_id)
 }
 \arguments{
+\item{...}{S3 method placeholder parameters, see class specific functions for details on parameters}
+
 \item{iso_files}{collection of iso_file objects}
 
 \item{data}{which masses and ratios to plot (e.g. c("44", "45", "45/44")), if omitted, all available masses and ratios are plotted. Note that ratios should be calculated using \code{\link{iso_calculate_ratios}} prior to plotting.}
@@ -20,9 +29,9 @@ iso_plot_continuous_flow_data(iso_files, data = c(),
 
 \item{filter}{any filter condition to apply to the data beyond the masses/ratio selection (param \code{data}) and time interval (param \code{time_interval}). For details on the available data columns see \link{iso_get_raw_data} with parameters \code{gather = TRUE} and \code{include_file_info = everything()} (i.e. all file info is available for plotting aesthetics).}
 
-\item{normalize}{whether to normalize all data (default is FALSE, i.e. no normalization). If TRUE, normalizes each trace across all files. Normalizing always scales such that each trace fills the entire height of the plot area. Note that zooming (if \code{zoom} is set) is applied after normalizing.}
+\item{normalize}{whether to normalize the data (default is FALSE, i.e. no normalization). If TRUE, normalizes each trace across all files (i.e. normalized to the global max/min). This is particularly useful for overlay plotting different mass and/or ratio traces (\code{panel = NULL}). Note that zooming (if \code{zoom} is set) is applied after normalizing.}
 
-\item{zoom}{if not set, automatically scales to the maximum range in the selected time_interval in each panel. If set, scales by the indicated factor, i.e. values > 1 are zoom in, values < 1 are zoom out, baseline always remains the bottom anchor point, zooming is always relative to the max in the plot (even if that is outside visible frame). Note that for overlay plots (\code{panel_bu = "none"}) zooming is relative to the max in each panel (potentially across different data traces). Also note that zooming only affects masses, ratios are not zoomed.}
+\item{zoom}{if not set, automatically scales to the maximum range in the selected time_interval in each plotting panel. If set, scales by the indicated factor, i.e. values > 1 are zoom in, values < 1 are zoom out, baseline always remains the bottom anchor point. Note that zooming is always relative to the max in each zoom_group (by default \code{zoom_group = data}, i.e. each trace is zoomed separately). The maximum considered may be outside the visible time window. Note that for \code{zoom_group} other than \code{data} (e.g. \code{file_id} or \code{NULL}), zooming is relative to the max signal across all mass traces. Typically it makes most sense to set the \code{zoom_group} to the same variable as the planned \code{panel} parameter to the plotting function. Lastly, note that zooming only affects masses, ratios are never zoomed.}
 
 \item{panel}{whether to panel data by anything - any data column is possible (see notes in the \code{filter} parameter) but the most commonly used options are \code{panel = NULL} (overlay all), \code{panel = data} (by mass/ratio data), \code{panel = file_id} (panel by files, alternatively use any appropriate file_info column). The default is panelling by \code{data}.}
 
@@ -32,13 +41,14 @@ iso_plot_continuous_flow_data(iso_files, data = c(),
 
 \item{label}{this is primarily of use for turning these into interactive plots via ggplotly as it present as an additional mousover label. Any unique file identifier is a useful choice, the default is \code{file_id}.}
 
-\item{...}{deprecated parameters}
+\item{dt}{a data frame of the chromatographic data prepared for plotting (see \code{\link{iso_prepare_continuous_flow_plot_data}})}
 }
 \description{
-Plot chromatogram from continuous flow data
+This function provides easy plotting for mass and ratio chromatograms from continuous flow IRMS data. It can be called either directly with a set of \code{iso_file} objects, or with a data frame prepared for plotting chromatographic data (see \code{\link{iso_prepare_continuous_flow_plot_data}}).
 }
 \seealso{
 Other plot functions: \code{\link{iso_plot_dual_inlet_data}},
-  \code{\link{iso_plot_raw_data}}
+  \code{\link{iso_plot_raw_data}},
+  \code{\link{iso_prepare_continuous_flow_plot_data}}
 }
 \concept{plot functions}

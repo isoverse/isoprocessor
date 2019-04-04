@@ -8,9 +8,18 @@ test_that("test that raw data plot throws appropriate errors", {
   expect_error(iso_plot_raw_data(42), "can only plot iso files")
 })
 
+test_that("test that cf plot data prep works properly", {
+
+  expect_error(iso_prepare_continuous_flow_plot_data())
+  expect_error(iso_prepare_continuous_flow_plot_data(c(isoreader:::make_di_data_structure())), "can only prepare continuous flow")
+
+  # FIXME: include more elaborate tests here
+
+})
+
 test_that("test that plot continuous flow works properly", {
 
-  expect_error(iso_plot_continuous_flow_data(42), "can only plot continuous flow")
+  expect_error(iso_plot_continuous_flow_data(42), "not defined")
   expect_is(cf <- isoreader:::make_cf_data_structure(), "continuous_flow")
   cf$read_options$file_info <- TRUE
   cf$read_options$raw_data <- TRUE
@@ -39,7 +48,7 @@ test_that("test that plot continuous flow works properly", {
   # aesthetics, mapping, panelling formatting tests - defaults first
   expect_true(all(names(p$mapping) %in% c("colour", "x", "y", "group", "label")))
   expect_true("file_id" %in% as.character(p$mapping$colour))
-  expect_true("time" %in% as.character(p$mapping$x))
+  expect_true("time.s" %in% as.character(p$mapping$x))
   expect_true("value" %in% as.character(p$mapping$y))
   expect_true("file_id" %in% as.character(p$mapping$label))
   expect_equal(class(p$facet)[1], "FacetGrid")
