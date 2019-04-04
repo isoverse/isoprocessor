@@ -3,8 +3,11 @@
 #' @export
 magrittr::`%>%`
 
-# simple col in df check
-col_in_df <- isoreader:::col_in_df
+# check if a column is in a data frame (copied from isoreader)
+col_in_df <- function(df, col) {
+  stopifnot(is.data.frame(df))
+  col %in% names(df)
+}
 
 # just because it always is very confusing error if the base `filter` is used instead
 #' @export
