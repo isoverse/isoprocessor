@@ -2,13 +2,12 @@
 
 #' Map peaks based on retention time
 #'
-#' This function makes it easy to map peaks based on peak maps. It reports all peaks including missing peaks and ambiguous peaks by adding a set of information columns for each entry (\code{is_identified}, \code{is_missing}, \code{is_ambiguous}, \code{n_matches}, \code{n_overlapping}).
-#' For routine downstream data processing, this function is usually followed by \code{\link{iso_get_problematic_peaks}} to inspect the problematic peaks and \code{\link{iso_remove_problematic_peaks}} to proceed only with peaks that do not have any problems. Note that without this filter, one must proceed with great caution interpreting the ambiguous peaks.
+#' This function makes it easy to map peaks based on peak maps. It reports all peaks including missing peaks and ambiguous peaks by adding a set of information columns for each entry (\code{is_identified}, \code{is_missing}, \code{is_ambiguous}, \code{n_matches}, \code{n_overlapping}). For routine downstream data processing, this function is usually followed by \code{\link{iso_summarize_peak_mappings}} and \code{\link{iso_get_problematic_peak_mappings}} to inspect the problematic peaks and \code{\link{iso_remove_problematic_peak_mappings}} to proceed only with mapped peaks that are clearly identified. Note that without this filter, one must proceed with great caution interpreting the ambiguous peaks. Also note that if the \code{compound} column alreadty exists in \code{dt}, it will be overwritten with the new mappings from the peak maps but will issue a warning that this is happening.
 #'
 #' @param dt data frame with peak data
-#' @param peak_maps data frame with the peak map
+#' @param peak_maps data frame with the peak map(s). At minimum, this data frame must have a \code{compound} and \code{rt} column but may have additional information columns. If multiple peak maps are provided, the \code{dt} data frame requires a \code{map_id} column to identify which peak map should be used and the peak maps data frame must have a \code{rt:<map_id>} column for each used value of \code{map_id}. The names of all these columns can be changed if necessary using the \code{compound}, code{rt} and \code{map_id} parameters.
 #' @param file_id the column(s) in dt that uniquely identify a file/set of peaks that belong together
-#' @param map_id the column in dt that indicates which map to use for which file
+#' @param map_id the column in dt that indicates which map to use for which file (only necessary if multiple peak maps are used)
 #' @param compound the column in peak_maps that holds compound information
 #' @param rt the column in dt and colum prefix in peak_maps ("rt:...") that holds retention time information
 #' @param rt_start the column in dt that holds start of peak retention times
@@ -34,9 +33,53 @@ iso_map_peaks <- function(
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   if (missing(peak_maps)) stop("no peak map(s) supplied", call. = FALSE)
-  dt_cols <- isoreader:::get_column_names(!!enquo(dt), file_id = enquo(file_id), map_id = enquo(map_id), rt = enquo(rt), rt_start = enquo(rt_start), rt_end = enquo(rt_end), n_reqs = list(file_id = "+"))
-  pm_cols <- isoreader:::get_column_names(!!enquo(peak_maps), compound = enquo(compound))
+  dt_quo <- enquo(dt)
+  if (nrow(dt) == 0) stop("no data in the data table", call. = FALSE)
+
+  # find regular dt columns
+  dt_cols <- isoreader:::get_column_names(
+    !!dt_quo, file_id = enquo(file_id), rt = enquo(rt), rt_start = enquo(rt_start), rt_end = enquo(rt_end),
+    n_reqs = list(file_id = "+"))
+
+  # find dt map_id column
+  map_quo <- resolve_defaults(enquo(map_id))
+  dt_cols$map_id <- tidyselect::vars_select(names(dt), map_id = !!map_quo, .strict = FALSE)
+  if (length(dt_cols$map_id) > 1)
+    glue::glue("map id must be stored in a single column, not: '{paste(dt_cols$map_id, collapse = \"', '\")}'") %>%
+    stop(call. = FALSE)
+
+  # find dt compound column
+  compound_quo <- resolve_defaults(enquo(compound))
+  dt_cols$compound <- tidyselect::vars_select(names(dt), compound = !!compound_quo, .strict = FALSE)
+
+  # find peak map columns
+  pm_cols <- isoreader:::get_column_names(!!enquo(peak_maps), compound = compound_quo)
+
+  # find new columns
   new_cols <- isoprocessor:::get_new_column_names(peak_info = quo(peak_info), is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous), n_matches = quo(n_matches), n_overlapping = quo(n_overlapping))
+
+  # deal with pre-existing compound column
+  n_overwritten <- 0L
+  if (length(dt_cols$compound) > 0) {
+    n_overwritten <- sum(!is.na(dt[[dt_cols$compound]]))
+    dt <- select(dt, -!!sym(dt_cols$compound))
+  }
+
+  # SK note: allowing pre-existing assignments to remain (via overwrite param) seems more
+  # hassle than it's worth, too many ambiguous columns that are tricky to fill (n_overlapping, etc.)
+  # @param overwrite whether to overwrite existing peak mappings. If set to \code{FALSE}, will ignore all peaks that already have values in the \code{compound} column.
+  # pre_dt <- data_frame()
+  # if (length(dt_cols$compound) > 0) {
+  #   # got a pre-existing compound column
+  #   pre_dt <- filter(dt, !is.na(!!sym(dt_cols$compound))) %>%
+  #     mutate(..peak_info.. = paste0(!!sym(dt_cols$compound), " (", signif((!!sym(dt_cols$rt)), digits = 4), ")"))
+  #   if (!overwrite) {
+  #     # map the ones not overwriting
+  #     dt <- filter(dt, is.na(!!sym(dt_cols$compound)))
+  #     if (nrow(dt) == 0) return(pre_dt)
+  #   }
+  #   dt <- select(dt, -!!sym(dt_cols$compound))
+  # }
 
   # read peak maps
   maps <- peak_maps %>%
@@ -47,20 +90,48 @@ iso_map_peaks <- function(
     # gather map retention times
     gather(..map_id.., ..rt_target.., starts_with(dt_cols$rt)) %>%
     # replace the rt prefix to get to the actual map name
-    mutate(!!sym(dt_cols$map_id) := str_replace(..map_id.., fixed(str_c(dt_cols$rt, rt_prefix_divider)), "")) %>%
-    select(-..map_id..) %>%
+    mutate(..map_id.. := str_replace(..map_id.., fixed(str_c(dt_cols$rt, rt_prefix_divider)), "")) %>%
     # only keep the NA compound and everything that has a ..rt_target..
     filter(is.na(!!sym(pm_cols$compound)) | !is.na(..rt_target..))
 
+  # check map id type
+  map_ids <- unique(maps$..map_id..)
+  if (length(map_ids) == 1 && str_detect(map_ids, str_c("^", dt_cols$rt, "$"))) {
+    # single map
+    dt <- dt %>% mutate(..map_id.. = !!dt_cols$rt)
+    multiple_maps <- FALSE
+  } else if (length(map_ids) == 1 && length(dt_cols$map_id) == 0) {
+    glue::glue(
+      "map id defined ('{map_ids}') ",
+      "but the '{quo_text(map_quo)}' column does not exist in the data frame.") %>%
+      stop(call. = FALSE)
+  } else if (length(map_ids) >= 1 && length(dt_cols$map_id) == 0) {
+    # multiple maps but no map id defined
+    glue::glue(
+      "more than one map defined ({paste(map_ids, collapse = ', ')}) ",
+      "but the '{quo_text(map_quo)}' column does not exist in the data frame.") %>%
+      stop(call. = FALSE)
+  } else {
+    # all in order
+    dt <- dt %>% rename(..map_id.. = !!sym(dt_cols$map_id))
+    multiple_maps <- TRUE
+  }
+
   # safety check --> look for data entries without peak maps
-  if ( nrow(missing <- filter(dt, is.na(!!sym(dt_cols$map_id)))) > 0 ) {
-    glue::glue("cannot proceed - {nrow(missing)} data table entries do not have a map defined in the '{dt_cols$map_id}' column. Make sure to remove entries with missing map metadata first.") %>%
+  if ( nrow(missing <- filter(dt, is.na(..map_id..))) > 0 ) {
+    glue::glue(
+      "cannot proceed - {nrow(missing)} data table entries do not have a ",
+      "map defined in the '{dt_cols$map_id}' column. Make sure to remove ",
+      "entries with missing map metadata first.") %>%
       stop(call. = FALSE)
   }
 
   # safety check --> look for missing maps
-  if (length(missing <- setdiff(unique(dt[[dt_cols$map_id]]), maps[[dt_cols$map_id]])) > 0) {
-    glue::glue("the following maps are referenced in the data table but do not exist in the peak maps: '{collapse(missing, \"', '\")}'. Available peak maps: '{collapse(unique(maps[[dt_cols$map_id]]), \"', '\")}'") %>%
+  if (length(missing <- setdiff(unique(dt$..map_id..), maps$..map_id..)) > 0) {
+    glue::glue(
+      "the following maps are referenced in the data table but do not exist in ",
+      "the peak maps: '{collapse(missing, \"', '\")}'. Available peak maps: ",
+      "'{collapse(unique(maps$..map_id..), \"', '\")}'") %>%
       stop(call. = FALSE)
   }
 
@@ -71,7 +142,7 @@ iso_map_peaks <- function(
     right_join(
       # add unique id per peak for identification simplicity
       dt %>% mutate(..peak_id.. = 1:n()),
-      by = dt_cols$map_id
+      by = "..map_id.."
     ) %>%
     # find the peak that the retention time window matches
     mutate(
@@ -103,10 +174,10 @@ iso_map_peaks <- function(
 
   # figure out which peaks are missing based on the expected peaks and the anti_join with the found ones
   missing_peaks <-
-    unique(dt[c(dt_cols$file_id, dt_cols$map_id)]) %>%
-    left_join(maps, by = dt_cols$map_id) %>%
+    unique(dt[c(dt_cols$file_id, "..map_id..")]) %>%
+    left_join(maps, by = "..map_id..") %>%
     filter(!is.na(!!sym(pm_cols$compound))) %>%
-    anti_join(found_peaks, by = c(dt_cols$file_id, dt_cols$map_id, pm_cols$compound)) %>%
+    anti_join(found_peaks, by = c(dt_cols$file_id, "..map_id..", pm_cols$compound)) %>%
     mutate(
       ..peak_info.. = paste0(compound, " (", signif(..rt_target.., digits = 4), "??)"),
       ..n_matches.. = 0L,
@@ -143,11 +214,15 @@ iso_map_peaks <- function(
     n_multiple_and_overlapping <- ambiguous %>% filter(..n_overlapping.. > 1 & ..n_matches.. > 1) %>% simplification
     n_multiple_matches <- ambiguous %>% filter(..n_overlapping.. <= 1 & ..n_matches.. > 1) %>% simplification
     n_overlapping_matches <- ambiguous %>% filter(..n_overlapping.. > 1 & ..n_matches.. <= 1) %>% simplification
+
     glue::glue(
-      "Info: {n_matched_peaks} of {nrow(dt)} peaks in {n_files} files were successfully mapped",
-      if (n_ambiguous_peaks > 0) str_c(' but ', n_ambiguous_peaks, ' of these are ambiguous. ') else '. ',
+      "Info: {n_matched_peaks} of {nrow(dt)} peaks in {n_files} files were successfully mapped ",
+      if (multiple_maps) "using {length(unique(dt$..map_id..))} peak maps ('{paste(unique(dt$..map_id..), collapse = \"', '\")}')"
+      else "using a single peak map",
+      if (n_ambiguous_peaks > 0) str_c(' but ', n_ambiguous_peaks, ' of these peak mappings are ambiguous. ') else '. ',
       if (n_unidentified_peaks > 0) str_c(n_unidentified_peaks, ' peak(s) could not be mapped. ') else '',
-      if (n_missing_matches > 0) str_c(n_missing_matches, ' expected peak(s) are missing.') else '',
+      if (n_missing_matches > 0) str_c(n_missing_matches, ' expected peak(s) are missing. ') else '',
+      if (n_overwritten > 0) str_c('All previous peak mappings (', n_overwritten, ') were overwritten. ') else '',
       if (n_multiple_matches > 0)
         "\n\t- {n_multiple_matches} were ambiguous because of multiple matching peak assignments" else '',
       if (n_overlapping_matches > 0)
@@ -158,6 +233,14 @@ iso_map_peaks <- function(
       message()
   }
 
+  # clean up map id
+  if (multiple_maps) {
+    all_data <- rename(all_data, !!dt_cols$map_id := ..map_id..)
+  } else {
+    all_data <- select(all_data, -..map_id..)
+  }
+
+  # return
   all_data %>%
     # clean up unnecessary columns and rename those with specific names
     select(-..is_target.., -..peak_id.., -..rt_target..)%>%
@@ -166,7 +249,7 @@ iso_map_peaks <- function(
       !!new_cols$n_matches := ..n_matches..,
       !!new_cols$n_overlapping := ..n_overlapping..) %>%
     # put the file id, map id and compound information at the front
-    select(dt_cols$file_id, dt_cols$map_id, pm_cols$compound, new_cols$peak_info, everything()) %>%
+    select(dt_cols$file_id, pm_cols$compound, new_cols$peak_info, everything()) %>%
     # re-arrange by retention time
     arrange(!!!map(dt_cols$file_id, sym), !!sym(dt_cols$rt))
 }

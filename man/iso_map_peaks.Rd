@@ -13,11 +13,11 @@ iso_map_peaks(dt, peak_maps, file_id = default(file_id),
 \arguments{
 \item{dt}{data frame with peak data}
 
-\item{peak_maps}{data frame with the peak map}
+\item{peak_maps}{data frame with the peak map(s). At minimum, this data frame must have a \code{compound} and \code{rt} column but may have additional information columns. If multiple peak maps are provided, the \code{dt} data frame requires a \code{map_id} column to identify which peak map should be used and the peak maps data frame must have a \code{rt:<map_id>} column for each used value of \code{map_id}. The names of all these columns can be changed if necessary using the \code{compound}, code{rt} and \code{map_id} parameters.}
 
 \item{file_id}{the column(s) in dt that uniquely identify a file/set of peaks that belong together}
 
-\item{map_id}{the column in dt that indicates which map to use for which file}
+\item{map_id}{the column in dt that indicates which map to use for which file (only necessary if multiple peak maps are used)}
 
 \item{compound}{the column in peak_maps that holds compound information}
 
@@ -43,8 +43,7 @@ data frame with mapped peaks and the following information columns:
 }
 }
 \description{
-This function makes it easy to map peaks based on peak maps. It reports all peaks including missing peaks and ambiguous peaks by adding a set of information columns for each entry (\code{is_identified}, \code{is_missing}, \code{is_ambiguous}, \code{n_matches}, \code{n_overlapping}).
-For routine downstream data processing, this function is usually followed by \code{\link{iso_get_problematic_peaks}} to inspect the problematic peaks and \code{\link{iso_remove_problematic_peaks}} to proceed only with peaks that do not have any problems. Note that without this filter, one must proceed with great caution interpreting the ambiguous peaks.
+This function makes it easy to map peaks based on peak maps. It reports all peaks including missing peaks and ambiguous peaks by adding a set of information columns for each entry (\code{is_identified}, \code{is_missing}, \code{is_ambiguous}, \code{n_matches}, \code{n_overlapping}). For routine downstream data processing, this function is usually followed by \code{\link{iso_summarize_peak_mappings}} and \code{\link{iso_get_problematic_peak_mappings}} to inspect the problematic peaks and \code{\link{iso_remove_problematic_peak_mappings}} to proceed only with mapped peaks that are clearly identified. Note that without this filter, one must proceed with great caution interpreting the ambiguous peaks. Also note that if the \code{compound} column alreadty exists in \code{dt}, it will be overwritten with the new mappings from the peak maps but will issue a warning that this is happening.
 }
 \seealso{
 Other peak mapping functions: \code{\link{iso_get_problematic_peak_mappings}},

@@ -6,6 +6,7 @@ test_that("testing that peak mapping works", {
 
   expect_error(iso_map_peaks(), "no data table")
   expect_error(iso_map_peaks(tibble()), "no peak map*")
+  expect_error(iso_map_peaks(data_frame(), data_frame()), "no data")
 
   # data table
   my_dt <- tibble(
@@ -17,6 +18,13 @@ test_that("testing that peak mapping works", {
     rt_end   = c(1.3, 4.2, 6.0, 2.0, 5.6, 6.2, 1.9, 2.4, 5.5)
   )
 
+  # single map
+  my_peak_map <- tibble(
+    compound = c("W", "X", "Y", "Z"),
+    other_info = c(TRUE, FALSE, FALSE, FALSE),
+    rt = c(1.3, 1.8, 4.2, 5.6)
+  )
+
   # maps
   my_peak_maps <- tibble(
     compound = c("X", "Y", "Z"),
@@ -26,14 +34,40 @@ test_that("testing that peak mapping works", {
     `rt:d_map` = c(1, 2, 3)
   )
 
-  # make sure get an error if peak maps are missing
+  # errors
+  expect_error(iso_map_peaks(select(my_dt, -map_id), rename(my_peak_map, rt2=rt)), "map id defined.*but.*map_id.*column does not exist")
+  expect_error(iso_map_peaks(select(my_dt, -map_id), my_peak_maps), "more than one map defined.*map_id.*does not exist")
   expect_error(iso_map_peaks(mutate(my_dt, map_id = ifelse(row_number() == 1, NA_character_, map_id)), my_peak_maps),
                "no.*map defined")
-
   expect_error(iso_map_peaks(mutate(my_dt, map_id = ifelse(row_number() == 1, "missing_pm", map_id)), my_peak_maps),
                "maps .* do not exist .* 'missing_pm'.* Available .* 'a_map', 'bc_map', 'd_map'")
+  expect_error(iso_map_peaks(my_dt, my_peak_maps, map_id = c(file_id, map_id)),
+               "map id must be stored in a single column")
 
-  # check that it all assembles properly
+  # check that it all assembles properly for single maps
+  expect_equal(mapped_dt <- iso_map_peaks(my_dt, my_peak_map),
+               tibble(
+                 file_id = c("a", "a", "a", "a", "b", "b", "b", "b", "b", "c", "c", "c", "c", "c", "c"),
+                 compound = c("W", "X", "Y", "Z", "W", "X", "Y", "Z", "Z", "W", "X", "X", "Y", NA, "Z"),
+                 peak_info = c("W (1.1)", "X (1.8??)", "Y (4)", "Z (5.8)", "W or X? (1.5)", "W or X? (1.5)", "Y (4.2??)", "Z? (5)", "Z? (5.8)",
+                               "W or X? (1.5)", "W or X? (1.5)", "X? (2)", "Y (4.2??)", "?? (5.5)", "Z (5.6??)"),
+                 other_info = c(TRUE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, NA, FALSE),
+                 map_id = c("a_map", NA, "a_map", "a_map", "bc_map", "bc_map", NA, "bc_map", "bc_map", "bc_map", "bc_map", "bc_map", NA, "bc_map", NA),
+                 rt = c(1.1, 1.8, 4, 5.8, 1.5, 1.5, 4.2, 5, 5.8, 1.5, 1.5, 2, 4.2, 5.5, 5.6),
+                 rt_start = c(0.9, NA, 3.8, 5.6, 1, 1, NA, 4.4, 5.4, 1.1, 1.1, 1.6, NA, 5.5, NA),
+                 rt_end = c(1.3, NA, 4.2, 6, 2, 2, NA, 5.6, 6.2, 1.9, 1.9, 2.4, NA, 5.5, NA),
+                 n_overlapping = c(1L, 0L, 1L, 1L, 1L, 1L, 0L, 2L, 2L, 1L, 2L, 2L, 0L, 0L, 0L),
+                 n_matches = c(1L, 0L, 1L, 1L, 2L, 2L, 0L, 1L, 1L, 2L, 2L, 1L, 0L, 0L, 0L),
+                 is_identified = c(TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE),
+                 is_missing = c(FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, TRUE),
+                 is_ambiguous = c(FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE)
+               ))
+  expect_message(iso_map_peaks(my_dt, my_peak_map), "8 of 9 peaks in 3 files.*using a single peak map.*5.*ambiguous.*1.*not be mapped.*4.*missing")
+  expect_message(iso_map_peaks(my_dt, my_peak_map), "1.*ambiguous.*multiple matching peak")
+  expect_message(iso_map_peaks(my_dt, my_peak_map), "3.*ambiguous.*overlapping")
+  expect_message(iso_map_peaks(my_dt, my_peak_map), "1.*ambiguous.*both")
+
+  # check that it all assembles properly for multi maps
   expect_equal(mapped_dt <- iso_map_peaks(my_dt, my_peak_maps),
                tibble(
                  file_id = c("a", "a", "a", "a", "b", "b", "b", "b", "c", "c", "c", "c"),
@@ -51,10 +85,14 @@ test_that("testing that peak mapping works", {
                  is_ambiguous = c(TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE)
                ))
 
-  expect_message(iso_map_peaks(my_dt, my_peak_maps), "8 of 9 peaks in 3 files.*5.*ambiguous.*1.*not be mapped.*1.*missing")
+  expect_message(iso_map_peaks(my_dt, my_peak_maps), "8 of 9 peaks in 3 files.*using 2 peak maps.*5.*ambiguous.*1.*not be mapped.*1.*missing")
   expect_message(iso_map_peaks(my_dt, my_peak_maps), "1.*ambiguous.*multiple matching peak")
   expect_message(iso_map_peaks(my_dt, my_peak_maps), "3.*ambiguous.*overlapping")
   expect_message(iso_map_peaks(my_dt, my_peak_maps), "1.*ambiguous.*both")
+
+  # pre-existing mappings / overwrite
+  expect_equal(mapped_dt, iso_map_peaks(mutate(my_dt, compound = "test"), my_peak_maps))
+  expect_message(iso_map_peaks(mutate(my_dt, compound = "test"), my_peak_maps), "previous peak mappings.*9.*overwritten")
 
   # test get problematic peaks
   expect_warning(try(iso_get_problematic_peaks()), "renamed")
@@ -99,6 +137,9 @@ test_that("testing that peak mapping works", {
   expect_equal(names(out), select(mapped_dt, -is_ambiguous, -starts_with("n_")) %>% names())
 
   # peak summaries
+  expect_error(iso_summarize_peak_mappings(), "no data table")
+  expect_error(iso_summarize_peak_mappings(tibble()), "unknown columns")
+
   expect_equal(
     iso_summarize_peak_mappings(mapped_dt),
     tibble(

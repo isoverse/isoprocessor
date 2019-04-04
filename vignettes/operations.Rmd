@@ -23,7 +23,7 @@ Coming soon...
 # Peak Mapping Problems
 
 ```{r}
-# iso_map_peaks()
+# iso_map_peaks() # with single on the fly peak map and without peak map
 # iso_get_problematic_peak_mappings()
 # iso_summarize_peak_mappings()
 # iso remove_problematic_peak_mappings
