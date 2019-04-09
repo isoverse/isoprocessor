@@ -23,10 +23,11 @@ test_that("test that plot continuous flow works properly", {
   expect_is(cf <- isoreader:::make_cf_data_structure(), "continuous_flow")
   cf$read_options$file_info <- TRUE
   cf$read_options$raw_data <- TRUE
-  expect_error(iso_plot_raw_data(cf), "no raw data in supplied iso_files")
+  expect_error(iso_plot_continuous_flow_data(cf), "no raw data in supplied iso_files")
+  expect_error(iso_plot_continuous_flow_data(c(cf)), "no raw data in supplied iso_files")
 
   # make test raw data
-  cf$raw_data <- data_frame(tp = 1:10, time.s = tp*0.2, v44.mV = runif(10), v46.mV = runif(10))
+  cf$raw_data <- tibble(tp = 1:10, time.s = tp*0.2, v44.mV = runif(10), v46.mV = runif(10))
 
   # test for errors
   expect_error(iso_plot_raw_data(cf, c("42")), "not available in the provided iso_files")
@@ -40,8 +41,10 @@ test_that("test that plot continuous flow works properly", {
   # generate plot
   cf <- iso_calculate_ratios(cf, "46/44")
   expect_message(p <- iso_plot_raw_data(cf, c("46/44", "44"), quiet = FALSE), "plotting data")
-  expect_true(is.ggplot(p))
   expect_silent(iso_plot_raw_data(cf, "44", quiet = TRUE))
+  expect_silent(p <- iso_plot_continuous_flow_data(cf, c("46/44", "44")))
+  expect_true(is.ggplot(p))
+
   expect_true(all(p$data$data %in% c("44 [mV]", "46/44"))) # only these datas selected
   expect_true(identical(p$data$data %>% levels(), c("46/44", "44 [mV]")))
 

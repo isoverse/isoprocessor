@@ -19,7 +19,7 @@ find_time_column <- function(df) {
 #' This functions helps with the preparation of plotting data from continuous flow data files (i.e. the raw chromatogram data). Call either explicity and pass the result to \code{\link{iso_plot_continuous_flow_data}} or let \code{\link{iso_plot_continuous_flow_data}} take care of preparing the plotting data directly from the \code{iso_files}.
 #'
 #' @param iso_files collection of iso_file objects
-#' @param data which masses and ratios to plot (e.g. c("44", "45", "45/44")), if omitted, all available masses and ratios are plotted. Note that ratios should be calculated using \code{\link{iso_calculate_ratios}} prior to plotting.
+#' @param data which masses and ratios to plot (e.g. \code{c("44", "45", "45/44")} - without the units), if omitted, all available masses and ratios are plotted. Note that ratios should be calculated using \code{\link{iso_calculate_ratios}} prior to plotting.
 #' @param time_interval which time interval to plot
 #' @param time_interval_units which units the time interval is in, default is "seconds"
 #' @param filter any filter condition to apply to the data beyond the masses/ratio selection (param \code{data}) and time interval (param \code{time_interval}). For details on the available data columns see \link{iso_get_raw_data} with parameters \code{gather = TRUE} and \code{include_file_info = everything()} (i.e. all file info is available for plotting aesthetics).
@@ -51,7 +51,7 @@ iso_prepare_continuous_flow_plot_data <- function(
   # only work with desired data (masses and ratios)
   select_data <- if(length(data) == 0) unique(raw_data$data) else as.character(data)
   if ( length(missing <- setdiff(select_data, unique(raw_data$data))) > 0 )
-    stop("data not available in the provided iso_files: ", str_c(missing, collapse = ", "), call. = FALSE)
+    stop("data not available in the provided iso_files (don't include units): ", str_c(missing, collapse = ", "), call. = FALSE)
   raw_data <- dplyr::filter(raw_data, data %in% select_data)
 
   # time column
@@ -221,6 +221,11 @@ iso_plot_continuous_flow_data.default <- function(x, ...) {
        class(x)[1], "'", call. = FALSE)
 }
 
+#' @export
+iso_plot_continuous_flow_data.iso_file <- function(iso_files, ...) {
+  iso_plot_continuous_flow_data(iso_as_file_list(iso_files), ...)
+}
+
 #' @inheritParams iso_prepare_continuous_flow_plot_data
 #' @rdname iso_plot_continuous_flow_data
 #' @export
@@ -260,10 +265,10 @@ iso_plot_continuous_flow_data.iso_file_list <- function(
 
 #' @rdname iso_plot_continuous_flow_data
 #' @param dt a data frame of the chromatographic data prepared for plotting (see \code{\link{iso_prepare_continuous_flow_plot_data}})
-#' @param panel whether to panel data by anything - any data column is possible (see notes in the \code{filter} parameter) but the most commonly used options are \code{panel = NULL} (overlay all), \code{panel = data} (by mass/ratio data), \code{panel = file_id} (panel by files, alternatively use any appropriate file_info column). The default is panelling by \code{data}.
-#' @param color whether to color data by anything, options are the same as for \code{panel} but the default is \code{file_id} and complex expressions (not just columns) are supported.
-#' @param linetype whether to differentiate data by linetype, options are the same as for \code{panel} but the default is \code{NULL} (i.e. no linetype aesthetic) and complex expressions (not just columns) are supported. Note that a limited number of linetypes (6) is defined by default and the plot will fail if a higher number is required unless specified using \code{\link[ggplot2]{scale_linetype}}.
-#' @param label this is primarily of use for turning these into interactive plots via ggplotly as it present as an additional mousover label. Any unique file identifier is a useful choice, the default is \code{file_id}.
+#' @param panel whether to panel plot by anything - any column is possible (see notes in the \code{filter} parameter) but the most commonly used options are \code{panel = NULL} (overlay all), \code{panel = data} (by mass/ratio data), \code{panel = file_id} (panel by files, alternatively use any appropriate file_info column). The default is panelling by the \code{data} column.
+#' @param color whether to color plot by anything, options are the same as for \code{panel} but the default is \code{file_id} and complex expressions (not just columns) are supported.
+#' @param linetype whether to differentiate by linetype, options are the same as for \code{panel} but the default is \code{NULL} (i.e. no linetype aesthetic) and complex expressions (not just columns) are supported. Note that a limited number of linetypes (6) is defined by default and the plot will fail if a higher number is required unless specified using \code{\link[ggplot2]{scale_linetype}}.
+#' @param label this is primarily of use for turning the generated ggplots into interactive plots via \code{\link[plotly]{ggplotly}} as the \code{label} will be rendered as an additional mousover label. Any unique file identifier is a useful choice, the default is \code{file_id}.
 #' @export
 iso_plot_continuous_flow_data.data.frame <- function(dt, panel = data, color = file_id, linetype = NULL, label = file_id) {
 
@@ -538,7 +543,7 @@ iso_plot_ref_peaks <- function(dt, ratio, group_id, is_ref_condition, is_ref_use
     group_by(ratio, !!!map(dt_cols$group_id, sym)) %>%
     mutate(
       delta_deviation = (value/mean(value) - 1) * 1000,
-      ref_peak_nr = 1:n()) %>%
+      ref_peak_nr = 1:dplyr::n()) %>%
     ungroup() %>%
     mutate(ref_peak_nr = factor(ref_peak_nr))
 

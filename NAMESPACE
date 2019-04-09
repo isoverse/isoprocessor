@@ -2,6 +2,7 @@
 
 S3method(iso_plot_continuous_flow_data,data.frame)
 S3method(iso_plot_continuous_flow_data,default)
+S3method(iso_plot_continuous_flow_data,iso_file)
 S3method(iso_plot_continuous_flow_data,iso_file_list)
 export("%>%")
 export(extract_substring)
