@@ -12,7 +12,7 @@ iso_prepare_continuous_flow_plot_data(iso_files, data = c(),
 \arguments{
 \item{iso_files}{collection of iso_file objects}
 
-\item{data}{which masses and ratios to plot (e.g. c("44", "45", "45/44")), if omitted, all available masses and ratios are plotted. Note that ratios should be calculated using \code{\link{iso_calculate_ratios}} prior to plotting.}
+\item{data}{which masses and ratios to plot (e.g. \code{c("44", "45", "45/44")} - without the units), if omitted, all available masses and ratios are plotted. Note that ratios should be calculated using \code{\link{iso_calculate_ratios}} prior to plotting.}
 
 \item{time_interval}{which time interval to plot}
 
