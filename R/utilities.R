@@ -92,7 +92,7 @@ iso_summarize_data_table <- function(dt, ..., cutoff = 1) {
   # generate summary
   dt %>%
     dplyr::select(!!!c(grp_vars, vars)) %>%
-    dplyr::summarize(n = n(), !!!summarize_funcs) %>%
+    dplyr::summarize(n = dplyr::n(), !!!summarize_funcs) %>%
     dplyr::filter(n >= cutoff)
 }
 
@@ -381,7 +381,8 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
     glue("{not_enough} of {nrow(data_w_models)} regressions have insufficient ",
          "degrees of freedom (not enough data given the regression models and/or ",
          "requested minimum number of data points) - please double check that all",
-         "peaks are mapped correctly ()") %>%
+         "peaks are mapped correctly (see ?iso_get_problematic_peak_mappings and ",
+         "?iso_summarize_peak_mappings)") %>%
     warning(immediate. = TRUE, call. = FALSE)
 
   # add residuals

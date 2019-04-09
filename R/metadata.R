@@ -65,12 +65,12 @@ iso_add_metadata <- function(dt, metadata, match_by = default(match_by), quiet =
     # remove the matching columns (since we already have the index matching)
     select(!!!cols_to_quos(dt_cols$match_by, negate = TRUE)) %>%
     # add index column
-    mutate(..mdata_idx.. = 1:n(), ..mdata_present.. = TRUE)
+    mutate(..mdata_idx.. = 1:dplyr::n(), ..mdata_present.. = TRUE)
 
   # do the actual matching
   select(matching_idx, ..data_idx.. = data_idx, ..mdata_idx.. = mdata_idx) %>%
     left_join(metadata, by = "..mdata_idx..") %>%
-    right_join(mutate(dt, ..data_idx.. = 1:n()), by = "..data_idx..") %>%
+    right_join(mutate(dt, ..data_idx.. = 1:dplyr::n()), by = "..data_idx..") %>%
     mutate(!!new_cols$has_metadata := !is.na(..mdata_present..)) %>%
     # preserve original order
     arrange(..data_idx..) %>%

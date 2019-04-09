@@ -141,7 +141,7 @@ iso_map_peaks <- function(
     # right join to keep map columns first
     right_join(
       # add unique id per peak for identification simplicity
-      dt %>% mutate(..peak_id.. = 1:n()),
+      dt %>% mutate(..peak_id.. = 1:dplyr::n()),
       by = "..map_id.."
     ) %>%
     # find the peak that the retention time window matches
