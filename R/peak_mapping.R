@@ -130,7 +130,8 @@ iso_map_peaks <- function(
   if (length(missing <- setdiff(unique(dt$..map_id..), maps$..map_id..)) > 0) {
     glue::glue(
       "the following maps are referenced in the data table but do not exist in ",
-      "the peak maps: '{collapse(missing, \"', '\")}'. Available peak maps: ",
+      "the peak maps (make sure that the 'rt' and 'rt_prefix_divider' parameters ",
+      "are set correctly): '{collapse(missing, \"', '\")}'. Available peak maps: ",
       "'{collapse(unique(maps$..map_id..), \"', '\")}'") %>%
       stop(call. = FALSE)
   }
