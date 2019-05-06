@@ -44,6 +44,10 @@ iso_prepare_continuous_flow_plot_data <- function(
   raw_data <- iso_get_raw_data(iso_files, gather = TRUE, quiet = TRUE)
   if (nrow(raw_data) == 0) stop("no raw data in supplied iso_files", call. = FALSE)
 
+  # add in file info
+  file_info <- iso_get_file_info(iso_files, select = !!enquo(include_file_info), quiet = TRUE)
+  raw_data <- dplyr::left_join(raw_data, file_info, by = "file_id")
+
   # check for zoom_gruop column(s) existence
   aes_quos <- list(zoom_group = enquo(zoom_group))
   aes_cols <- get_column_names(raw_data, zoom_group = aes_quos$zoom_group, n_reqs = list(zoom_group = "*"))
@@ -165,10 +169,6 @@ iso_prepare_continuous_flow_plot_data <- function(
              data_wo_units = factor(data_wo_units, levels = unique(as.character(data_levels)[data_sorting])))
     } %>%
     dplyr::arrange(tp, data)
-
-  # add in file info
-  file_info <- iso_get_file_info(iso_files, select = !!enquo(include_file_info), quiet = TRUE)
-  plot_data <- dplyr::left_join(plot_data, file_info, by = "file_id")
 
   # return
   return(plot_data)
