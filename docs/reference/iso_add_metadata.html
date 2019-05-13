@@ -39,12 +39,7 @@
 
 <meta property="og:title" content="Add metadata to data table — iso_add_metadata" />
 
-<meta property="og:description" content="This function adds metadata flexibly by providing the possibility to match_by multiple different columns (paramter match_by) in sequence.
-This is equivalent to applying a set of increasingly more specific matching rules. For each metadata column, only the rows that have a defined non empty (&quot;&quot;) value
-for that column will be mapped to the data. Each set of metadata can overwrite the previous matches such that the last metadata column defined by match_by
-will overwrite all previous matches for which it applies, even if they have already been a match for a previous column." />
-
-<meta property="og:image" content="http://isoprocessor.isoverse.org/logo.png" />
+<meta property="og:description" content="This function was deprecated in favour of the more broadly applicable iso_add_file_info." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -85,7 +80,7 @@ will overwrite all previous matches for which it applies, even if they have alre
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.0</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.7</span>
       </span>
     </div>
 
@@ -128,47 +123,20 @@ will overwrite all previous matches for which it applies, even if they have alre
 
     <div class="ref-description">
     
-    <p>This function adds metadata flexibly by providing the possibility to match_by multiple different columns (paramter <code>match_by</code>) in sequence.
-This is equivalent to applying a set of increasingly more specific matching rules. For each metadata column, only the rows that have a defined non empty ("") value
-for that column will be mapped to the data. Each set of metadata can overwrite the previous matches such that the last metadata column defined by <code>match_by</code>
-will overwrite all previous matches for which it applies, even if they have already been a match for a previous column.</p>
+    <p>This function was deprecated in favour of the more broadly applicable <code>iso_add_file_info</code>.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>iso_add_metadata</span>(<span class='no'>dt</span>, <span class='no'>metadata</span>, <span class='kw'>match_by</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>match_by</span>),
-  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))</pre>
+    <pre class="usage"><span class='fu'>iso_add_metadata</span>(<span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>dt</th>
-      <td><p>data frame with the data</p></td>
-    </tr>
-    <tr>
-      <th>metadata</th>
-      <td><p>data frame with the metadata</p></td>
-    </tr>
-    <tr>
-      <th>match_by</th>
-      <td><p>the column (or columns) to match the metadata by. Used sequently, i.e. if the first column is defined in the metadata, it will be used first before mapping the remainder of the metadata with the second column, etc. All columns must exist in both the <code>dt</code> and <code>metadata</code> data frames.</p></td>
+      <th>...</th>
+      <td><p>deprecated</p></td>
     </tr>
     </table>
-    
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
-
-    <p>merged data frame with data and metadata and new column logical (TRUE/FALSE) <code>has_metadata</code> that holds information about which rows had metadata matches.</p>
-    
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>This function also introduces a <code>has_metadata</code> column that would be typically used afterwards to inspect and/or filter data that has/doesn't have metadata. For routine downstream data processing, this function is thus usually followed by <code><a href='iso_get_missing_metadata.html'>iso_get_missing_metadata</a></code> to inspect which entries are missing metadata and <code><a href='iso_remove_missing_metadata.html'>iso_remove_missing_metadata</a></code> to proceed only with entries that do have metadata assigned.</p>
-<p>Note that this is a convenience function for easily adding metadata in a rule based way. If a direct <code><a href='https://dplyr.tidyverse.org/reference/join.html'>join</a></code> is suitable (i.e. if there is direct
-1-to-1 or 1-to-many mapping of a single ID column or several id columns in combination), it will be a lot faster to use the <code><a href='https://dplyr.tidyverse.org/reference/join.html'>join</a></code>.</p>
-    
-    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
-
-    <div class='dont-index'><p>Other metadata functions: <code><a href='iso_get_missing_metadata.html'>iso_get_missing_metadata</a></code>,
-  <code><a href='iso_remove_missing_metadata.html'>iso_remove_missing_metadata</a></code></p></div>
     
 
   </div>
@@ -176,13 +144,7 @@ will overwrite all previous matches for which it applies, even if they have alre
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
-      <li><a href="#value">Value</a></li>
-
-      <li><a href="#details">Details</a></li>
-
-      <li><a href="#see-also">See also</a></li>
-          </ul>
+                </ul>
 
   </div>
 </div>

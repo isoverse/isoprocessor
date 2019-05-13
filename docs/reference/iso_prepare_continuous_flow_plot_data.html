@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Plot chromatogram from continuous flow data — iso_plot_continuous_flow_data • isoprocessor</title>
+<title>Prepare plotting data from continuous flow files — iso_prepare_continuous_flow_plot_data • isoprocessor</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -37,9 +37,9 @@
 
 
 
-<meta property="og:title" content="Plot chromatogram from continuous flow data — iso_plot_continuous_flow_data" />
+<meta property="og:title" content="Prepare plotting data from continuous flow files — iso_prepare_continuous_flow_plot_data" />
 
-<meta property="og:description" content="This function provides easy plotting for mass and ratio chromatograms from continuous flow IRMS data. It can be called either directly with a set of iso_file objects, or with a data frame prepared for plotting chromatographic data (see iso_prepare_continuous_flow_plot_data)." />
+<meta property="og:description" content="This function helps with the preparation of plotting data from continuous flow data files (i.e. the raw chromatogram data). Call either explicity and pass the result to iso_plot_continuous_flow_data or let iso_plot_continuous_flow_data take care of preparing the plotting data directly from the iso_files." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -116,45 +116,28 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Plot chromatogram from continuous flow data</h1>
+    <h1>Prepare plotting data from continuous flow files</h1>
     <small class="dont-index">Source: <a href='https://github.com/isoverse/isoprocessor/blob/master/R/visualization.R'><code>R/visualization.R</code></a></small>
-    <div class="hidden name"><code>iso_plot_continuous_flow_data.Rd</code></div>
+    <div class="hidden name"><code>iso_prepare_continuous_flow_plot_data.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>This function provides easy plotting for mass and ratio chromatograms from continuous flow IRMS data. It can be called either directly with a set of <code>iso_file</code> objects, or with a data frame prepared for plotting chromatographic data (see <code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a></code>).</p>
+    <p>This function helps with the preparation of plotting data from continuous flow data files (i.e. the raw chromatogram data). Call either explicity and pass the result to <code><a href='iso_plot_continuous_flow_data.html'>iso_plot_continuous_flow_data</a></code> or let <code><a href='iso_plot_continuous_flow_data.html'>iso_plot_continuous_flow_data</a></code> take care of preparing the plotting data directly from the <code>iso_files</code>.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>iso_plot_continuous_flow_data</span>(<span class='no'>...</span>)
-
-<span class='co'># S3 method for iso_file_list</span>
-<span class='fu'>iso_plot_continuous_flow_data</span>(<span class='no'>iso_files</span>,
-  <span class='kw'>data</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(), <span class='kw'>time_interval</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(), <span class='kw'>time_interval_units</span> <span class='kw'>=</span> <span class='st'>"seconds"</span>,
-  <span class='kw'>filter</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>normalize</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>zoom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>panel</span> <span class='kw'>=</span> <span class='no'>data</span>,
-  <span class='kw'>color</span> <span class='kw'>=</span> <span class='no'>file_id</span>, <span class='kw'>linetype</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>label</span> <span class='kw'>=</span> <span class='no'>file_id</span>,
-  <span class='kw'>peak_table</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>file_id</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>file_id</span>), <span class='kw'>rt</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt</span>),
+    <pre class="usage"><span class='fu'>iso_prepare_continuous_flow_plot_data</span>(<span class='no'>iso_files</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(),
+  <span class='kw'>include_file_info</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>time_interval</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(),
+  <span class='kw'>time_interval_units</span> <span class='kw'>=</span> <span class='st'>"seconds"</span>, <span class='kw'>filter</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>normalize</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>zoom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>zoom_group</span> <span class='kw'>=</span> <span class='no'>data</span>, <span class='kw'>peak_table</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>file_id</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>file_id</span>), <span class='kw'>rt</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt</span>),
   <span class='kw'>rt_start</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt_start</span>), <span class='kw'>rt_end</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt_end</span>),
-  <span class='kw'>rt_unit</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>peak_marker</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>peak_bounds</span> <span class='kw'>=</span> !<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/NULL'>is.null</a></span>(<span class='no'>peak_table</span>), <span class='kw'>peak_label</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>peak_label_filter</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>peak_label_size</span> <span class='kw'>=</span> <span class='fl'>2</span>,
-  <span class='kw'>peak_label_repel</span> <span class='kw'>=</span> <span class='fl'>1</span>)
-
-<span class='co'># S3 method for data.frame</span>
-<span class='fu'>iso_plot_continuous_flow_data</span>(<span class='no'>df</span>, <span class='kw'>panel</span> <span class='kw'>=</span> <span class='no'>data</span>,
-  <span class='kw'>color</span> <span class='kw'>=</span> <span class='no'>file_id</span>, <span class='kw'>linetype</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>label</span> <span class='kw'>=</span> <span class='no'>file_id</span>,
-  <span class='kw'>peak_marker</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>peak_bounds</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>peak_label</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>peak_label_filter</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>peak_label_size</span> <span class='kw'>=</span> <span class='fl'>2</span>,
-  <span class='kw'>peak_label_repel</span> <span class='kw'>=</span> <span class='fl'>1</span>)</pre>
+  <span class='kw'>rt_unit</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>...</th>
-      <td><p>S3 method placeholder parameters, see class specific functions for details on parameters</p></td>
-    </tr>
     <tr>
       <th>iso_files</th>
       <td><p>collection of iso_file objects</p></td>
@@ -184,22 +167,6 @@
       <td><p>if not set, automatically scales to the maximum range in the selected time_interval in each plotting panel. If set, scales by the indicated factor, i.e. values &gt; 1 are zoom in, values &lt; 1 are zoom out, baseline always remains the bottom anchor point. Note that zooming is always relative to the max in each zoom_group (by default <code>zoom_group = data</code>, i.e. each trace is zoomed separately). The maximum considered may be outside the visible time window. Note that for <code>zoom_group</code> other than <code>data</code> (e.g. <code>file_id</code> or <code>NULL</code>), zooming is relative to the max signal across all mass traces. Typically it makes most sense to set the <code>zoom_group</code> to the same variable as the planned <code>panel</code> parameter to the plotting function. Lastly, note that zooming only affects masses, ratios are never zoomed.</p></td>
     </tr>
     <tr>
-      <th>panel</th>
-      <td><p>whether to panel plot by anything - any column is possible (see notes in the <code>filter</code> parameter) but the most commonly used options are <code>panel = NULL</code> (overlay all), <code>panel = data</code> (by mass/ratio data), <code>panel = file_id</code> (panel by files, alternatively use any appropriate file_info column). The default is panelling by the <code>data</code> column.</p></td>
-    </tr>
-    <tr>
-      <th>color</th>
-      <td><p>whether to color plot by anything, options are the same as for <code>panel</code> but the default is <code>file_id</code> and complex expressions (not just columns) are supported.</p></td>
-    </tr>
-    <tr>
-      <th>linetype</th>
-      <td><p>whether to differentiate by linetype, options are the same as for <code>panel</code> but the default is <code>NULL</code> (i.e. no linetype aesthetic) and complex expressions (not just columns) are supported. Note that a limited number of linetypes (6) is defined by default and the plot will fail if a higher number is required unless specified using <code><a href='https://www.rdocumentation.org/packages/ggplot2/topics/scale_linetype'>scale_linetype</a></code>.</p></td>
-    </tr>
-    <tr>
-      <th>label</th>
-      <td><p>this is primarily of use for turning the generated ggplots into interactive plots via <code><a href='https://www.rdocumentation.org/packages/plotly/topics/ggplotly'>ggplotly</a></code> as the <code>label</code> will be rendered as an additional mousover label. Any unique file identifier is a useful choice, the default is <code>file_id</code>.</p></td>
-    </tr>
-    <tr>
       <th>peak_table</th>
       <td><p>a data frame that describes the peaks in this chromatogram. By default, the chromatographic data is prepared WITHOUT peaks information. Supply this parameter to add in the peaks data. Note that the following parameters must also be set correctly IF <code>peak_table</code> is supplied: <code>file_id</code>, <code>rt</code>, <code>rt_start</code>, <code>rt_end</code>.</p></td>
     </tr>
@@ -223,41 +190,13 @@
       <th>rt_unit</th>
       <td><p>which time unit the retention time columns (<code>rt</code>, <code>rt_start</code>, <code>rt_end</code>) are in. If not specified (i.e. the default), assumes it is the same unit as the time column of the <code>iso_files</code> raw data.</p></td>
     </tr>
-    <tr>
-      <th>peak_marker</th>
-      <td><p>whether to mark identified peaks with a vertical line at the peak retention time. Only works if a <code>peak_table</code> was provided to identify the peaks and will issue a warning if <code>peak_marker = TRUE</code> but no peaks were identified.</p></td>
-    </tr>
-    <tr>
-      <th>peak_bounds</th>
-      <td><p>whether to mark the boundaries of identified peaks with a vertical ine at peak start and end retention times. Only works if a <code>peak_table</code> was provided to identify the peaks and will issue a warning if <code>peak_bounds = TRUE</code> but no peaks were identified.</p></td>
-    </tr>
-    <tr>
-      <th>peak_label</th>
-      <td><p>whether to label identified peaks. Any valid column or complex expression is supported and ALL columns in the provided <code>peak_table</code> can be used in this expression. To provide more space for peak labels, it is sometimes useful to use a <code>zoom</code> value smaller than 1 to zoom out a bit, e.g. <code>zoom = 0.9</code>. If peak labels overlap, consider changing <code>peak_label_size</code> and/or <code>peak_label_repel</code>. Note that this only works if a <code>peak_table</code> was provided to identify the peaks and will issue a warning if <code>peak_label</code> is set but no peaks were identified. Also note that peaks whose value at the peak retention time is not visible on the panel due to e.g. a high <code>zoom</code> value will not have a visible label either.</p></td>
-    </tr>
-    <tr>
-      <th>peak_label_filter</th>
-      <td><p>a filter for the peak labels (if supplied). Can be useful for highlighting only a subset of peaks with peak labels (e.g. only one data trace, or only those in a certain portion of the chromatogram). Only interpreted if peak_table is set.</p></td>
-    </tr>
-    <tr>
-      <th>peak_label_size</th>
-      <td><p>the font size for the peak labels. Depends largely on how much data is shown and how busy the chromatograms are. Default is a rather small font size (2), adjust as needed.</p></td>
-    </tr>
-    <tr>
-      <th>peak_label_repel</th>
-      <td><p>how strongly the labels repel each other. Increase the value if large labels overlap (e.g. to 5 or 10).</p></td>
-    </tr>
-    <tr>
-      <th>df</th>
-      <td><p>a data frame of the chromatographic data prepared for plotting (see <code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a></code>)</p></td>
-    </tr>
     </table>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p>Other plot functions: <code><a href='iso_plot_dual_inlet_data.html'>iso_plot_dual_inlet_data</a></code>,
-  <code><a href='iso_plot_raw_data.html'>iso_plot_raw_data</a></code>,
-  <code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a></code></p></div>
+    <div class='dont-index'><p>Other plot functions: <code><a href='iso_plot_continuous_flow_data.html'>iso_plot_continuous_flow_data</a></code>,
+  <code><a href='iso_plot_dual_inlet_data.html'>iso_plot_dual_inlet_data</a></code>,
+  <code><a href='iso_plot_raw_data.html'>iso_plot_raw_data</a></code></p></div>
     
 
   </div>

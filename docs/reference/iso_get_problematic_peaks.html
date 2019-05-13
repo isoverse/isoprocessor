@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Fetch problematic peaks — iso_get_problematic_peaks • isoprocessor</title>
+<title>Renamed to iso_get_problematic_peak_mappings — iso_get_problematic_peaks • isoprocessor</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -37,11 +37,9 @@
 
 
 
-<meta property="og:title" content="Fetch problematic peaks — iso_get_problematic_peaks" />
+<meta property="og:title" content="Renamed to iso_get_problematic_peak_mappings — iso_get_problematic_peaks" />
 
-<meta property="og:description" content="Fetch peaks that were problematic during peak mapping. This function is typically called after iso_add_metadata to inspect problematic entries. Use the select parameter to select only the most informative columns (always includes a problem column that identifies why the peak is problematic). Note that peaks that are ambiguous because of multiple potential map matches have a data table entry for each potential match." />
-
-<meta property="og:image" content="http://isoprocessor.isoverse.org/logo.png" />
+<meta property="og:description" content="Renamed to iso_get_problematic_peak_mappings" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -82,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.0</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.7</span>
       </span>
     </div>
 
@@ -118,54 +116,27 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Fetch problematic peaks</h1>
+    <h1>Renamed to iso_get_problematic_peak_mappings</h1>
     <small class="dont-index">Source: <a href='https://github.com/isoverse/isoprocessor/blob/master/R/peak_mapping.R'><code>R/peak_mapping.R</code></a></small>
     <div class="hidden name"><code>iso_get_problematic_peaks.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>Fetch peaks that were problematic during peak mapping. This function is typically called after <a href='iso_add_metadata.html'>iso_add_metadata</a> to inspect problematic entries. Use the <code>select</code> parameter to select only the most informative columns (always includes a <code>problem</code> column that identifies why the peak is problematic). Note that peaks that are ambiguous because of multiple potential map matches have a data table entry for each potential match.</p>
+    <p>Renamed to iso_get_problematic_peak_mappings</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>iso_get_problematic_peaks</span>(<span class='no'>dt</span>, <span class='kw'>select</span> <span class='kw'>=</span> <span class='fu'>everything</span>(),
-  <span class='kw'>unidentified</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>missing</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>ambiguous</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))</pre>
+    <pre class="usage"><span class='fu'>iso_get_problematic_peaks</span>(<span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>dt</th>
-      <td><p>data table with mapped peaks. Requires the <code>is_identified</code>, <code>is_missing</code> and <code>is_ambiguous</code> columns to be present.</p></td>
-    </tr>
-    <tr>
-      <th>select</th>
-      <td><p>which columns to select - use <code><a href='https://www.rdocumentation.org/packages/base/topics/c'>c(...)</a></code> to select multiple, supports all <a href='https://dplyr.tidyverse.org/reference/select.html'>select</a> syntax including renaming columns. Includes all columns by default but this function is more useful with a smaller subset of identifying columns.</p></td>
-    </tr>
-    <tr>
-      <th>unidentified</th>
-      <td><p>whether to include peaks that are problematics because they are unidentified</p></td>
-    </tr>
-    <tr>
-      <th>missing</th>
-      <td><p>whether to include peaks that are problematics because they are missing</p></td>
-    </tr>
-    <tr>
-      <th>ambiguous</th>
-      <td><p>whether to include peaks that are problematics because they are ambiguously identified</p></td>
+      <th>...</th>
+      <td><p>deprecated</p></td>
     </tr>
     </table>
-    
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
-
-    <p>data table with rows for problematic peaks and the <code>select</code>-identified columns</p>
-    
-    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
-
-    <div class='dont-index'><p>Other peak mapping functions: <code><a href='iso_map_peaks.html'>iso_map_peaks</a></code>,
-  <code><a href='iso_remove_problematic_peaks.html'>iso_remove_problematic_peaks</a></code></p></div>
     
 
   </div>
@@ -173,11 +144,7 @@
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
-      <li><a href="#value">Value</a></li>
-
-      <li><a href="#see-also">See also</a></li>
-          </ul>
+                </ul>
 
   </div>
 </div>

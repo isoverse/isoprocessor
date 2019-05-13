@@ -11,7 +11,7 @@ iso_get_problematic_peak_mappings(dt, select = everything(),
 \arguments{
 \item{dt}{data table with mapped peaks. Requires the \code{is_identified}, \code{is_missing} and \code{is_ambiguous} columns to be present.}
 
-\item{select}{which columns to select - use \code{c(...)} to select multiple, supports all \link[dplyr]{select} syntax including renaming columns. Includes all columns by default but this function is more useful with a smaller subset of identifying columns.}
+\item{select}{which column to select, by default all}
 
 \item{unidentified}{whether to include peaks that are problematics because they are unidentified}
 

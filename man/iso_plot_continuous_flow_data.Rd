@@ -14,14 +14,14 @@ iso_plot_continuous_flow_data(...)
   color = file_id, linetype = NULL, label = file_id,
   peak_table = NULL, file_id = default(file_id), rt = default(rt),
   rt_start = default(rt_start), rt_end = default(rt_end),
-  rt_unit = NULL, mark_peaks = FALSE,
-  mark_peak_bounds = !is.null(peak_table), peak_label = NULL,
+  rt_unit = NULL, peak_marker = FALSE,
+  peak_bounds = !is.null(peak_table), peak_label = NULL,
   peak_label_filter = NULL, peak_label_size = 2,
   peak_label_repel = 1)
 
 \method{iso_plot_continuous_flow_data}{data.frame}(df, panel = data,
   color = file_id, linetype = NULL, label = file_id,
-  mark_peaks = FALSE, mark_peak_bounds = FALSE, peak_label = NULL,
+  peak_marker = FALSE, peak_bounds = FALSE, peak_label = NULL,
   peak_label_filter = NULL, peak_label_size = 2,
   peak_label_repel = 1)
 }
@@ -62,9 +62,9 @@ iso_plot_continuous_flow_data(...)
 
 \item{rt_unit}{which time unit the retention time columns (\code{rt}, \code{rt_start}, \code{rt_end}) are in. If not specified (i.e. the default), assumes it is the same unit as the time column of the \code{iso_files} raw data.}
 
-\item{mark_peaks}{whether to mark identified peaks with a vertical line at the peak retention time. Only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{mark_peaks = TRUE} but no peaks were identified.}
+\item{peak_marker}{whether to mark identified peaks with a vertical line at the peak retention time. Only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_marker = TRUE} but no peaks were identified.}
 
-\item{mark_peak_bounds}{whether to mark the boundaries of identified peaks with a vertical ine at peak start and end retention times. Only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{mark_peak_bounds = TRUE} but no peaks were identified.}
+\item{peak_bounds}{whether to mark the boundaries of identified peaks with a vertical ine at peak start and end retention times. Only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_bounds = TRUE} but no peaks were identified.}
 
 \item{peak_label}{whether to label identified peaks. Any valid column or complex expression is supported and ALL columns in the provided \code{peak_table} can be used in this expression. To provide more space for peak labels, it is sometimes useful to use a \code{zoom} value smaller than 1 to zoom out a bit, e.g. \code{zoom = 0.9}. If peak labels overlap, consider changing \code{peak_label_size} and/or \code{peak_label_repel}. Note that this only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_label} is set but no peaks were identified. Also note that peaks whose value at the peak retention time is not visible on the panel due to e.g. a high \code{zoom} value will not have a visible label either.}
 

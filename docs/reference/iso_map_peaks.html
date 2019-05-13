@@ -39,10 +39,7 @@
 
 <meta property="og:title" content="Map peaks based on retention time — iso_map_peaks" />
 
-<meta property="og:description" content="This function makes it easy to map peaks based on peak maps. It reports all peaks including missing peaks and ambiguous peaks by adding a set of information columns for each entry (is_identified, is_missing, is_ambiguous, n_matches, n_overlapping).
-For routine downstream data processing, this function is usually followed by iso_get_problematic_peaks to inspect the problematic peaks and iso_remove_problematic_peaks to proceed only with peaks that do not have any problems. Note that without this filter, one must proceed with great caution interpreting the ambiguous peaks." />
-
-<meta property="og:image" content="http://isoprocessor.isoverse.org/logo.png" />
+<meta property="og:description" content="This function makes it easy to map peaks based on peak maps. It reports all peaks including missing peaks and ambiguous peaks by adding a set of information columns for each entry (is_identified, is_missing, is_ambiguous, n_matches, n_overlapping). For routine downstream data processing, this function is usually followed by iso_summarize_peak_mappings and iso_get_problematic_peak_mappings to inspect the problematic peaks and iso_remove_problematic_peak_mappings to proceed only with mapped peaks that are clearly identified. Note that without this filter, one must proceed with great caution interpreting the ambiguous peaks. Also note that if the compound column alreadty exists in dt, it will be overwritten with the new mappings from the peak maps but will issue a warning that this is happening." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -83,7 +80,7 @@ For routine downstream data processing, this function is usually followed by iso
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.0</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.7</span>
       </span>
     </div>
 
@@ -126,8 +123,7 @@ For routine downstream data processing, this function is usually followed by iso
 
     <div class="ref-description">
     
-    <p>This function makes it easy to map peaks based on peak maps. It reports all peaks including missing peaks and ambiguous peaks by adding a set of information columns for each entry (<code>is_identified</code>, <code>is_missing</code>, <code>is_ambiguous</code>, <code>n_matches</code>, <code>n_overlapping</code>).
-For routine downstream data processing, this function is usually followed by <code><a href='iso_get_problematic_peaks.html'>iso_get_problematic_peaks</a></code> to inspect the problematic peaks and <code><a href='iso_remove_problematic_peaks.html'>iso_remove_problematic_peaks</a></code> to proceed only with peaks that do not have any problems. Note that without this filter, one must proceed with great caution interpreting the ambiguous peaks.</p>
+    <p>This function makes it easy to map peaks based on peak maps. It reports all peaks including missing peaks and ambiguous peaks by adding a set of information columns for each entry (<code>is_identified</code>, <code>is_missing</code>, <code>is_ambiguous</code>, <code>n_matches</code>, <code>n_overlapping</code>). For routine downstream data processing, this function is usually followed by <code><a href='iso_summarize_peak_mappings.html'>iso_summarize_peak_mappings</a></code> and <code><a href='iso_get_problematic_peak_mappings.html'>iso_get_problematic_peak_mappings</a></code> to inspect the problematic peaks and <code><a href='iso_remove_problematic_peak_mappings.html'>iso_remove_problematic_peak_mappings</a></code> to proceed only with mapped peaks that are clearly identified. Note that without this filter, one must proceed with great caution interpreting the ambiguous peaks. Also note that if the <code>compound</code> column alreadty exists in <code>dt</code>, it will be overwritten with the new mappings from the peak maps but will issue a warning that this is happening.</p>
     
     </div>
 
@@ -146,7 +142,7 @@ For routine downstream data processing, this function is usually followed by <co
     </tr>
     <tr>
       <th>peak_maps</th>
-      <td><p>data frame with the peak map</p></td>
+      <td><p>data frame with the peak map(s). At minimum, this data frame must have a <code>compound</code> and <code>rt</code> column but may have additional information columns. If multiple peak maps are provided, the <code>dt</code> data frame requires a <code>map_id</code> column to identify which peak map should be used and the peak maps data frame must have a <code>rt:&lt;map_id&gt;</code> column for each used value of <code>map_id</code>. The names of all these columns can be changed if necessary using the <code>compound</code>, codert and <code>map_id</code> parameters.</p></td>
     </tr>
     <tr>
       <th>file_id</th>
@@ -154,7 +150,7 @@ For routine downstream data processing, this function is usually followed by <co
     </tr>
     <tr>
       <th>map_id</th>
-      <td><p>the column in dt that indicates which map to use for which file</p></td>
+      <td><p>the column in dt that indicates which map to use for which file (only necessary if multiple peak maps are used)</p></td>
     </tr>
     <tr>
       <th>compound</th>
@@ -176,11 +172,16 @@ For routine downstream data processing, this function is usually followed by <co
       <th>rt_prefix_divider</th>
       <td><p>the divider after the retention time column prefix in peak_maps to identify the map id values (e.g. "rt:map_id_value")</p></td>
     </tr>
+    <tr>
+      <th>quiet</th>
+      <td><p>whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.</p></td>
+    </tr>
     </table>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>data frame with mapped peaks and the following information columns:</p><ul>
+<li><p><code>peak_info</code>: a label for the peak with its name and retention time plus indicators of any ambiguity in identification in the form of <code>'?'</code> for either compound name or retention time for an expected peak that was not found</p></li>
 <li><p><code>is_identified</code>: a logical TRUE/FALSE indicating peaks that have been successfully identified (includes missing peaks from the peak map!) (note that this information could also be derived from !is.na(compound) but is provided for convenience)</p></li>
 <li><p><code>is_missing</code>: a logical TRUE/FALSE indicating peaks that are in the peak map definition but have no matching peak</p></li>
 <li><p><code>is_ambiguous</code>: a logical TRUE/FALSE indicating peaks that are ambiguous in their definition either because they have multiple matches or because they overlap with other, overlapping peaks that were identified the same (note that this information could also be derived from n_overlapping &gt; 1 | n_matches &gt; 1 but is provided for convenience)</p></li>
@@ -191,8 +192,9 @@ For routine downstream data processing, this function is usually followed by <co
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p>Other peak mapping functions: <code><a href='iso_get_problematic_peaks.html'>iso_get_problematic_peaks</a></code>,
-  <code><a href='iso_remove_problematic_peaks.html'>iso_remove_problematic_peaks</a></code></p></div>
+    <div class='dont-index'><p>Other peak mapping functions: <code><a href='iso_get_problematic_peak_mappings.html'>iso_get_problematic_peak_mappings</a></code>,
+  <code><a href='iso_remove_problematic_peak_mappings.html'>iso_remove_problematic_peak_mappings</a></code>,
+  <code><a href='iso_summarize_peak_mappings.html'>iso_summarize_peak_mappings</a></code></p></div>
     
 
   </div>
