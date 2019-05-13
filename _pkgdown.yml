@@ -37,21 +37,13 @@ reference:
   - '`iso_calculate_ratios`'
   - '`iso_convert_signals`'
   - '`iso_convert_time`'
-
-- title: Metadata
-  desc: >
-    Functions to easily add metadata to a data table.
-  contents:
-   - iso_add_metadata
-   - iso_get_missing_metadata
-   - iso_remove_missing_metadata
 - title: Peak mapping
   desc: >
     Functions to easily map data table peaks by retention time.
   contents:
    - iso_map_peaks
-   - iso_get_problematic_peaks
-   - iso_remove_problematic_peaks
+   - iso_get_problematic_peak_mappings
+   - iso_remove_problematic_peak_mappings
 - title: Calibration
   desc: >
     Functions to calibrate data.
@@ -76,7 +68,6 @@ reference:
   desc: >
     Visualization functions.
   contents:
-  - iso_plot_raw_data
   - iso_plot_continuous_flow_data
   - iso_plot_dual_inlet_data
   - iso_plot_ref_peaks
@@ -87,7 +78,7 @@ reference:
   desc: >
     Reporting functions.
   contents:
-  - iso_generate_summary_table
+  - iso_summarize_data_table
   - iso_remove_list_columns
 
 - title: Package settings

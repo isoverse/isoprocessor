@@ -39,9 +39,6 @@
 
 <meta property="og:title" content="Function reference" />
 
-<meta property="og:image" content="http://isoprocessor.isoverse.org/logo.png" />
-<meta name="twitter:card" content="summary" />
-
 
 
 <!-- mathjax -->
@@ -80,7 +77,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.0</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.7</span>
       </span>
     </div>
 
@@ -156,32 +153,6 @@
     </tbody><tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-metadata" class="hasAnchor"><a href="#section-metadata" class="anchor"></a>Metadata</h2>
-          <p class="section-desc"><p>Functions to easily add metadata to a data table.</p></p>
-        </th>
-      </tr>
-      <tr>
-        
-        <td>
-          <p><code><a href="iso_add_metadata.html">iso_add_metadata()</a></code> </p>
-        </td>
-        <td><p>Add metadata to data table</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="iso_get_missing_metadata.html">iso_get_missing_metadata()</a></code> </p>
-        </td>
-        <td><p>Fetch entries with missing metadata</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="iso_remove_missing_metadata.html">iso_remove_missing_metadata()</a></code> </p>
-        </td>
-        <td><p>Remove entries with missing metadata</p></td>
-      </tr>
-    </tbody><tbody>
-      <tr>
-        <th colspan="2">
           <h2 id="section-peak-mapping" class="hasAnchor"><a href="#section-peak-mapping" class="anchor"></a>Peak mapping</h2>
           <p class="section-desc"><p>Functions to easily map data table peaks by retention time.</p></p>
         </th>
@@ -195,15 +166,15 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="iso_get_problematic_peaks.html">iso_get_problematic_peaks()</a></code> </p>
+          <p><code><a href="iso_get_problematic_peak_mappings.html">iso_get_problematic_peak_mappings()</a></code> </p>
         </td>
-        <td><p>Fetch problematic peaks</p></td>
+        <td><p>Fetch problematic peak mappings</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="iso_remove_problematic_peaks.html">iso_remove_problematic_peaks()</a></code> </p>
+          <p><code><a href="iso_remove_problematic_peak_mappings.html">iso_remove_problematic_peak_mappings()</a></code> </p>
         </td>
-        <td><p>Remove problematic peaks</p></td>
+        <td><p>Remove problematic peak mappings</p></td>
       </tr>
     </tbody><tbody>
       <tr>
@@ -297,12 +268,6 @@
       <tr>
         
         <td>
-          <p><code><a href="iso_plot_raw_data.html">iso_plot_raw_data()</a></code> </p>
-        </td>
-        <td><p>Plot raw data from isoreader files</p></td>
-      </tr><tr>
-        
-        <td>
           <p><code><a href="iso_plot_continuous_flow_data.html">iso_plot_continuous_flow_data()</a></code> </p>
         </td>
         <td><p>Plot chromatogram from continuous flow data</p></td>
@@ -341,9 +306,9 @@
       <tr>
         
         <td>
-          <p><code><a href="iso_generate_summary_table.html">iso_generate_summary_table()</a></code> </p>
+          <p><code><a href="iso_summarize_data_table.html">iso_summarize_data_table()</a></code> </p>
         </td>
-        <td><p>Generate an overview table with the data</p></td>
+        <td><p>Summarize a data table</p></td>
       </tr><tr>
         
         <td>
@@ -418,7 +383,6 @@ Define the default parameters for calculations used in this package.</p></td>
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#section-calculation-functions">Calculation functions</a></li>
-      <li><a href="#section-metadata">Metadata</a></li>
       <li><a href="#section-peak-mapping">Peak mapping</a></li>
       <li><a href="#section-calibration">Calibration</a></li>
       <li><a href="#section-unpacking-calibration-models">Unpacking calibration models</a></li>

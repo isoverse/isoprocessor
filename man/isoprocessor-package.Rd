@@ -6,8 +6,6 @@
 \alias{isoprocessor-package}
 \title{isoprocessor: IRMS data processor}
 \description{
-\if{html}{\figure{logo.png}{options: align='right'}}
-
 Data processing and reduction pipelines for isotope ratio mass spectrometry (IRMS) data
 }
 \seealso{

@@ -169,8 +169,8 @@ test_that("inverting regressions work properly", {
   ) %>%
     as_tibble() %>%
     mutate(
-      name = c("a", "a", "b", "a", sample(c("a", "b"), replace = TRUE, size = n() - 4)),
-      is_standard = c(rep(FALSE, 4), sample(c(TRUE, FALSE), replace = TRUE, size = n() - 4)),
+      name = c("a", "a", "b", "a", sample(c("a", "b"), replace = TRUE, size = dplyr::n() - 4)),
+      is_standard = c(rep(FALSE, 4), sample(c(TRUE, FALSE), replace = TRUE, size = dplyr::n() - 4)),
       y = -1 + 5 * x1 + x1*x2*20 + 50 * sqrt(x2) + x3 + rnorm(length(x1), sd = 15),
       # special case: missing data
       x2 = ifelse(row_number() %in% c(1,2,3), NA_real_, x2),

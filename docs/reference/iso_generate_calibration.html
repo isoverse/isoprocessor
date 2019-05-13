@@ -40,8 +40,6 @@
 <meta property="og:title" content="Generate data calibration — iso_generate_calibration" />
 
 <meta property="og:description" content="Generate a calibration for a specific variable based on one or multiple calibration models. Requires properly nested and grouped data, see iso_prepare_for_calibration for details. Note that to calibrate different variables, separate calls to this function should be issued each with different calibration names." />
-
-<meta property="og:image" content="http://isoprocessor.isoverse.org/logo.png" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -82,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.0</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.7</span>
       </span>
     </div>
 
@@ -151,6 +149,14 @@
     <tr>
       <th>is_standard</th>
       <td><p>column or filter condition to determine which subset of data to actually use for the calibration (default is the <code>is_standard</code> field introduced by <code><a href='iso_add_standards.html'>iso_add_standards</a></code>).</p></td>
+    </tr>
+    <tr>
+      <th>min_n_datapoints</th>
+      <td><p>the minimum number of data points required for applying the model(s). Note that there is always an additional check to make sure the minimum number of degrees of freedom for each model is met. If the minimum number of degrees of freedom required is not met, the model will/can not be calculated no matter what <code>min_n_datapoints</code> is set to.</p></td>
+    </tr>
+    <tr>
+      <th>quiet</th>
+      <td><p>whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.</p></td>
     </tr>
     </table>
     
