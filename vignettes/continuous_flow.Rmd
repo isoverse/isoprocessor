@@ -56,16 +56,31 @@ iso_files %>%
   )
 ```
 
+# Peak Labels
+
+Since peak information is often key for interpretating chromatograms, the `iso_plot_continuous_flow_data` function also provides a suite of peak data integration parameters that make it easy to highlight peaks in the chromatogram and label them with any number of desired information. For example, the following code illustrates how the `vendor_data_table` provided by some file formats can be used as a source for this information:
+
+```{r "with_peak_labels", fig.width = 9, fig.asp = 0.4}
+iso_files %>% 
+  iso_plot_continuous_flow_data(
+    # select which data to plot and how to plot it
+    data = c("2", "3"), color = data, panel = NULL,
+    # provide source for peak information
+    peak_table = iso_get_vendor_data_table(iso_files),
+    # specify the names of key columns in the peak_table 
+    rt = Rt, rt_start = Start, rt_end = End,
+    # specify what to label the peaks with
+    peak_label = sprintf("rt=%.0f", Rt),
+    peak_label_size = 3,
+    # specify which labels to display (only the 2 trace, between 500 and 1500s)
+    peak_label_filter = data == "2 [mV]" & dplyr::between(time.s, 500, 1500)
+  )
+```
+
+
 # Isotope ratios
 
 Raw data typically only includes ion signals but isotope ratios are often needed to calculate and visualize the data. For this purpose, isoreader provides a dynamic ratio calculation function (`iso_calculate_ratios()`) that accepts any combination of masses, here demonstrated for the standard CO2 ratios $\frac{46}{44}$ and $\frac{45}{44}$. Additionally, the following example demonstrates how the `filter` parameter can be used to exclude plotting artifacts (here e.g. the extreme ratio values seen right after the magnet jump). Notice how the ratios calculated from current intensities are close to 0 (as the real ratios likely are) whereas those calculated from voltages are close to 1 (due to the so chosen, different resistors in the detector circuit). See the section on **Signal conversion** further down on how to scale to uniform intensity units to address this comparison obstacle.
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-# for between
-library(dplyr)
-# for expand range
-library(ggplot2)
-```
 
 ```{r "ratios", fig.width = 10, fig.asp = 0.8}
 iso_files <-
@@ -78,9 +93,9 @@ iso_files %>%
     # visualize ratios along with main ion
     data = c("44", "45/44", "46/44"),
     # plot all masses but ratios only 0 to 2 to omit peak jump artifacts
-    filter = category == "mass" | between(value, 0, 2)
+    filter = category == "mass" | dplyr::between(value, 0, 2)
   ) + 
-  expand_limits(y = -0.3)
+  ggplot2::expand_limits(y = -0.3)
 ```
 
 # Time conversion
@@ -130,8 +145,8 @@ iso_files %>%
     data = c("44", "45/44", "46/44"),
     filter = 
       category == "mass" |
-      (data == "45/44" & between(value, 0.005, 0.03)) |
-      (data == "46/44" & between(value, 0, 0.012))
+      (data == "45/44" & dplyr::between(value, 0.005, 0.03)) |
+      (data == "46/44" & dplyr::between(value, 0, 0.012))
   )
 ```
 

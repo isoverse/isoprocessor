@@ -232,12 +232,12 @@ iso_prepare_continuous_flow_plot_data <- function(
 
     plot_data_peaks <-
       plot_data_peaks_all %>%
-      # hone in on only the parts that belong to an actual peak
-      dplyr::filter(..time >= ..rt_start & ..time <= ..rt_end) %>%
       # identify the location of the peak marker
       dplyr::group_by(..data, ..peak_id) %>%
       dplyr::mutate(peak_marker = if (length(..rt) == 0) NA else abs(..rt - ..time) == min(abs(..rt - ..time))) %>%
       dplyr::ungroup() %>%
+      # remove everything that doesn't actually belong to a peak
+      dplyr::filter(peak_marker | (..time >= ..rt_start & ..time <= ..rt_end)) %>%
       dplyr::select(..data_id, ..peak_id, peak_marker)
 
     # safety checks
@@ -252,8 +252,8 @@ iso_prepare_continuous_flow_plot_data <- function(
     }
     if (length(missing) > 0) {
       glue::glue(
-        "only {length(missing)} of the {length(all_peaks)} applicable peaks in ",
-        "the peak table could be identified in the chromatogram") %>%
+        "only {length(all_peaks) - length(missing)} of the {length(all_peaks)} ",
+        "applicable peaks in the peak table could be identified in the chromatogram") %>%
         warning(immediate. = TRUE, call. = FALSE)
     }
 
@@ -344,7 +344,7 @@ iso_plot_continuous_flow_data.iso_file_list <- function(
   peak_table = NULL, file_id = default(file_id),
   rt = default(rt), rt_start = default(rt_start), rt_end = default(rt_end),
   rt_unit = NULL,
-  mark_peaks = FALSE, mark_peak_bounds = !is.null(peak_table),
+  peak_marker = FALSE, peak_bounds = !is.null(peak_table),
   peak_label = NULL, peak_label_filter = NULL, peak_label_size = 2, peak_label_repel = 1) {
 
   # safety checks
@@ -377,8 +377,8 @@ iso_plot_continuous_flow_data.iso_file_list <- function(
     color = !!enquo(color),
     linetype = !!enquo(linetype),
     label = !!enquo(label),
-    mark_peaks = mark_peaks,
-    mark_peak_bounds = mark_peak_bounds,
+    peak_marker = peak_marker,
+    peak_bounds = peak_bounds,
     peak_label = !!enquo(peak_label),
     peak_label_filter = !!enquo(peak_label_filter),
     peak_label_size = peak_label_size,
@@ -392,8 +392,8 @@ iso_plot_continuous_flow_data.iso_file_list <- function(
 #' @param color whether to color plot by anything, options are the same as for \code{panel} but the default is \code{file_id} and complex expressions (not just columns) are supported.
 #' @param linetype whether to differentiate by linetype, options are the same as for \code{panel} but the default is \code{NULL} (i.e. no linetype aesthetic) and complex expressions (not just columns) are supported. Note that a limited number of linetypes (6) is defined by default and the plot will fail if a higher number is required unless specified using \code{\link[ggplot2]{scale_linetype}}.
 #' @param label this is primarily of use for turning the generated ggplots into interactive plots via \code{\link[plotly]{ggplotly}} as the \code{label} will be rendered as an additional mousover label. Any unique file identifier is a useful choice, the default is \code{file_id}.
-#' @param mark_peaks whether to mark identified peaks with a vertical line at the peak retention time. Only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{mark_peaks = TRUE} but no peaks were identified.
-#' @param mark_peak_bounds whether to mark the boundaries of identified peaks with a vertical ine at peak start and end retention times. Only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{mark_peak_bounds = TRUE} but no peaks were identified.
+#' @param peak_marker whether to mark identified peaks with a vertical line at the peak retention time. Only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_marker = TRUE} but no peaks were identified.
+#' @param peak_bounds whether to mark the boundaries of identified peaks with a vertical ine at peak start and end retention times. Only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_bounds = TRUE} but no peaks were identified.
 #' @param peak_label whether to label identified peaks. Any valid column or complex expression is supported and ALL columns in the provided \code{peak_table} can be used in this expression. To provide more space for peak labels, it is sometimes useful to use a \code{zoom} value smaller than 1 to zoom out a bit, e.g. \code{zoom = 0.9}. If peak labels overlap, consider changing \code{peak_label_size} and/or \code{peak_label_repel}. Note that this only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_label} is set but no peaks were identified. Also note that peaks whose value at the peak retention time is not visible on the panel due to e.g. a high \code{zoom} value will not have a visible label either.
 #' @param peak_label_filter a filter for the peak labels (if supplied). Can be useful for highlighting only a subset of peaks with peak labels (e.g. only one data trace, or only those in a certain portion of the chromatogram). Only interpreted if \cod{peak_table} is set.
 #' @param peak_label_size the font size for the peak labels. Depends largely on how much data is shown and how busy the chromatograms are. Default is a rather small font size (2), adjust as needed.
@@ -401,7 +401,7 @@ iso_plot_continuous_flow_data.iso_file_list <- function(
 #' @export
 iso_plot_continuous_flow_data.data.frame <- function(
   df, panel = data, color = file_id, linetype = NULL, label = file_id,
-  mark_peaks = FALSE, mark_peak_bounds = FALSE,
+  peak_marker = FALSE, peak_bounds = FALSE,
   peak_label = NULL, peak_label_filter = NULL, peak_label_size = 2, peak_label_repel = 1
   ) {
 
@@ -435,9 +435,9 @@ iso_plot_continuous_flow_data.data.frame <- function(
     theme_bw()
 
   # peak cols safety check
-  if (!all(peak_cols) && (mark_peaks || mark_peak_bounds || !quo_is_null(aes_quos$peak_label))) {
-    mark_peaks <- FALSE
-    mark_peak_bounds <- FALSE
+  if (!all(peak_cols) && (peak_marker || peak_bounds || !quo_is_null(aes_quos$peak_label))) {
+    peak_marker <- FALSE
+    peak_bounds <- FALSE
     aes_quos$peak_label <- quo(NULL)
     glue::glue(
       "peak features requested but peak identifications seem to be missing - ",
@@ -449,7 +449,7 @@ iso_plot_continuous_flow_data.data.frame <- function(
   }
 
   # peak boundaries - consider making this an area background
-  if (mark_peak_bounds) {
+  if (peak_bounds) {
     p <- p +
       geom_rect(
         data = function(df) dplyr::filter(df, peak_point > 0 & (peak_start | peak_end)) %>%
@@ -467,12 +467,12 @@ iso_plot_continuous_flow_data.data.frame <- function(
   }
 
   # peak markers
-  if (mark_peaks) {
+  if (peak_marker) {
     p <- p +
       geom_vline(
         data = function(df) dplyr::filter(df, peak_marker),
-        mapping = aes(xintercept = time.min, color = NULL),
-        color = "black"
+        mapping = aes(xintercept = !!sym(time_info$column), color = NULL),
+        color = "black", linetype = 2
       )
   }
 
