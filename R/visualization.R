@@ -16,7 +16,7 @@ find_time_column <- function(df) {
 
 #' Prepare plotting data from continuous flow files
 #'
-#' This functions helps with the preparation of plotting data from continuous flow data files (i.e. the raw chromatogram data). Call either explicity and pass the result to \code{\link{iso_plot_continuous_flow_data}} or let \code{\link{iso_plot_continuous_flow_data}} take care of preparing the plotting data directly from the \code{iso_files}.
+#' These functions help with the preparation of plotting data from continuous flow data files (i.e. the raw chromatogram data). Call either explicity and pass the result to \code{\link{iso_plot_continuous_flow_data}} or let \code{\link{iso_plot_continuous_flow_data}} take care of preparing the plotting data directly from the \code{iso_files}.
 #'
 #' @param iso_files collection of iso_file objects
 #' @param data which masses and ratios to plot (e.g. \code{c("44", "45", "45/44")} - without the units), if omitted, all available masses and ratios are plotted. Note that ratios should be calculated using \code{\link{iso_calculate_ratios}} prior to plotting.
@@ -25,13 +25,22 @@ find_time_column <- function(df) {
 #' @param filter any filter condition to apply to the data beyond the masses/ratio selection (param \code{data}) and time interval (param \code{time_interval}). For details on the available data columns see \link{iso_get_raw_data} with parameters \code{gather = TRUE} and \code{include_file_info = everything()} (i.e. all file info is available for plotting aesthetics).
 #' @param normalize whether to normalize the data (default is FALSE, i.e. no normalization). If TRUE, normalizes each trace across all files (i.e. normalized to the global max/min). This is particularly useful for overlay plotting different mass and/or ratio traces (\code{panel = NULL}). Note that zooming (if \code{zoom} is set) is applied after normalizing.
 #' @param zoom if not set, automatically scales to the maximum range in the selected time_interval in each plotting panel. If set, scales by the indicated factor, i.e. values > 1 are zoom in, values < 1 are zoom out, baseline always remains the bottom anchor point. Note that zooming is always relative to the max in each zoom_group (by default \code{zoom_group = data}, i.e. each trace is zoomed separately). The maximum considered may be outside the visible time window. Note that for \code{zoom_group} other than \code{data} (e.g. \code{file_id} or \code{NULL}), zooming is relative to the max signal across all mass traces. Typically it makes most sense to set the \code{zoom_group} to the same variable as the planned \code{panel} parameter to the plotting function. Lastly, note that zooming only affects masses, ratios are never zoomed.
+#' @param peaks_table a data frame that describes the peaks in this chromatogram. By default, the chromatographic data is prepared WITHOUT peaks information. Supply this parameter to add in the peaks data. Note that the following parameters must also be set correctly IF \code{peaks_table} is supplied: \code{file_id}, \code{rt}, \code{rt_start}, \code{rt_end}.
+#' @param file_id the column (or columns) that uniquely identify each iso_file for proper matching of the raw chromatography data with the peaks_table data. In most cases, the default (\code{file_id}) should work fine.
+#' @param rt the column in the \code{peaks_table} that holds the retention time of the peak.
+#' @param rt_start the column in the\code{peaks_table} that holds the retention time where each peak starts.
+#' @param rt_end the column in the\code{peaks_table} that holds the retention time where each peak ends.
+#' @param rt_unit which time unit the retention time columns (\code{rt}, \code{rt_start}, \code{rt_end}) are in. If not specified (i.e. the default), assumes it is the same unit as the time column of the \code{iso_files} raw data.
 #' @family plot functions
 #' @export
 iso_prepare_continuous_flow_plot_data <- function(
   iso_files, data = c(), include_file_info = NULL,
   time_interval = c(), time_interval_units = "seconds",
   filter = NULL,
-  normalize = FALSE, zoom = NULL, zoom_group = data) {
+  normalize = FALSE, zoom = NULL, zoom_group = data,
+  peaks_table = NULL, file_id = default(file_id),
+  rt = default(rt), rt_start = default(rt_start), rt_end = default(rt_end),
+  rt_unit = NULL) {
 
   # safety checks
   if(!iso_is_continuous_flow(iso_files))
@@ -122,7 +131,7 @@ iso_prepare_continuous_flow_plot_data <- function(
       } else .
     } %>%
     # time filtering
-    { if (length(time_interval) == 2) dplyr::filter(., between(!!sym(time_info$column), time_interval[1], time_interval[2])) else . } %>%
+    { if (length(time_interval) == 2) dplyr::filter(., dplyr::between(!!sym(time_info$column), time_interval[1], time_interval[2])) else . } %>%
     # info fields
     mutate(zoom_cutoff = NA_real_, normalized = FALSE) %>%
     # normalizing
@@ -146,7 +155,7 @@ iso_prepare_continuous_flow_plot_data <- function(
             discard = ifelse(!is_ratio, value > zoom_cutoff, FALSE), # never zoom ratios
             change = c(0, diff(discard)), # check for where the cutoffs
             border = change == 1 | c(change[-1], 0) == -1, # identify borders
-            gap = c(0, change[-n()]) == 1, # identify gaps next to one border so ggplot knows the line is interrupted
+            gap = c(0, change[-dplyr::n()]) == 1, # identify gaps next to one border so ggplot knows the line is interrupted
             !!sym(time_info$column) := extrapolate_border(zoom_cutoff, border, change, !!sym(time_info$column), value), # calculate time at border
             value = ifelse(border, zoom_cutoff, ifelse(gap, NA, value)) # assign values
           ) %>%
@@ -170,10 +179,107 @@ iso_prepare_continuous_flow_plot_data <- function(
     } %>%
     dplyr::arrange(tp, data)
 
+  # peaks table =======
+
+  # safety checks
+  peaks_table_quo <- enquo(peaks_table)
+  if (!quo_is_null(peaks_table_quo)) {
+
+    if (nrow(peaks_table) == 0) stop("peaks table supplied but there is no peaks data in it", call. = FALSE)
+
+    # find regular dt columns
+    plot_data_cols <- isoreader:::get_column_names(
+      plot_data, file_id = enquo(file_id), data = quo(data), n_reqs = list(file_id = "+"))
+    peaks_table_cols <- isoreader:::get_column_names(
+      !!peaks_table_quo, file_id = enquo(file_id), rt = enquo(rt), rt_start = enquo(rt_start), rt_end = enquo(rt_end),
+      n_reqs = list(file_id = "+"))
+
+    # file_id quos
+    file_id_quos <- purrr::map(plot_data_cols$file_id, sym)
+
+    # deal with time units (make sure they are all in the plot data time units)
+    rt_unit <- if(is.null(rt_unit)) find_time_column(plot_data)$unit else rt_unit
+    time_info <- find_time_column(plot_data)
+    peaks_table <- peaks_table %>%
+      dplyr::mutate(
+        # note that this peak ID goes across ALL files, it's truly unique,
+        # NOT just a counter within each file - this should  make processing faster
+        ..peak_id = dplyr::row_number(),
+        ..rt = scale_time(!!sym(peaks_table_cols$rt), to = time_info$unit, from = rt_unit),
+        ..rt_start = scale_time(!!sym(peaks_table_cols$rt_start), to = time_info$unit, from = rt_unit),
+        ..rt_end = scale_time(!!sym(peaks_table_cols$rt_end), to = time_info$unit, from = rt_unit)
+      )
+
+    # find peaks in plot data
+    plot_data <- plot_data %>%
+      dplyr::mutate(
+        ..data_id = dplyr::row_number(),
+        ..time = !!sym(time_info$column),
+        ..data = as.character(!!sym(plot_data_cols$data))
+      )
+
+    plot_data_peaks_all <-
+      # all possible combinations in each file
+      dplyr::inner_join(
+        dplyr::select(plot_data, !!!file_id_quos, ..data_id, ..time, ..data),
+        dplyr::select(peaks_table, !!!file_id_quos, ..peak_id, ..rt, ..rt_start, ..rt_end),
+        by = plot_data_cols$file_id
+      ) %>%
+      # widdle down to the time range in each file
+      dplyr::group_by(!!!file_id_quos) %>%
+      dplyr::filter(..rt >= min(..time, na.rm = TRUE) & ..rt <= max(..time, na.rm = TRUE)) %>%
+      dplyr::ungroup()
+
+    plot_data_peaks <-
+      plot_data_peaks_all %>%
+      # hone in on only the parts that belong to an actual peak
+      dplyr::filter(..time >= ..rt_start & ..time <= ..rt_end) %>%
+      # identify the location of the peak marker
+      dplyr::group_by(..data, ..peak_id) %>%
+      dplyr::mutate(peak_marker = if (length(..rt) == 0) NA else abs(..rt - ..time) == min(abs(..rt - ..time))) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(..data_id, ..peak_id, peak_marker)
+
+    # safety checks
+    all_peaks <- unique(plot_data_peaks_all$..peak_id)
+    missing <- setdiff(all_peaks, unique(plot_data_peaks$..peak_id))
+    if (length(all_peaks) == 0) {
+      glue::glue(
+        "there are no peaks that fit into the time window of the chromatogram. ",
+        "Please double check that the rt_unit parameter is set to correctly identify ",
+        "the time units of the peak table - currently assumed to be '{rt_unit}'.") %>%
+        warning(immediate. = TRUE, call. = FALSE)
+    }
+    if (length(missing) > 0) {
+      glue::glue(
+        "only {length(missing)} of the {length(all_peaks)} applicable peaks in ",
+        "the peak table could be identified in the chromatogram") %>%
+        warning(immediate. = TRUE, call. = FALSE)
+    }
+
+    # add to plot data
+    plot_data <- plot_data %>%
+      dplyr::left_join(plot_data_peaks, by = "..data_id") %>%
+      # find peak delimiters
+      dplyr::arrange(..time) %>% # sorting is important!
+      dplyr::group_by(!!!file_id_quos, ..data) %>%
+      dplyr::mutate(
+        peak_marker = !is.na(peak_marker) & peak_marker,
+        peak_point = ifelse(!is.na(..peak_id), ..peak_id, 0), # makes it possible to identify peak clusters afterwards
+        peak_start = c(0, diff(peak_point > 0)) == 1 | c(diff(peak_point > 0), 0) == 1,
+        peak_end = c(diff(peak_point > 0), 0) == -1 | c(0, diff(peak_point > 0)) == -1,
+      ) %>%
+      dplyr::ungroup() %>%
+      # add peak info
+      dplyr::left_join(peaks_table, by = c(plot_data_cols$file_id, "..peak_id")) %>%
+      dplyr::arrange(..data_id) %>% # return to original sorting
+      dplyr::select(-starts_with(".."))
+
+  }
+
   # return
   return(plot_data)
 }
-
 
 # raw data plots =====
 
@@ -234,7 +340,12 @@ iso_plot_continuous_flow_data.iso_file_list <- function(
   time_interval = c(), time_interval_units = "seconds",
   filter = NULL,
   normalize = FALSE, zoom = NULL,
-  panel = data, color = file_id, linetype = NULL, label = file_id) {
+  panel = data, color = file_id, linetype = NULL, label = file_id,
+  peaks_table = NULL, file_id = default(file_id),
+  rt = default(rt), rt_start = default(rt_start), rt_end = default(rt_end),
+  rt_unit = NULL,
+  highlight_peaks = FALSE, mark_peaks = FALSE, mark_peak_bounds = TRUE,
+  peak_label = NULL, peak_label_size = 2) {
 
   # safety checks
   if(!iso_is_continuous_flow(iso_files))
@@ -250,7 +361,13 @@ iso_plot_continuous_flow_data.iso_file_list <- function(
     filter = !!enquo(filter),
     normalize = normalize,
     zoom = zoom,
-    zoom_group = !!panel_quo
+    zoom_group = !!panel_quo,
+    peaks_table = peaks_table,
+    file_id = !!enquo(file_id),
+    rt = !!enquo(rt),
+    rt_start = !!enquo(rt_start),
+    rt_end = !!enquo(rt_end),
+    rt_unit = rt_unit
   )
 
   # plot
@@ -259,51 +376,145 @@ iso_plot_continuous_flow_data.iso_file_list <- function(
     panel = !!enquo(panel),
     color = !!enquo(color),
     linetype = !!enquo(linetype),
-    label = !!enquo(label)
+    label = !!enquo(label),
+    highlight_peaks = highlight_peaks,
+    mark_peaks = mark_peaks,
+    mark_peak_bounds = mark_peak_bounds,
+    peak_label = !!enquo(peak_label),
+    peak_label_size = peak_label
   )
 }
 
 #' @rdname iso_plot_continuous_flow_data
-#' @param dt a data frame of the chromatographic data prepared for plotting (see \code{\link{iso_prepare_continuous_flow_plot_data}})
+#' @param df a data frame of the chromatographic data prepared for plotting (see \code{\link{iso_prepare_continuous_flow_plot_data}})
 #' @param panel whether to panel plot by anything - any column is possible (see notes in the \code{filter} parameter) but the most commonly used options are \code{panel = NULL} (overlay all), \code{panel = data} (by mass/ratio data), \code{panel = file_id} (panel by files, alternatively use any appropriate file_info column). The default is panelling by the \code{data} column.
 #' @param color whether to color plot by anything, options are the same as for \code{panel} but the default is \code{file_id} and complex expressions (not just columns) are supported.
 #' @param linetype whether to differentiate by linetype, options are the same as for \code{panel} but the default is \code{NULL} (i.e. no linetype aesthetic) and complex expressions (not just columns) are supported. Note that a limited number of linetypes (6) is defined by default and the plot will fail if a higher number is required unless specified using \code{\link[ggplot2]{scale_linetype}}.
 #' @param label this is primarily of use for turning the generated ggplots into interactive plots via \code{\link[plotly]{ggplotly}} as the \code{label} will be rendered as an additional mousover label. Any unique file identifier is a useful choice, the default is \code{file_id}.
+#' @param highlight_peaks whether to highlight peaks over background by making lines outside of identified peaks lighter. Only works if a \code{peaks_table} was provided to identify the peaks and will issue a warning if \code{highlight_peaks = TRUE} but no peaks were identified.
+#' @param mark_peaks whether to mark identified peaks with a vertical line at the peak retention time. Only works if a \code{peaks_table} was provided to identify the peaks and will issue a warning if \code{highlight_peaks = TRUE} but no peaks were identified.
+#' @param mark_peak_bounds whether to mark the boundaries of identified peaks with a vertical ine at peak start and end retention times. Only works if a \code{peaks_table} was provided to identify the peaks and will issue a warning if \code{highlight_peaks = TRUE} but no peaks were identified.
+#' @param peak_label whether to label identified peaks. Any valid column or complex expression is supported. Only works if a \code{peaks_table} was provided to identify the peaks and will issue a warning if \code{highlight_peaks = TRUE} but no peaks were identified. Also note that peaks whose value at the peak retention time is not visible on the panel due to e.g. a high \code{zoom} value will not have a visible label either.
+#' @param peak_label_size the font size for the peak labels. Depends largely on how much data is shown and how busy the chromatograms are. Default is a rather small font size (2), adjust as needed.
 #' @export
-iso_plot_continuous_flow_data.data.frame <- function(dt, panel = data, color = file_id, linetype = NULL, label = file_id) {
+iso_plot_continuous_flow_data.data.frame <- function(
+  df, panel = data, color = file_id, linetype = NULL, label = file_id,
+  highlight_peaks = FALSE, mark_peaks = FALSE, mark_peak_bounds = TRUE,
+  peak_label = NULL, peak_label_size = 2
+  ) {
 
   # check for data
-  if (nrow(dt) == 0) stop("no data provided", call. = FALSE)
+  if (nrow(df) == 0) stop("no data provided", call. = FALSE)
 
   # check for time column
-  time_info <- find_time_column(dt)
+  time_info <- find_time_column(df)
 
   # quos and other column checks
-  aes_quos <- list(panel = enquo(panel), color = enquo(color), linetype = enquo(linetype), label = enquo(label))
+  aes_quos <- list(panel = enquo(panel), color = enquo(color), linetype = enquo(linetype), label = enquo(label), peak_label = enquo(peak_label))
   aes_cols <- get_column_names(
-    dt, panel = aes_quos$panel,
+    df, panel = aes_quos$panel,
     file_id = quo("file_id"),
     time_min = quo("time_min"), time_max = quo("time_max"),
     is_ratio = quo("is_ratio"), data = quo("data"), value = quo("value"),
     n_reqs = list(panel = "?"))
-  isoreader:::check_expressions(dt, aes_quos$color, aes_quos$linetype, aes_quos$label)
+  peak_cols <- c("peak_marker", "peak_point", "peak_start", "peak_end") %in% names(df)
+  isoreader:::check_expressions(df, aes_quos$color, aes_quos$linetype, aes_quos$label, aes_quos$peak_label)
 
   # find overall plot parameters from data frame
-  normalize <- col_in_df(dt, "normalized") & dt$normalized[1]
-  zoom <- col_in_df(dt, "zoom_cutoff") & !all(is.na(dt$zoom_cutoff[1]))
-  if (col_in_df(dt, "normalize")) stopifnot(all(dt$normalized == dt$normalized[1])) # should be a single value
+  normalize <- col_in_df(df, "normalized") & df$normalized[1]
+  zoom <- col_in_df(df, "zoom_cutoff") & !all(is.na(df$zoom_cutoff[1]))
+  if (col_in_df(df, "normalize")) stopifnot(all(df$normalized == df$normalized[1])) # should be a single value
 
   # generate plot
-  p <- ggplot(dt) +
+  p <- ggplot(df) +
     aes(!!sym(time_info$column), value, group = paste(file_id, data)) +
-    geom_line() +
     scale_x_continuous(str_c("Time ", time_info$unit), expand = c(0, 0)) +
     scale_y_continuous(if(normalize) "Normalized Signal" else "Signal", expand = c(0, 0)) +
     theme_bw()
 
+  # peak cols safety check
+  if (!all(peak_cols) && (highlight_peaks || mark_peaks || mark_peak_bounds || !quo_is_null(aes_quos$peak_label))) {
+    highlight_peaks <- FALSE
+    mark_peaks <- FALSE
+    mark_peak_bounds <- FALSE
+    aes_quos$peak_label <- quo(NULL)
+    glue::glue("peak features requested but peak identifications seem to be missing, make sure to provide a peak_table") %>%
+      warning(immediate. = TRUE, call. = FALSE)
+  }
+
+  # peak boundaries - consider making this an area background
+  if (mark_peak_bounds) {
+    p <- p +
+      geom_rect(
+        data = function(df) dplyr::filter(df, peak_point > 0 & (peak_start | peak_end)) %>%
+          dplyr::group_by(peak_point) %>%
+          dplyr::mutate(xmin = ifelse(any(peak_start), (!!sym(time_info$column))[peak_start][1], -Inf),
+                        xmax = ifelse(any(peak_end), (!!sym(time_info$column))[peak_end][1], Inf)) %>%
+          dplyr::ungroup() %>%
+          # collapse double entries without loosing any other potentially important aesthetics info
+          dplyr::select(-!!sym(time_info$column), -value, -peak_start, -peak_end, -peak_marker) %>%
+          { if ("tp" %in% names(.)) dplyr::select(., -tp) else . } %>%
+          unique(),
+        mapping = aes(x = NULL, y = NULL, xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf, color = NULL),
+        fill = "grey20", color = NA, alpha = 0.1, show.legend = FALSE
+      )
+  }
+
+  # peak markers
+  if (mark_peaks) {
+    p <- p +
+      geom_vline(
+        data = function(df) dplyr::filter(df, peak_marker),
+        mapping = aes(xintercept = time.min, color = NULL),
+        color = "black"
+      )
+  }
+
+  # generate lines
+  if (highlight_peaks) {
+    p <- p +
+      # background
+      geom_line(
+        data = function(df)
+          df %>%
+          dplyr::filter(peak_point == 0 | peak_start | peak_end | peak_marker) %>%
+          # use peak_marker location to break up the line - NOTE wll lead to missing
+          # value warning if chrom starts or ends with peak or has joined peaks
+          dplyr::mutate(value = ifelse(peak_marker, NA_real_, value)),
+        alpha = 0.3 # make more opaque
+      ) +
+      # peaks
+      geom_line(
+        data = function(df)
+          df %>%
+          dplyr::filter(peak_point > 0 | peak_end) %>%
+          # use peak end point to break up the line
+          dplyr::mutate(value = ifelse(peak_point == 0 & peak_end, NA_real_, value))
+      )
+  } else {
+    # simple lines
+    p <- p + geom_line()
+  }
+
+  # peak labels
+  if (!quo_is_null(aes_quos$peak_label)) {
+    p <- p +
+      ggrepel::geom_label_repel(
+        data = function(df) dplyr::filter(df, peak_marker),
+        mapping = aes_(label = aes_quos$peak_label),
+        show.legend = FALSE,
+        force = 1, box.padding = 1,
+        min.segment.length = 0,
+        size = peak_label_size
+      )
+  }
+
+  # FIXME: implement all these parameters in the iso_files funciton
+  #FIXME: make a new function to map these things (see test in rmd)
+
   # zoom ghost points to make sure the zooming frame remains the same (if zoom is set)
   if (zoom) {
-    get_column_names(dt, baseline = quo(baseline)) # check that baseline exists
+    get_column_names(df, baseline = quo(baseline)) # check that baseline exists
     p <- p +
       geom_point(data = function(df) group_by(df, !!!map(aes_cols$panel, sym)) %>%
                    summarize(time = mean(!!sym(time_info$column), na.omit = TRUE), value = min(baseline, na.rm = TRUE)) %>%
@@ -318,10 +529,10 @@ iso_plot_continuous_flow_data.data.frame <- function(dt, panel = data, color = f
   }
 
   # display full time scale
-  if (!is.infinite(dt$time_min[1]))
-    p <- p + expand_limits(x = dt$time_min[1])
-  if (!is.infinite(dt$time_max[1]))
-    p <- p + expand_limits(x = dt$time_max[1])
+  if (!is.infinite(df$time_min[1]))
+    p <- p + expand_limits(x = df$time_min[1])
+  if (!is.infinite(df$time_max[1]))
+    p <- p + expand_limits(x = df$time_max[1])
 
   # normalize plot y axis
   if (normalize)
