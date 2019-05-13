@@ -72,6 +72,8 @@ test_that("test that plot continuous flow works properly", {
   expect_equal(names(p$facet$params$rows), "file_id")
   expect_equal(names(p$facet$params$cols) %>% length(), 0)
 
+  # FIXME: implemment proper tests for visualization with peak_table
+
 })
 
 test_that("test that plot dual inlet works properly", {

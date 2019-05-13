@@ -7,7 +7,10 @@
 iso_prepare_continuous_flow_plot_data(iso_files, data = c(),
   include_file_info = NULL, time_interval = c(),
   time_interval_units = "seconds", filter = NULL, normalize = FALSE,
-  zoom = NULL, zoom_group = data)
+  zoom = NULL, zoom_group = data, peak_table = NULL,
+  file_id = default(file_id), rt = default(rt),
+  rt_start = default(rt_start), rt_end = default(rt_end),
+  rt_unit = NULL)
 }
 \arguments{
 \item{iso_files}{collection of iso_file objects}
@@ -23,9 +26,21 @@ iso_prepare_continuous_flow_plot_data(iso_files, data = c(),
 \item{normalize}{whether to normalize the data (default is FALSE, i.e. no normalization). If TRUE, normalizes each trace across all files (i.e. normalized to the global max/min). This is particularly useful for overlay plotting different mass and/or ratio traces (\code{panel = NULL}). Note that zooming (if \code{zoom} is set) is applied after normalizing.}
 
 \item{zoom}{if not set, automatically scales to the maximum range in the selected time_interval in each plotting panel. If set, scales by the indicated factor, i.e. values > 1 are zoom in, values < 1 are zoom out, baseline always remains the bottom anchor point. Note that zooming is always relative to the max in each zoom_group (by default \code{zoom_group = data}, i.e. each trace is zoomed separately). The maximum considered may be outside the visible time window. Note that for \code{zoom_group} other than \code{data} (e.g. \code{file_id} or \code{NULL}), zooming is relative to the max signal across all mass traces. Typically it makes most sense to set the \code{zoom_group} to the same variable as the planned \code{panel} parameter to the plotting function. Lastly, note that zooming only affects masses, ratios are never zoomed.}
+
+\item{peak_table}{a data frame that describes the peaks in this chromatogram. By default, the chromatographic data is prepared WITHOUT peaks information. Supply this parameter to add in the peaks data. Note that the following parameters must also be set correctly IF \code{peak_table} is supplied: \code{file_id}, \code{rt}, \code{rt_start}, \code{rt_end}.}
+
+\item{file_id}{the column (or columns) that uniquely identify each iso_file for proper matching of the raw chromatography data with the peak_table data. In most cases, the default (\code{file_id}) should work fine.}
+
+\item{rt}{the column in the \code{peak_table} that holds the retention time of the peak.}
+
+\item{rt_start}{the column in the\code{peak_table} that holds the retention time where each peak starts.}
+
+\item{rt_end}{the column in the\code{peak_table} that holds the retention time where each peak ends.}
+
+\item{rt_unit}{which time unit the retention time columns (\code{rt}, \code{rt_start}, \code{rt_end}) are in. If not specified (i.e. the default), assumes it is the same unit as the time column of the \code{iso_files} raw data.}
 }
 \description{
-This functions helps with the preparation of plotting data from continuous flow data files (i.e. the raw chromatogram data). Call either explicity and pass the result to \code{\link{iso_plot_continuous_flow_data}} or let \code{\link{iso_plot_continuous_flow_data}} take care of preparing the plotting data directly from the \code{iso_files}.
+This function helps with the preparation of plotting data from continuous flow data files (i.e. the raw chromatogram data). Call either explicity and pass the result to \code{\link{iso_plot_continuous_flow_data}} or let \code{\link{iso_plot_continuous_flow_data}} take care of preparing the plotting data directly from the \code{iso_files}.
 }
 \seealso{
 Other plot functions: \code{\link{iso_plot_continuous_flow_data}},
