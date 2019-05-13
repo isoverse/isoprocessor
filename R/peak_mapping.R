@@ -269,8 +269,8 @@ iso_get_problematic_peaks <- function(...) {
 #'
 #' Fetch peak mappings that were problematic in any way. This function is typically called after \link{iso_map_peaks} to inspect problematic entries. Use the \code{select} parameter to select only the most informative columns (always includes at minimum the \code{peak_info} and \code{problem} columns to identify why the peak is problematic). Note that peaks that are ambiguous because of multiple potential map matches have a data table entry for each potential match.
 #'
-#' @inheritParams iso_get_missing_metadata
 #' @param dt data table with mapped peaks. Requires the \code{is_identified}, \code{is_missing} and \code{is_ambiguous} columns to be present.
+#' @param select which column to select, by default all
 #' @param unidentified whether to include peaks that are problematics because they are unidentified
 #' @param missing whether to include peaks that are problematics because they are missing
 #' @param ambiguous whether to include peaks that are problematics because they are ambiguously identified
