@@ -34,11 +34,10 @@ You can install the dependency
 [isoreader](http://isoreader.isoverse.org/) and
 [isoprocessor](http://isoprocessor.isoverse.org/) itself both from
 GitHub using the `devtools` package. Note that while
-[isoprocessor](http://isoprocessor.isoverse.org/) uses some
-functions from [isoreader](http://isoreader.isoverse.org/), it
-does NOT require IRMS data to be read with
-[isoreader](http://isoreader.isoverse.org/), it can be used
-standalone with raw data obtained differently.
+[isoprocessor](http://isoprocessor.isoverse.org/) uses some functions
+from [isoreader](http://isoreader.isoverse.org/), it does NOT require
+IRMS data to be read with [isoreader](http://isoreader.isoverse.org/),
+it can be used standalone with raw data obtained differently.
 
 ``` r
 install.packages("devtools") # only if you don't have this installed yet
@@ -56,17 +55,25 @@ devtools::install_github("isoverse/isoprocessor")
   - for an example of how to work with dual inlet data, see the vignette
     on **[Dual
     Inlet](http://isoprocessor.isoverse.org/articles/dual_inlet.html)**
+  - for an example of how Isodat in particular calculates isotope ratios
+    for standard continuous flow and dual inlet data, see the **[Isodat
+    calculations
+    notebook](http://isoprocessor.isoverse.org/other/how_isodat_calculates_R.html)**
   - additional vignettes on data reduction and calibration are in the
     works
 
 ## Open Source
 
-[isoprocessor](http://isoprocessor.isoverse.org/) is and will
-always be fully open-source (i.e. free as in ‘freedom’ and free as in
-‘free beer’) and is provided as is. The source code is released under
+[isoprocessor](http://isoprocessor.isoverse.org/) is and will always be
+fully open-source (i.e. free as in ‘freedom’ and free as in ‘free beer’)
+and is provided as is. The source code is released under
 GPL-2.
 
 ## isoverse <a href='http://www.isoverse.org'><img src='man/figures/isoverse_logo_thumb.png' align="right" height="138.5"/></a>
 
 This package is part of the isoverse suite of data tools for stable
-isotopes.
+isotopes. If you like the functionality that isoverse packages provide
+to the geochemical community, please help us spread the word and include
+an isoverse or individual package logo on one of your posters or slides.
+All logos are posted in high resolution in the main [isoverse
+repository](https://github.com/isoverse/isoverse/tree/master/man/figures).

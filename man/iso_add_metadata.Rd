@@ -4,35 +4,11 @@
 \alias{iso_add_metadata}
 \title{Add metadata to data table}
 \usage{
-iso_add_metadata(dt, metadata, match_by = default(match_by),
-  quiet = default(quiet))
+iso_add_metadata(...)
 }
 \arguments{
-\item{dt}{data frame with the data}
-
-\item{metadata}{data frame with the metadata}
-
-\item{match_by}{the column (or columns) to match the metadata by. Used sequently, i.e. if the first column is defined in the metadata, it will be used first before mapping the remainder of the metadata with the second column, etc. All columns must exist in both the \code{dt} and \code{metadata} data frames.}
-
-\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
-}
-\value{
-merged data frame with data and metadata and new column logical (TRUE/FALSE) \code{has_metadata} that holds information about which rows had metadata matches.
+\item{...}{deprecated}
 }
 \description{
-This function adds metadata flexibly by providing the possibility to match_by multiple different columns (paramter \code{match_by}) in sequence.
-This is equivalent to applying a set of increasingly more specific matching rules. For each metadata column, only the rows that have a defined non empty ("") value
-for that column will be mapped to the data. Each set of metadata can overwrite the previous matches such that the last metadata column defined by \code{match_by}
-will overwrite all previous matches for which it applies, even if they have already been a match for a previous column.
+This function was deprecated in favour of the more broadly applicable \code{\link[isoreader]{iso_add_file_info}}.
 }
-\details{
-This function also introduces a \code{has_metadata} column that would be typically used afterwards to inspect and/or filter data that has/doesn't have metadata. For routine downstream data processing, this function is thus usually followed by \code{\link{iso_get_missing_metadata}} to inspect which entries are missing metadata and \code{\link{iso_remove_missing_metadata}} to proceed only with entries that do have metadata assigned.
-
-Note that this is a convenience function for easily adding metadata in a rule based way. If a direct \code{\link[dplyr]{join}} is suitable (i.e. if there is direct
-1-to-1 or 1-to-many mapping of a single ID column or several id columns in combination), it will be a lot faster to use the \code{\link[dplyr]{join}}.
-}
-\seealso{
-Other metadata functions: \code{\link{iso_get_missing_metadata}},
-  \code{\link{iso_remove_missing_metadata}}
-}
-\concept{metadata functions}

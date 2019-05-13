@@ -34,10 +34,10 @@
     <loc>http://isoprocessor.isoverse.org//reference/iso_get_default_processor_parameters.html</loc>
   </url>
   <url>
-    <loc>http://isoprocessor.isoverse.org//reference/iso_get_missing_metadata.html</loc>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_get_problematic_calibrations.html</loc>
   </url>
   <url>
-    <loc>http://isoprocessor.isoverse.org//reference/iso_get_problematic_calibrations.html</loc>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_get_problematic_peak_mappings.html</loc>
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_get_problematic_peaks.html</loc>
@@ -67,6 +67,9 @@
     <loc>http://isoprocessor.isoverse.org//reference/iso_plot_ref_peaks.html</loc>
   </url>
   <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_prepare_continuous_flow_plot_data.html</loc>
+  </url>
+  <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_prepare_for_calibration.html</loc>
   </url>
   <url>
@@ -76,10 +79,10 @@
     <loc>http://isoprocessor.isoverse.org//reference/iso_remove_list_columns.html</loc>
   </url>
   <url>
-    <loc>http://isoprocessor.isoverse.org//reference/iso_remove_missing_metadata.html</loc>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_remove_problematic_calibrations.html</loc>
   </url>
   <url>
-    <loc>http://isoprocessor.isoverse.org//reference/iso_remove_problematic_calibrations.html</loc>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_remove_problematic_peak_mappings.html</loc>
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_remove_problematic_peaks.html</loc>
@@ -89,6 +92,12 @@
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_show_default_processor_parameters.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_summarize_data_table.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_summarize_peak_mappings.html</loc>
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_unnest_calibration_coefs.html</loc>
@@ -134,5 +143,8 @@
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//articles/dual_inlet.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//articles/operations.html</loc>
   </url>
 </urlset>

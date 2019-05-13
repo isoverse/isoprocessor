@@ -4,6 +4,7 @@ pkgdown_sha: ~
 articles:
   continuous_flow: continuous_flow.html
   dual_inlet: dual_inlet.html
+  operations: operations.html
 urls:
   reference: http://isoprocessor.isoverse.org//reference
   article: http://isoprocessor.isoverse.org//articles

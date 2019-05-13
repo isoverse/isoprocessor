@@ -40,8 +40,6 @@
 <meta property="og:title" content="Prepare data set for calibration — iso_prepare_for_calibration" />
 
 <meta property="og:description" content="Nests data set in preparation for calibration calculations. Use the group_by parameter to group analyses as appropriate for calibration. Use iso_unnest_data to easily pull out additional columns from the nested data frame in all_data at any point before, during or after calibration." />
-
-<meta property="og:image" content="http://isoprocessor.isoverse.org/logo.png" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -82,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.0</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.7</span>
       </span>
     </div>
 
@@ -142,6 +140,10 @@
     <tr>
       <th>group_by</th>
       <td><p>what to group by for indidual calibration calculations (use c(...) to select multiple) - set <code>group_by = NULL</code> to avoid grouping</p></td>
+    </tr>
+    <tr>
+      <th>quiet</th>
+      <td><p>whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.</p></td>
     </tr>
     </table>
     

@@ -34,7 +34,7 @@ summarize_H3_factors <- function(dt, is_H3_factor_file_condition, is_H3_factor_f
     mutate(H3_factor_group = cumsum(c(0, diff(!!sym(dt_new_cols$is_H3_factor_file))) > 0)) %>%
     # n# analyses per H3 factor
     group_by(H3_factor_group) %>%
-    mutate(n_analyses = n()) %>%
+    mutate(n_analyses = dplyr::n()) %>%
     ungroup() %>%
     arrange(!!sym(dt_cols$file_datetime)) %>%
     # calculate max and min amplitudes

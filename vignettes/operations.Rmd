@@ -1,0 +1,31 @@
+---
+title: "Operations"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Operations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Introduction
+
+Coming soon...
+
+# Peak Mapping Problems
+
+```{r}
+# iso_map_peaks() # with single on the fly peak map and without peak map
+# iso_get_problematic_peak_mappings()
+# iso_summarize_peak_mappings()
+# iso remove_problematic_peak_mappings
+```
+
