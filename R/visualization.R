@@ -266,8 +266,13 @@ iso_prepare_continuous_flow_plot_data <- function(
       dplyr::mutate(
         peak_marker = !is.na(peak_marker) & peak_marker,
         peak_point = ifelse(!is.na(..peak_id), ..peak_id, 0), # makes it possible to identify peak clusters afterwards
-        peak_start = c(0, diff(peak_point > 0)) == 1 | c(diff(peak_point > 0), 0) == 1,
-        peak_end = c(diff(peak_point > 0), 0) == -1 | c(0, diff(peak_point > 0)) == -1,
+        peak_start = c(0, diff(peak_point)) > 0 | c(diff(peak_point), 0) > 0,
+          #c(0, diff(peak_point)) > 0 | c(diff(peak_point), 0) > 0,
+        peak_end =
+          c(diff(peak_point), 0) < 0 | c(0, diff(peak_point)) < 0 |
+          # take care of case when two peaks touch and there is no 0 in between
+          (peak_start & peak_point > 0 & c(0, peak_point[-length(peak_point)]) > 0 & c(peak_point[-1], 0) > 0)
+          #c(diff(peak_point), 0) > 0 | c(0, diff(peak_point)) > 0,
       ) %>%
       dplyr::ungroup() %>%
       # add peak info
@@ -454,9 +459,12 @@ iso_plot_continuous_flow_data.data.frame <- function(
       geom_rect(
         data = function(df) dplyr::filter(df, peak_point > 0 & (peak_start | peak_end)) %>%
           dplyr::group_by(peak_point) %>%
-          dplyr::mutate(xmin = ifelse(any(peak_start), (!!sym(time_info$column))[peak_start][1], -Inf),
-                        xmax = ifelse(any(peak_end), (!!sym(time_info$column))[peak_end][1], Inf)) %>%
+          dplyr::mutate(xmin = ifelse(any(peak_start),
+                                      min((!!sym(time_info$column))[peak_start]), -Inf),
+                        xmax = ifelse(any(peak_end),
+                                      max((!!sym(time_info$column))[peak_end]), Inf)) %>%
           dplyr::ungroup() %>%
+          dplyr::filter(!is.infinite(xmin) | !is.infinite(xmax)) %>%
           # collapse double entries without loosing any other potentially important aesthetics info
           dplyr::select(-!!sym(time_info$column), -value, -peak_start, -peak_end, -peak_marker) %>%
           { if ("tp" %in% names(.)) dplyr::select(., -tp) else . } %>%
