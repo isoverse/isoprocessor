@@ -274,9 +274,15 @@ iso_prepare_continuous_flow_plot_data <- function(
           (peak_start & peak_point > 0 & c(0, peak_point[-length(peak_point)]) > 0 & c(peak_point[-1], 0) > 0)
           #c(diff(peak_point), 0) > 0 | c(0, diff(peak_point)) > 0,
       ) %>%
-      dplyr::ungroup() %>%
-      # add peak info
-      dplyr::left_join(peak_table, by = c(plot_data_cols$file_id, "..peak_id")) %>%
+      dplyr::ungroup()
+
+    # add peak info
+    plot_data <- plot_data %>%
+      dplyr::left_join(
+        dplyr::select(peak_table, plot_data_cols$file_id, "..peak_id",
+                      # ensure there are no column duplications
+                      names(peak_table) %>% { .[!.%in% names(plot_data)] }),
+        by = c(plot_data_cols$file_id, "..peak_id")) %>%
       dplyr::arrange(..data_id) %>% # return to original sorting
       dplyr::select(-starts_with(".."))
 
