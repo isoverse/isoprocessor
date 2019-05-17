@@ -33,7 +33,7 @@ test_that("test that plot continuous flow works properly", {
   expect_error(iso_plot_raw_data(cf, c("42")), "not available in the provided iso_files")
   expect_error(cf %>% {.$raw_data$time.min = 1:10; .} %>% iso_plot_raw_data(.), "unclear which column is the time column")
   expect_error(iso_plot_raw_data(cf, time_interval = 55), "time interval needs to be a vector with two numeric entries")
-  expect_error(iso_plot_raw_data(cf, panel = DNE), "unknown column")
+  expect_error(iso_plot_raw_data(cf, panel = DNE), "not.*valid")
   expect_error(iso_plot_raw_data(cf, color = DNE), "not.*valid")
   expect_error(iso_plot_raw_data(cf, linetype = DNE), "not.*valid")
   expect_error(iso_plot_raw_data(cf, label = DNE), "not.*valid")
@@ -55,7 +55,7 @@ test_that("test that plot continuous flow works properly", {
   expect_true("value" %in% as.character(p$mapping$y))
   expect_true("file_id" %in% as.character(p$mapping$label))
   expect_equal(class(p$facet)[1], "FacetGrid")
-  expect_equal(names(p$facet$params$rows), "data")
+  expect_equal(names(p$facet$params$rows), "..panel") # always ..panel because expressions not possible
   expect_equal(names(p$facet$params$cols) %>% length(), 0)
 
   # then custom specifications
@@ -69,7 +69,7 @@ test_that("test that plot continuous flow works properly", {
   expect_true(all(names(p$mapping) %in% c("x", "y", "group", "linetype", "label")))
   expect_true("data" %in% as.character(p$mapping$linetype))
   expect_equal(class(p$facet)[1], "FacetGrid")
-  expect_equal(names(p$facet$params$rows), "file_id")
+  expect_equal(names(p$facet$params$rows), "..panel") # always ..panel because expressions not possible
   expect_equal(names(p$facet$params$cols) %>% length(), 0)
 
   # FIXME: implemment proper tests for visualization with peak_table

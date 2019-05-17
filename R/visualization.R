@@ -59,7 +59,7 @@ iso_prepare_continuous_flow_plot_data <- function(
 
   # check for zoom_gruop column(s) existence
   aes_quos <- list(zoom_group = enquo(zoom_group))
-  aes_cols <- get_column_names(raw_data, zoom_group = aes_quos$zoom_group, n_reqs = list(zoom_group = "*"))
+  isoreader:::check_expressions(raw_data, aes_quos$zoom_group)
 
   # only work with desired data (masses and ratios)
   select_data <- if(length(data) == 0) unique(raw_data$data) else as.character(data)
@@ -108,7 +108,6 @@ iso_prepare_continuous_flow_plot_data <- function(
   }
 
   # plot data
-  zoom_grouping <- unname(aes_cols$zoom_group)
   plot_data <-
     raw_data %>%
     # make ratio identification simple
@@ -123,11 +122,13 @@ iso_prepare_continuous_flow_plot_data <- function(
     # find global zoom cutoffs per group before time filtering (don't consider ratios)
     {
       if (!is.null(zoom)) {
-        group_by(., !!!map(zoom_grouping, sym)) %>%
+        mutate(., ..zoom_group = !!aes_quos$zoom_group) %>%
+          group_by(..zoom_group) %>%
           mutate(
             baseline = value[!is_ratio] %>% { if(length(.) == 0) NA else min(.) },
             max_signal = value[!is_ratio] %>% { if(length(.) == 0) NA else max(.) }) %>%
-          ungroup()
+          ungroup() %>%
+          select(-..zoom_group)
       } else .
     } %>%
     # time filtering
@@ -366,7 +367,8 @@ iso_plot_continuous_flow_data.iso_file_list <- function(
   panel_quo <- enquo(panel)
   plot_data <- iso_prepare_continuous_flow_plot_data(
     iso_files,
-    data = data, include_file_info = everything(),
+    data = data,
+    include_file_info = everything(),
     time_interval = time_interval,
     time_interval_units = time_interval_units,
     filter = !!enquo(filter),
@@ -399,9 +401,9 @@ iso_plot_continuous_flow_data.iso_file_list <- function(
 
 #' @rdname iso_plot_continuous_flow_data
 #' @param df a data frame of the chromatographic data prepared for plotting (see \code{\link{iso_prepare_continuous_flow_plot_data}})
-#' @param panel whether to panel plot by anything - any column is possible (see notes in the \code{filter} parameter) but the most commonly used options are \code{panel = NULL} (overlay all), \code{panel = data} (by mass/ratio data), \code{panel = file_id} (panel by files, alternatively use any appropriate file_info column). The default is panelling by the \code{data} column.
-#' @param color whether to color plot by anything, options are the same as for \code{panel} but the default is \code{file_id} and complex expressions (not just columns) are supported.
-#' @param linetype whether to differentiate by linetype, options are the same as for \code{panel} but the default is \code{NULL} (i.e. no linetype aesthetic) and complex expressions (not just columns) are supported. Note that a limited number of linetypes (6) is defined by default and the plot will fail if a higher number is required unless specified using \code{\link[ggplot2]{scale_linetype}}.
+#' @param panel whether to panel plot by anything - any column or complex expression is possible (see notes in the \code{filter} parameter for available raw data columns and \code{\link{iso_get_file_info}} for available file info columns) but the most commonly used options are \code{panel = NULL} (overlay all), \code{panel = data} (by mass/ratio data), \code{panel = file_id} (panel by files, alternatively use any appropriate file_info column or expression that's unique for each file). The default is panelling by the \code{data} column.
+#' @param color whether to color plot by anything, options are the same as for \code{panel} but the default is \code{file_id}
+#' @param linetype whether to differentiate by linetype, options are the same as for \code{panel} but the default is \code{NULL} (i.e. no linetype aesthetic). Note that a limited number of linetypes (6) is defined by default and the plot will fail if a higher number is required unless specified using \code{\link[ggplot2]{scale_linetype}}.
 #' @param label this is primarily of use for turning the generated ggplots into interactive plots via \code{\link[plotly]{ggplotly}} as the \code{label} will be rendered as an additional mousover label. Any unique file identifier is a useful choice, the default is \code{file_id}.
 #' @param peak_marker whether to mark identified peaks with a vertical line at the peak retention time. Only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_marker = TRUE} but no peaks were identified.
 #' @param peak_bounds whether to mark the boundaries of identified peaks with a vertical ine at peak start and end retention times. Only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_bounds = TRUE} but no peaks were identified.
@@ -425,13 +427,17 @@ iso_plot_continuous_flow_data.data.frame <- function(
   # quos and other column checks
   aes_quos <- list(panel = enquo(panel), color = enquo(color), linetype = enquo(linetype), label = enquo(label), peak_label = enquo(peak_label))
   aes_cols <- get_column_names(
-    df, panel = aes_quos$panel,
+    df,
     file_id = quo("file_id"),
     time_min = quo("time_min"), time_max = quo("time_max"),
-    is_ratio = quo("is_ratio"), data = quo("data"), value = quo("value"),
-    n_reqs = list(panel = "?"))
+    is_ratio = quo("is_ratio"), data = quo("data"), value = quo("value"))
   peak_cols <- c("peak_marker", "peak_point", "peak_start", "peak_end") %in% names(df)
-  isoreader:::check_expressions(df, aes_quos$color, aes_quos$linetype, aes_quos$label)
+  isoreader:::check_expressions(df, aes_quos$color, aes_quos$linetype, aes_quos$label, aes_quos$panel)
+
+  # add panel column to allow expressions
+  if (!quo_is_null(aes_quos$panel)) {
+    df <- mutate(df, ..panel = !!aes_quos$panel)
+  }
 
   # find overall plot parameters from data frame
   normalize <- col_in_df(df, "normalized") & df$normalized[1]
@@ -523,16 +529,20 @@ iso_plot_continuous_flow_data.data.frame <- function(
   if (zoom) {
     get_column_names(df, baseline = quo(baseline)) # check that baseline exists
     p <- p +
-      geom_point(data = function(df) group_by(df, !!!map(aes_cols$panel, sym)) %>%
-                   summarize(time = mean(!!sym(time_info$column), na.omit = TRUE), value = min(baseline, na.rm = TRUE)) %>%
-                   dplyr::filter(!is.na(value)),
-                 mapping = aes(x = time, y = value), inherit.aes = FALSE,
-                 size = 0, alpha = 1, show.legend = FALSE) +
-      geom_point(data = function(df) group_by(df, !!!map(aes_cols$panel, sym)) %>%
-                   summarize(time = mean(!!sym(time_info$column), na.omit = TRUE), value = max(zoom_cutoff, na.rm = TRUE)) %>%
-                   dplyr::filter(!is.na(value)),
-                 mapping = aes(x = time, y = value), inherit.aes = FALSE,
-                 size = 0, alpha = 1, show.legend = FALSE)
+      geom_point(data = function(df)
+        df %>%
+          group_by(..panel) %>%
+          summarize(time = mean(!!sym(time_info$column), na.omit = TRUE), value = min(baseline, na.rm = TRUE)) %>%
+          dplyr::filter(!is.na(value)),
+        mapping = aes(x = time, y = value), inherit.aes = FALSE,
+        size = 0, alpha = 1, show.legend = FALSE) +
+      geom_point(data = function(df)
+        df %>%
+          group_by(..panel) %>%
+          summarize(time = mean(!!sym(time_info$column), na.omit = TRUE), value = max(zoom_cutoff, na.rm = TRUE)) %>%
+          dplyr::filter(!is.na(value)),
+        mapping = aes(x = time, y = value), inherit.aes = FALSE,
+        size = 0, alpha = 1, show.legend = FALSE)
   }
 
   # display full time scale
@@ -546,8 +556,8 @@ iso_plot_continuous_flow_data.data.frame <- function(
     p <- p + theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
   # paneling
-  if (!is_empty(aes_cols$panel))
-    p <- p + facet_grid(rlang::new_formula(sym(aes_cols$panel), sym(".")), scales = "free_y")
+  if (!quo_is_null(aes_quos$panel))
+    p <- p + facet_grid(..panel ~ ., scales = "free_y")
 
   # color
   if (!quo_is_null(aes_quos$color))
