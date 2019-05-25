@@ -43,6 +43,8 @@ test_that("testing that peak mapping works", {
                "maps .* do not exist .* 'missing_pm'.* Available .* 'a_map', 'bc_map', 'd_map'")
   expect_error(iso_map_peaks(my_dt, my_peak_maps, map_id = c(file_id, map_id)),
                "map id must be stored in a single column")
+  expect_error(iso_map_peaks(my_dt, my_peak_maps %>% dplyr::select(-starts_with("rt"))),
+               "peak maps do not have any columns that match or start with.*retention time column")
 
   # check that it all assembles properly for single maps
   expect_equal(mapped_dt <- iso_map_peaks(my_dt, my_peak_map),
