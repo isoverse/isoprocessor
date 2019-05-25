@@ -43,7 +43,7 @@ vignettes/**/*.pdf
 *.knit.md
 
 # Auxiliary package files
-/tmp/
+tmp
 *.pdf
 *.png
 *.jpg
