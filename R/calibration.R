@@ -40,7 +40,8 @@ iso_add_standards <- function(dt, stds, match_by = default(std_match_by), is_std
     n_stds <- filter(dt_w_stds, !!sym(new_cols$is_std_peak))[dt_cols$match_by] %>% unique() %>% nrow()
     n_stds_rows <- filter(dt_w_stds, !!sym(new_cols$is_std_peak)) %>% nrow()
     glue("Info: matching standards by '{collapse(dt_cols$match_by, sep = \"', '\", last = \"' and '\")}' - ",
-         "added {n_stds} standard entries to {n_stds_rows} out of {nrow(dt_w_stds)} rows") %>%
+         "added {n_stds} standard entries to {n_stds_rows} out of {nrow(dt_w_stds)} rows, ",
+         "added new column '{new_cols$is_std_peak}' to identify standard peaks") %>%
       message()
   }
   return(dt_w_stds)
