@@ -170,7 +170,7 @@ test_that("inverting regressions work properly", {
     as_tibble() %>%
     mutate(
       name = c("a", "a", "b", "a", sample(c("a", "b"), replace = TRUE, size = dplyr::n() - 4)),
-      is_standard = c(rep(FALSE, 4), sample(c(TRUE, FALSE), replace = TRUE, size = dplyr::n() - 4)),
+      is_std_peak = c(rep(FALSE, 4), sample(c(TRUE, FALSE), replace = TRUE, size = dplyr::n() - 4)),
       y = -1 + 5 * x1 + x1*x2*20 + 50 * sqrt(x2) + x3 + rnorm(length(x1), sd = 15),
       # special case: missing data
       x2 = ifelse(row_number() %in% c(1,2,3), NA_real_, x2),
@@ -180,13 +180,13 @@ test_that("inverting regressions work properly", {
     )
   nested_test_df <- nest_data(test_df, name, nested_data = model_data)
   models <- quo(list(m1 = lm(y ~ x1), m2 = lm(y ~ x1 + I(sqrt(x2)) + x1:x2 + x3)))
-  df_w_models <- nested_test_df %>% run_regression(!!models, model_filter_condition = is_standard)
-  df_w_nested_models <- nested_test_df %>% run_regression(!!models, nest_model = TRUE, model_filter_condition = is_standard)
+  df_w_models <- nested_test_df %>% run_regression(!!models, model_filter_condition = is_std_peak)
+  df_w_nested_models <- nested_test_df %>% run_regression(!!models, nest_model = TRUE, model_filter_condition = is_std_peak)
 
   # apply regression
   expect_error(apply_regression(df_w_models, predict = DNE), "not a regressor.*m1, m2")
   expect_error(apply_regression(df_w_models, predict = x2), "not a regressor.*m1")
-  expect_error(nested_test_df %>% run_regression(lm(y + x1 ~ x2), model_filter_condition = is_standard) %>% apply_regression(x2),
+  expect_error(nested_test_df %>% run_regression(lm(y + x1 ~ x2), model_filter_condition = is_std_peak) %>% apply_regression(x2),
                "multiple dependent.*not supported")
 
   # missing data or out of range troubles for the different data sets and models
@@ -215,7 +215,7 @@ test_that("inverting regressions work properly", {
   expect_equal(out_direct$model_data[[1]], out_nested$model_data[[1]])
 
   # check for new columns in the data frame
-  base_cols <- c("x1", "x2", "x3", "is_standard", "y", "residual")
+  base_cols <- c("x1", "x2", "x3", "is_std_peak", "y", "residual")
   expect_equal(names(out_direct$model_data[[1]]), c(base_cols, "pred", "pred_in_range"))
   expect_equal(
     df_w_models %>% filter(name == "b", model_name == "m1") %>%
