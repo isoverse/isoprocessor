@@ -90,7 +90,8 @@ get_calibration_vars <- function(calibration) {
     model_name = str_c(prefix_with_sep, "calib"),
     model_enough_data = str_c(prefix_with_sep, "calib_ok"),
     model_params = str_c(prefix_with_sep, "calib_params"),
-    residual = str_c(prefix_with_sep, "resid")
+    residual = str_c(prefix_with_sep, "resid"),
+    in_range = str_c(prefix_with_sep, "in_range")
   )
 }
 
@@ -165,7 +166,7 @@ iso_generate_calibration <- function(dt, model, calibration = "", is_std_peak = 
     model_enough_data = !!sym(calib_vars$model_enough_data),
     model_params = !!sym(calib_vars$model_params),
     residual = !!sym(calib_vars$residual),
-    model_fit = model_fit, model_range = model_range, model_coefs = model_coefs, model_summary = model_summary
+    model_fit = model_fit, model_coefs = model_coefs, model_summary = model_summary
   )
 
   return(dt_w_regs)
@@ -235,6 +236,53 @@ iso_remove_problematic_calibrations <- function(dt, calibration = "", remove_cal
   return(dt_out)
 }
 
+# EVALUATING CALIBRATION RANGES -------
+
+#' Evaluate calibration range
+#'
+#' Evaluates the calibration ranges for all calibrations and all data with respect to the provided terms (\code{...}). Generates a summary column called \code{in_range} (with \code{calibration} prefix if used) in the \code{all_data} data frames summarizing the range information. Also stores the calibration ranges themselves in a nested data frame, which can be accessed via \link{iso_unnest_calibration_range} if needed.
+#'
+#' Note that this function requires prior generation of a calibration (\code{\link{iso_generate_calibration}}). All measured parameters and derived terms can be included in the calibration range evalution. However, if the predicted term is intended to be included in the range evaluation, the calibration(s) must also be applied (\code{\link{iso_apply_calibration}}) first so the predicted term is actually available.
+#'
+#' @inheritParams evaluate_range
+#' @inheritParams iso_show_default_processor_parameters
+#' @export
+iso_evaluate_calibration_range <- function(dt, ..., calibration = "", quiet = default(quiet)) {
+
+  # safety checks
+  if (missing(dt)) stop("no data table supplied", call. = FALSE)
+  terms_quos <- rlang::enquos(...)
+  if (length(terms_quos) == 0) {
+    stop("no terms for calibration range evaluation are provided, please specify at least one term", call. = FALSE)
+  }
+
+  dt_quo <- enquo(dt)
+  calib_vars <- get_calibration_vars(calibration)
+  check_calibration_cols(!!dt_quo, calib_vars$model_params)
+
+  # information
+  if (!quiet) {
+    glue("Info: evaluating range for terms ",
+         "'{glue::glue_collapse(map_chr(terms_quos, rlang::as_label), sep = \"', '\", last = \"' and '\")}' ",
+         "in {calib_vars$calib_name}calibration for {nrow(dt)} data group(s); ",
+         "storing resulting summary for each data entry in new column '{calib_vars$in_range}'.") %>%
+      message()
+  }
+
+  # evaluate range
+  dt_out <- evaluate_range(
+    dt = dt, !!!terms_quos,
+    nested_model = TRUE,
+    model_data = all_data,
+    model_params = !!sym(calib_vars$model_params),
+    residual = !!sym(calib_vars$residual),
+    model_range = model_range,
+    in_range = !!sym(calib_vars$in_range)
+  )
+
+  return(dt_out)
+}
+
 # INVERTING CALIBRATION --------
 
 #' Apply calibration
@@ -286,11 +334,9 @@ iso_apply_calibration <- function(dt, predict, calibration = "", predict_range =
     model_data = all_data,
     model_name = !!sym(calib_vars$model_name),
     model_fit = model_fit,
-    model_range = model_range,
     model_params = !!sym(calib_vars$model_params),
     predict_value = !!pred_col_quo,
     predict_error = !!pred_se_col_quo,
-    predict_in_range = !!pred_se_in_range_quo,
     predict_range = predict_range
   )
 
@@ -378,7 +424,7 @@ iso_unnest_calibration_summary <- function(dt, calibration = "", select = everyt
 
 #' Unnest calibration range
 #'
-#' Retrieve range information for a calibration. Problematic calibrations are silently omitted (use \link{iso_get_problematic_calibrations} and \link{iso_remove_problematic_calibrations} to deal with them more explicitly).
+#' Retrieve range information created by \link{iso_evaluate_calibration_range}. Problematic calibrations are silently omitted (use \link{iso_get_problematic_calibrations} and \link{iso_remove_problematic_calibrations} to deal with them more explicitly).
 #'
 #' @inheritParams iso_generate_calibration
 #' @inheritParams unnest_model_column
@@ -394,3 +440,4 @@ iso_unnest_calibration_range <- function(dt, calibration = "", select = everythi
     keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data
   )
 }
+

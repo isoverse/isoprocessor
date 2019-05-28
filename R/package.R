@@ -12,7 +12,6 @@
 #' @importFrom stringr str_c str_replace fixed str_detect
 #' @importFrom forcats as_factor
 #' @importFrom broom tidy glance
-#' @importFrom modelr geom_ref_line add_residuals
 #' @importFrom investr invest
 #' @importFrom stats setNames
 #' @importFrom methods is

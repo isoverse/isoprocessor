@@ -7,9 +7,8 @@
 apply_regression(dt, predict, nested_model = FALSE,
   calculate_error = FALSE, model_data = model_data,
   model_name = model_name, model_fit = model_fit,
-  model_range = model_range, model_params = model_params,
-  predict_value = pred, predict_error = pred_se,
-  predict_in_range = pred_in_range, predict_range = NULL)
+  model_params = model_params, predict_value = pred,
+  predict_error = pred_se, predict_range = NULL)
 }
 \arguments{
 \item{dt}{data table with calibrations}
@@ -26,15 +25,11 @@ apply_regression(dt, predict, nested_model = FALSE,
 
 \item{model_fit}{the new model objects column}
 
-\item{model_range}{the range of each variable in the model}
-
 \item{model_params}{the nested model information (only relevant if \code{nest_model = TRUE})}
 
 \item{predict_value}{the new column in the model_data that holds the predicted value}
 
 \item{predict_error}{the new column in the model_data that holds the error of the predicted value (only created if \code{calculate_error = TRUE})}
-
-\item{predict_in_range}{the new column in the model_data that holds whether a data entry is within the range of the calibration. Checks whether all dependent and independent variables in the regression model are within the range of the calibration and sets the \code{predict_in_range} flag to FALSE if any(!) of them are not - i.e. this column provides information on whether new values are extrapolated beyond a calibration model and treat the extrapolated ones with the appropriate care. Note that all missing predicted values (due to missing parameters) are also automatically flagged as not in range (\code{predict_in_range} = FALSE).}
 
 \item{predict_range}{vector of 2 numbers, if provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the \code{predict_range} is usually only necessary if the calibration range should be extrapolated significantely.}
 }
