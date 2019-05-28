@@ -5,8 +5,8 @@
 \title{Visualize the data}
 \usage{
 iso_plot_data(dt, x, y, y_error = NULL, group = NULL, color = NULL,
-  shape = NULL, size = NULL, linetype = NULL, lines = TRUE,
-  points = FALSE)
+  shape = NULL, size = 4, linetype = NULL, label = NULL,
+  lines = TRUE, points = FALSE)
 }
 \arguments{
 \item{dt}{data frame with peak data}
@@ -23,9 +23,11 @@ iso_plot_data(dt, x, y, y_error = NULL, group = NULL, color = NULL,
 
 \item{shape}{variable to use for shape aesthetic for the plot}
 
-\item{size}{variable to use for size aesthetic for the plot}
+\item{size}{variable to use for size aesthetic for the plot or constant value for the points size}
 
 \item{linetype}{variable to use for linetype aesthetic for the plot}
+
+\item{label}{this is primarily of use for turning the generated ggplots into interactive plots via \code{\link[plotly]{ggplotly}} as the \code{label} will be rendered as an additional mousover label.}
 
 \item{lines}{whether to plot lines (TRUE by default)}
 

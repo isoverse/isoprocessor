@@ -275,7 +275,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   if (missing(model)) stop("no regression model supplied", call. = FALSE)
   model_quos <- enquo(model)
   # resolve list of models
-  if (quo_is_lang(model_quos) && quo_text(lang_head(model_quos)) %in% c("c", "list")) {
+  if (quo_is_call(model_quos) && quo_text(lang_head(model_quos)) %in% c("c", "list")) {
     lquos <- quos(!!!lang_args(model_quos))
   } else {
     lquos <- quos(!!!model_quos)
@@ -285,7 +285,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   if (length(lquos) == 0) stop("no regression model supplied", call. = FALSE)
   # @NOTE: loess and nls not currently supported because a) would have to deal with range differently and b) would have to find a way to make inversion work
   supported_models <- c("lm", "glm", "lme")
-  lquos_are_models <- map_lgl(lquos, function(lq) quo_is_lang(lq) && quo_text(lang_head(lq)) %in% supported_models)
+  lquos_are_models <- map_lgl(lquos, function(lq) quo_is_call(lq) && quo_text(lang_head(lq)) %in% supported_models)
   if(!all(ok <- lquos_are_models)) {
     params <-
       str_c(names(lquos)[!ok] %>% { ifelse(nchar(.) > 0, str_c(., " = "), .) },

@@ -143,7 +143,7 @@ iso_generate_calibration <- function(dt, model, calibration = "", is_std_peak = 
 
   # information
   if (!quiet) {
-    if (quo_is_lang(model_quos) && quo_text(lang_head(model_quos)) %in% c("c", "list")) {
+    if (quo_is_call(model_quos) && quo_text(lang_head(model_quos)) %in% c("c", "list")) {
       lquos <- quos(!!!lang_args(model_quos))
     } else {
       lquos <- quos(!!!model_quos)

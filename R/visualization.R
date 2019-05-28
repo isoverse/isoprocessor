@@ -814,13 +814,13 @@ iso_plot_ref_peaks <- function(dt, ratio, group_id, is_ref_condition, is_ref_use
 #' @param select_from_summary which parameters from the fit summary to include, by default includes the adjusted R2 (renamed just \code{R2}) and the root mean square deviation (\code{RMSD}), which R often calls \link[stats]{sigma} or residual standard deviation (often also called residual standard error and root mean square error instead of deviation, or standard error of the regression).
 #' @param color variable to use for color aesthetic for the plot
 #' @param shape variable to use for shape aesthetic for the plot
-#' @param size variable to use for size aesthetic for the plot
+#' @param size variable to use for size aesthetic for the plot or constant value for the points size
 #' @param date_breaks what breaks to use for the x axis if it is a datetime
 #' @param date_labels datetime label pattern for x axis if it is a datetime
 #' @export
 iso_plot_calibration_parameters <- function(dt, calibration = "", x,
                                        select_from_summary = c(R2 = adj.r.squared, RMSD = sigma),
-                                       color = NULL, shape = NULL, size = NULL,
+                                       color = NULL, shape = NULL, size = 4,
                                        date_breaks = "2 hours", date_labels = "%d %b %H:%M") {
 
   # safety checks
@@ -881,14 +881,22 @@ iso_plot_calibration_parameters <- function(dt, calibration = "", x,
     aes_q(x = vis_quos$x, y = sym("estimate")) +
     { if(!quo_is_null(vis_quos$color)) aes_q(color = vis_quos$color) } +
     { if(!quo_is_null(vis_quos$shape)) aes_q(shape = vis_quos$shape) } +
-    { if(!quo_is_null(vis_quos$size)) aes_q(size = vis_quos$size) } +
     geom_errorbar(data = function(df) filter(df,!is.na(std.error)),
-                  map = aes(ymin = estimate - std.error, ymax = estimate + std.error), width = 0, size = 1) +
-    { if (quo_is_null(vis_quos$size)) geom_point(size = 4) else geom_point() } +
-    facet_wrap(~term, ncol = 1, scales = "free_y") +
+                  map = aes(ymin = estimate - std.error, ymax = estimate + std.error), width = 0) +
+    facet_grid(rlang::new_formula(sym("term"), sym(calib_vars$model_name)),
+               scales = "free_y", space = "free_x") +
     theme_bw() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
     theme(plot.margin = margin(10, 5, 15, 20)) +
     labs(y="")
+
+  # points
+  if (!quo_is_null(vis_quos$size)) {
+    if (quo_is_symbol(vis_quos$size) || quo_is_call(vis_quos$size))
+      p <- p + geom_point(mapping = aes_q(size = vis_quos$size))
+    else
+      p <- p + geom_point(size = eval_tidy(vis_quos$size))
+  } else
+    p <- p + geom_point()
 
   # type of x axis
   x <- mutate(visualization_data, x = !!vis_quos$x)$x
@@ -1005,11 +1013,12 @@ iso_plot_calibration_range <- function(dt, calibration = "", x, y, color = NULL,
 #' @param y_error an error column for drawing y error bars - if multiple \code{y} are provided, error needs to point to the same number of columns
 #' @param lines whether to plot lines (TRUE by default)
 #' @param points whether to plot points (FALSE by default)
+#' @param label this is primarily of use for turning the generated ggplots into interactive plots via \code{\link[plotly]{ggplotly}} as the \code{label} will be rendered as an additional mousover label.
 #' @export
 #' @note should probably make sure that the default columns for gather 'panel' and 'value' do not exist...
 #' @note it would be great to allow renaming of the columns via this (especially the y column)
 #' @export
-iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, shape = NULL, size = NULL, linetype = NULL, lines = TRUE, points = FALSE) {
+iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, shape = NULL, size = 4, linetype = NULL, label = NULL, lines = TRUE, points = FALSE) {
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   if (missing(x)) stop("have to provide an x to plot", call. = FALSE)
@@ -1021,7 +1030,8 @@ iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, 
          x = enquo(x), y = enquo(y), y_error = enquo(y_error),
          group = enquo(group),
          color = enquo(color), shape = enquo(shape),
-         linetype = enquo(linetype), size = enquo(size))
+         linetype = enquo(linetype), size = enquo(size),
+         label = enquo(label))
 
   # check existence of ys and errors
   dt_cols <- get_column_names(!!vis_quos$dt, y = vis_quos$y, y_error = vis_quos$y_error,
@@ -1065,7 +1075,7 @@ iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, 
     { if(!quo_is_null(vis_quos$color)) aes_q(color = vis_quos$color) } +
     { if(!quo_is_null(vis_quos$shape)) aes_q(shape = vis_quos$shape) } +
     { if(!quo_is_null(vis_quos$linetype)) aes_q(linetype = vis_quos$linetype) } +
-    { if(!quo_is_null(vis_quos$size)) aes_q(size = vis_quos$size) } +
+    { if(!quo_is_null(vis_quos$label)) aes_q(label = vis_quos$label) } +
     facet_wrap(~panel, ncol = 1, scales = "free_y") +
     theme_bw() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
     theme(plot.margin = margin(10, 5, 15, 20)) +
@@ -1084,7 +1094,13 @@ iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, 
     p <- p + geom_line()
   }
   if (points) {
-    p <- p +  { if (quo_is_null(vis_quos$size)) geom_point(size = 4) else geom_point() }
+    if (!quo_is_null(vis_quos$size)) {
+      if (quo_is_symbol(vis_quos$size) || quo_is_call(vis_quos$size))
+        p <- p + geom_point(mapping = aes_q(size = vis_quos$size))
+      else
+        p <- p + geom_point(size = eval_tidy(vis_quos$size))
+    } else
+      p <- p + geom_point()
   }
 
   return(p)

@@ -20,7 +20,7 @@ iso_plot_calibration_range(dt, calibration = "", x, y, color = NULL,
 
 \item{shape}{variable to use for shape aesthetic for the plot}
 
-\item{size}{variable to use for size aesthetic for the plot}
+\item{size}{variable to use for size aesthetic for the plot or constant value for the points size}
 }
 \description{
 This function visualizes the calibration range for each regression model (separate panels) as it is constrained in the chosen x and y variables (most commonly measures of delta value and signal strength) by showing analysis points within the calibration range in solid and all others slighly opaque, as well as by drawing a rectangle around the calibration range. Note that if one of the chosen dimensions (x or y) is not part of the calibration for a model but the other dimension is, it simply shows two lines bracketing the samples in the dimension that is part of the calibration. Also note that the rectangular interpretation of calibration range in this plot is a visual simplification, technically the range is polygonal and maybe be more than 2 dimensional for more complex regression models.

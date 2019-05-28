@@ -6,7 +6,7 @@
 \usage{
 iso_plot_calibration_parameters(dt, calibration = "", x,
   select_from_summary = c(R2 = adj.r.squared, RMSD = sigma),
-  color = NULL, shape = NULL, size = NULL, date_breaks = "2 hours",
+  color = NULL, shape = NULL, size = 4, date_breaks = "2 hours",
   date_labels = "\%d \%b \%H:\%M")
 }
 \arguments{
@@ -22,7 +22,7 @@ iso_plot_calibration_parameters(dt, calibration = "", x,
 
 \item{shape}{variable to use for shape aesthetic for the plot}
 
-\item{size}{variable to use for size aesthetic for the plot}
+\item{size}{variable to use for size aesthetic for the plot or constant value for the points size}
 
 \item{date_breaks}{what breaks to use for the x axis if it is a datetime}
 
