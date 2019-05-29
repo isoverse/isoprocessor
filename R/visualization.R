@@ -924,7 +924,7 @@ iso_mark_calibration_range <- function(p, calibration = "") {
   calib_vars <- get_calibration_vars(calibration)
 
   # x (only one that needs to come from plot)
-  x <- as_label(p$mapping$x)
+  x <- rlang::as_label(p$mapping$x)
 
   # range marker calucations
   prepare_range_marker_data <- function(plot_data) {
@@ -1003,6 +1003,7 @@ iso_plot_calibration_range <- function(...) {
 #' @inheritParams iso_plot_calibration_parameters
 #' @param y which columns to visualize, combine with c()
 #' @param group what to group by, multiple columns allowed (combine with paste(...)), usually not necessary if groupings are fully defined through other aesthetics
+#' @param fill variable to use for the fill aesthetic of the plot
 #' @param linetype variable to use for linetype aesthetic for the plot
 #' @param y_error an error column for drawing y error bars - if multiple \code{y} are provided, error needs to point to the same number of columns
 #' @param lines whether to plot lines (FALSE by default)
@@ -1012,7 +1013,7 @@ iso_plot_calibration_range <- function(...) {
 #' @note should probably make sure that the default columns for gather 'panel' and 'value' do not exist...
 #' @note it would be great to allow renaming of the columns via this (especially the y column)
 #' @export
-iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, shape = NULL, size = 4, linetype = NULL, label = NULL, lines = FALSE, points = FALSE) {
+iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, fill = NULL, shape = NULL, size = 4, linetype = NULL, label = NULL, lines = FALSE, points = FALSE) {
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   if (missing(x)) stop("have to provide an x to plot", call. = FALSE)
@@ -1028,7 +1029,7 @@ iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, 
     list(dt = enquo(dt),
          x = enquo(x), y = enquo(y), y_error = enquo(y_error),
          group = enquo(group),
-         color = enquo(color), shape = enquo(shape),
+         color = enquo(color), fill = enquo(fill), shape = enquo(shape),
          linetype = enquo(linetype), size = enquo(size),
          label = enquo(label))
 
@@ -1072,6 +1073,7 @@ iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, 
     aes_q(x = vis_quos$x, y = sym("y_value")) +
     { if(!quo_is_null(vis_quos$group)) aes_q(group = vis_quos$group) } +
     { if(!quo_is_null(vis_quos$color)) aes_q(color = vis_quos$color) } +
+    { if(!quo_is_null(vis_quos$fill)) aes_q(fill = vis_quos$fill) } +
     { if(!quo_is_null(vis_quos$shape)) aes_q(shape = vis_quos$shape) } +
     { if(!quo_is_null(vis_quos$linetype)) aes_q(linetype = vis_quos$linetype) } +
     { if(!quo_is_null(vis_quos$label)) aes_q(label = vis_quos$label) } +
