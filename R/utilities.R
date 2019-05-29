@@ -244,20 +244,21 @@ unnest_model_column <- function(dt, model_column, model_params = model_params, n
 #' @param nest_model whether to nest the model outcome columns (for easier use in multi model systems), default is FALSE
 #' @param min_n_datapoints the minimum number of data points required for applying the model(s). Note that there is always an additional check to make sure the minimum number of degrees of freedom for each model is met. If the minimum number of degrees of freedom required is not met, the model will/can not be calculated no matter what \code{min_n_datapoints} is set to.
 #' @param model_data the nested model data column
-#' @param model_filter_condition a filter to apply to the data before running the regression (if only a subset of the data is part of the calibration data), by default no filter
+#' @param model_filter_condition a filter to apply to the data before running the regression (if only a subset of the data is part of the calibration data) - stored in \code{in_reg}, by default no filter
 #' @param model_name new column with the model formulae or names if supplied
 #' @param model_enough_data new column with information on whether the model has enough data (based on the required degrees of freedom for the model)
 #' @param model_fit the new model objects column
 #' @param model_coefs the new model coefficients nested data frame column
 #' @param model_summary the new model summary nested data frame column
 #' @param model_params the nested model information (only relevant if \code{nest_model = TRUE})
+#' @param in_reg name of the new logical column in the nested model_data that flags the data included in the regression (i.e. the data that fullfills the \code{model_filter_condition} if provided)
 #' @param residual name of the new residual column in the nested model_data - residuals are only calculated for rows that are part of the regression (as determined by \code{model_filter_condition})
 run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
                            model_data = model_data, model_filter_condition = NULL,
                            model_name = model_name, model_enough_data = model_enough_data,
                            model_fit = model_fit, model_coefs = model_coefs,
                            model_summary = model_summary, model_params = model_params,
-                           residual = residual) {
+                           in_reg = in_reg, residual = residual) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
@@ -267,7 +268,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
     model_name = enquo(model_name), model_enough_data = enquo(model_enough_data),
     model_fit = enquo(model_fit), model_coefs = enquo(model_coefs), model_summary = enquo(model_summary),
     model_params = enquo(model_params),
-    residual = enquo(residual))
+    in_reg = enquo(in_reg), residual = enquo(residual))
   filter_quo <- enquo(model_filter_condition) %>% { if(quo_is_null(.)) quo(TRUE) else . }
 
   # models
@@ -371,10 +372,13 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
         pmap(
           list(d = !!sym(dt_cols$model_data), fit = !!sym(dt_new_cols$model_fit), run = !!sym(dt_new_cols$model_enough_data)),
           function(d, fit, run) {
+            d[[dt_new_cols$in_reg]] <- FALSE
             d[[dt_new_cols$residual]] <- NA_real_
             if (run) {
+              # find which ones are in reg
+              d[[dt_new_cols$in_reg]] <- rlang::eval_tidy(filter_quo, data = d)
               # add residuals
-              d[rlang::eval_tidy(filter_quo, data = d), dt_new_cols$residual] <- residuals(fit)
+              d[d[[dt_new_cols$in_reg]], dt_new_cols$residual] <- residuals(fit)
             }
             return(d)
           })
@@ -648,7 +652,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
 #' @param in_range new column in the model_data that holds whether a data entry is within the model_range. Checks whether all terms are within the model_range and records a textual summary of the result in this new column.
 evaluate_range <- function(
   dt, ..., nested_model = FALSE, model_data = model_data, model_params = model_params,
-  residual = residual, model_range = model_range, in_range = in_range) {
+  in_reg = in_reg, model_range = model_range, in_range = in_range) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
@@ -681,14 +685,14 @@ evaluate_range <- function(
     )
 
   # data columns
-  residual_quo <- enquo(residual)
+  in_reg_quo <- enquo(in_reg)
   dt <- dt %>%
     mutate(
       ..data_cols.. = map(!!sym(dt_cols$model_data), ~
           {
             model_data <- .x
-            get_column_names(model_data, residual = residual_quo,
-                             type_reqs = list(residual = "numeric"))
+            get_column_names(model_data, in_reg = in_reg_quo,
+                             type_reqs = list(in_reg = "logical"))
           })
     )
 
@@ -704,7 +708,7 @@ evaluate_range <- function(
         ..data_cols..,
         ~{
           # consider only data that is part of the regression
-          d_in_calib <- .x[!is.na(.x[[.y$residual]]),]
+          d_in_calib <- .x[.x[[.y$in_reg]],]
           if (nrow(d_in_calib) > 0) {
             # determine the ranges for all terms
             tryCatch(
@@ -773,6 +777,10 @@ evaluate_range <- function(
 
           # add in the range evaluation
           model_data %>%
+            {
+              if (dt_new_cols$in_range %in% names(.)) select(., -!!sym(dt_new_cols$in_range))
+              else .
+            } %>%
             left_join(select(terms_evals, ..data_id.., !!sym(dt_new_cols$in_range)), by = "..data_id..") %>%
             select(-..data_id..)
         })

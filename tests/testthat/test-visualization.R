@@ -164,3 +164,9 @@ test_that("visualization works", {
   # @FIXME implement visualization function test
 
 })
+
+test_that("calibration ranges work", {
+
+  expect_warning(iso_plot_calibration_range(), "deprecated")
+
+})

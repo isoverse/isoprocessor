@@ -36,9 +36,9 @@ test_that("test that calibration variables work properly", {
   # get calibration vars function
   expect_error(get_calibration_vars(), "missing")
   expect_equal(get_calibration_vars(""),
-               list(calib_name = "", model_name = "calib", model_enough_data = "calib_ok", model_params = "calib_params", residual = "resid", in_range = "in_range"))
+               list(calib_name = "", model_name = "calib", model_enough_data = "calib_ok", model_params = "calib_params", residual = "resid", in_reg = "in_calib", in_range = "in_range"))
   expect_equal(vars <- get_calibration_vars("x"),
-               list(calib_name = "'x' ", model_name = "x_calib", model_enough_data = "x_calib_ok", model_params = "x_calib_params", residual = "x_resid", in_range = "x_in_range"))
+               list(calib_name = "'x' ", model_name = "x_calib", model_enough_data = "x_calib_ok", model_params = "x_calib_params", residual = "x_resid", in_reg = "x_in_calib", in_range = "x_in_range"))
 
   # check calibration cols function
   expect_error(check_calibration_cols(42), "not a data frame")

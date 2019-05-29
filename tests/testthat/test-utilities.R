@@ -209,7 +209,7 @@ test_that("inverting regressions work properly", {
   expect_equal(out_direct$model_data[[1]], out_nested$model_data[[1]])
 
   # check for new columns in the data frame
-  base_cols <- c("x1", "x2", "x3", "is_std_peak", "y", "residual")
+  base_cols <- c("x1", "x2", "x3", "is_std_peak", "y", "in_reg", "residual")
   expect_equal(names(out_direct$model_data[[1]]), c(base_cols, "pred"))
   expect_equal(
     df_w_models %>% filter(name == "b", model_name == "m1") %>%

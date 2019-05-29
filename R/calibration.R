@@ -91,6 +91,7 @@ get_calibration_vars <- function(calibration) {
     model_enough_data = str_c(prefix_with_sep, "calib_ok"),
     model_params = str_c(prefix_with_sep, "calib_params"),
     residual = str_c(prefix_with_sep, "resid"),
+    in_reg = str_c(prefix_with_sep, "in_calib"),
     in_range = str_c(prefix_with_sep, "in_range")
   )
 }
@@ -153,7 +154,8 @@ iso_generate_calibration <- function(dt, model, calibration = "", is_std_peak = 
     plural <- if (length(models) > 1) "s" else ""
     glue("Info: generating {calib_vars$calib_name}calibration based on {length(models)} model{plural} ('{collapse(models, \"', '\")}') ",
          "for {nrow(dt)} data group(s) with standards filter '{quo_text(filter_quo)}'. ",
-         "Storing residuals in new column '{calib_vars$residual}'.") %>%
+         "Storing residuals in new column '{calib_vars$residual}'. ",
+         "Storing calibration info in new column '{calib_vars$in_reg}'.") %>%
       message()
   }
 
@@ -165,6 +167,7 @@ iso_generate_calibration <- function(dt, model, calibration = "", is_std_peak = 
     model_name = !!sym(calib_vars$model_name),
     model_enough_data = !!sym(calib_vars$model_enough_data),
     model_params = !!sym(calib_vars$model_params),
+    in_reg = !!sym(calib_vars$in_reg),
     residual = !!sym(calib_vars$residual),
     model_fit = model_fit, model_coefs = model_coefs, model_summary = model_summary
   )
@@ -275,7 +278,7 @@ iso_evaluate_calibration_range <- function(dt, ..., calibration = "", quiet = de
     nested_model = TRUE,
     model_data = all_data,
     model_params = !!sym(calib_vars$model_params),
-    residual = !!sym(calib_vars$residual),
+    in_reg = !!sym(calib_vars$in_reg),
     model_range = model_range,
     in_range = !!sym(calib_vars$in_range)
   )
@@ -440,4 +443,3 @@ iso_unnest_calibration_range <- function(dt, calibration = "", select = everythi
     keep_remaining_nested_data = keep_remaining_nested_data, keep_other_list_data = keep_other_list_data
   )
 }
-
