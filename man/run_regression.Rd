@@ -9,7 +9,7 @@ run_regression(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   model_name = model_name, model_enough_data = model_enough_data,
   model_fit = model_fit, model_coefs = model_coefs,
   model_summary = model_summary, model_params = model_params,
-  residual = residual)
+  in_reg = in_reg, residual = residual)
 }
 \arguments{
 \item{dt}{data table}
@@ -22,7 +22,7 @@ run_regression(dt, model, nest_model = FALSE, min_n_datapoints = 1,
 
 \item{model_data}{the nested model data column}
 
-\item{model_filter_condition}{a filter to apply to the data before running the regression (if only a subset of the data is part of the calibration data), by default no filter}
+\item{model_filter_condition}{a filter to apply to the data before running the regression (if only a subset of the data is part of the calibration data) - stored in \code{in_reg}, by default no filter}
 
 \item{model_name}{new column with the model formulae or names if supplied}
 
@@ -35,6 +35,8 @@ run_regression(dt, model, nest_model = FALSE, min_n_datapoints = 1,
 \item{model_summary}{the new model summary nested data frame column}
 
 \item{model_params}{the nested model information (only relevant if \code{nest_model = TRUE})}
+
+\item{in_reg}{name of the new logical column in the nested model_data that flags the data included in the regression (i.e. the data that fullfills the \code{model_filter_condition} if provided)}
 
 \item{residual}{name of the new residual column in the nested model_data - residuals are only calculated for rows that are part of the regression (as determined by \code{model_filter_condition})}
 }

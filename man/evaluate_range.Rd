@@ -5,7 +5,7 @@
 \title{evaluate regression ranges}
 \usage{
 evaluate_range(dt, ..., nested_model = FALSE, model_data = model_data,
-  model_params = model_params, residual = residual,
+  model_params = model_params, in_reg = in_reg,
   model_range = model_range, in_range = in_range)
 }
 \arguments{
@@ -19,7 +19,7 @@ evaluate_range(dt, ..., nested_model = FALSE, model_data = model_data,
 
 \item{model_params}{the nested model information (only relevant if \code{nest_model = TRUE})}
 
-\item{residual}{name of the new residual column in the nested model_data - residuals are only calculated for rows that are part of the regression (as determined by \code{model_filter_condition})}
+\item{in_reg}{name of the new logical column in the nested model_data that flags the data included in the regression (i.e. the data that fullfills the \code{model_filter_condition} if provided)}
 
 \item{model_range}{new column recording the range of all terms for each model and model_data combination.}
 
