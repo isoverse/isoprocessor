@@ -306,3 +306,18 @@ test_that("test that range evaluation works", {
 
 
 })
+
+# example files =====
+
+test_that("example files are accessible", {
+
+  expect_equal(
+    iso_get_processor_examples()$filename,
+    c("gc_irms_example_carbon.cf.rds")
+  )
+
+  expect_error(iso_get_processor_example(), "missing")
+  expect_error(iso_get_processor_example("DNE"), "file.*does not exist")
+
+
+})

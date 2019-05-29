@@ -1,3 +1,36 @@
+# examples =======
+
+#' Example files
+#'
+#' @description The isprocessor package comes with a few example data sets to make it easy to illustrate the functionality.
+#'
+#' @details \code{iso_get_processor_example}: retrieve the path to an isoprocessor example data set
+#' @param filename the name of the example file for which to retrieve the system path
+#' @export
+iso_get_processor_example <- function(filename) {
+  filepath <- system.file(package = "isoprocessor", "extdata", filename)
+  if(!file.exists(filepath))
+    sprintf("The example file '%s' does not exist. Please use iso_get_reader_examples() to see a list of all available example files.", filename) %>%
+    stop(call. = FALSE)
+  return(filepath)
+}
+
+#' @rdname iso_get_processor_example
+#' @details \code{iso_get_processor_examples}: list of all available isoprocessor example data set
+#' @export
+iso_get_processor_examples <- function() {
+  # global vars
+
+  extension <- filename <- format <- NULL
+  file_types <- isoreader::iso_get_supported_file_types()
+  iso_expand_paths(
+    ".", extensions = file_types$extension, root = system.file(package = "isoprocessor", "extdata")) %>%
+    mutate(filename = basename(path)) %>%
+    isoreader:::match_to_supported_file_types(file_types) %>%
+    arrange(type, extension, filename) %>%
+    select(filename, type, description)
+}
+
 # general helper functions ========
 
 #' @export
