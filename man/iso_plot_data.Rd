@@ -5,8 +5,8 @@
 \title{Visualize the data}
 \usage{
 iso_plot_data(dt, x, y, y_error = NULL, group = NULL, color = NULL,
-  shape = NULL, size = 4, linetype = NULL, label = NULL,
-  lines = FALSE, points = FALSE)
+  fill = NULL, shape = NULL, size = 4, linetype = NULL,
+  label = NULL, lines = FALSE, points = FALSE)
 }
 \arguments{
 \item{dt}{data frame with peak data}
@@ -20,6 +20,8 @@ iso_plot_data(dt, x, y, y_error = NULL, group = NULL, color = NULL,
 \item{group}{what to group by, multiple columns allowed (combine with paste(...)), usually not necessary if groupings are fully defined through other aesthetics}
 
 \item{color}{variable to use for color aesthetic for the plot}
+
+\item{fill}{variable to use for the fill aesthetic of the plot}
 
 \item{shape}{variable to use for shape aesthetic for the plot}
 
