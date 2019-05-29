@@ -357,7 +357,11 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
     # evaluation of model
     mutate(
       # check if there is any data
-      !!dt_new_cols$model_enough_data := map_lgl(!!sym(dt_cols$model_data), ~nrow(filter(.x, !!filter_quo)) >= min_n_datapoints),
+      !!dt_new_cols$model_enough_data := map_lgl(!!sym(dt_cols$model_data), ~{
+        data <- .x
+        check_expressions(data, filter_quo)
+        nrow(filter(data, !!filter_quo)) >= min_n_datapoints
+      }),
       # fit the model if there is any data
       !!dt_new_cols$model_fit :=
         pmap(list(m = model_quo, d = !!sym(dt_cols$model_data), run = !!sym(dt_new_cols$model_enough_data)),

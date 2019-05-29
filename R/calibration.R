@@ -111,6 +111,12 @@ check_calibration_cols <- function(df, cols) {
   }
 }
 
+# convenience function to find calibrations (only works fornested ones)
+find_calibrations <- function(df) {
+  names(df) %>% stringr::str_subset("^.*calib_params$") %>%
+    stringr::str_replace("_?calib_params$", "")
+}
+
 #' Generate data calibration
 #'
 #' Generate a calibration for a specific variable based on one or multiple calibration models. Requires properly nested and grouped data, see \link{iso_prepare_for_calibration} for details. Note that to calibrate different variables, separate calls to this function should be issued each with different \code{calibration} names.

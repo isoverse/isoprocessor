@@ -1,5 +1,7 @@
 context("Calibration")
 
+# standard addition =====
+
 test_that("test that standard addition works properly", {
 
   expect_error(iso_add_standards(), "no data table")
@@ -9,6 +11,8 @@ test_that("test that standard addition works properly", {
   # FIXME: elaborate on test cases
 
 })
+
+# calibration prep =====
 
 test_that("test that calibration prep works properly", {
 
@@ -32,6 +36,8 @@ test_that("test that calibration prep works properly", {
 
 })
 
+# calibrations vars =====
+
 test_that("test that calibration variables work properly", {
   # get calibration vars function
   expect_error(get_calibration_vars(), "missing")
@@ -48,11 +54,30 @@ test_that("test that calibration variables work properly", {
                                        vars[c("model_enough_data", "model_params")]))
 })
 
+# default behavior of calibs =====
+
 test_that("test default behavior of calibrations", {
 
-  # FIXME: implement test casesto test calibration functions
+  # test calibration
+  expect_message(df <- iso_prepare_for_calibration(ggplot2::mpg, group_by = cyl),
+                 "preparing.*calibration")
+  expect_equal(df %>% find_calibrations(), character(0))
+  expect_message(
+    df_calib <- df %>% iso_generate_calibration(model = lm(hwy ~ cty), is_std_peak = TRUE),
+    "generating calibration.*1 model.*4 data group.*filter \'TRUE\'.*new column \'resid\'.*new column \'in_calib\'"
+  )
+  expect_equal(df_calib %>% find_calibrations(), "")
+  expect_message(
+    df_calib2 <- df_calib %>% iso_generate_calibration(model = lm(cty ~ hwy), calibration = "x", is_std_peak = TRUE),
+    "generating \'x\' calibration.*1 model.*4 data group.*filter \'TRUE\'.*new column \'x_resid\'.*new column \'x_in_calib\'"
+  )
+  expect_equal(df_calib2 %>% find_calibrations(),c("", "x"))
+
+  # FIXME: continue testin these!
 
 })
+
+# problematic calibrations ====
 
 test_that("test that problematic calibrations can be removed properly", {
 

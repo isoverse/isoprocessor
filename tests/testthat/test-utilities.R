@@ -77,6 +77,7 @@ test_that("regression functions work properly", {
                c("name", "model_data", "model_name", "model_enough_data", "model_fit", "model_coefs", "model_summary"))
 
   # single model with filter
+  expect_error(nested_test_df %>% run_regression(model = lm(y ~ x), model_filter_condition = DNE < 0.5), "not a valid expression")
   expect_s3_class(df_w_models <- nested_test_df %>% run_regression(model = lm(y ~ x), model_filter_condition = y < 0.5) , "tbl")
   expect_equal(nrow(df_w_models), 2L)
   expect_equal(df_w_models$model_fit[[1]]$residuals %>% length(), filter(test_df, name == "a", y < 0.5) %>% nrow())
