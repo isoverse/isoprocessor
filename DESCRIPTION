@@ -30,6 +30,7 @@ Imports:
     readxl,
     openxlsx
 Suggests:
+    tidyverse,
     testthat,
     knitr,
     rmarkdown,
