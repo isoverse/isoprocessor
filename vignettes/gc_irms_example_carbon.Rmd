@@ -827,7 +827,7 @@ peak_data_summary <-
   group_by(sample, compound) %>% 
   iso_summarize_data_table(area.Vs, true_d13C_pred)
 
-peak_data_summary %>% knitr::kable(d = 12)
+peak_data_summary %>% knitr::kable(d = 2)
 ```
 
 # Final
