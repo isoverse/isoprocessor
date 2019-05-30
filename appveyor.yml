@@ -21,6 +21,8 @@ environment:
     USE_RTOOLS: true
     NOT_CRAN: true
   matrix:
+    - configuration: oldrel
+      R_VERSION: oldrel
     - configuration: release
       R_VERSION: release
     - configuration: devel
