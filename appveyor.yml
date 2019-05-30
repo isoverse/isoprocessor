@@ -18,7 +18,6 @@ cache:
 environment:
   global:
     BIOC_USE_DEVEL: "FALSE"
-    BIOC_USE_DEVEL: "FALSE"
     USE_RTOOLS: true
     NOT_CRAN: true
   matrix:
@@ -27,9 +26,11 @@ environment:
     - configuration: devel
       R_VERSION: devel
 
+matrix:
+  fast_finish: true
+
 build_script:
   - travis-tool.sh install_bioc rhdf5
-  - travis-tool.sh install_bioc_deps
   - travis-tool.sh install_github isoverse/isoreader
   - travis-tool.sh install_deps
 
