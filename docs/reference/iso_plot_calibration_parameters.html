@@ -80,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.7</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.4.0</span>
       </span>
     </div>
 
@@ -91,6 +91,18 @@
 </li>
 <li>
   <a href="../articles/continuous_flow.html">Continuous Flow</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Processing Examples
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/gc_irms_example_carbon.html">Compound specific carbon isotope analysis</a>
+    </li>
+  </ul>
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
@@ -129,7 +141,7 @@
 
     <pre class="usage"><span class='fu'>iso_plot_calibration_parameters</span>(<span class='no'>dt</span>, <span class='kw'>calibration</span> <span class='kw'>=</span> <span class='st'>""</span>, <span class='no'>x</span>,
   <span class='kw'>select_from_summary</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='kw'>R2</span> <span class='kw'>=</span> <span class='no'>adj.r.squared</span>, <span class='kw'>RMSD</span> <span class='kw'>=</span> <span class='no'>sigma</span>),
-  <span class='kw'>color</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>shape</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>size</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>date_breaks</span> <span class='kw'>=</span> <span class='st'>"2 hours"</span>,
+  <span class='kw'>color</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>shape</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>size</span> <span class='kw'>=</span> <span class='fl'>4</span>, <span class='kw'>date_breaks</span> <span class='kw'>=</span> <span class='st'>"2 hours"</span>,
   <span class='kw'>date_labels</span> <span class='kw'>=</span> <span class='st'>"%d %b %H:%M"</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -161,7 +173,7 @@
     </tr>
     <tr>
       <th>size</th>
-      <td><p>variable to use for size aesthetic for the plot</p></td>
+      <td><p>variable to use for size aesthetic for the plot or constant value for the points size</p></td>
     </tr>
     <tr>
       <th>date_breaks</th>

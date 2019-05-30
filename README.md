@@ -4,7 +4,7 @@
 # isoprocessor <a href='http://isoprocessor.isoverse.org'><img src='man/figures/isoprocessor_logo_thumb.png' align="right" height="138.5"/></a>
 
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/isoprocessor)](https://cran.r-project.org/package=isoprocessor)
-[![Git\_Hub\_Version](https://img.shields.io/badge/GitHub-0.3.0-orange.svg?style=flat-square)](/commits)
+[![Git\_Hub\_Version](https://img.shields.io/badge/GitHub-0.4.0-orange.svg?style=flat-square)](/commits)
 [![Documentation](https://img.shields.io/badge/docs-online-green.svg)](http://isoprocessor.isoverse.org/)
 [![Build
 Status](https://travis-ci.org/isoverse/isoprocessor.svg?branch=master)](https://travis-ci.org/isoverse/isoprocessor)
@@ -55,12 +55,14 @@ devtools::install_github("isoverse/isoprocessor")
   - for an example of how to work with dual inlet data, see the vignette
     on **[Dual
     Inlet](http://isoprocessor.isoverse.org/articles/dual_inlet.html)**
-  - for an example of how Isodat in particular calculates isotope ratios
-    for standard continuous flow and dual inlet data, see the **[Isodat
-    calculations
+  - for an example of how Thermo Isodat in particular calculates isotope
+    ratios for standard continuous flow and dual inlet data, see the
+    **[Isodat calculations
     notebook](http://isoprocessor.isoverse.org/other/how_isodat_calculates_R.html)**
   - additional vignettes on data reduction and calibration are in the
-    works
+    works:
+      - example 1: **[compound specific carbon isotope
+        analysis](http://isoprocessor.isoverse.org/articles/gc_irms_example_carbon.html)**
 
 ## Open Source
 
