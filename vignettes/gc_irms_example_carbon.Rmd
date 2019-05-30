@@ -54,6 +54,7 @@ All code chunks that contain a critical step towards the final data (i.e. do mor
 ```{r}
 # set file path(s) to data files, folders or rds collections 
 # can be multiple folders or mix of folders and files, using example data set here
+# (this is a reduced data set of mostly standards with just a few example samples)
 data_path <- iso_get_processor_example("gc_irms_example_carbon.cf.rds")
 
 # read files
@@ -247,8 +248,6 @@ peak_table <- iso_files %>%
   # filter out analyses that
   ## a) did not inject
   iso_filter_files(!Analysis %in% c(2031, 2040, 2069, 2098, 2116, 2138)) %>%
-  iso_filter_files(
-    !Analysis %in% c(2031, 2037:2040, 2057:2058, 2069, 2098, 2116, 2135, 2138)) %>%
   ## b) had double or rogue peaks from mis-injection
   iso_filter_files(!Analysis %in% c(2044, 2132, 2134)) %>% 
   # retrieve peak data table from vendor data
@@ -341,8 +340,10 @@ iso_files %>%
     data = 44, color = id1, panel = Analysis,
     # zoom in on time interval
     time_interval = c(1000, 3200),
-    # define peak features
-    peak_table = peak_table_w_ids, peak_label = peak_info, 
+    # provide peak table information
+    peak_table = peak_table_w_ids, 
+    # define peak labels, this can be any valid expression
+    peak_label = paste0(peak_info, "\nd13C=", round(d13C, 1)), 
     # specify which labels to show (removing the !is_identified or putting a 
     # restriction by retention time can help a lot with busy chromatograms)
     peak_label_filter = is_identified | !is_identified | is_missing
@@ -750,6 +751,7 @@ peak_table_calibrated %>%
   # focus on samples
   filter(type == "sample") %>% 
   # focus on identified peaks (comment out this line to see ALL peaks)
+  # if there's a lot of data, might need to hone in on a few at a time
   filter(!is.na(compound)) %>% 
   # visualize
   iso_plot_data(
