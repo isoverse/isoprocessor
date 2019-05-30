@@ -2,26 +2,13 @@
 % Please edit documentation in R/visualization.R
 \name{iso_plot_calibration_range}
 \alias{iso_plot_calibration_range}
-\title{Visualize the calibration range}
+\title{Plot calibration range}
 \usage{
-iso_plot_calibration_range(dt, calibration = "", x, y, color = NULL,
-  shape = NULL, size = NULL)
+iso_plot_calibration_range(...)
 }
 \arguments{
-\item{dt}{data table}
-
-\item{calibration}{name of the calibration, must match the name used in \link{iso_generate_calibration} (if any)}
-
-\item{x}{the x-axis column for visualizing the calibration range, typically a measure of signal strength (amplitude or area) that is part of the/some calibration regression models}
-
-\item{y}{the y-axis column for visualizing the calibration range, typically a measure of the isotopic value (ratio or delta) that is part of the calibration regression models}
-
-\item{color}{variable to use for color aesthetic for the plot}
-
-\item{shape}{variable to use for shape aesthetic for the plot}
-
-\item{size}{variable to use for size aesthetic for the plot}
+\item{...}{deprecated}
 }
 \description{
-This function visualizes the calibration range for each regression model (separate panels) as it is constrained in the chosen x and y variables (most commonly measures of delta value and signal strength) by showing analysis points within the calibration range in solid and all others slighly opaque, as well as by drawing a rectangle around the calibration range. Note that if one of the chosen dimensions (x or y) is not part of the calibration for a model but the other dimension is, it simply shows two lines bracketing the samples in the dimension that is part of the calibration. Also note that the rectangular interpretation of calibration range in this plot is a visual simplification, technically the range is polygonal and maybe be more than 2 dimensional for more complex regression models.
+This function is deprecated, please use \link{iso_plot_data} and \link{iso_mark_calibration_range} instead.
 }

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Visualize the calibration range — iso_plot_calibration_range • isoprocessor</title>
+<title>Plot calibration range — iso_plot_calibration_range • isoprocessor</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -37,9 +37,9 @@
 
 
 
-<meta property="og:title" content="Visualize the calibration range — iso_plot_calibration_range" />
+<meta property="og:title" content="Plot calibration range — iso_plot_calibration_range" />
 
-<meta property="og:description" content="This function visualizes the calibration range for each regression model (separate panels) as it is constrained in the chosen x and y variables (most commonly measures of delta value and signal strength) by showing analysis points within the calibration range in solid and all others slighly opaque, as well as by drawing a rectangle around the calibration range. Note that if one of the chosen dimensions (x or y) is not part of the calibration for a model but the other dimension is, it simply shows two lines bracketing the samples in the dimension that is part of the calibration. Also note that the rectangular interpretation of calibration range in this plot is a visual simplification, technically the range is polygonal and maybe be more than 2 dimensional for more complex regression models." />
+<meta property="og:description" content="This function is deprecated, please use iso_plot_data and iso_mark_calibration_range instead." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -80,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.7</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.4.0</span>
       </span>
     </div>
 
@@ -91,6 +91,18 @@
 </li>
 <li>
   <a href="../articles/continuous_flow.html">Continuous Flow</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Processing Examples
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/gc_irms_example_carbon.html">Compound specific carbon isotope analysis</a>
+    </li>
+  </ul>
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
@@ -116,50 +128,25 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Visualize the calibration range</h1>
+    <h1>Plot calibration range</h1>
     <small class="dont-index">Source: <a href='https://github.com/isoverse/isoprocessor/blob/master/R/visualization.R'><code>R/visualization.R</code></a></small>
     <div class="hidden name"><code>iso_plot_calibration_range.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>This function visualizes the calibration range for each regression model (separate panels) as it is constrained in the chosen x and y variables (most commonly measures of delta value and signal strength) by showing analysis points within the calibration range in solid and all others slighly opaque, as well as by drawing a rectangle around the calibration range. Note that if one of the chosen dimensions (x or y) is not part of the calibration for a model but the other dimension is, it simply shows two lines bracketing the samples in the dimension that is part of the calibration. Also note that the rectangular interpretation of calibration range in this plot is a visual simplification, technically the range is polygonal and maybe be more than 2 dimensional for more complex regression models.</p>
+    <p>This function is deprecated, please use <a href='iso_plot_data.html'>iso_plot_data</a> and <a href='iso_mark_calibration_range.html'>iso_mark_calibration_range</a> instead.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>iso_plot_calibration_range</span>(<span class='no'>dt</span>, <span class='kw'>calibration</span> <span class='kw'>=</span> <span class='st'>""</span>, <span class='no'>x</span>, <span class='no'>y</span>, <span class='kw'>color</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>shape</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>size</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
+    <pre class="usage"><span class='fu'>iso_plot_calibration_range</span>(<span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>dt</th>
-      <td><p>data table</p></td>
-    </tr>
-    <tr>
-      <th>calibration</th>
-      <td><p>name of the calibration, must match the name used in <a href='iso_generate_calibration.html'>iso_generate_calibration</a> (if any)</p></td>
-    </tr>
-    <tr>
-      <th>x</th>
-      <td><p>the x-axis column for visualizing the calibration range, typically a measure of signal strength (amplitude or area) that is part of the/some calibration regression models</p></td>
-    </tr>
-    <tr>
-      <th>y</th>
-      <td><p>the y-axis column for visualizing the calibration range, typically a measure of the isotopic value (ratio or delta) that is part of the calibration regression models</p></td>
-    </tr>
-    <tr>
-      <th>color</th>
-      <td><p>variable to use for color aesthetic for the plot</p></td>
-    </tr>
-    <tr>
-      <th>shape</th>
-      <td><p>variable to use for shape aesthetic for the plot</p></td>
-    </tr>
-    <tr>
-      <th>size</th>
-      <td><p>variable to use for size aesthetic for the plot</p></td>
+      <th>...</th>
+      <td><p>deprecated</p></td>
     </tr>
     </table>
     

@@ -80,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.7</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.4.0</span>
       </span>
     </div>
 
@@ -91,6 +91,18 @@
 </li>
 <li>
   <a href="../articles/continuous_flow.html">Continuous Flow</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Processing Examples
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/gc_irms_example_carbon.html">Compound specific carbon isotope analysis</a>
+    </li>
+  </ul>
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
@@ -130,9 +142,9 @@
     <pre class="usage"><span class='fu'>run_regression</span>(<span class='no'>dt</span>, <span class='no'>model</span>, <span class='kw'>nest_model</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>min_n_datapoints</span> <span class='kw'>=</span> <span class='fl'>1</span>,
   <span class='kw'>model_data</span> <span class='kw'>=</span> <span class='no'>model_data</span>, <span class='kw'>model_filter_condition</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>model_name</span> <span class='kw'>=</span> <span class='no'>model_name</span>, <span class='kw'>model_enough_data</span> <span class='kw'>=</span> <span class='no'>model_enough_data</span>,
-  <span class='kw'>model_fit</span> <span class='kw'>=</span> <span class='no'>model_fit</span>, <span class='kw'>model_range</span> <span class='kw'>=</span> <span class='no'>model_range</span>,
-  <span class='kw'>model_coefs</span> <span class='kw'>=</span> <span class='no'>model_coefs</span>, <span class='kw'>model_summary</span> <span class='kw'>=</span> <span class='no'>model_summary</span>,
-  <span class='kw'>model_params</span> <span class='kw'>=</span> <span class='no'>model_params</span>, <span class='kw'>residual</span> <span class='kw'>=</span> <span class='no'>residual</span>)</pre>
+  <span class='kw'>model_fit</span> <span class='kw'>=</span> <span class='no'>model_fit</span>, <span class='kw'>model_coefs</span> <span class='kw'>=</span> <span class='no'>model_coefs</span>,
+  <span class='kw'>model_summary</span> <span class='kw'>=</span> <span class='no'>model_summary</span>, <span class='kw'>model_params</span> <span class='kw'>=</span> <span class='no'>model_params</span>,
+  <span class='kw'>in_reg</span> <span class='kw'>=</span> <span class='no'>in_reg</span>, <span class='kw'>residual</span> <span class='kw'>=</span> <span class='no'>residual</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -159,7 +171,7 @@
     </tr>
     <tr>
       <th>model_filter_condition</th>
-      <td><p>a filter to apply to the data before running the regression (if only a subset of the data is part of the calibration data), by default no filter</p></td>
+      <td><p>a filter to apply to the data before running the regression (if only a subset of the data is part of the calibration data) - stored in <code>in_reg</code>, by default no filter</p></td>
     </tr>
     <tr>
       <th>model_name</th>
@@ -174,10 +186,6 @@
       <td><p>the new model objects column</p></td>
     </tr>
     <tr>
-      <th>model_range</th>
-      <td><p>the range of each variable in the model</p></td>
-    </tr>
-    <tr>
       <th>model_coefs</th>
       <td><p>the new model coefficients nested data frame column</p></td>
     </tr>
@@ -188,6 +196,10 @@
     <tr>
       <th>model_params</th>
       <td><p>the nested model information (only relevant if <code>nest_model = TRUE</code>)</p></td>
+    </tr>
+    <tr>
+      <th>in_reg</th>
+      <td><p>name of the new logical column in the nested model_data that flags the data included in the regression (i.e. the data that fullfills the <code>model_filter_condition</code> if provided)</p></td>
     </tr>
     <tr>
       <th>residual</th>

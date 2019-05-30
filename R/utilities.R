@@ -1,3 +1,36 @@
+# examples =======
+
+#' Example files
+#'
+#' @description The isprocessor package comes with a few example data sets to make it easy to illustrate the functionality.
+#'
+#' @details \code{iso_get_processor_example}: retrieve the path to an isoprocessor example data set
+#' @param filename the name of the example file for which to retrieve the system path
+#' @export
+iso_get_processor_example <- function(filename) {
+  filepath <- system.file(package = "isoprocessor", "extdata", filename)
+  if(!file.exists(filepath))
+    sprintf("The example file '%s' does not exist. Please use iso_get_reader_examples() to see a list of all available example files.", filename) %>%
+    stop(call. = FALSE)
+  return(filepath)
+}
+
+#' @rdname iso_get_processor_example
+#' @details \code{iso_get_processor_examples}: list of all available isoprocessor example data set
+#' @export
+iso_get_processor_examples <- function() {
+  # global vars
+
+  extension <- filename <- format <- NULL
+  file_types <- isoreader::iso_get_supported_file_types()
+  iso_expand_paths(
+    ".", extensions = file_types$extension, root = system.file(package = "isoprocessor", "extdata")) %>%
+    mutate(filename = basename(path)) %>%
+    isoreader:::match_to_supported_file_types(file_types) %>%
+    arrange(type, extension, filename) %>%
+    select(filename, type, description)
+}
+
 # general helper functions ========
 
 #' @export
@@ -244,21 +277,21 @@ unnest_model_column <- function(dt, model_column, model_params = model_params, n
 #' @param nest_model whether to nest the model outcome columns (for easier use in multi model systems), default is FALSE
 #' @param min_n_datapoints the minimum number of data points required for applying the model(s). Note that there is always an additional check to make sure the minimum number of degrees of freedom for each model is met. If the minimum number of degrees of freedom required is not met, the model will/can not be calculated no matter what \code{min_n_datapoints} is set to.
 #' @param model_data the nested model data column
-#' @param model_filter_condition a filter to apply to the data before running the regression (if only a subset of the data is part of the calibration data), by default no filter
+#' @param model_filter_condition a filter to apply to the data before running the regression (if only a subset of the data is part of the calibration data) - stored in \code{in_reg}, by default no filter
 #' @param model_name new column with the model formulae or names if supplied
 #' @param model_enough_data new column with information on whether the model has enough data (based on the required degrees of freedom for the model)
 #' @param model_fit the new model objects column
-#' @param model_range the range of each variable in the model
 #' @param model_coefs the new model coefficients nested data frame column
 #' @param model_summary the new model summary nested data frame column
 #' @param model_params the nested model information (only relevant if \code{nest_model = TRUE})
+#' @param in_reg name of the new logical column in the nested model_data that flags the data included in the regression (i.e. the data that fullfills the \code{model_filter_condition} if provided)
 #' @param residual name of the new residual column in the nested model_data - residuals are only calculated for rows that are part of the regression (as determined by \code{model_filter_condition})
 run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
                            model_data = model_data, model_filter_condition = NULL,
                            model_name = model_name, model_enough_data = model_enough_data,
-                           model_fit = model_fit, model_range = model_range,
-                           model_coefs = model_coefs, model_summary = model_summary,
-                           model_params = model_params, residual = residual) {
+                           model_fit = model_fit, model_coefs = model_coefs,
+                           model_summary = model_summary, model_params = model_params,
+                           in_reg = in_reg, residual = residual) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
@@ -266,16 +299,16 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   dt_cols <- get_column_names(!!dt_quo, model_data = enquo(model_data), type_reqs = list(model_data = "list"))
   dt_new_cols <- get_new_column_names(
     model_name = enquo(model_name), model_enough_data = enquo(model_enough_data),
-    model_fit = enquo(model_fit), model_range = enquo(model_range), model_coefs = enquo(model_coefs), model_summary = enquo(model_summary),
+    model_fit = enquo(model_fit), model_coefs = enquo(model_coefs), model_summary = enquo(model_summary),
     model_params = enquo(model_params),
-    residual = enquo(residual))
+    in_reg = enquo(in_reg), residual = enquo(residual))
   filter_quo <- enquo(model_filter_condition) %>% { if(quo_is_null(.)) quo(TRUE) else . }
 
   # models
   if (missing(model)) stop("no regression model supplied", call. = FALSE)
   model_quos <- enquo(model)
   # resolve list of models
-  if (quo_is_lang(model_quos) && quo_text(lang_head(model_quos)) %in% c("c", "list")) {
+  if (quo_is_call(model_quos) && quo_text(lang_head(model_quos)) %in% c("c", "list")) {
     lquos <- quos(!!!lang_args(model_quos))
   } else {
     lquos <- quos(!!!model_quos)
@@ -283,9 +316,9 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
 
   # safety checks on models
   if (length(lquos) == 0) stop("no regression model supplied", call. = FALSE)
-  # @NOTE: loess and nls not currently supported because a) would have to deal with range differently and b) would have to find a way to make inversion work
+  # @NOTE: loess and nls not currently supported because would have to find a way to make inversion work
   supported_models <- c("lm", "glm", "lme")
-  lquos_are_models <- map_lgl(lquos, function(lq) quo_is_lang(lq) && quo_text(lang_head(lq)) %in% supported_models)
+  lquos_are_models <- map_lgl(lquos, function(lq) quo_is_call(lq) && quo_text(lang_head(lq)) %in% supported_models)
   if(!all(ok <- lquos_are_models)) {
     params <-
       str_c(names(lquos)[!ok] %>% { ifelse(nchar(.) > 0, str_c(., " = "), .) },
@@ -320,12 +353,15 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   data_w_models <-
     eval_tidy(dt_quo) %>%
     mutate(..group_id.. = row_number()) %>% # for easier sorting
-    merge(models) %>%
-    as_tibble() %>%
+    tidyr::crossing(models) %>%
     # evaluation of model
     mutate(
       # check if there is any data
-      !!dt_new_cols$model_enough_data := map_lgl(!!sym(dt_cols$model_data), ~nrow(filter(.x, !!filter_quo)) >= min_n_datapoints),
+      !!dt_new_cols$model_enough_data := map_lgl(!!sym(dt_cols$model_data), ~{
+        data <- .x
+        check_expressions(data, filter_quo)
+        nrow(filter(data, !!filter_quo)) >= min_n_datapoints
+      }),
       # fit the model if there is any data
       !!dt_new_cols$model_fit :=
         pmap(list(m = model_quo, d = !!sym(dt_cols$model_data), run = !!sym(dt_new_cols$model_enough_data)),
@@ -336,26 +372,6 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
                  ~if (.y) {
                    !any(coef(.x) %>% as.list() %>% map_lgl(is.na))
                   } else FALSE),
-      # get the parameter ranges
-      !!dt_new_cols$model_range :=
-        pmap(list(fit = !!sym(dt_new_cols$model_fit), d = !!sym(dt_cols$model_data), run = !!sym(dt_new_cols$model_enough_data)),
-             function(fit, d, run) {
-               if (run) {
-                 # individual model terms' ranges (needed?)
-                 # terms <- fit$model %>% as.list() %>%
-                 #   map(~if (is.numeric(.x)) { as.numeric(range(.x)) } else { c(NA_real_, NA_real_) })
-
-                 # all variables
-                 tibble(
-                   var = all.vars(fit$terms),
-                   dependent = var %in% all.vars(fit$terms[[2]]),
-                   min = map_dbl(var, ~filter(d, !!filter_quo)[[.x]] %>%
-                                   { if(is.numeric(.)) { as.numeric(min(., na.rm = TRUE)) } else { NA_real_} }),
-                   max = map_dbl(var, ~filter(d, !!filter_quo)[[.x]] %>%
-                                   { if(is.numeric(.)) { as.numeric(max(., na.rm = TRUE)) } else { NA_real_} })
-                 )
-               } else NULL
-             }),
       # get the coefficients
       !!dt_new_cols$model_coefs := map2(
         !!sym(dt_new_cols$model_fit), !!sym(dt_new_cols$model_enough_data),
@@ -393,14 +409,15 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
         pmap(
           list(d = !!sym(dt_cols$model_data), fit = !!sym(dt_new_cols$model_fit), run = !!sym(dt_new_cols$model_enough_data)),
           function(d, fit, run) {
+            d[[dt_new_cols$in_reg]] <- FALSE
+            d[[dt_new_cols$residual]] <- NA_real_
             if (run) {
+              # find which ones are in reg
+              d[[dt_new_cols$in_reg]] <- rlang::eval_tidy(filter_quo, data = d)
               # add residuals
-              add_residuals(d, fit, var = dt_new_cols$residual) %>%
-                # no residuals for rows that are not part of the calibration
-                mutate(!!dt_new_cols$residual := ifelse(!!filter_quo, !!sym(dt_new_cols$residual), NA_real_))
-            } else {
-              mutate(d, !!dt_new_cols$residual := NA_real_)
+              d[d[[dt_new_cols$in_reg]], dt_new_cols$residual] <- residuals(fit)
             }
+            return(d)
           })
     )
 
@@ -408,7 +425,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   if (nest_model) {
     # generated row id for unique matching id
     data_w_models <- data_w_models %>% mutate(..row_id.. = row_number())
-    model_cols <- c(dt_new_cols$model_fit, dt_new_cols$model_range, dt_new_cols$model_coefs, dt_new_cols$model_summary)
+    model_cols <- c(dt_new_cols$model_fit, dt_new_cols$model_coefs, dt_new_cols$model_summary)
     data_w_models <-
       inner_join(
         data_w_models %>% select(!!!map(model_cols, ~quo(-!!sym(.x)))),
@@ -451,14 +468,11 @@ run_grouped_regression <- function(dt, group_by = NULL, model = NULL, model_data
 #' @inheritParams unnest_model_column
 #' @param predict_value the new column in the model_data that holds the predicted value
 #' @param predict_error the new column in the model_data that holds the error of the predicted value (only created if \code{calculate_error = TRUE})
-#' @param predict_in_range the new column in the model_data that holds whether a data entry is within the range of the calibration. Checks whether all dependent and independent variables in the regression model are within the range of the calibration and sets the \code{predict_in_range} flag to FALSE if any(!) of them are not - i.e. this column provides information on whether new values are extrapolated beyond a calibration model and treat the extrapolated ones with the appropriate care. Note that all missing predicted values (due to missing parameters) are also automatically flagged as not in range (\code{predict_in_range} = FALSE).
 #' @param predict_range vector of 2 numbers, if provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the \code{predict_range} is usually only necessary if the calibration range should be extrapolated significantely.
 apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error = FALSE,
                              model_data = model_data, model_name = model_name,
-                             model_fit = model_fit, model_range = model_range,
-                             model_params = model_params,
+                             model_fit = model_fit, model_params = model_params,
                              predict_value = pred, predict_error = pred_se,
-                             predict_in_range = pred_in_range,
                              predict_range = NULL) {
 
   # safety checks
@@ -476,43 +490,44 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
     dt_cols <- c(
       dt_cols,
       get_column_names(unnest(!!dt_quo, !!sym(dt_cols$model_params)),
-                       model_fit = enquo(model_fit), model_range = enquo(model_range),
-                       type_reqs = list(model_fit = "list", model_range = "list")))
+                       model_fit = enquo(model_fit), type_reqs = list(model_fit = "list")))
 
-    # pull out the model fit and range
+    # pull out the model fit
     dt <- dt %>%
       mutate(
-        !!dt_cols$model_fit := map(!!sym(dt_cols$model_params), ~.x[[dt_cols$model_fit]]),
-        !!dt_cols$model_range := map(!!sym(dt_cols$model_params), ~.x[[dt_cols$model_range]])
+        !!dt_cols$model_fit := map(!!sym(dt_cols$model_params), ~.x[[dt_cols$model_fit]])
       ) %>%
-      unnest(!!sym(dt_cols$model_fit), .drop = FALSE) %>%
-      unnest(!!sym(dt_cols$model_range), .drop = FALSE)
+      unnest(!!sym(dt_cols$model_fit), .drop = FALSE)
   } else {
     # not nested model
     dt_cols <- get_column_names(
       !!dt_quo, model_data = enquo(model_data),
-      model_name = enquo(model_name), model_fit = enquo(model_fit), model_range = enquo(model_range),
-      type_reqs = list(model_name = "character", model_data = "list", model_fit = "list", model_range = "list"))
+      model_name = enquo(model_name), model_fit = enquo(model_fit),
+      type_reqs = list(model_name = "character", model_data = "list", model_fit = "list"))
   }
 
   # new cols (+predict)
-  dt_new_cols <- get_new_column_names(predict = enquo(predict), predict_value = enquo(predict_value),
-                                      predict_error = enquo(predict_error), predict_in_range = enquo(predict_in_range))
+  dt_new_cols <- get_new_column_names(
+    predict = enquo(predict), predict_value = enquo(predict_value),
+    predict_error = enquo(predict_error))
 
   # check that predict variable is part of all regressions
   dt <-
     dt %>%
     mutate(
+      .predict_vars = map(
+        !!sym(dt_cols$model_fit),
+        ~tibble(var = all.vars(.x$terms), dependent = var %in% all.vars(.x$terms[[2]]))
+      ),
       # only allowing inverting regression for independent variables
       # @FIXME: consider doing a two way split here and allowing regular predict on the dependent variable!
       # note: consider scenario though where dependent variable is e.g. log(y) or similar - possible to deal with that?
       .predict_x = dt_new_cols$predict,
-      .predict_info = map(!!sym(dt_cols$model_range), ~filter(.x, var == dt_new_cols$predict, !dependent)),
+      .predict_info = map(.predict_vars, ~filter(.x, var == dt_new_cols$predict, !dependent)),
       .predict_ok = map_lgl(.predict_info, ~nrow(.x) == 1),
-      .predict_range = map2(.predict_info, .predict_ok, ~if (.y) { unlist(.x[c("min", "max")]) } else { NA }),
-      .predict_y = map(!!sym(dt_cols$model_range), ~filter(.x, dependent)$var),
+      .predict_y = map(.predict_vars, ~filter(.x, dependent)$var),
       .predict_y_ok = map_lgl(.predict_y, ~length(.x) == 1),
-      .predict_other_xs = map(!!sym(dt_cols$model_range), ~filter(.x, var != dt_new_cols$predict, !dependent)$var)
+      .predict_other_xs = map(.predict_vars, ~filter(.x, var != dt_new_cols$predict, !dependent)$var)
     )
 
   # safety checks
@@ -538,13 +553,20 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
       !!dt_cols$model_data :=
         pmap(
           list(d = !!sym(dt_cols$model_data), fit = !!sym(dt_cols$model_fit), name = !!sym(dt_cols$model_name),
-               x = .predict_x, range = .predict_range, y = .predict_y, other_xs = .predict_other_xs),
+               x = .predict_x, y = .predict_y, other_xs = .predict_other_xs),
 
           # process data set for a single model
-          function(d, fit, name, x, range, y, other_xs) {
+          function(d, fit, name, x, y, other_xs) {
 
             # range
-            if(!is.null(predict_range)) range <- predict_range
+            if(!is.null(predict_range)) {
+              # parameter provided predict_range
+              range <- predict_range
+            } else {
+              # estimate predict range based on available values
+              # NOTE: should this be only values that were used for calib? (i.e. have residual column set)
+              range <- base::range(d[[x]], na.rm = TRUE)
+            }
             range_tolerance_escalation <- c(0, 1, 10, 100, 1000)
 
             # check for enough data (standard eval to avoid quoting trouble)
@@ -581,6 +603,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
                       # NOTE: the following doesn't really do anything, using the tolerance ranges instead
                       extendInt = "yes"
                     )
+
                     # break as soon as success or a different error
                     if (is.null(out$error) || !str_detect(out$error$message, "not found in.*search interval")) {
                       break
@@ -638,46 +661,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
             }
 
             # return combined
-            left_join(d, d_prediction, by = "..rn..")
-          })
-    )
-
-  # test for in_range
-  # NOTE: currently only supported/evaluated for numeric values
-  dt <- dt %>%
-    mutate(
-      !!dt_cols$model_data :=
-        pmap(
-          list(d = !!sym(dt_cols$model_data), ranges = !!sym(dt_cols$model_range), x = .predict_x),
-          function(d, ranges, x) {
-
-            # @NOTE: should the predicated variable be considered for the 'range' evaluation? I would say no because it leads to unexpected behavior on determining if standards are inside or outside a calibration.
-            ranges <- ranges %>%
-              filter(var != x)
-
-            # alternative: do consider the predicted variable
-            # # account for renaming of predicted value
-            # ranges <- ranges %>%
-            #   mutate(var = ifelse(var == x, dt_new_cols$predict_value, var))
-
-            # range information
-            d_range <- d[c("..rn..", unique(ranges$var))] %>%
-              gather(var, value, -..rn..) %>%
-              mutate(value = suppressMessages(as.numeric(value))) %>%
-              filter(!is.na(value)) %>%
-              left_join(ranges, by = "var") %>%
-              mutate(in_range = value >= min & value <= max) %>%
-              group_by(..rn..) %>%
-              summarize(!!dt_new_cols$predict_in_range := all(in_range))
-
-            # return values
-            d %>%
-              # join in ranges
-              left_join(d_range, by = "..rn..") %>%
-              # make sure values that don't have enough data evaluate to FALSE
-              mutate(!!dt_new_cols$predict_in_range :=
-                       ifelse(!..enough_data.., FALSE, !!sym(dt_new_cols$predict_in_range))) %>%
-              # cleanup remove temp columns
+            left_join(d, d_prediction, by = "..rn..") %>%
               select(-..rn.., -..enough_data.., -..problem..)
           })
     )
@@ -689,8 +673,166 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
 
   # remove unnested columns if in nested mode
   if (nested_model) {
-    dt <- dt %>% select(-!!sym(dt_cols$model_fit), -!!sym(dt_cols$model_range))
+    dt <- dt %>% select(-!!sym(dt_cols$model_fit))
   }
 
   return(dt)
 }
+
+# regression range =====
+
+#' evaluate regression ranges
+#' @inheritParams run_regression
+#' @inheritParams apply_regression
+#' @param ... which terms to evaluate the range for. Can be individual columns or more complex numeric expressions. All must be valid within the scope of the model_data and only numeric values are currently evaluated.
+#' @param model_range new column recording the range of all terms for each model and model_data combination.
+#' @param in_range new column in the model_data that holds whether a data entry is within the model_range. Checks whether all terms are within the model_range and records a textual summary of the result in this new column.
+evaluate_range <- function(
+  dt, ..., nested_model = FALSE, model_data = model_data, model_params = model_params,
+  in_reg = in_reg, model_range = model_range, in_range = in_range) {
+
+  # safety checks
+  if (missing(dt)) stop("no data table supplied", call. = FALSE)
+  dt_quo <- enquo(dt)
+
+  # terms
+  terms_quos <- rlang::enquos(...)
+  if (length(terms_quos) == 0) {
+    stop("no terms for range evaluation are provided, please specify at least one term", call. = FALSE)
+  }
+
+  # dt columns
+  dt_cols <- get_column_names(
+    !!dt_quo, model_data = enquo(model_data), type_reqs = list(model_data = "list"))
+
+  # nested model
+  if (nested_model) {
+    dt_cols <- c(
+      dt_cols,
+      get_column_names(
+        !!dt_quo, model_params = enquo(model_params),type_reqs = list(model_params = "list"))
+    )
+  }
+
+  # terms tibble
+  terms <-
+    tibble(
+      term = map_chr(terms_quos, rlang::as_label),
+      q = terms_quos
+    )
+
+  # data columns
+  in_reg_quo <- enquo(in_reg)
+  dt <- dt %>%
+    mutate(
+      ..data_cols.. = map(!!sym(dt_cols$model_data), ~
+          {
+            model_data <- .x
+            get_column_names(model_data, in_reg = in_reg_quo,
+                             type_reqs = list(in_reg = "logical"))
+          })
+    )
+
+  # new columns
+  dt_new_cols <- get_new_column_names(model_range = enquo(model_range), in_range = enquo(in_range))
+
+  # find range
+  dt_w_ranges <-
+    dt %>%
+    mutate(
+      !!dt_new_cols$model_range := purrr::map2(
+        !!sym(dt_cols$model_data),
+        ..data_cols..,
+        ~{
+          # consider only data that is part of the regression
+          d_in_calib <- .x[.x[[.y$in_reg]],]
+          if (nrow(d_in_calib) > 0) {
+            # determine the ranges for all terms
+            tryCatch(
+              terms_ranges <-
+                terms %>%
+                mutate(
+                  values = map(q, ~rlang::eval_tidy(.x, data = d_in_calib)),
+                  min = map_dbl(values, ~.x %>%
+                                  { if(is.numeric(.)) { as.numeric(min(., na.rm = TRUE)) } else { NA_real_} }),
+                  max = map_dbl(values, ~.x %>%
+                                  { if(is.numeric(.)) { as.numeric(max(., na.rm = TRUE)) } else { NA_real_} })
+                ) %>%
+                select(-q, -values),
+              error = function(e) {
+                glue::glue(
+                  "not all range evaluation terms are valid expressions in the context of the ",
+                  "model data: {e$message}") %>%
+                  stop(call. = FALSE)
+              }
+            )
+            return(terms_ranges)
+          } else {
+            return(mutate(terms, min = NA_real_, max = NA_real_) %>% select(-q))
+          }
+        }
+      )
+    )
+
+  # evaluate range
+  dt_w_ranges <- dt_w_ranges %>%
+    mutate(
+      !!dt_cols$model_data :=
+        map2(!!sym(dt_cols$model_data), !!sym(dt_new_cols$model_range), ~{
+          model_data <- mutate(.x, ..data_id.. = row_number())
+
+          # evaluate ranges
+          terms_evals <- terms %>%
+            # find data values for each term
+            mutate(..values.. = map(q, ~
+              mutate(
+                model_data,
+                value = rlang::eval_tidy(.x, data = model_data) %>% as.numeric()) %>%
+                select(..data_id.., value)
+              )
+            ) %>%
+            # remove quos
+            select(-q) %>%
+            # figure out if it's within our outside range
+            unnest(..values..) %>%
+            left_join(.y, by = "term") %>%
+            mutate(
+              in_range = case_when(
+                is.na(min) | is.na(max) ~ sprintf("'%s' range NA", term),
+                is.na(value) ~ sprintf("'%s' NA", term),
+                value < min ~ sprintf("<'%s' range", term),
+                value > max ~ sprintf(">'%s' range", term),
+                TRUE ~ "OK"
+              )
+            ) %>%
+            group_by(..data_id..) %>%
+            summarize(
+              !!dt_new_cols$in_range :=
+                if (all(in_range == "OK")) "in range"
+                else paste(unique(in_range[in_range != "OK"]), collapse = ", ")
+            )
+
+          # add in the range evaluation
+          model_data %>%
+            {
+              if (dt_new_cols$in_range %in% names(.)) select(., -!!sym(dt_new_cols$in_range))
+              else .
+            } %>%
+            left_join(select(terms_evals, ..data_id.., !!sym(dt_new_cols$in_range)), by = "..data_id..") %>%
+            select(-..data_id..)
+        })
+    )
+
+  # remove unnested columns if in nested mode
+  if (nested_model) {
+    dt_w_ranges <- dt_w_ranges %>%
+      # nest the new model range column into the nested columns
+      mutate(!!dt_cols$model_params := map2(!!sym(dt_cols$model_params), !!sym(dt_new_cols$model_range),
+                                            ~{.x[[dt_new_cols$model_range]] <- list(.y); .x})) %>%
+      # remove the not nested columns
+      select(-!!sym(dt_new_cols$model_range))
+  }
+
+  return(dt_w_ranges %>% select(-..data_cols..))
+}
+

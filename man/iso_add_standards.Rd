@@ -5,7 +5,8 @@
 \title{Add calibration standards}
 \usage{
 iso_add_standards(dt, stds, match_by = default(std_match_by),
-  is_standard = is_standard, quiet = default(quiet))
+  is_std_peak = default(is_std_peak), quiet = default(quiet),
+  is_standard = NULL)
 }
 \arguments{
 \item{dt}{data table}
@@ -14,9 +15,11 @@ iso_add_standards(dt, stds, match_by = default(std_match_by),
 
 \item{match_by}{what column(s) to match the standards by}
 
-\item{is_standard}{new column that holds information about what is a standard and what isn't}
+\item{is_std_peak}{new column that holds information about which ones are standard peaks (i.e. have known isotopic values)}
 
 \item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
+
+\item{is_standard}{renamed to \code{is_std_peak} because the naming caused too much confusion, will be removed in future versions, please use \code{is_std_peak} instead}
 }
 \value{
 data frame with standards data frame merged in and the following information column added:
