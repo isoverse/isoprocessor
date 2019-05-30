@@ -9,7 +9,7 @@
 [![Build
 Status](https://travis-ci.org/isoverse/isoprocessor.svg?branch=master)](https://travis-ci.org/isoverse/isoprocessor)
 [![AppVeyor Build
-Status](https://ci.appveyor.com/api/projects/status/github/isoverse/isoprocessor?branch=master&svg=true)](https://ci.appveyor.com/project/isoverse/isoprocessor)
+Status](https://ci.appveyor.com/api/projects/status/github/isoverse/isoprocessor?branch=master&svg=true)](https://ci.appveyor.com/project/KopfLab/isoprocessor)
 [![Binder](https://img.shields.io/badge/launch-RStudio-blue.svg)](https://mybinder.org/v2/gh/isoverse/isoprocessor/binder?urlpath=rstudio)
 [![Binder](https://img.shields.io/badge/launch-Jupyter-orange.svg)](https://mybinder.org/v2/gh/isoverse/isoprocessor/binder?urlpath=lab)
 
