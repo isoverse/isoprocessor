@@ -354,7 +354,7 @@ iso_files %>%
 ## Overview of unclear peak mappings
 
 ```{r, eval = FALSE}
-# look at missing and unidentified peaks summary
+# look at missing and unidentified peaks summary (not run during knitting)
 # -> check if any of the missing peaks are unexpected (should be there but aren't)
 # -> check if any unidentified peaks should be added to the peak maps
 # -> check if any ambiguous peaks need clearer peak map retention times
@@ -362,8 +362,7 @@ iso_files %>%
 # as needed: iterate on peak map update, then peak mapping inspection
 peak_table_w_ids %>% 
   iso_get_problematic_peak_mappings() %>% 
-  iso_summarize_peak_mappings(file_id = c(Analysis, type)) %>% 
-  knitr::kable()
+  iso_summarize_peak_mappings(file_id = c(Analysis, type))
 ```
 
 # Reference peaks
