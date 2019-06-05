@@ -126,7 +126,12 @@ iso_files %>%
     time_interval_units = "minutes",
     # adjust plot aesthetics to panel by masses vs. ratios and color by traces
     panel = category,
-    color = data
+    color = data,
+    # add peak labels
+    peak_table = iso_get_vendor_data_table(iso_files),
+    rt = Rt, rt_start = Start, rt_end = End, rt_unit = "s",
+    peak_label = sprintf("RT: %.0fs\ndD: %.0f\U2030", round(Rt), `d 2H/1H`),
+    peak_label_filter = data == "2 [mV]", peak_label_size = 4
   )
 ```
 
@@ -149,6 +154,30 @@ iso_files %>%
       (data == "46/44" & dplyr::between(value, 0, 0.012))
   )
 ```
+
+# Peak labels
+
+Isoprocessor also provides an easy way to label individual peaks with any useful information based on a peak table that can be provided directly from the isofiles themselves as illustrated below, or with any external peak data table.
+
+```{r "peak labels", fig.width = 10, fig.asp = 0.5}
+iso_files %>% 
+  iso_plot_continuous_flow_data(
+    # plot masses 2 and 3 for the same time window as before in a single panel
+    data = c("2", "3"), time_interval = c(10, 13), time_interval_units = "min",
+    color = data, panel = `Identifier 1`,
+    # specify peak data table
+    peak_table = iso_get_vendor_data_table(iso_files),
+    # specify provided retention time columns
+    rt = Rt, rt_start = Start, rt_end = End, rt_unit = "s",
+    # specify peak label text
+    peak_label = sprintf("RT: %.0fs\ndD: %.0f\U2030", round(Rt), `d 2H/1H`),
+    # specify a specific data trace to label
+    peak_label_filter = data == "2 [mV]", 
+    # adjust label size
+    peak_label_size = 4
+  )
+```
+
 
 # Plot styling
 
