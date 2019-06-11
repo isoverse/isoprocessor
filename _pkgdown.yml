@@ -22,6 +22,10 @@ navbar:
     href: articles/dual_inlet.html
   - text: Continuous Flow
     href: articles/continuous_flow.html
+  - text: "Processing Examples"
+    menu:
+      - text: "Compound specific carbon isotope analysis"
+        href: articles/gc_irms_example_carbon.html
   - text: Reference
     href: reference/index.html
   right:
@@ -34,9 +38,9 @@ reference:
   desc: >
     These functions provide tools to easily calculate ratios, scale time and convert signal units.
   contents:
-  - '`iso_calculate_ratios`'
-  - '`iso_convert_signals`'
-  - '`iso_convert_time`'
+  - iso_calculate_ratios
+  - iso_convert_signals
+  - iso_convert_time
 - title: Peak mapping
   desc: >
     Functions to easily map data table peaks by retention time.
@@ -52,17 +56,18 @@ reference:
   - iso_prepare_for_calibration
   - iso_generate_calibration
   - iso_apply_calibration
+  - iso_evaluate_calibration_range
   - iso_get_problematic_calibrations
   - iso_remove_problematic_calibrations
 - title: Unpacking calibration models
   desc: >
     Generic base functions, can be adapted for non-standard applications.
   contents:
-  - iso_unnest_calibration_coefs
-  - iso_unnest_calibration_parameters
-  - iso_unnest_calibration_range
-  - iso_unnest_calibration_summary
   - iso_unnest_data
+  - iso_unnest_calibration_coefs
+  - iso_unnest_calibration_summary
+  - iso_unnest_calibration_range
+  - iso_unnest_calibration_parameters
 
 - title: Visualization
   desc: >
@@ -70,16 +75,17 @@ reference:
   contents:
   - iso_plot_continuous_flow_data
   - iso_plot_dual_inlet_data
-  - iso_plot_ref_peaks
   - iso_plot_calibration_parameters
   - iso_plot_data
+  - iso_mark_calibration_range
 
-- title: Reporting
+- title: Reporting & Export
   desc: >
-    Reporting functions.
+    Reporting and export functions.
   contents:
   - iso_summarize_data_table
   - iso_remove_list_columns
+  - iso_export_calibration_to_excel
 
 - title: Package settings
   desc: >

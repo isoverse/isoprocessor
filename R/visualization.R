@@ -59,7 +59,7 @@ iso_prepare_continuous_flow_plot_data <- function(
 
   # check for zoom_gruop column(s) existence
   aes_quos <- list(zoom_group = enquo(zoom_group))
-  aes_cols <- get_column_names(raw_data, zoom_group = aes_quos$zoom_group, n_reqs = list(zoom_group = "*"))
+  isoreader:::check_expressions(raw_data, aes_quos$zoom_group)
 
   # only work with desired data (masses and ratios)
   select_data <- if(length(data) == 0) unique(raw_data$data) else as.character(data)
@@ -108,7 +108,6 @@ iso_prepare_continuous_flow_plot_data <- function(
   }
 
   # plot data
-  zoom_grouping <- unname(aes_cols$zoom_group)
   plot_data <-
     raw_data %>%
     # make ratio identification simple
@@ -123,11 +122,13 @@ iso_prepare_continuous_flow_plot_data <- function(
     # find global zoom cutoffs per group before time filtering (don't consider ratios)
     {
       if (!is.null(zoom)) {
-        group_by(., !!!map(zoom_grouping, sym)) %>%
+        mutate(., ..zoom_group = !!aes_quos$zoom_group) %>%
+          group_by(..zoom_group) %>%
           mutate(
             baseline = value[!is_ratio] %>% { if(length(.) == 0) NA else min(.) },
             max_signal = value[!is_ratio] %>% { if(length(.) == 0) NA else max(.) }) %>%
-          ungroup()
+          ungroup() %>%
+          select(-..zoom_group)
       } else .
     } %>%
     # time filtering
@@ -266,12 +267,23 @@ iso_prepare_continuous_flow_plot_data <- function(
       dplyr::mutate(
         peak_marker = !is.na(peak_marker) & peak_marker,
         peak_point = ifelse(!is.na(..peak_id), ..peak_id, 0), # makes it possible to identify peak clusters afterwards
-        peak_start = c(0, diff(peak_point > 0)) == 1 | c(diff(peak_point > 0), 0) == 1,
-        peak_end = c(diff(peak_point > 0), 0) == -1 | c(0, diff(peak_point > 0)) == -1,
+        peak_start = c(0, diff(peak_point)) > 0 | c(diff(peak_point), 0) > 0,
+          #c(0, diff(peak_point)) > 0 | c(diff(peak_point), 0) > 0,
+        peak_end =
+          c(diff(peak_point), 0) < 0 | c(0, diff(peak_point)) < 0 |
+          # take care of case when two peaks touch and there is no 0 in between
+          (peak_start & peak_point > 0 & c(0, peak_point[-length(peak_point)]) > 0 & c(peak_point[-1], 0) > 0)
+          #c(diff(peak_point), 0) > 0 | c(0, diff(peak_point)) > 0,
       ) %>%
-      dplyr::ungroup() %>%
-      # add peak info
-      dplyr::left_join(peak_table, by = c(plot_data_cols$file_id, "..peak_id")) %>%
+      dplyr::ungroup()
+
+    # add peak info
+    plot_data <- plot_data %>%
+      dplyr::left_join(
+        dplyr::select(peak_table, plot_data_cols$file_id, "..peak_id",
+                      # ensure there are no column duplications
+                      names(peak_table) %>% { .[!.%in% names(plot_data)] }),
+        by = c(plot_data_cols$file_id, "..peak_id")) %>%
       dplyr::arrange(..data_id) %>% # return to original sorting
       dplyr::select(-starts_with(".."))
 
@@ -355,7 +367,8 @@ iso_plot_continuous_flow_data.iso_file_list <- function(
   panel_quo <- enquo(panel)
   plot_data <- iso_prepare_continuous_flow_plot_data(
     iso_files,
-    data = data, include_file_info = everything(),
+    data = data,
+    include_file_info = everything(),
     time_interval = time_interval,
     time_interval_units = time_interval_units,
     filter = !!enquo(filter),
@@ -388,9 +401,9 @@ iso_plot_continuous_flow_data.iso_file_list <- function(
 
 #' @rdname iso_plot_continuous_flow_data
 #' @param df a data frame of the chromatographic data prepared for plotting (see \code{\link{iso_prepare_continuous_flow_plot_data}})
-#' @param panel whether to panel plot by anything - any column is possible (see notes in the \code{filter} parameter) but the most commonly used options are \code{panel = NULL} (overlay all), \code{panel = data} (by mass/ratio data), \code{panel = file_id} (panel by files, alternatively use any appropriate file_info column). The default is panelling by the \code{data} column.
-#' @param color whether to color plot by anything, options are the same as for \code{panel} but the default is \code{file_id} and complex expressions (not just columns) are supported.
-#' @param linetype whether to differentiate by linetype, options are the same as for \code{panel} but the default is \code{NULL} (i.e. no linetype aesthetic) and complex expressions (not just columns) are supported. Note that a limited number of linetypes (6) is defined by default and the plot will fail if a higher number is required unless specified using \code{\link[ggplot2]{scale_linetype}}.
+#' @param panel whether to panel plot by anything - any column or complex expression is possible (see notes in the \code{filter} parameter for available raw data columns and \code{\link{iso_get_file_info}} for available file info columns) but the most commonly used options are \code{panel = NULL} (overlay all), \code{panel = data} (by mass/ratio data), \code{panel = file_id} (panel by files, alternatively use any appropriate file_info column or expression that's unique for each file). The default is panelling by the \code{data} column.
+#' @param color whether to color plot by anything, options are the same as for \code{panel} but the default is \code{file_id}
+#' @param linetype whether to differentiate by linetype, options are the same as for \code{panel} but the default is \code{NULL} (i.e. no linetype aesthetic). Note that a limited number of linetypes (6) is defined by default and the plot will fail if a higher number is required unless specified using \code{\link[ggplot2]{scale_linetype}}.
 #' @param label this is primarily of use for turning the generated ggplots into interactive plots via \code{\link[plotly]{ggplotly}} as the \code{label} will be rendered as an additional mousover label. Any unique file identifier is a useful choice, the default is \code{file_id}.
 #' @param peak_marker whether to mark identified peaks with a vertical line at the peak retention time. Only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_marker = TRUE} but no peaks were identified.
 #' @param peak_bounds whether to mark the boundaries of identified peaks with a vertical ine at peak start and end retention times. Only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_bounds = TRUE} but no peaks were identified.
@@ -414,13 +427,17 @@ iso_plot_continuous_flow_data.data.frame <- function(
   # quos and other column checks
   aes_quos <- list(panel = enquo(panel), color = enquo(color), linetype = enquo(linetype), label = enquo(label), peak_label = enquo(peak_label))
   aes_cols <- get_column_names(
-    df, panel = aes_quos$panel,
+    df,
     file_id = quo("file_id"),
     time_min = quo("time_min"), time_max = quo("time_max"),
-    is_ratio = quo("is_ratio"), data = quo("data"), value = quo("value"),
-    n_reqs = list(panel = "?"))
+    is_ratio = quo("is_ratio"), data = quo("data"), value = quo("value"))
   peak_cols <- c("peak_marker", "peak_point", "peak_start", "peak_end") %in% names(df)
-  isoreader:::check_expressions(df, aes_quos$color, aes_quos$linetype, aes_quos$label)
+  isoreader:::check_expressions(df, aes_quos$color, aes_quos$linetype, aes_quos$label, aes_quos$panel)
+
+  # add panel column to allow expressions
+  if (!quo_is_null(aes_quos$panel)) {
+    df <- mutate(df, ..panel = !!aes_quos$panel)
+  }
 
   # find overall plot parameters from data frame
   normalize <- col_in_df(df, "normalized") & df$normalized[1]
@@ -454,9 +471,12 @@ iso_plot_continuous_flow_data.data.frame <- function(
       geom_rect(
         data = function(df) dplyr::filter(df, peak_point > 0 & (peak_start | peak_end)) %>%
           dplyr::group_by(peak_point) %>%
-          dplyr::mutate(xmin = ifelse(any(peak_start), (!!sym(time_info$column))[peak_start][1], -Inf),
-                        xmax = ifelse(any(peak_end), (!!sym(time_info$column))[peak_end][1], Inf)) %>%
+          dplyr::mutate(xmin = ifelse(any(peak_start),
+                                      min((!!sym(time_info$column))[peak_start]), -Inf),
+                        xmax = ifelse(any(peak_end),
+                                      max((!!sym(time_info$column))[peak_end]), Inf)) %>%
           dplyr::ungroup() %>%
+          dplyr::filter(!is.infinite(xmin) | !is.infinite(xmax)) %>%
           # collapse double entries without loosing any other potentially important aesthetics info
           dplyr::select(-!!sym(time_info$column), -value, -peak_start, -peak_end, -peak_marker) %>%
           { if ("tp" %in% names(.)) dplyr::select(., -tp) else . } %>%
@@ -509,16 +529,20 @@ iso_plot_continuous_flow_data.data.frame <- function(
   if (zoom) {
     get_column_names(df, baseline = quo(baseline)) # check that baseline exists
     p <- p +
-      geom_point(data = function(df) group_by(df, !!!map(aes_cols$panel, sym)) %>%
-                   summarize(time = mean(!!sym(time_info$column), na.omit = TRUE), value = min(baseline, na.rm = TRUE)) %>%
-                   dplyr::filter(!is.na(value)),
-                 mapping = aes(x = time, y = value), inherit.aes = FALSE,
-                 size = 0, alpha = 1, show.legend = FALSE) +
-      geom_point(data = function(df) group_by(df, !!!map(aes_cols$panel, sym)) %>%
-                   summarize(time = mean(!!sym(time_info$column), na.omit = TRUE), value = max(zoom_cutoff, na.rm = TRUE)) %>%
-                   dplyr::filter(!is.na(value)),
-                 mapping = aes(x = time, y = value), inherit.aes = FALSE,
-                 size = 0, alpha = 1, show.legend = FALSE)
+      geom_point(data = function(df)
+        df %>%
+          group_by(..panel) %>%
+          summarize(time = mean(!!sym(time_info$column), na.omit = TRUE), value = min(baseline, na.rm = TRUE)) %>%
+          dplyr::filter(!is.na(value)),
+        mapping = aes(x = time, y = value), inherit.aes = FALSE,
+        size = 0, alpha = 1, show.legend = FALSE) +
+      geom_point(data = function(df)
+        df %>%
+          group_by(..panel) %>%
+          summarize(time = mean(!!sym(time_info$column), na.omit = TRUE), value = max(zoom_cutoff, na.rm = TRUE)) %>%
+          dplyr::filter(!is.na(value)),
+        mapping = aes(x = time, y = value), inherit.aes = FALSE,
+        size = 0, alpha = 1, show.legend = FALSE)
   }
 
   # display full time scale
@@ -532,8 +556,8 @@ iso_plot_continuous_flow_data.data.frame <- function(
     p <- p + theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
   # paneling
-  if (!is_empty(aes_cols$panel))
-    p <- p + facet_grid(rlang::new_formula(sym(aes_cols$panel), sym(".")), scales = "free_y")
+  if (!quo_is_null(aes_quos$panel))
+    p <- p + facet_grid(..panel ~ ., scales = "free_y")
 
   # color
   if (!quo_is_null(aes_quos$color))
@@ -790,13 +814,13 @@ iso_plot_ref_peaks <- function(dt, ratio, group_id, is_ref_condition, is_ref_use
 #' @param select_from_summary which parameters from the fit summary to include, by default includes the adjusted R2 (renamed just \code{R2}) and the root mean square deviation (\code{RMSD}), which R often calls \link[stats]{sigma} or residual standard deviation (often also called residual standard error and root mean square error instead of deviation, or standard error of the regression).
 #' @param color variable to use for color aesthetic for the plot
 #' @param shape variable to use for shape aesthetic for the plot
-#' @param size variable to use for size aesthetic for the plot
+#' @param size variable to use for size aesthetic for the plot or constant value for the points size
 #' @param date_breaks what breaks to use for the x axis if it is a datetime
 #' @param date_labels datetime label pattern for x axis if it is a datetime
 #' @export
 iso_plot_calibration_parameters <- function(dt, calibration = "", x,
                                        select_from_summary = c(R2 = adj.r.squared, RMSD = sigma),
-                                       color = NULL, shape = NULL, size = NULL,
+                                       color = NULL, shape = NULL, size = 4,
                                        date_breaks = "2 hours", date_labels = "%d %b %H:%M") {
 
   # safety checks
@@ -857,14 +881,22 @@ iso_plot_calibration_parameters <- function(dt, calibration = "", x,
     aes_q(x = vis_quos$x, y = sym("estimate")) +
     { if(!quo_is_null(vis_quos$color)) aes_q(color = vis_quos$color) } +
     { if(!quo_is_null(vis_quos$shape)) aes_q(shape = vis_quos$shape) } +
-    { if(!quo_is_null(vis_quos$size)) aes_q(size = vis_quos$size) } +
     geom_errorbar(data = function(df) filter(df,!is.na(std.error)),
-                  map = aes(ymin = estimate - std.error, ymax = estimate + std.error), width = 0, size = 1) +
-    { if (quo_is_null(vis_quos$size)) geom_point(size = 4) else geom_point() } +
-    facet_wrap(~term, ncol = 1, scales = "free_y") +
+                  map = aes(ymin = estimate - std.error, ymax = estimate + std.error), width = 0) +
+    facet_grid(rlang::new_formula(sym("term"), sym(calib_vars$model_name)),
+               scales = "free_y", space = "free_x") +
     theme_bw() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
     theme(plot.margin = margin(10, 5, 15, 20)) +
     labs(y="")
+
+  # points
+  if (!quo_is_null(vis_quos$size)) {
+    if (quo_is_symbol(vis_quos$size) || quo_is_call(vis_quos$size))
+      p <- p + geom_point(mapping = aes_q(size = vis_quos$size))
+    else
+      p <- p + geom_point(size = eval_tidy(vis_quos$size))
+  } else
+    p <- p + geom_point()
 
   # type of x axis
   x <- mutate(visualization_data, x = !!vis_quos$x)$x
@@ -879,125 +911,127 @@ iso_plot_calibration_parameters <- function(dt, calibration = "", x,
 
 #' Visualize the calibration range
 #'
-#' This function visualizes the calibration range for each regression model (separate panels) as it is constrained in the chosen x and y variables (most commonly measures of delta value and signal strength) by showing analysis points within the calibration range in solid and all others slighly opaque, as well as by drawing a rectangle around the calibration range. Note that if one of the chosen dimensions (x or y) is not part of the calibration for a model but the other dimension is, it simply shows two lines bracketing the samples in the dimension that is part of the calibration. Also note that the rectangular interpretation of calibration range in this plot is a visual simplification, technically the range is polygonal and maybe be more than 2 dimensional for more complex regression models.
+#' This is a convenience function to visualize the calibration ranges in a plot generated by \code{\link{iso_plot_data}} with a gray area behind the data points. Note that \code{\link{iso_evaluate_calibration_range}} must have been called at an earlier point to establish calibration ranges for different terms. Also note that if one of the chosen dimensions (x or y) is not part of the available calibration range for a panel but the other dimension is, it simply shows two lines bracketing the samples in the dimension that is part of the calibration range.
 #' @inheritParams iso_plot_calibration_parameters
-#' @param x the x-axis column for visualizing the calibration range, typically a measure of signal strength (amplitude or area) that is part of the/some calibration regression models
-#' @param y the y-axis column for visualizing the calibration range, typically a measure of the isotopic value (ratio or delta) that is part of the calibration regression models
+#' @param p a plot generated by \code{\link{iso_plot_data}} (usually piped to this function)
 #' @export
-iso_plot_calibration_range <- function(dt, calibration = "", x, y, color = NULL, shape = NULL, size = NULL) {
+iso_mark_calibration_range <- function(p, calibration = "") {
 
   # safety checks
-  if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  if (missing(x)) stop("have to provide an x to plot", call. = FALSE)
-  if (missing(y)) stop("have to provide at least one column to plot", call. = FALSE)
-
-  # quos
-  vis_quos <- list(dt = enquo(dt), x = enquo(x), y = enquo(y),
-                   color = enquo(color), size = enquo(size), shape = enquo(shape))
+  if (missing(p)) stop("no base plot provided", call. = FALSE)
 
   # check for model parameters
   calib_vars <- get_calibration_vars(calibration)
-  check_calibration_cols(!!vis_quos$dt, calib_vars$model_params)
 
-  # data
-  dt <- dt %>% mutate(..rowid.. = row_number())
-  data <- dt %>% iso_unnest_data()
+  # x (only one that needs to come from plot)
+  x <- rlang::as_label(p$mapping$x)
 
-  # check existence of x and y
-  dt_cols <- get_column_names(data, x = vis_quos$x, y = vis_quos$y)
+  # range marker calucations
+  prepare_range_marker_data <- function(plot_data) {
 
-  # ranges
-  ranges <- dt %>% iso_unnest_calibration_range(calibration = calibration)
-  xrange <- ranges %>% filter(var == dt_cols$x) %>% select(..rowid.., xmin = min, xmax = max)
-  yrange <- ranges %>% filter(var == dt_cols$y) %>% select(..rowid.., ymin = min, ymax = max)
-  data <- data %>%
-    # facet
-    mutate(panel = !!sym(calib_vars$model_name)) %>%
-    # ranges
-    left_join(xrange, by = "..rowid..") %>%
-    left_join(yrange, by = "..rowid..") %>%
-    mutate(
-      xmin = ifelse(is.na(xmin), -Inf, xmin),
-      xmax = ifelse(is.na(xmax), Inf, xmax),
-      ymin = ifelse(is.na(ymin), -Inf, ymin),
-      ymax = ifelse(is.na(ymax), Inf, ymax),
-      x_in_range = !!sym(dt_cols$x) >= xmin & !!sym(dt_cols$x) <= xmax,
-      y_in_range = !!sym(dt_cols$y) >= ymin & !!sym(dt_cols$y) <= ymax,
-      in_range = x_in_range & y_in_range)
-  # note on ranges: ideally with alpha = 0.5 but then have to make sure each rectangle
-  # is only drawn once which is tricky if unclear which columns are grouping columns
-  # would have to make unique based on all columns that have only 1 entry for each ..rowid..
+    # make sure calibration cols are present
+    check_calibration_cols(plot_data, c(calib_vars$model_name, calib_vars$model_params))
 
-  # color
-  if (!quo_is_null(vis_quos$color))
-    data <- data %>% mutate(color = !!vis_quos$color)
+    # check existence of panel column (introduced by iso_plot_data)
+    dt_cols <- get_column_names(plot_data, panel = quo(panel))
 
+    # ys
+    ys <- plot_data$panel %>% unique() %>% as.character()
 
-  # shape
-  if (!quo_is_null(vis_quos$shape))
-    data <- data %>% mutate(shape = !!vis_quos$shape)
+    # needed ranges
+    range_req <- tibble(x = x, y = ys, panel = ys) %>%
+      crossing(select(plot_data, !!sym(calib_vars$model_name)) %>% unique())
 
-  # size
-  if (!quo_is_null(vis_quos$size))
-    data <- data %>% mutate(size = !!vis_quos$size)
+    # model ranges
+    range_data <- plot_data %>%
+      mutate(panel = as.character(panel)) %>%
+      select(panel, !!sym(calib_vars$model_name), !!sym(calib_vars$model_params)) %>%
+      unique() %>%
+      iso_unnest_calibration_range(keep_other_list_data = FALSE)
 
-  # plot
-  data %>%
-    ggplot() +
-    aes_q(x = vis_quos$x, y = vis_quos$y, alpha = sym("in_range")) +
-    { if(!quo_is_null(vis_quos$color)) aes(color = color) } +
-    { if(!quo_is_null(vis_quos$shape)) aes(shape = shape) } +
-    { if(!quo_is_null(vis_quos$size)) aes(size = size) } +
-    # in range area
-    geom_rect(
-      mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
-                    color = NULL, fill = NULL),
-      color = "black", fill = NA) +
-    scale_alpha_discrete(
-      "calibration range",
-      breaks = c(FALSE, TRUE),
-      labels = function(x) ifelse(x, "in range", "out of range"),
-      range = c(0.4, 1)) +
-    guides(
-      color = guide_legend(override.aes = list(fill = "white", linetype = 0)),
-      alpha = guide_legend(override.aes = list(fill = "white", linetype = 0))) +
-    # points
-      { if (quo_is_null(vis_quos$size)) geom_point(size = 4) else geom_point() } +
-    theme_bw() +
-    facet_wrap(~panel)
+    # resulting data frame
+    ranges <-
+      full_join(
+        # x-range
+        left_join(range_req, range_data, by = c(calib_vars$model_name, "panel", "x" = "term")) %>%
+          select(!!sym(calib_vars$model_name), panel, x, xmin = min, xmax = max),
+        # y-range
+        left_join(range_req, range_data, by = c(calib_vars$model_name, "panel", "y" = "term")) %>%
+          select(!!sym(calib_vars$model_name), panel, y, ymin = min, ymax = max),
+        by = c(calib_vars$model_name, "panel")
+      ) %>%
+      filter(!(is.na(xmin) & is.na(xmax) & is.na(ymin) & is.na(ymax))) %>%
+      mutate(
+        xmin = ifelse(is.na(xmin), -Inf, xmin),
+        xmax = ifelse(is.na(xmax), Inf, xmax),
+        ymin = ifelse(is.na(ymin), -Inf, ymin),
+        ymax = ifelse(is.na(ymax), Inf, ymax)
+      )
+
+    return(ranges)
+  }
+
+  # add geom rect for calibration range
+  p$layers <-
+    c(
+      geom_rect(
+        data = prepare_range_marker_data,
+        mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
+                      x = NULL, y = NULL, color = NULL, fill = NULL,
+                      linetype = NULL, label = NULL, shape = NULL),
+        color = "black", fill = "grey", alpha = 0.3),
+      p$layers
+    )
+
+  return(p)
 }
 
-
+#' Plot calibration range
+#'
+#' This function is deprecated, please use \link{iso_plot_data} and \link{iso_mark_calibration_range} instead.
+#' @param ... deprecated
+#' @export
+iso_plot_calibration_range <- function(...) {
+  warning("iso_plot_calibration_range was deprecated as part of a major change in treatment of calibration ranges in isoprocessor version 0.3.8. Please use iso_evaluate_calibration_range to calculate calibration ranges for your terms of interest, iso_plot_data to visualize the data, and iso_mark_calibration_range to highlight the calculated calibration ranges visually.", immediate. = TRUE, call. = FALSE)
+}
 
 #' Visualize the data
 #'
-#' General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with \link[ggplot2]{facet_wrap} or \link[ggplot2]{theme} calls).
+#' General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with \link[ggplot2]{facet_wrap} or \link[ggplot2]{theme} calls). Make sure to specify \code{lines = TRUE} and/or \code{points = TRUE} to add the layers.
 #'
 #' @inheritParams iso_map_peaks
 #' @inheritParams iso_plot_calibration_parameters
 #' @param y which columns to visualize, combine with c()
 #' @param group what to group by, multiple columns allowed (combine with paste(...)), usually not necessary if groupings are fully defined through other aesthetics
+#' @param fill variable to use for the fill aesthetic of the plot
 #' @param linetype variable to use for linetype aesthetic for the plot
 #' @param y_error an error column for drawing y error bars - if multiple \code{y} are provided, error needs to point to the same number of columns
-#' @param lines whether to plot lines (TRUE by default)
+#' @param lines whether to plot lines (FALSE by default)
 #' @param points whether to plot points (FALSE by default)
+#' @param label this is primarily of use for turning the generated ggplots into interactive plots via \code{\link[plotly]{ggplotly}} as the \code{label} will be rendered as an additional mousover label.
 #' @export
 #' @note should probably make sure that the default columns for gather 'panel' and 'value' do not exist...
 #' @note it would be great to allow renaming of the columns via this (especially the y column)
 #' @export
-iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, shape = NULL, size = NULL, linetype = NULL, lines = TRUE, points = FALSE) {
+iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, fill = NULL, shape = NULL, size = 4, linetype = NULL, label = NULL, lines = FALSE, points = FALSE) {
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   if (missing(x)) stop("have to provide an x to plot", call. = FALSE)
   if (missing(y)) stop("have to provide at least one column to plot", call. = FALSE)
 
-  # quoss
+  # warnings
+  if (!lines && !points) {
+    warning("no geoms (points or lines) included, plot will be blank", immediate. = TRUE, call. = FALSE)
+  }
+
+  # quos
   vis_quos <-
     list(dt = enquo(dt),
          x = enquo(x), y = enquo(y), y_error = enquo(y_error),
          group = enquo(group),
-         color = enquo(color), shape = enquo(shape),
-         linetype = enquo(linetype), size = enquo(size))
+         color = enquo(color), fill = enquo(fill), shape = enquo(shape),
+         linetype = enquo(linetype), size = enquo(size),
+         label = enquo(label))
 
   # check existence of ys and errors
   dt_cols <- get_column_names(!!vis_quos$dt, y = vis_quos$y, y_error = vis_quos$y_error,
@@ -1039,9 +1073,10 @@ iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, 
     aes_q(x = vis_quos$x, y = sym("y_value")) +
     { if(!quo_is_null(vis_quos$group)) aes_q(group = vis_quos$group) } +
     { if(!quo_is_null(vis_quos$color)) aes_q(color = vis_quos$color) } +
+    { if(!quo_is_null(vis_quos$fill)) aes_q(fill = vis_quos$fill) } +
     { if(!quo_is_null(vis_quos$shape)) aes_q(shape = vis_quos$shape) } +
     { if(!quo_is_null(vis_quos$linetype)) aes_q(linetype = vis_quos$linetype) } +
-    { if(!quo_is_null(vis_quos$size)) aes_q(size = vis_quos$size) } +
+    { if(!quo_is_null(vis_quos$label)) aes_q(label = vis_quos$label) } +
     facet_wrap(~panel, ncol = 1, scales = "free_y") +
     theme_bw() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
     theme(plot.margin = margin(10, 5, 15, 20)) +
@@ -1060,7 +1095,13 @@ iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, 
     p <- p + geom_line()
   }
   if (points) {
-    p <- p +  { if (quo_is_null(vis_quos$size)) geom_point(size = 4) else geom_point() }
+    if (!quo_is_null(vis_quos$size)) {
+      if (quo_is_symbol(vis_quos$size) || quo_is_call(vis_quos$size))
+        p <- p + geom_point(mapping = aes_q(size = vis_quos$size))
+      else
+        p <- p + geom_point(size = eval_tidy(vis_quos$size))
+    } else
+      p <- p + geom_point()
   }
 
   return(p)

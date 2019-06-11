@@ -82,6 +82,13 @@ iso_map_peaks <- function(
   # }
 
   # read peak maps
+  if (peak_maps %>% select(starts_with(dt_cols$rt)) %>% ncol() == 0) {
+    glue::glue("peak maps do not have any columns that match or start with the ",
+               "provided retention time column name '{dt_cols$rt}'. ",
+               "Available columns: {paste(names(peak_maps), collapse = ', ')}") %>%
+      stop(call. = FALSE)
+  }
+
   maps <- peak_maps %>%
     # ignore empty rows (safety precaution)
     filter(!is.na(!!sym(pm_cols$compound))) %>%

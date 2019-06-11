@@ -5,8 +5,8 @@
 \title{Visualize the data}
 \usage{
 iso_plot_data(dt, x, y, y_error = NULL, group = NULL, color = NULL,
-  shape = NULL, size = NULL, linetype = NULL, lines = TRUE,
-  points = FALSE)
+  fill = NULL, shape = NULL, size = 4, linetype = NULL,
+  label = NULL, lines = FALSE, points = FALSE)
 }
 \arguments{
 \item{dt}{data frame with peak data}
@@ -21,18 +21,22 @@ iso_plot_data(dt, x, y, y_error = NULL, group = NULL, color = NULL,
 
 \item{color}{variable to use for color aesthetic for the plot}
 
+\item{fill}{variable to use for the fill aesthetic of the plot}
+
 \item{shape}{variable to use for shape aesthetic for the plot}
 
-\item{size}{variable to use for size aesthetic for the plot}
+\item{size}{variable to use for size aesthetic for the plot or constant value for the points size}
 
 \item{linetype}{variable to use for linetype aesthetic for the plot}
 
-\item{lines}{whether to plot lines (TRUE by default)}
+\item{label}{this is primarily of use for turning the generated ggplots into interactive plots via \code{\link[plotly]{ggplotly}} as the \code{label} will be rendered as an additional mousover label.}
+
+\item{lines}{whether to plot lines (FALSE by default)}
 
 \item{points}{whether to plot points (FALSE by default)}
 }
 \description{
-General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with \link[ggplot2]{facet_wrap} or \link[ggplot2]{theme} calls).
+General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with \link[ggplot2]{facet_wrap} or \link[ggplot2]{theme} calls). Make sure to specify \code{lines = TRUE} and/or \code{points = TRUE} to add the layers.
 }
 \note{
 should probably make sure that the default columns for gather 'panel' and 'value' do not exist...

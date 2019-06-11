@@ -39,7 +39,7 @@
 
 <meta property="og:title" content="Visualize the data — iso_plot_data" />
 
-<meta property="og:description" content="General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with facet_wrap or theme calls)." />
+<meta property="og:description" content="General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with facet_wrap or theme calls). Make sure to specify lines = TRUE and/or points = TRUE to add the layers." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -80,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.3.7</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.4.0</span>
       </span>
     </div>
 
@@ -91,6 +91,18 @@
 </li>
 <li>
   <a href="../articles/continuous_flow.html">Continuous Flow</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Processing Examples
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/gc_irms_example_carbon.html">Compound specific carbon isotope analysis</a>
+    </li>
+  </ul>
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
@@ -123,13 +135,13 @@
 
     <div class="ref-description">
     
-    <p>General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with <a href='https://www.rdocumentation.org/packages/ggplot2/topics/facet_wrap'>facet_wrap</a> or <a href='https://www.rdocumentation.org/packages/ggplot2/topics/theme'>theme</a> calls).</p>
+    <p>General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with <a href='https://www.rdocumentation.org/packages/ggplot2/topics/facet_wrap'>facet_wrap</a> or <a href='https://www.rdocumentation.org/packages/ggplot2/topics/theme'>theme</a> calls). Make sure to specify <code>lines = TRUE</code> and/or <code>points = TRUE</code> to add the layers.</p>
     
     </div>
 
     <pre class="usage"><span class='fu'>iso_plot_data</span>(<span class='no'>dt</span>, <span class='no'>x</span>, <span class='no'>y</span>, <span class='kw'>y_error</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>group</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>color</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>shape</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>size</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>linetype</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>lines</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>points</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+  <span class='kw'>fill</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>shape</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>size</span> <span class='kw'>=</span> <span class='fl'>4</span>, <span class='kw'>linetype</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>label</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>lines</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>points</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -159,20 +171,28 @@
       <td><p>variable to use for color aesthetic for the plot</p></td>
     </tr>
     <tr>
+      <th>fill</th>
+      <td><p>variable to use for the fill aesthetic of the plot</p></td>
+    </tr>
+    <tr>
       <th>shape</th>
       <td><p>variable to use for shape aesthetic for the plot</p></td>
     </tr>
     <tr>
       <th>size</th>
-      <td><p>variable to use for size aesthetic for the plot</p></td>
+      <td><p>variable to use for size aesthetic for the plot or constant value for the points size</p></td>
     </tr>
     <tr>
       <th>linetype</th>
       <td><p>variable to use for linetype aesthetic for the plot</p></td>
     </tr>
     <tr>
+      <th>label</th>
+      <td><p>this is primarily of use for turning the generated ggplots into interactive plots via <code><a href='https://www.rdocumentation.org/packages/plotly/topics/ggplotly'>ggplotly</a></code> as the <code>label</code> will be rendered as an additional mousover label.</p></td>
+    </tr>
+    <tr>
       <th>lines</th>
-      <td><p>whether to plot lines (TRUE by default)</p></td>
+      <td><p>whether to plot lines (FALSE by default)</p></td>
     </tr>
     <tr>
       <th>points</th>
