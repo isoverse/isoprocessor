@@ -84,7 +84,7 @@ iso_print_data_table <- function(dt, select = everything(), filter = TRUE, print
 #' @param ... deprecated
 #' @export
 iso_generate_summary_table <- function(...) {
-  warning("this function was renamed --> calling iso_generate_summary_table() instead",
+  warning("this function was renamed --> calling iso_summarize_data_table() instead",
           immediate. = TRUE, call. = FALSE)
   iso_summarize_data_table(...)
 }
