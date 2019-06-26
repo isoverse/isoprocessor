@@ -2761,7 +2761,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = &quot;#&gt;&quot;)</code></pre>
 #&gt; Info: preparing to read 2 data files (all will be cached)...
 #&gt; Info: reading file 'test_data/21848__SW_50.dxf' from cache...
 #&gt; Info: reading file 'test_data/21870__BSA2 CA3_sm.dxf' from cache...
-#&gt; Info: finished reading 2 files in 0.93 secs
+#&gt; Info: finished reading 2 files in 0.39 secs
 iso_files %&gt;% iso_get_data_summary()
 #&gt; Info: aggregating data summary from 2 data file(s)</code></pre>
 <div data-pagedtable="false">
@@ -2883,7 +2883,7 @@ calculations &lt;-
     ## 2. linearly extrapolated ref ratio at all retention times
     ref_ratio_at_Rt = 
       lm(y ~ x, 
-         data = data_frame(
+         data = tibble(
            x = Rt[`Is Ref.?` == 1], 
            y = `rR 66SO2/64SO2 new`[`Is Ref.?` == 1])) %&gt;% 
       predict(newdata = data_frame(x = Rt)) %&gt;% 
@@ -2949,7 +2949,7 @@ calculations %&gt;% select(Nr., starts_with(&quot;d 66&quot;)) %&gt;% rmarkdown:
 #&gt; Info: reading file 'test_data/SP1.did' from cache...
 #&gt; Info: reading file 'test_data/SP2.did' from cache...
 #&gt; Info: reading file 'test_data/SP3.did' from cache...
-#&gt; Info: finished reading 4 files in 0.28 secs
+#&gt; Info: finished reading 4 files in 0.39 secs
 iso_files %&gt;% iso_get_data_summary()
 #&gt; Info: aggregating data summary from 4 data file(s)</code></pre>
 <div data-pagedtable="false">
