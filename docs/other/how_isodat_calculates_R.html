@@ -2761,7 +2761,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = &quot;#&gt;&quot;)</code></pre>
 #&gt; Info: preparing to read 2 data files (all will be cached)...
 #&gt; Info: reading file 'test_data/21848__SW_50.dxf' from cache...
 #&gt; Info: reading file 'test_data/21870__BSA2 CA3_sm.dxf' from cache...
-#&gt; Info: finished reading 2 files in 0.39 secs
+#&gt; Info: finished reading 2 files in 0.45 secs
 iso_files %&gt;% iso_get_data_summary()
 #&gt; Info: aggregating data summary from 2 data file(s)</code></pre>
 <div data-pagedtable="false">
@@ -2886,7 +2886,7 @@ calculations &lt;-
          data = tibble(
            x = Rt[`Is Ref.?` == 1], 
            y = `rR 66SO2/64SO2 new`[`Is Ref.?` == 1])) %&gt;% 
-      predict(newdata = data_frame(x = Rt)) %&gt;% 
+      predict(newdata = tibble(x = Rt)) %&gt;% 
       as.numeric(),
     ## 3. resulting calculated 66/64 ratio (note that since these relie on rR only, the whole resistor shenanegans are not actually necessary)
     `R 66SO2/64SO2 new` = `rR 66SO2/64SO2 new` / ref_ratio_at_Rt * `Rps 66SO2/64SO2 new`,
@@ -2897,9 +2897,7 @@ calculations &lt;-
     # or more elegantly directly from the rR and extrapolated ref ratios
     `d 66SO2/64SO2 new2` = ((`rR 66SO2/64SO2 new` / ref_ratio_at_Rt - 1) * 1000) %&gt;% round(10)
   ) %&gt;% 
-  ungroup() 
-#&gt; Warning: `data_frame()` is deprecated, use `tibble()`.
-#&gt; This warning is displayed once per session.</code></pre>
+  ungroup() </code></pre>
 </div>
 <div id="compare" class="section level3">
 <h3>Compare</h3>
@@ -2949,7 +2947,7 @@ calculations %&gt;% select(Nr., starts_with(&quot;d 66&quot;)) %&gt;% rmarkdown:
 #&gt; Info: reading file 'test_data/SP1.did' from cache...
 #&gt; Info: reading file 'test_data/SP2.did' from cache...
 #&gt; Info: reading file 'test_data/SP3.did' from cache...
-#&gt; Info: finished reading 4 files in 0.39 secs
+#&gt; Info: finished reading 4 files in 0.37 secs
 iso_files %&gt;% iso_get_data_summary()
 #&gt; Info: aggregating data summary from 4 data file(s)</code></pre>
 <div data-pagedtable="false">
