@@ -50,10 +50,10 @@ test_that("test that plot continuous flow works properly", {
 
   # aesthetics, mapping, panelling formatting tests - defaults first
   expect_true(all(names(p$mapping) %in% c("colour", "x", "y", "group", "label")))
-  expect_true("file_id" %in% as.character(p$mapping$colour))
-  expect_true("time.s" %in% as.character(p$mapping$x))
-  expect_true("value" %in% as.character(p$mapping$y))
-  expect_true("file_id" %in% as.character(p$mapping$label))
+  expect_true("file_id" %in% rlang::as_label(p$mapping$colour))
+  expect_true("time.s" %in% rlang::as_label(p$mapping$x))
+  expect_true("value" %in% rlang::as_label(p$mapping$y))
+  expect_true("file_id" %in% rlang::as_label(p$mapping$label))
   expect_equal(class(p$facet)[1], "FacetGrid")
   expect_equal(names(p$facet$params$rows), "..panel") # always ..panel because expressions not possible
   expect_equal(names(p$facet$params$cols) %>% length(), 0)
@@ -62,12 +62,12 @@ test_that("test that plot continuous flow works properly", {
   expect_true(is.ggplot(p <- iso_plot_raw_data(cf, panel = NULL, color = data, linetype = file_id)))
   expect_true(all(p$data$data %in% c("44 [mV]", "46 [mV]", "46/44"))) # all selected by default
   expect_true(all(names(p$mapping) %in% c("colour", "x", "y", "group", "linetype", "label")))
-  expect_true("data" %in% as.character(p$mapping$colour))
-  expect_true("file_id" %in% as.character(p$mapping$linetype))
+  expect_true("data" %in% rlang::as_label(p$mapping$colour))
+  expect_true("file_id" %in% rlang::as_label(p$mapping$linetype))
   expect_equal(class(p$facet)[1], "FacetNull")
   expect_true(is.ggplot(p <- iso_plot_raw_data(cf, "44", panel = file_id, color = NULL, linetype = data)))
   expect_true(all(names(p$mapping) %in% c("x", "y", "group", "linetype", "label")))
-  expect_true("data" %in% as.character(p$mapping$linetype))
+  expect_true("data" %in% rlang::as_label(p$mapping$linetype))
   expect_equal(class(p$facet)[1], "FacetGrid")
   expect_equal(names(p$facet$params$rows), "..panel") # always ..panel because expressions not possible
   expect_equal(names(p$facet$params$cols) %>% length(), 0)
@@ -106,11 +106,11 @@ test_that("test that plot dual inlet works properly", {
 
   # aesthetics, mapping, panelling formatting tests - defaults first
   expect_true(all(names(p$mapping) %in% c("colour", "x", "y", "group", "shape", "label")))
-  expect_true("file_id" %in% as.character(p$mapping$colour))
-  expect_true("cycle" %in% as.character(p$mapping$x))
-  expect_true("value" %in% as.character(p$mapping$y))
-  expect_true("type" %in% as.character(p$mapping$shape))
-  expect_true("file_id" %in% as.character(p$mapping$label))
+  expect_true("file_id" %in% rlang::as_label(p$mapping$colour))
+  expect_true("cycle" %in% rlang::as_label(p$mapping$x))
+  expect_true("value" %in% rlang::as_label(p$mapping$y))
+  expect_true("type" %in% rlang::as_label(p$mapping$shape))
+  expect_true("file_id" %in% rlang::as_label(p$mapping$label))
   expect_equal(class(p$facet)[1], "FacetWrap")
   expect_equal(names(p$facet$params$facets), "data")
 
@@ -118,14 +118,14 @@ test_that("test that plot dual inlet works properly", {
   expect_true(is.ggplot(p <- iso_plot_raw_data(di, panel = NULL, color = data, linetype = file_id, shape = NULL)))
   expect_true(all(p$data$data %in% c("44 [mV]", "46 [mV]", "46/44"))) # all selected by default
   expect_true(all(names(p$mapping) %in% c("colour", "x", "y", "group", "linetype", "label")))
-  expect_true("data" %in% as.character(p$mapping$colour))
-  expect_true("file_id" %in% as.character(p$mapping$linetype))
+  expect_true("data" %in% rlang::as_label(p$mapping$colour))
+  expect_true("file_id" %in% rlang::as_label(p$mapping$linetype))
   expect_equal(class(p$facet)[1], "FacetNull")
   expect_true(is.ggplot(p <- iso_plot_raw_data(di, "44", panel = file_id, color = type, linetype = data, shape = file_id)))
   expect_true(all(names(p$mapping) %in% c("x", "y", "group", "colour", "linetype", "shape", "label")))
-  expect_true("type" %in% as.character(p$mapping$colour))
-  expect_true("data" %in% as.character(p$mapping$linetype))
-  expect_true("file_id" %in% as.character(p$mapping$shape))
+  expect_true("type" %in% rlang::as_label(p$mapping$colour))
+  expect_true("data" %in% rlang::as_label(p$mapping$linetype))
+  expect_true("file_id" %in% rlang::as_label(p$mapping$shape))
   expect_equal(class(p$facet)[1], "FacetWrap")
   expect_equal(names(p$facet$params$facets), "file_id")
 
@@ -149,9 +149,9 @@ test_that("test that referencd peak visualization works", {
 
   # simple generation tests
   expect_true((p <- iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = TRUE, ratio = displ, group_id = model)) %>% ggplot2::is.ggplot())
-  expect_true("ref_peak_nr" %in% as.character(p$mapping$fill))
-  expect_true("model" %in% as.character(p$mapping$x))
-  expect_true("total_delta_deviation" %in% as.character(p$mapping$y))
+  expect_true("ref_peak_nr" %in% rlang::as_label(p$mapping$fill))
+  expect_true("model" %in% rlang::as_label(p$mapping$x))
+  expect_true("total_delta_deviation" %in% rlang::as_label(p$mapping$y))
   expect_true(iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = TRUE, ratio = c(displ, hwy), group_id = model) %>% ggplot2::is.ggplot())
   expect_true(iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = cyl > 6, ratio = c(displ, hwy), group_id = model) %>% ggplot2::is.ggplot())
 
