@@ -151,10 +151,10 @@ iso_generate_calibration <- function(dt, model, calibration = "", is_std_peak = 
 
   # information
   if (!quiet) {
-    if (quo_is_call(model_quos) && quo_text(lang_head(model_quos)) %in% c("c", "list")) {
-      lquos <- quos(!!!lang_args(model_quos))
+    if (quo_is_call(model_quos) && rlang::call_name(model_quos) %in% c("c", "list")) {
+      lquos <- quos(!!!rlang::call_args(model_quos))
     } else {
-      lquos <- quos(!!!model_quos)
+      lquos <- quos(!!model_quos)
     }
     models <- str_c(names(lquos) %>% { ifelse(nchar(.) > 0, str_c(., " = "), .) }, map_chr(lquos, quo_text))
     plural <- if (length(models) > 1) "s" else ""

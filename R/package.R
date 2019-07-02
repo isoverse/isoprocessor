@@ -1,7 +1,7 @@
 #' @keywords internal
 "_PACKAGE"
 
-#' @importFrom rlang enquo quo quos !! !!! sym ensyms get_expr quo_expr quo_text quo_is_null quo_is_missing quo_is_symbol quo_is_call is_quosure is_list is_empty is_integerish eval_tidy sym lang_head lang_args sym
+#' @importFrom rlang enquo quo quos !! !!! sym ensyms get_expr quo_text quo_is_null quo_is_missing quo_is_symbol quo_is_call is_quosure is_list is_empty is_integerish eval_tidy sym
 #' @importFrom tidyselect vars_select starts_with ends_with everything
 #' @importFrom glue glue
 #' @importFrom dplyr mutate select rename filter as_data_frame inner_join left_join right_join anti_join data_frame %>% bind_rows group_by ungroup arrange summarize do case_when row_number

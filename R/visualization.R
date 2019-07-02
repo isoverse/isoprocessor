@@ -635,8 +635,8 @@ iso_plot_dual_inlet_data <- function(
     # formula --> facet_grid
     aes_cols <- c(aes_cols, get_column_names(
       raw_data,
-      panel_rows = aes_quos$panel %>% quo_expr() %>% rlang::f_lhs(),
-      panel_cols = aes_quos$panel %>% quo_expr() %>% rlang::f_rhs()))
+      panel_rows = aes_quos$panel %>% rlang::quo_squash() %>% rlang::f_lhs(),
+      panel_cols = aes_quos$panel %>% rlang::quo_squash() %>% rlang::f_rhs()))
   }
 
   # only work with desired data (masses and ratios)
