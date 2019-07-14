@@ -78,7 +78,7 @@ iso_convert_signals <- function(iso_files, to, R, R_units = NA, quiet = default(
   auto_R <- missing(R)
 
   if (!quiet) {
-    sprintf("Info: converting signals to '%s' for %d continuous flow data file(s) with %s",
+    sprintf("Info: converting signals to '%s' for %d data file(s) with %s",
             to, length(iso_files),
             if (auto_R) "automatic resistor values from individual iso_files (if needed for conversion)"
             else str_c("specific resistor value(s): ", str_c(str_c(names(R),"=",R, R_units), collapse = ", "))
@@ -98,11 +98,22 @@ iso_convert_signals <- function(iso_files, to, R, R_units = NA, quiet = default(
     # don't try to convert if raw data not present or otherwise empty
     if (!iso_file$read_options$raw_data || nrow(iso_file$raw_data) == 0) return(iso_file)
 
+    # check whether background data exists that needs to be converted too
+    convert_bgrd <- !is.null(iso_file$bgrd_data) && nrow(iso_file$bgrd_data) > 0
+
     # column names
-    col_names <- names(iso_file$raw_data) %>% stringr::str_subset(signal_pattern)
-    if (length(col_names) == 0) {
-      return(register_warning(
-        iso_file, func = func, details = "could not find any voltage or current data columns"))
+    data_col_names <- stringr::str_subset(names(iso_file$raw_data), signal_pattern)
+    if (convert_bgrd) {
+      bgrd_col_names <- stringr::str_subset(names(iso_file$bgrd_data), signal_pattern)
+      col_names <- c(data_col_names, bgrd_col_names)
+    } else {
+      col_names <- data_col_names
+    }
+
+    # safety check on data columns
+    if (length(data_col_names) == 0) {
+      return(isoreader:::register_warning(
+        iso_file, func = func, details = "could not find any voltage or current data columns", warn = FALSE))
     }
 
     # see if resistors are required (i.e. any columns are v/i and 'to' is not the same)
@@ -113,24 +124,26 @@ iso_convert_signals <- function(iso_files, to, R, R_units = NA, quiet = default(
     # resistors
     if (scaling_only) {
       # scaling only
-      iso_file$raw_data <- scale_signals(iso_file$raw_data, col_names, to = to, quiet = TRUE)
+      iso_file$raw_data <- scale_signals(iso_file$raw_data, data_col_names, to = to, quiet = TRUE)
+      if (convert_bgrd)
+        iso_file$bgrd_data <- scale_signals(iso_file$bgrd_data, bgrd_col_names, to = to, quiet = TRUE)
       return(iso_file)
     }
 
     if (!scaling_only && auto_R) {
       # find resistors from files
       if (!iso_file$read_options$method_info) {
-        return(register_warning(
+        return(isoreader:::register_warning(
           iso_file, func = func,
           details = "cannot automatically determine resistor values, method info not available (read_method_info = FALSE)"))
       } else if (is.null(iso_file$method_info$resistors) || nrow(iso_file$method_info$resistors) == 0) {
-        return(register_warning(
+        return(isoreader:::register_warning(
           iso_file, func = func,
-          details = "cannot automatically determine resistor values, no resistor data available"))
+          details = "cannot automatically determine resistor values, no resistor data available", warn = FALSE))
       } else if (!"mass" %in% names(iso_file$method_info$resistors)) {
-        return(register_warning(
+        return(isoreader:::register_warning(
           iso_file, func = func,
-          details = "cannot automatically determine resistor values, resistor data not linked to masses"))
+          details = "cannot automatically determine resistor values, resistor data not linked to masses", warn = FALSE))
       } else {
         R <- iso_file$method_info$resistors %>%
           mutate(R_name = str_c("R", mass)) %>%
@@ -140,7 +153,29 @@ iso_convert_signals <- function(iso_files, to, R, R_units = NA, quiet = default(
     }
 
     # convert signals
-    iso_file$raw_data <- scale_signals(iso_file$raw_data, col_names, to = to, R = R, R_units = R_units, quiet = TRUE)
+    iso_file$raw_data <-
+      scale_signals(
+        iso_file$raw_data,
+        data_col_names,
+        to = to,
+        R = R,
+        R_units = R_units,
+        quiet = TRUE
+      )
+
+    # convert background
+    if (convert_bgrd) {
+      iso_file$bgrd_data <-
+        scale_signals(
+          iso_file$bgrd_data,
+          bgrd_col_names,
+          to = to,
+          R = R,
+          R_units = R_units,
+          quiet = TRUE
+        )
+    }
+
     return(iso_file)
   }) %>% iso_as_file_list()
 
