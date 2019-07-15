@@ -82,7 +82,7 @@ iso_files %>%
 
 In addition, isoprocessor provides a dynamic raw delta calculation function (`iso_calculate_deltas()`) that calculates direct or bracketed sample-standard delta values as described in the function help. See code below for a few examples:
 
-```{r}
+```{r "deltas", fig.width = 8, fig.asp = 1}
 iso_files <-
   iso_files %>% 
   # calculate 46/44, 45/44 and 32/28 (O2/N2) deltas

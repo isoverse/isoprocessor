@@ -665,9 +665,10 @@ iso_plot_dual_inlet_data <- function(
     }
 
   # generate plot
+  group_quos <- list(quo(file_id))
   p <- plot_data %>%
     ggplot() +
-    aes(cycle, value, group = paste(file_id, type, data)) +
+    aes(cycle, value) +
     geom_line() +
     geom_point(size = 2) +
     scale_x_continuous("Cycle", breaks = c(0:max(plot_data$cycle))) +
@@ -683,16 +684,25 @@ iso_plot_dual_inlet_data <- function(
   }
 
   # color
-  if (!quo_is_null(aes_quos$color))
+  if (!quo_is_null(aes_quos$color)) {
     p <- p %+% aes_(color = aes_quos$color)
+    group_quos <- c(group_quos, aes_quos['color'])
+  }
 
   # linetype
-  if (!quo_is_null(aes_quos$linetype))
+  if (!quo_is_null(aes_quos$linetype)) {
     p <- p %+% aes_(linetype = aes_quos$linetype)
+    group_quos <- c(group_quos, aes_quos['linetype'])
+  }
 
   # shape_by
-  if (!quo_is_null(aes_quos$shape))
+  if (!quo_is_null(aes_quos$shape)) {
     p <- p %+% aes_(shape = aes_quos$shape)
+    group_quos <- c(group_quos, aes_quos['shape'])
+  }
+
+  # group quo
+  p <- p %+% aes_(group = quo(paste(!!!group_quos)))
 
   # label
   if (!quo_is_null(aes_quos$label))
