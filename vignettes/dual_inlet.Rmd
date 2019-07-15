@@ -86,7 +86,8 @@ In addition, isoprocessor provides a dynamic raw delta calculation function (`is
 iso_files <-
   iso_files %>% 
   # calculate 46/44, 45/44 and 32/28 (O2/N2) deltas
-  iso_calculate_deltas(deltas = c("d46/44", "d45/44", "d32/28"), bracket = TRUE)
+  iso_calculate_deltas(deltas = c("d46/44", "d45/44", "d32/28"), 
+                       bracket = TRUE, in_permil = TRUE)
 
 iso_files %>% 
   iso_plot_dual_inlet_data(

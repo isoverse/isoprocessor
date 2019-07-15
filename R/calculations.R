@@ -141,8 +141,8 @@ iso_calculate_deltas.data.frame <- function(df, deltas, bracket = TRUE, in_permi
   }
 
   # required ratios
-  ratios <- str_c(ratio_prefix, stringr::str_match(deltas, delta_pattern)[,2]) %>%
-    setNames(deltas)
+  ratios <- str_c(ratio_prefix, stringr::str_match(deltas, delta_pattern)[,2])
+  deltas <- if (in_permil) paste0(deltas, ".permil") else deltas
 
   # check for ratios
   if (!all(ok <- ratios %in% names(df))) {
