@@ -74,21 +74,21 @@ test_that("test that deltas can be calculated", {
 
   expect_equal(
     iso_calculate_deltas(df, c("d46/44", "d45/44")) %>% names(),
-    c("file_id", "r46/44", "r45/44", "type", "cycle", "extra", "d46/44", "d45/44"))
+    c("file_id", "r46/44", "r45/44", "type", "cycle", "extra", "d46/44.permil", "d45/44.permil"))
   expect_equal(
-    iso_calculate_deltas(df, c("d46/44", "d45/44"))$`d46/44`,
+    iso_calculate_deltas(df, c("d46/44", "d45/44"))$`d46/44.permil`,
     c(NA_real_, 200., NA_real_, NA_real_, NA_real_))
   expect_equal(
     iso_calculate_deltas(df, c("d46/44", "d45/44"), in_permil = FALSE)$`d46/44`,
     c(NA_real_, 0.200, NA_real_, NA_real_, NA_real_))
   expect_equal(
-    iso_calculate_deltas(df, c("d46/44", "d45/44"))$`d45/44`,
+    iso_calculate_deltas(df, c("d46/44", "d45/44"))$`d45/44.permil`,
     c(NA_real_, 200., NA_real_, NA_real_, NA_real_))
   expect_equal(
-    iso_calculate_deltas(df, c("d46/44", "d45/44"), bracket = FALSE)$`d46/44`,
+    iso_calculate_deltas(df, c("d46/44", "d45/44"), bracket = FALSE)$`d46/44.permil`,
     c(NA_real_, 500., NA_real_, NA_real_, -500))
   expect_equal(
-    iso_calculate_deltas(df, c("d46/44", "d45/44"), bracket = FALSE)$`d45/44`,
+    iso_calculate_deltas(df, c("d46/44", "d45/44"), bracket = FALSE)$`d45/44.permil`,
     c(NA_real_, 0., NA_real_, NA_real_, 1000))
 
 
