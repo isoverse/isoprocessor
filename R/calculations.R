@@ -108,11 +108,15 @@ iso_calculate_deltas.iso_file_list <- function(iso_files, deltas, bracket = TRUE
                          in_permil = in_permil, quiet = quiet) %>%
     { split(., .$file_id) }
 
-  # mutate
+  # update iso files
+  deltas <- if (in_permil) paste0(deltas, ".permil") else deltas
   iso_files <- map(iso_files,
                    ~{
-                     if (.x$file_info$file_id %in% names(raw_data))
-                      .x$raw_data <- select(raw_data[[.x$file_info$file_id]], -file_id)
+                     if (.x$file_info$file_id %in% names(raw_data)) {
+                       # make sure only to keep original cols and new delta columns
+                       original_cols <- names(.x$raw_data)
+                      .x$raw_data <- raw_data[[.x$file_info$file_id]][c(original_cols, deltas)]
+                     }
                      .x
                    })
 
