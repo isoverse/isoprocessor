@@ -1,7 +1,7 @@
 Package: isoprocessor
 Title: IRMS data processor
 Description: Data processing and reduction pipelines for isotope ratio mass spectrometry (IRMS) data
-Version: 0.4.4.1
+Version: 0.4.4.2
 Authors@R: person("Sebastian", "Kopf", email = "sebastian.kopf@colorado.edu",
     role = c("aut", "cre"))
 URL: https://github.com/isoverse/isoprocessor
@@ -18,7 +18,7 @@ Imports:
     tidyselect,
     tibble,
     dplyr (>= 0.7.4),
-    tidyr,
+    tidyr (>= 1.0.0),
     stringr,
     purrr,
     forcats,

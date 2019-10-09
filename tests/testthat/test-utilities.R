@@ -31,7 +31,8 @@ test_that("nesting and unnesting functions work properly", {
   expect_equal(unnest_select_data(nested_df) %>% nrow(), nrow(test_df))
 
   # making sure unnest can deal with <NULL> columns
-  null_nested_df <- nested_df %>% mutate(nested_data = map2(nested_data, row_number(), ~if(.y == 2) {NULL} else {.x}))
+  null_nested_df <- nested_df %>%
+    mutate(nested_data = map2(nested_data, row_number(), ~if(.y == 2) {NULL} else {.x}))
   expect_equal(unnest_select_data(null_nested_df, select = c()) %>% names(), nested_df %>% names())
   expect_equal(unnest_select_data(null_nested_df) %>% nrow(), nrow(filter(test_df, y == "a")))
 
@@ -66,7 +67,7 @@ test_that("regression functions work properly", {
   expect_equal(df_w_models$model_fit[[1]]$residuals %>% length(), filter(test_df, name == "a") %>% nrow())
   expect_equal(names(df_w_models), c("name", "model_data", "model_name", "model_enough_data", "model_fit", "model_coefs", "model_summary"))
   expect_equal(names(df_w_coefs <- unnest(df_w_models, model_coefs)),
-               c("name", "model_name", "model_enough_data", "term", "estimate", "std.error", "statistic", "p.value", "signif"))
+               c("name", "model_data", "model_name", "model_enough_data", "model_fit", "term", "estimate", "std.error", "statistic", "p.value", "signif", "model_summary"))
   expect_equal(nrow(df_w_coefs), 2*2)
   expect_true(all(df_w_coefs$term %in% c("(Intercept)", "x")))
 
@@ -94,6 +95,7 @@ test_that("regression functions work properly", {
   expect_equal(nrow(df_w_models2), 4L)
   expect_equal(df_w_models2$name, c("a", "a", "b", "b"))
   expect_equal(df_w_models2$model_name, c("m1", "m2", "m1", "m2"))
+  # FIXME: continue here, this is also a consequence of list vs. vector list!
   expect_equal(names(df_w_coefs2 <- unnest_select_data(df_w_models2, select = term, nested_data = model_coefs)),
                c("name", "model_name", "model_enough_data", "term", "model_coefs", "model_data", "model_fit", "model_summary"))
   expect_equal(nrow(df_w_coefs2), 2*2 + 2*4)
@@ -259,10 +261,14 @@ test_that("test that range evaluation works", {
   expect_equal(names(df_w_nested_models_ranges), names(df_w_nested_models))
   expect_equal(names(unnest(df_w_nested_models_ranges, model_params)),
                c(names(unnest(df_w_nested_models, model_params)), "model_range"))
-  expect_equal(names(unnest(df_w_models_ranges, model_data)),
-               c(names(unnest(df_w_models, model_data)), "in_range"))
-  expect_equal(names(unnest(df_w_nested_models_ranges, model_data)),
-               c(names(unnest(df_w_nested_models, model_data)), "in_range"))
+  expect_true(setequal(
+    names(unnest(df_w_models_ranges, model_data)),
+    c(names(unnest(df_w_models, model_data)), "in_range", "model_range"))
+  )
+  expect_true(setequal(
+    names(unnest(df_w_nested_models_ranges, model_data)),
+    c(names(unnest(df_w_nested_models, model_data)), "in_range"))
+  )
   expect_equal(unnest(df_w_models_ranges, model_data)$in_range %>% unique(), "in range")
   expect_equal(unnest(df_w_nested_models_ranges, model_data)$in_range %>% unique(), "in range")
   expect_equal(
@@ -281,8 +287,10 @@ test_that("test that range evaluation works", {
   expect_is(df_w_models_ranges2 <- df_w_models2 %>%
               evaluate_range(x, y, x*y, model_range = my_range, in_range = my_in_range), "tbl")
   expect_equal(names(df_w_models_ranges2), c(names(df_w_models2), "my_range"))
-  expect_equal(names(unnest(df_w_models_ranges2, model_data)),
-               c(names(unnest(df_w_models2, model_data)), "my_in_range"))
+  expect_true(setequal(
+    names(unnest(df_w_models_ranges2, model_data)),
+    c(names(unnest(df_w_models2, model_data)), "my_in_range", "my_range"))
+  )
   expect_equal(
     unnest(df_w_models_ranges2, model_data)$my_in_range %>% unique(),
     # NOTE: this test could fail if the set.seed does not behave the same way on the server
