@@ -294,6 +294,8 @@ iso_prepare_continuous_flow_plot_data <- function(
   return(plot_data)
 }
 
+
+
 # raw data plots =====
 
 #' Plot raw data from isoreader files
@@ -427,7 +429,6 @@ iso_plot_continuous_flow_data.data.frame <- function(
 
   # quos and other column checks
   aes_quos <- list(panel = enquo(panel), color = enquo(color), linetype = enquo(linetype), label = enquo(label), peak_label = enquo(peak_label))
-  if (rlang::quo_is_null(aes_quos$panel)) aes_quos$panel <- quo(1)
 
   aes_cols <- get_column_names(
     df,
@@ -530,18 +531,20 @@ iso_plot_continuous_flow_data.data.frame <- function(
 
   # zoom ghost points to make sure the zooming frame remains the same (if zoom is set)
   if (zoom) {
+    panel_zoom_group <- if (!rlang::quo_is_null(aes_quos$panel)) quo(..panel) else quo(1)
+
     get_column_names(df, baseline = quo(baseline)) # check that baseline exists
     p <- p +
       geom_point(data = function(df)
         df %>%
-          group_by(..panel) %>%
+          group_by(!!panel_zoom_group) %>%
           summarize(time = mean(!!sym(time_info$column), na.omit = TRUE), value = min(baseline, na.rm = TRUE)) %>%
           dplyr::filter(!is.na(value)),
         mapping = aes(x = time, y = value), inherit.aes = FALSE,
         size = 0, alpha = 1, show.legend = FALSE) +
       geom_point(data = function(df)
         df %>%
-          group_by(..panel) %>%
+          group_by(!!panel_zoom_group) %>%
           summarize(time = mean(!!sym(time_info$column), na.omit = TRUE), value = max(zoom_cutoff, na.rm = TRUE)) %>%
           dplyr::filter(!is.na(value)),
         mapping = aes(x = time, y = value), inherit.aes = FALSE,
