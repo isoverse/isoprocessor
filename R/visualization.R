@@ -59,6 +59,7 @@ iso_prepare_continuous_flow_plot_data <- function(
 
   # check for zoom_gruop column(s) existence
   aes_quos <- list(zoom_group = enquo(zoom_group))
+  if (rlang::quo_is_null(aes_quos$zoom_group)) aes_quos$zoom_group <- quo(1)
   isoreader:::check_expressions(raw_data, aes_quos$zoom_group)
 
   # only work with desired data (masses and ratios)
@@ -293,6 +294,8 @@ iso_prepare_continuous_flow_plot_data <- function(
   return(plot_data)
 }
 
+
+
 # raw data plots =====
 
 #' Plot raw data from isoreader files
@@ -426,6 +429,7 @@ iso_plot_continuous_flow_data.data.frame <- function(
 
   # quos and other column checks
   aes_quos <- list(panel = enquo(panel), color = enquo(color), linetype = enquo(linetype), label = enquo(label), peak_label = enquo(peak_label))
+
   aes_cols <- get_column_names(
     df,
     file_id = quo("file_id"),
@@ -527,18 +531,20 @@ iso_plot_continuous_flow_data.data.frame <- function(
 
   # zoom ghost points to make sure the zooming frame remains the same (if zoom is set)
   if (zoom) {
+    panel_zoom_group <- if (!rlang::quo_is_null(aes_quos$panel)) quo(..panel) else quo(1)
+
     get_column_names(df, baseline = quo(baseline)) # check that baseline exists
     p <- p +
       geom_point(data = function(df)
         df %>%
-          group_by(..panel) %>%
+          group_by(!!panel_zoom_group) %>%
           summarize(time = mean(!!sym(time_info$column), na.omit = TRUE), value = min(baseline, na.rm = TRUE)) %>%
           dplyr::filter(!is.na(value)),
         mapping = aes(x = time, y = value), inherit.aes = FALSE,
         size = 0, alpha = 1, show.legend = FALSE) +
       geom_point(data = function(df)
         df %>%
-          group_by(..panel) %>%
+          group_by(!!panel_zoom_group) %>%
           summarize(time = mean(!!sym(time_info$column), na.omit = TRUE), value = max(zoom_cutoff, na.rm = TRUE)) %>%
           dplyr::filter(!is.na(value)),
         mapping = aes(x = time, y = value), inherit.aes = FALSE,
@@ -665,9 +671,10 @@ iso_plot_dual_inlet_data <- function(
     }
 
   # generate plot
+  group_quos <- list(quo(file_id))
   p <- plot_data %>%
     ggplot() +
-    aes(cycle, value, group = paste(file_id, type, data)) +
+    aes(cycle, value) +
     geom_line() +
     geom_point(size = 2) +
     scale_x_continuous("Cycle", breaks = c(0:max(plot_data$cycle))) +
@@ -683,16 +690,25 @@ iso_plot_dual_inlet_data <- function(
   }
 
   # color
-  if (!quo_is_null(aes_quos$color))
+  if (!quo_is_null(aes_quos$color)) {
     p <- p %+% aes_(color = aes_quos$color)
+    group_quos <- c(group_quos, aes_quos['color'])
+  }
 
   # linetype
-  if (!quo_is_null(aes_quos$linetype))
+  if (!quo_is_null(aes_quos$linetype)) {
     p <- p %+% aes_(linetype = aes_quos$linetype)
+    group_quos <- c(group_quos, aes_quos['linetype'])
+  }
 
   # shape_by
-  if (!quo_is_null(aes_quos$shape))
+  if (!quo_is_null(aes_quos$shape)) {
     p <- p %+% aes_(shape = aes_quos$shape)
+    group_quos <- c(group_quos, aes_quos['shape'])
+  }
+
+  # group quo
+  p <- p %+% aes_(group = quo(paste(!!!group_quos)))
 
   # label
   if (!quo_is_null(aes_quos$label))

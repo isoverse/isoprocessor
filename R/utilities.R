@@ -146,7 +146,7 @@ nest_data <- function(dt, group_by = NULL, nested_data = nested_data) {
   # perform the nest
   dt %>%
     as_tibble() %>% # nest requires tbl
-    nest(!!!map(dt_cols$group_by, ~quo(-!!sym(.x))), .key = !!nested_col)
+    nest(!!nested_col := -!!dt_cols$group_by)
 }
 
 #' Remove nested data
@@ -202,7 +202,7 @@ unnest_select_data <- function(dt, select = everything(), nested_data = nested_d
   } else
     renested_dt <- unnested_dt[keep_cols]
 
-  # merge the extra columns back in
+  # merge the extra columns back in (easier this way with the renest than using unnest for this)
   if (keep_other_list_data && length(list_cols) > 0) {
     renested_dt <- left_join(renested_dt, dt[c("..row..", list_cols)], by = "..row..")
   }
@@ -241,7 +241,7 @@ unnest_model_column <- function(dt, model_column, model_params = model_params, n
 
     # unnest model params
     original_cols <- names(dt)
-    dt <- unnest(dt, !!sym(dt_cols$model_params), .drop = FALSE)
+    dt <- unnest(dt, !!sym(dt_cols$model_params))
     model_cols <- setdiff(names(dt), original_cols)
   }
 
@@ -258,7 +258,7 @@ unnest_model_column <- function(dt, model_column, model_params = model_params, n
     dt <-
       inner_join(
         dt %>% dplyr::select(!!!map(model_cols, ~quo(-!!sym(.x)))),
-        dt %>% dplyr::select(..row_id.., !!!map(model_cols, sym)) %>% nest(-..row_id.., .key = !!dt_cols$model_params),
+        dt %>% dplyr::select(..row_id.., !!!map(model_cols, sym)) %>% nest(!!dt_cols$model_params := c(-..row_id..)),
         by = "..row_id.."
       ) %>%
       dplyr::select(-..row_id..)
@@ -337,7 +337,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
     tibble(
       model_formula = map_chr(lquos, quo_text),
       !!dt_new_cols$model_name := ifelse(nchar(names(lquos)) > 0, names(lquos), model_formula),
-      model_quo = lquos
+      model_quo = map(lquos, identity)
     ) %>%
     # don't keep separate formula column
     select(-model_formula)
@@ -429,7 +429,8 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
     data_w_models <-
       inner_join(
         data_w_models %>% select(!!!map(model_cols, ~quo(-!!sym(.x)))),
-        data_w_models %>% select(..row_id.., !!!map(model_cols, sym)) %>% nest(-..row_id.., .key = !!dt_new_cols$model_params),
+        data_w_models %>% select(..row_id.., !!!map(model_cols, sym)) %>%
+          nest(!!dt_new_cols$model_params := -..row_id..),
         by = "..row_id.."
       ) %>%
       select(-..row_id..)
@@ -497,7 +498,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
       mutate(
         !!dt_cols$model_fit := map(!!sym(dt_cols$model_params), ~.x[[dt_cols$model_fit]])
       ) %>%
-      unnest(!!sym(dt_cols$model_fit), .drop = FALSE)
+      unnest(!!sym(dt_cols$model_fit))
   } else {
     # not nested model
     dt_cols <- get_column_names(
