@@ -59,6 +59,7 @@ iso_prepare_continuous_flow_plot_data <- function(
 
   # check for zoom_gruop column(s) existence
   aes_quos <- list(zoom_group = enquo(zoom_group))
+  if (rlang::quo_is_null(aes_quos$zoom_group)) aes_quos$zoom_group <- quo(1)
   isoreader:::check_expressions(raw_data, aes_quos$zoom_group)
 
   # only work with desired data (masses and ratios)
@@ -426,6 +427,8 @@ iso_plot_continuous_flow_data.data.frame <- function(
 
   # quos and other column checks
   aes_quos <- list(panel = enquo(panel), color = enquo(color), linetype = enquo(linetype), label = enquo(label), peak_label = enquo(peak_label))
+  if (rlang::quo_is_null(aes_quos$panel)) aes_quos$panel <- quo(1)
+
   aes_cols <- get_column_names(
     df,
     file_id = quo("file_id"),
