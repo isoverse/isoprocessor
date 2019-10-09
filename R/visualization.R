@@ -26,11 +26,7 @@ find_time_column <- function(df) {
 #' @param normalize whether to normalize the data (default is FALSE, i.e. no normalization). If TRUE, normalizes each trace across all files (i.e. normalized to the global max/min). This is particularly useful for overlay plotting different mass and/or ratio traces (\code{panel = NULL}). Note that zooming (if \code{zoom} is set) is applied after normalizing.
 #' @param zoom if not set, automatically scales to the maximum range in the selected time_interval in each plotting panel. If set, scales by the indicated factor, i.e. values > 1 are zoom in, values < 1 are zoom out, baseline always remains the bottom anchor point. Note that zooming is always relative to the max in each zoom_group (by default \code{zoom_group = data}, i.e. each trace is zoomed separately). The maximum considered may be outside the visible time window. Note that for \code{zoom_group} other than \code{data} (e.g. \code{file_id} or \code{NULL}), zooming is relative to the max signal across all mass traces. Typically it makes most sense to set the \code{zoom_group} to the same variable as the planned \code{panel} parameter to the plotting function. Lastly, note that zooming only affects masses, ratios are never zoomed.
 #' @param peak_table a data frame that describes the peaks in this chromatogram. By default, the chromatographic data is prepared WITHOUT peaks information. Supply this parameter to add in the peaks data. Note that the following parameters must also be set correctly IF \code{peak_table} is supplied: \code{file_id}, \code{rt}, \code{rt_start}, \code{rt_end}.
-#' @param file_id the column (or columns) that uniquely identify each iso_file for proper matching of the raw chromatography data with the peak_table data. In most cases, the default (\code{file_id}) should work fine.
-#' @param rt the column in the \code{peak_table} that holds the retention time of the peak.
-#' @param rt_start the column in the\code{peak_table} that holds the retention time where each peak starts.
-#' @param rt_end the column in the\code{peak_table} that holds the retention time where each peak ends.
-#' @param rt_unit which time unit the retention time columns (\code{rt}, \code{rt_start}, \code{rt_end}) are in. If not specified (i.e. the default), assumes it is the same unit as the time column of the \code{iso_files} raw data.
+#' @inheritParams combine_raw_data_with_peak_table
 #' @family plot functions
 #' @export
 iso_prepare_continuous_flow_plot_data <- function(
@@ -187,114 +183,118 @@ iso_prepare_continuous_flow_plot_data <- function(
   peak_table_quo <- enquo(peak_table)
   if (!is.null(peak_table)) {
 
-    if (nrow(peak_table) == 0) stop("peaks table supplied but there is no peaks data in it", call. = FALSE)
+    plot_data <- combine_raw_data_with_peak_table(
+      plot_data, peak_table,
+      file_id = !!enquo(file_id), data_trace = data,
+      rt = !!enquo(rt), rt_start = !!enquo(rt_start), rt_end = !!enquo(rt_end),
+      rt_unit = rt_unit)
 
-    # find regular dt columns
-    plot_data_cols <- isoreader:::get_column_names(
-      plot_data, file_id = enquo(file_id), data = quo(data), n_reqs = list(file_id = "+"))
-    peak_table_cols <- isoreader:::get_column_names(
-      !!peak_table_quo, file_id = enquo(file_id), rt = enquo(rt), rt_start = enquo(rt_start), rt_end = enquo(rt_end),
-      n_reqs = list(file_id = "+"))
-
-    # file_id quos
-    file_id_quos <- purrr::map(plot_data_cols$file_id, sym)
-
-    # deal with time units (make sure they are all in the plot data time units)
-    rt_unit <- if(is.null(rt_unit)) find_time_column(plot_data)$unit else rt_unit
-    time_info <- find_time_column(plot_data)
-    peak_table <- peak_table %>%
-      dplyr::mutate(
-        # note that this peak ID goes across ALL files, it's truly unique,
-        # NOT just a counter within each file - this should  make processing faster
-        ..peak_id = dplyr::row_number(),
-        ..rt = scale_time(!!sym(peak_table_cols$rt), to = time_info$unit, from = rt_unit),
-        ..rt_start = scale_time(!!sym(peak_table_cols$rt_start), to = time_info$unit, from = rt_unit),
-        ..rt_end = scale_time(!!sym(peak_table_cols$rt_end), to = time_info$unit, from = rt_unit)
-      )
-
-    # find peaks in plot data
-    plot_data <- plot_data %>%
-      dplyr::mutate(
-        ..data_id = dplyr::row_number(),
-        ..time = !!sym(time_info$column),
-        ..data = as.character(!!sym(plot_data_cols$data))
-      )
-
-    plot_data_peaks_all <-
-      # all possible combinations in each file
-      dplyr::inner_join(
-        dplyr::select(plot_data, !!!file_id_quos, ..data_id, ..time, ..data),
-        dplyr::select(peak_table, !!!file_id_quos, ..peak_id, ..rt, ..rt_start, ..rt_end),
-        by = plot_data_cols$file_id
-      ) %>%
-      # widdle down to the time range in each file
-      dplyr::group_by(!!!file_id_quos) %>%
-      dplyr::filter(..rt >= min(..time, na.rm = TRUE) & ..rt <= max(..time, na.rm = TRUE)) %>%
-      dplyr::ungroup()
-
-    plot_data_peaks <-
-      plot_data_peaks_all %>%
-      # identify the location of the peak marker
-      dplyr::group_by(..data, ..peak_id) %>%
-      dplyr::mutate(peak_marker = if (length(..rt) == 0) NA else abs(..rt - ..time) == min(abs(..rt - ..time))) %>%
-      dplyr::ungroup() %>%
-      # remove everything that doesn't actually belong to a peak
-      dplyr::filter(peak_marker | (..time >= ..rt_start & ..time <= ..rt_end)) %>%
-      dplyr::select(..data_id, ..peak_id, peak_marker)
-
-    # safety checks
-    all_peaks <- unique(plot_data_peaks_all$..peak_id)
-    missing <- setdiff(all_peaks, unique(plot_data_peaks$..peak_id))
-    if (length(all_peaks) == 0) {
-      glue::glue(
-        "there are no peaks that fit into the time window of the chromatogram. ",
-        "Please double check that the rt_unit parameter is set to correctly identify ",
-        "the time units of the peak table - currently assumed to be '{rt_unit}'.") %>%
-        warning(immediate. = TRUE, call. = FALSE)
-    }
-    if (length(missing) > 0) {
-      glue::glue(
-        "only {length(all_peaks) - length(missing)} of the {length(all_peaks)} ",
-        "applicable peaks in the peak table could be identified in the chromatogram") %>%
-        warning(immediate. = TRUE, call. = FALSE)
-    }
-
-    # add to plot data
-    plot_data <- plot_data %>%
-      dplyr::left_join(plot_data_peaks, by = "..data_id") %>%
-      # find peak delimiters
-      dplyr::arrange(..time) %>% # sorting is important!
-      dplyr::group_by(!!!file_id_quos, ..data) %>%
-      dplyr::mutate(
-        peak_marker = !is.na(peak_marker) & peak_marker,
-        peak_point = ifelse(!is.na(..peak_id), ..peak_id, 0), # makes it possible to identify peak clusters afterwards
-        peak_start = c(0, diff(peak_point)) > 0 | c(diff(peak_point), 0) > 0,
-          #c(0, diff(peak_point)) > 0 | c(diff(peak_point), 0) > 0,
-        peak_end =
-          c(diff(peak_point), 0) < 0 | c(0, diff(peak_point)) < 0 |
-          # take care of case when two peaks touch and there is no 0 in between
-          (peak_start & peak_point > 0 & c(0, peak_point[-length(peak_point)]) > 0 & c(peak_point[-1], 0) > 0)
-          #c(diff(peak_point), 0) > 0 | c(0, diff(peak_point)) > 0,
-      ) %>%
-      dplyr::ungroup()
-
-    # add peak info
-    plot_data <- plot_data %>%
-      dplyr::left_join(
-        dplyr::select(peak_table, plot_data_cols$file_id, "..peak_id",
-                      # ensure there are no column duplications
-                      names(peak_table) %>% { .[!.%in% names(plot_data)] }),
-        by = c(plot_data_cols$file_id, "..peak_id")) %>%
-      dplyr::arrange(..data_id) %>% # return to original sorting
-      dplyr::select(-starts_with(".."))
+    # if (nrow(peak_table) == 0) stop("peaks table supplied but there is no peaks data in it", call. = FALSE)
+    #
+    # # find regular dt columns
+    # plot_data_cols <- isoreader:::get_column_names(
+    #   plot_data, file_id = enquo(file_id), data = quo(data), n_reqs = list(file_id = "+"))
+    # peak_table_cols <- isoreader:::get_column_names(
+    #   !!peak_table_quo, file_id = enquo(file_id), rt = enquo(rt), rt_start = enquo(rt_start), rt_end = enquo(rt_end),
+    #   n_reqs = list(file_id = "+"))
+    #
+    # # file_id quos
+    # file_id_quos <- purrr::map(plot_data_cols$file_id, sym)
+    #
+    # # deal with time units (make sure they are all in the plot data time units)
+    # rt_unit <- if(is.null(rt_unit)) find_time_column(plot_data)$unit else rt_unit
+    # time_info <- find_time_column(plot_data)
+    # peak_table <- peak_table %>%
+    #   dplyr::mutate(
+    #     # note that this peak ID goes across ALL files, it's truly unique,
+    #     # NOT just a counter within each file - this should  make processing faster
+    #     ..peak_id = dplyr::row_number(),
+    #     ..rt = scale_time(!!sym(peak_table_cols$rt), to = time_info$unit, from = rt_unit),
+    #     ..rt_start = scale_time(!!sym(peak_table_cols$rt_start), to = time_info$unit, from = rt_unit),
+    #     ..rt_end = scale_time(!!sym(peak_table_cols$rt_end), to = time_info$unit, from = rt_unit)
+    #   )
+    #
+    # # find peaks in plot data
+    # plot_data <- plot_data %>%
+    #   dplyr::mutate(
+    #     ..data_id = dplyr::row_number(),
+    #     ..time = !!sym(time_info$column),
+    #     ..data = as.character(!!sym(plot_data_cols$data))
+    #   )
+    #
+    # plot_data_peaks_all <-
+    #   # all possible combinations in each file
+    #   dplyr::inner_join(
+    #     dplyr::select(plot_data, !!!file_id_quos, ..data_id, ..time, ..data),
+    #     dplyr::select(peak_table, !!!file_id_quos, ..peak_id, ..rt, ..rt_start, ..rt_end),
+    #     by = plot_data_cols$file_id
+    #   ) %>%
+    #   # widdle down to the time range in each file
+    #   dplyr::group_by(!!!file_id_quos) %>%
+    #   dplyr::filter(..rt >= min(..time, na.rm = TRUE) & ..rt <= max(..time, na.rm = TRUE)) %>%
+    #   dplyr::ungroup()
+    #
+    # plot_data_peaks <-
+    #   plot_data_peaks_all %>%
+    #   # identify the location of the peak marker
+    #   dplyr::group_by(..data, ..peak_id) %>%
+    #   dplyr::mutate(peak_marker = if (length(..rt) == 0) NA else abs(..rt - ..time) == min(abs(..rt - ..time))) %>%
+    #   dplyr::ungroup() %>%
+    #   # remove everything that doesn't actually belong to a peak
+    #   dplyr::filter(peak_marker | (..time >= ..rt_start & ..time <= ..rt_end)) %>%
+    #   dplyr::select(..data_id, ..peak_id, peak_marker)
+    #
+    # # safety checks
+    # all_peaks <- unique(plot_data_peaks_all$..peak_id)
+    # missing <- setdiff(all_peaks, unique(plot_data_peaks$..peak_id))
+    # if (length(all_peaks) == 0) {
+    #   glue::glue(
+    #     "there are no peaks that fit into the time window of the chromatogram. ",
+    #     "Please double check that the rt_unit parameter is set to correctly identify ",
+    #     "the time units of the peak table - currently assumed to be '{rt_unit}'.") %>%
+    #     warning(immediate. = TRUE, call. = FALSE)
+    # }
+    # if (length(missing) > 0) {
+    #   glue::glue(
+    #     "only {length(all_peaks) - length(missing)} of the {length(all_peaks)} ",
+    #     "applicable peaks in the peak table could be identified in the chromatogram") %>%
+    #     warning(immediate. = TRUE, call. = FALSE)
+    # }
+    #
+    # # add to plot data
+    # plot_data <- plot_data %>%
+    #   dplyr::left_join(plot_data_peaks, by = "..data_id") %>%
+    #   # find peak delimiters
+    #   dplyr::arrange(..time) %>% # sorting is important!
+    #   dplyr::group_by(!!!file_id_quos, ..data) %>%
+    #   dplyr::mutate(
+    #     peak_marker = !is.na(peak_marker) & peak_marker,
+    #     peak_point = ifelse(!is.na(..peak_id), ..peak_id, 0), # makes it possible to identify peak clusters afterwards
+    #     peak_start = c(0, diff(peak_point)) > 0 | c(diff(peak_point), 0) > 0,
+    #       #c(0, diff(peak_point)) > 0 | c(diff(peak_point), 0) > 0,
+    #     peak_end =
+    #       c(diff(peak_point), 0) < 0 | c(0, diff(peak_point)) < 0 |
+    #       # take care of case when two peaks touch and there is no 0 in between
+    #       (peak_start & peak_point > 0 & c(0, peak_point[-length(peak_point)]) > 0 & c(peak_point[-1], 0) > 0)
+    #       #c(diff(peak_point), 0) > 0 | c(0, diff(peak_point)) > 0,
+    #   ) %>%
+    #   dplyr::ungroup()
+    #
+    # # add peak info
+    # plot_data <- plot_data %>%
+    #   dplyr::left_join(
+    #     dplyr::select(peak_table, plot_data_cols$file_id, "..peak_id",
+    #                   # ensure there are no column duplications
+    #                   names(peak_table) %>% { .[!.%in% names(plot_data)] }),
+    #     by = c(plot_data_cols$file_id, "..peak_id")) %>%
+    #   dplyr::arrange(..data_id) %>% # return to original sorting
+    #   dplyr::select(-starts_with(".."))
 
   }
 
   # return
   return(plot_data)
 }
-
-
 
 # raw data plots =====
 
@@ -470,7 +470,7 @@ iso_plot_continuous_flow_data.data.frame <- function(
   }
 
   # peak boundaries - consider making this an area background
-  if (peak_bounds) {
+  if (peak_bounds && nrow(dplyr::filter(df, peak_point > 0 & (peak_start | peak_end))) > 0) {
     p <- p +
       geom_rect(
         data = function(df) dplyr::filter(df, peak_point > 0 & (peak_start | peak_end)) %>%
@@ -506,27 +506,39 @@ iso_plot_continuous_flow_data.data.frame <- function(
   # peak labels
   if (!quo_is_null(aes_quos$peak_label)) {
     peak_label_filter_quo <- enquo(peak_label_filter)
-    p <- p +
-      ggrepel::geom_label_repel(
-        data = function(df)
-          dplyr::filter(df, peak_marker) %>%
-          {
-            if(!quo_is_null(peak_label_filter_quo))
-              dplyr::filter(., !!peak_label_filter_quo)
-            else
-              .
-          },
-        mapping = aes_(label = aes_quos$peak_label),
-        show.legend = FALSE,
-        force = peak_label_repel,
-        #box.padding = 1,
-        min.segment.length = 0,
-        size = peak_label_size,
-        segment.color = "black",
-        segment.alpha = 0.5,
-        segment.size = 0.5,
-        direction = "both"
-      )
+    has_any_labels <-
+      dplyr::filter(df, peak_marker) %>%
+      {
+        if(!quo_is_null(peak_label_filter_quo))
+          dplyr::filter(., !!peak_label_filter_quo)
+        else
+          .
+      } %>%
+      nrow()
+
+    if (has_any_labels > 0) {
+      p <- p +
+        ggrepel::geom_label_repel(
+          data = function(df)
+            dplyr::filter(df, peak_marker) %>%
+            {
+              if(!quo_is_null(peak_label_filter_quo))
+                dplyr::filter(., !!peak_label_filter_quo)
+              else
+                .
+            },
+          mapping = aes_(label = aes_quos$peak_label),
+          show.legend = FALSE,
+          force = peak_label_repel,
+          #box.padding = 1,
+          min.segment.length = 0,
+          size = peak_label_size,
+          segment.color = "black",
+          segment.alpha = 0.5,
+          segment.size = 0.5,
+          direction = "both"
+        )
+    }
   }
 
   # zoom ghost points to make sure the zooming frame remains the same (if zoom is set)
