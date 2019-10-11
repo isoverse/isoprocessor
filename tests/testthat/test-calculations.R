@@ -4,30 +4,31 @@ context("Ratio calculations")
 
 test_that("test that ratios can be calculated", {
 
-  # parameter tests
-  expect_error(iso_calculate_ratios(42), "can only calculate ratios for iso files")
-  iso_file <- isoreader:::make_iso_file_data_structure()
-  expect_error(iso_calculate_ratios(iso_file), "no ratios provided for ratio calculations")
-  expect_error(iso_calculate_ratios(iso_file, ratios = c("42")), "invalid ratio")
-  expect_warning(iso_calculate_ratios(iso_file, ratios = c("44/42")), "read without extracting the raw data")
+  # confirm expected errors
+  expect_warning(tryCatch(iso_calculate_ratios(isoreader:::make_cf_data_structure()), error = function(e) {}), "read without extracting the raw data")
+  expect_error(iso_calculate_ratios(), "missing")
+  expect_error(iso_calculate_ratios(42), "not defined")
+  expect_error(iso_calculate_ratios(tibble()), "no data")
+  expect_error(iso_calculate_ratios(tibble(x=1)), "no ratios provided")
+  expect_error(iso_calculate_ratios(tibble(x=1), "42"), "invalid ratio")
+  expect_error(iso_calculate_ratios(tibble(x=1), "42/41"), "missing intensity column")
+  expect_error(iso_calculate_ratios(tibble(x=1), "46/44", "47/44"), "make sure to pass ratios as a vector")
+  expect_error(iso_calculate_ratios(tibble(v44.mV=1, v46.mV=1), "46/44"), "missing key column")
 
-  # test data
+  # example calculation
+  raw_data <- dplyr::tibble(file_id = "a", tp = 1:10, time.s = tp*0.2, v44.mV = runif(10), v46.mV = runif(10))
+  expect_message(iso_calculate_ratios(raw_data, ratios = c("46/44"), quiet = FALSE), "calculating ratio.*1 data file.*r46/44")
+  expect_silent(raw_data_w_ratio <- iso_calculate_ratios(raw_data, ratios = c("46/44"), quiet = TRUE))
+  expect_equal(raw_data_w_ratio$`r46/44`, with(raw_data, v46.mV/v44.mV))
+
+  # example calculation in isofiles version
+  iso_file <- isoreader:::make_cf_data_structure()
+  iso_file$file_info$file_id <- "a"
   iso_file$read_options$raw_data <- TRUE
-  iso_file$raw_data <- data_frame(tp = 1:10, time.s = tp*0.2, v44.mV = runif(10), v46.mV = runif(10))
-  expect_message(iso_calculate_ratios(iso_file, ratios = c("46/44"), quiet = FALSE), "calculating ratio")
-  expect_silent(iso_calculate_ratios(iso_file, ratios = c("46/44"), quiet = TRUE))
+  iso_file$raw_data <- dplyr::select(raw_data, -file_id)
   expect_true(iso_is_file(iso_file_w_ratio <- iso_calculate_ratios(iso_file, ratios = c("46/44"))))
   expect_equal(iso_file_w_ratio$raw_data$`r46/44`, with(iso_file$raw_data, v46.mV/v44.mV))
-
-  # multiple files
-  iso_files <- c(modifyList(iso_file, list(file_info = list(file_id = "a"))),
-                modifyList(iso_file, list(file_info = list(file_id = "b"))))
-  iso_files$b$raw_data$v45.mV <- (1:10)*runif(10)
-  expect_true(iso_is_file_list(iso_files_w_ratios <- iso_calculate_ratios(iso_files, ratios = c("46/44", "45/44"))))
-  expect_equal(iso_files_w_ratios$a$raw_data$`r46/44`, with(iso_files$a$raw_data, v46.mV/v44.mV))
-  expect_false("r45/44" %in% names(iso_files_w_ratios$a$raw_data)) # not in a
-  expect_equal(iso_files_w_ratios$b$raw_data$`r46/44`, with(iso_files$b$raw_data, v46.mV/v44.mV))
-  expect_equal(iso_files_w_ratios$b$raw_data$`r45/44`, with(iso_files$b$raw_data, v45.mV/v44.mV))
+  expect_equal(iso_file_w_ratio %>% iso_get_raw_data(), raw_data_w_ratio)
 
 })
 
@@ -37,6 +38,8 @@ context("Deltas calculations")
 
 test_that("test that deltas can be calculated", {
 
+  # confirm expected errors
+  expect_error(iso_calculate_deltas(), "missing")
   expect_error(iso_calculate_deltas(42), "not defined")
   expect_error(iso_calculate_deltas(tibble()), "no data")
   expect_error(iso_calculate_deltas(tibble(x=1)), "no deltas provided")
