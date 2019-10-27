@@ -5,7 +5,7 @@ context("Ratio calculations")
 test_that("test that ratios can be calculated", {
 
   # confirm expected errors
-  expect_warning(tryCatch(iso_calculate_ratios(isoreader:::make_cf_data_structure()), error = function(e) {}), "read without extracting the raw data")
+  expect_warning(tryCatch(iso_calculate_ratios(isoreader:::make_cf_data_structure("NA")), error = function(e) {}), "read without extracting the raw data")
   expect_error(iso_calculate_ratios(), "missing")
   expect_error(iso_calculate_ratios(42), "not defined")
   expect_error(iso_calculate_ratios(tibble()), "no data")
@@ -22,8 +22,7 @@ test_that("test that ratios can be calculated", {
   expect_equal(raw_data_w_ratio$`r46/44`, with(raw_data, v46.mV/v44.mV))
 
   # example calculation in isofiles version
-  iso_file <- isoreader:::make_cf_data_structure()
-  iso_file$file_info$file_id <- "a"
+  iso_file <- isoreader:::make_cf_data_structure("a")
   iso_file$read_options$raw_data <- TRUE
   iso_file$raw_data <- dplyr::select(raw_data, -file_id)
   expect_true(iso_is_file(iso_file_w_ratio <- iso_calculate_ratios(iso_file, ratios = c("46/44"))))
@@ -96,7 +95,7 @@ test_that("test that deltas can be calculated", {
 
 
   # dual inlet iso files
-  expect_error(iso_calculate_deltas(isoreader:::make_cf_data_structure()), "only.*dual inlet files")
-  expect_warning(tryCatch(iso_calculate_deltas(isoreader:::make_di_data_structure()), error = function(e) {}), "read without extracting the raw data")
+  expect_error(iso_calculate_deltas(isoreader:::make_cf_data_structure("NA")), "only.*dual inlet files")
+  expect_warning(tryCatch(iso_calculate_deltas(isoreader:::make_di_data_structure("NA")), error = function(e) {}), "read without extracting the raw data")
 
 })

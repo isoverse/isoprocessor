@@ -11,7 +11,7 @@ test_that("test that raw data plot throws appropriate errors", {
 test_that("test that cf plot data prep works properly", {
 
   expect_error(iso_prepare_continuous_flow_plot_data())
-  expect_error(iso_prepare_continuous_flow_plot_data(c(isoreader:::make_di_data_structure())), "can only prepare continuous flow")
+  expect_error(iso_prepare_continuous_flow_plot_data(c(isoreader:::make_di_data_structure("NA"))), "can only prepare continuous flow")
 
   # FIXME: include more elaborate tests here
 
@@ -20,7 +20,7 @@ test_that("test that cf plot data prep works properly", {
 test_that("test that plot continuous flow works properly", {
 
   expect_error(iso_plot_continuous_flow_data(42), "not defined")
-  expect_is(cf <- isoreader:::make_cf_data_structure(), "continuous_flow")
+  expect_is(cf <- isoreader:::make_cf_data_structure("NA"), "continuous_flow")
   cf$read_options$file_info <- TRUE
   cf$read_options$raw_data <- TRUE
   expect_error(iso_plot_continuous_flow_data(cf), "no raw data in supplied iso_files")
@@ -79,7 +79,7 @@ test_that("test that plot continuous flow works properly", {
 test_that("test that plot dual inlet works properly", {
 
   expect_error(iso_plot_dual_inlet_data(42), "can only plot dual inlet")
-  expect_is(di <- isoreader:::make_di_data_structure(), "dual_inlet")
+  expect_is(di <- isoreader:::make_di_data_structure("NA"), "dual_inlet")
   di$read_options$file_info <- TRUE
   di$read_options$raw_data <- TRUE
   expect_error(iso_plot_raw_data(di), "no raw data in supplied iso_files")
