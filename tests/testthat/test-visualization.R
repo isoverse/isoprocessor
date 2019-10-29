@@ -1,4 +1,33 @@
-context("Visualization")
+context("Visualization Utils")
+
+# iso_format ====
+
+test_that("test that iso_format works properly", {
+
+  expect_error(iso_format(1:5, 1), "unequal lengths")
+  x <- 1:2
+  expect_equal(
+    iso_format(x, b = iso_double_with_units(pi * 1:2, "V"), signif = 3),
+    c("x: 1\nb: 3.14V", "x: 2\nb: 6.28V")
+  )
+  expect_equal(
+    iso_format(a = x, b = iso_double_with_units(pi * 1:2, "V"), signif = 3),
+    c("a: 1\nb: 3.14V", "a: 2\nb: 6.28V")
+  )
+  expect_equal(
+    iso_format(a = x, b = iso_double_with_units(pi * 1:2, "V"), signif = 4),
+    c("a: 1\nb: 3.142V", "a: 2\nb: 6.283V")
+  )
+  expect_equal(
+    iso_format(x, iso_double_with_units(pi * 1:2, "V"), signif = 3, format_names = NULL),
+    c("1\n3.14V", "2\n6.28V")
+  )
+  expect_equal(
+    iso_format(x, iso_double_with_units(pi * 1:2, "V"), signif = 3, format_names = NULL, format_units = NULL),
+    c("1\n3.14", "2\n6.28")
+  )
+
+})
 
 # raw data ========
 
@@ -16,6 +45,8 @@ test_that("test that cf plot data prep works properly", {
   # FIXME: include more elaborate tests here
 
 })
+
+# continuous flow plot =====
 
 test_that("test that plot continuous flow works properly", {
 
@@ -75,6 +106,8 @@ test_that("test that plot continuous flow works properly", {
   # FIXME: implemment proper tests for visualization with peak_table
 
 })
+
+# dual inlet plot ====
 
 test_that("test that plot dual inlet works properly", {
 
