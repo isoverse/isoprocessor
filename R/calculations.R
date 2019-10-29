@@ -192,7 +192,7 @@ generate_ratio_column_names <- function(ratios) {
 #' If \code{bracket=TRUE} (the default), the delta values are calculated from the raw data ratios of the sample and the two bracketing standards in the same cycle and cycle before it (this implicitly assumes that the pre-standard has cycle number 0) If \code{bracket=FALSE}, the delta values are calculated straight from the corresponding raw data ratios of the sample and the standard in the same cycle. Delta values are only stored in the \code{sample} rows of the raw data, not in the \code{standard} rows.
 #'
 #' @param ... S3 method placeholder parameters, see class specific functions for details on parameters
-#' @return the passed in iso_file(s) with deltas added
+#' @return the passed in data with deltas added
 #' @export
 iso_calculate_deltas <- function(...) {
   UseMethod("iso_calculate_deltas")
@@ -210,15 +210,21 @@ iso_calculate_deltas.iso_file <- function(iso_files, ...) {
   iso_calculate_deltas(iso_as_file_list(iso_files), ...)[[1]]
 }
 
+# Note: could make this for dual_inlet_list instead but want a more helpful error message
 #' @rdname iso_calculate_deltas
-#' @param iso_files collection of iso_file objects
-#' @param deltas which deltas to calculate, must be in the complete format with prefix 'd' and both numerator and denominator mass, e.g. \code{c("d45/44", "d46/44")} to calculate both delta 45/44 and delta 46/44. Deltas can only be calculated if the corresponding ratio columns already exist.
+#' @param iso_files collection of dual inlet iso_file objects
+#' @param deltas which deltas to calculate from the raw data, must be in the complete format with prefix 'd' and both numerator and denominator mass, e.g. \code{c("d45/44", "d46/44")} to calculate both delta 45/44 and delta 46/44. Deltas can only be calculated if the corresponding ratio columns already exist.
 #' @inheritParams iso_show_default_processor_parameters
 #' @export
 iso_calculate_deltas.iso_file_list <- function(iso_files, deltas, bracket = TRUE, in_permil = TRUE, quiet = default(quiet)) {
 
-  # only dual inlet supported for now
-  if(!iso_is_dual_inlet(iso_files)) stop("can only calculate deltas for dual inlet files", call. = FALSE)
+  # calculating deltas from raw data only makes sense in dual inlet files
+  if(!iso_is_dual_inlet(iso_files)) {
+    if (iso_is_continuous_flow(iso_files))
+      stop("can only calculate raw deltas for dual inlet files, did you mean iso_calculate_peak_deltas?", call. = FALSE)
+    else
+      stop("can only calculate raw deltas for dual inlet files", call. = FALSE)
+  }
 
   # get raw data
   raw_data <- iso_get_raw_data(iso_files, quiet = TRUE) %>%
