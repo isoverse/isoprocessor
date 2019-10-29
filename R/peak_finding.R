@@ -1,6 +1,58 @@
 # peak finding algorithms =====
 
-#' combine chromatogram and peak table information for various calculations
+#' Find chromatographic peaks
+#'
+#' @param ... S3 method placeholder parameters, see class specific functions for details on parameters
+#' @export
+iso_find_peaks <- function(...) {
+  UseMethod("iso_find_peaks")
+}
+
+#' @export
+iso_find_peaks.default <- function(...) {
+  if(length(list(...)) == 0) stop("missing parameters", call. = FALSE)
+  stop("this function is not defined for objects of type '",
+       class(..1)[1], "'", call. = FALSE)
+}
+
+#' @export
+iso_find_peaks.iso_file <- function(iso_files, ...) {
+  iso_find_peaks(iso_as_file_list(iso_files), ...)[[1]]
+}
+
+#' @rdname iso_find_peaks
+#' @param iso_files collection of continuous flow iso_file objects
+#' @inheritParams iso_show_default_processor_parameters
+#' @export
+iso_find_peaks.iso_file_list <- function(iso_files, ..., quiet = default(quiet)) {
+
+  # only dual inlet supported for now
+  if(!iso_is_continuous_flow(iso_files))
+    stop("can only find peaks in continuous flow files", call. = FALSE)
+
+  # find peaks
+  peak_table <-
+    iso_get_raw_data(iso_files, quiet = TRUE) %>%
+    iso_find_peaks(...)
+
+  # set peak table
+  return(iso_set_peak_table(iso_files, peak_table, quiet = TRUE))
+}
+
+#' @rdname iso_find_peaks
+#' @param df a data frame of raw continuouus flow data, must have at minimum the columns 'file_id'
+#' @export
+iso_find_peaks.data.frame <- function(df, quiet = default(quiet)) {
+  # stop, not implemented yet
+  stop("sorry, peak finding algorightms are not yet implemented", call. = FALSE)
+}
+
+# combining raw and chromatographic data =====
+
+#' Generate chromatographic data with peak table information.
+#'
+#' This function combines chromatogram and peak table information for various downstream calculations (e.g. peak areas, backgrounds).
+#'
 #' @param raw_data the raw chromatographic data. If in long format, \code{data_trace} must be set to identify peaks correctly with the individual data traces.
 #' @param peak_table a data frame that describes the peaks in this chromatogram. Peaks must have at minimum an apex retention time or a start and end retention time (ideally all 3). If no apex retention time is provided, peak marker points cannot be identified. If not both start and end retention time are provided, peak start and end are identified to lie right before and after the apex point.
 #' @param file_id the column (or columns) that uniquely identifies individual analyses for proper matching of the raw chromatography data with the peak_table data. In most cases dealing with isoreader data, the default (\code{file_id}) should work fine.
@@ -8,8 +60,9 @@
 #' @param rt_start the column in the\code{peak_table} that holds the retention time where each peak starts.
 #' @param rt_end the column in the\code{peak_table} that holds the retention time where each peak ends.
 #' @param rt_unit which time unit the retention time columns (\code{rt}, \code{rt_start}, \code{rt_end}) are in. If not specified (i.e. the default), assumes it is the same unit as the time column of the raw data.
-#' @param data_trace expression to identify individual data traces for raw data in long format. If this is not set correctly for data in long format, peak table data is integrated across all traces in the raw data leading to unpredictable peak border and apex identifications.
-combine_raw_data_with_peak_table <- function(
+#' @param data_trace expression to identify individual data traces for raw data in long format. This is not usually needed for calculations but can be useful when working with data frames already gathered for plotting. If the data is indeed in gathered (long) format, and this is not set correctly, peak table data is integrated across all traces in the raw data leading to unpredictable peak border and apex identifications.
+#' @export
+iso_combine_raw_data_with_peak_table <- function(
   raw_data, peak_table,
   file_id = default(file_id), data_trace = NULL,
   rt = default(rt), rt_start = default(rt_start), rt_end = default(rt_end),
