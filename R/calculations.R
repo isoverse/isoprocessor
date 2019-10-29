@@ -44,7 +44,7 @@ iso_calculate_ratios.iso_file_list <- function(iso_files, ratios, quiet = defaul
       if (.x$file_info$file_id %in% names(raw_data)) {
         # make sure only to keep original cols and ratio columns
         original_cols <- names(.x$raw_data)
-        .x$raw_data <- raw_data[[.x$file_info$file_id]][c(original_cols, ratio_cols)]
+        .x$raw_data <- raw_data[[.x$file_info$file_id]][unique(c(original_cols, ratio_cols))]
       }
       .x
     })
@@ -240,7 +240,7 @@ iso_calculate_deltas.iso_file_list <- function(iso_files, deltas, bracket = TRUE
       if (.x$file_info$file_id %in% names(raw_data)) {
         # make sure only to keep original cols and new delta columns
         original_cols <- names(.x$raw_data)
-        .x$raw_data <- raw_data[[.x$file_info$file_id]][c(original_cols, delta_cols)]
+        .x$raw_data <- raw_data[[.x$file_info$file_id]][unique(c(original_cols, delta_cols))]
       }
       .x
     })

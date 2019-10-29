@@ -255,7 +255,7 @@ iso_mutate_peak_table.iso_file_list <- function(iso_files, ..., quiet = default(
     ~{
       if (!is.null(.x$peak_table)) {
         original_cols <- names(.x$peak_table)
-        .x$peak_table <- split_peak_table[[.x$file_info$file_id]][c(original_cols, new_cols)]
+        .x$peak_table <- split_peak_table[[.x$file_info$file_id]][unique(c(original_cols, new_cols))]
       }
       .x
     })
