@@ -34,7 +34,8 @@ Plot mass data from dual inlet files
 normalization is not useful for dual inlet data, except potentially between standard and sample - however, for this it is more meaningful to simply plot the relevant ratios together
 }
 \seealso{
-Other plot functions: \code{\link{iso_plot_continuous_flow_data}},
+Other plot functions: \code{\link{iso_format}},
+  \code{\link{iso_plot_continuous_flow_data}},
   \code{\link{iso_plot_raw_data}},
   \code{\link{iso_prepare_continuous_flow_plot_data}}
 }

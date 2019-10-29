@@ -15,11 +15,11 @@ iso_calculate_deltas(...)
   in_permil = TRUE, ratio_prefix = "r", quiet = default(quiet))
 }
 \arguments{
-\item{...}{parameters for the data specific plotting functions}
+\item{...}{S3 method placeholder parameters, see class specific functions for details on parameters}
 
-\item{iso_files}{collection of iso_file objects}
+\item{iso_files}{collection of dual inlet iso_file objects}
 
-\item{deltas}{which deltas to calculate, must be in the complete format with prefix 'd' and both numerator and denominator mass, e.g. \code{c("d45/44", "d46/44")} to calculate both delta 45/44 and delta 46/44. Deltas can only be calculated if the corresponding ratio columns already exist.}
+\item{deltas}{which deltas to calculate from the raw data, must be in the complete format with prefix 'd' and both numerator and denominator mass, e.g. \code{c("d45/44", "d46/44")} to calculate both delta 45/44 and delta 46/44. Deltas can only be calculated if the corresponding ratio columns already exist.}
 
 \item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
 
@@ -28,7 +28,7 @@ iso_calculate_deltas(...)
 \item{ratio_prefix}{the prefix of the ratio columns. Default is \code{"r"} which is what \code{\link{iso_calculate_ratios}} generates.}
 }
 \value{
-the passed in iso_file(s) with deltas added
+the passed in data with deltas added
 }
 \description{
 Calculate delta values from recorded data in dual inlet files (continuous flow not yet supported). Note that these are recorded delta values of sample vs. standard in each dual inlet file and NOT normalized against any external standard or reported values of the standard. They usually need at least a frame shift correction afterwards. Also note that the delta values are only multipled by 1000 if \code{in_permil=TRUE} (the default), otherwise returns raw values without unit multiplication.

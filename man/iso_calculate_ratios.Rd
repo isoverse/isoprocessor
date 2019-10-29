@@ -2,16 +2,28 @@
 % Please edit documentation in R/calculations.R
 \name{iso_calculate_ratios}
 \alias{iso_calculate_ratios}
+\alias{iso_calculate_ratios.iso_file_list}
+\alias{iso_calculate_ratios.data.frame}
 \title{Calculate ratios}
 \usage{
-iso_calculate_ratios(iso_files, ratios, quiet = default(quiet))
+iso_calculate_ratios(...)
+
+\method{iso_calculate_ratios}{iso_file_list}(iso_files, ratios,
+  quiet = default(quiet))
+
+\method{iso_calculate_ratios}{data.frame}(df, ratios,
+  quiet = default(quiet))
 }
 \arguments{
+\item{...}{S3 method placeholder parameters, see class specific functions for details on parameters}
+
 \item{iso_files}{collection of iso_file objects}
 
-\item{ratios}{which ratios to calculate (e.g. c("45/44", "46/44")), will only be calculated in files that have the necessary mass column}
+\item{ratios}{which ratios to calculate (e.g. c("45/44", "46/44"))}
 
 \item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
+
+\item{df}{a data frame of raw continuous flow or dual inlet data, must have at minimum the columns 'file_id' and the referenced mass columns required to calculate the \code{ratios}. Assumes that mass columns have either 'v' (for voltages) or 'i' (for currents) as the column name prefix and a ".<unit>" suffix, but otherwise makes no safety checks and will let you calculate any two ratios.}
 }
 \value{
 the passed in iso_file(s) with ratios added
