@@ -74,17 +74,24 @@ iso_calculate_ratios.data.frame <- function(df, ratios, quiet = default(quiet)) 
   ratio_columns <- generate_ratio_column_names(ratios)
 
   # available mass columns
-  mass_column_pattern <- "^[vi](\\d+)\\.(.*)$"
-  mass_lookup <- names(df) %>%
+  mass_column_pattern <- "^([vi])(\\d+)\\.(.*)$"
+  mass_lookup_df <- names(df) %>%
     stringr::str_subset(mass_column_pattern) %>%
     stringr::str_match(mass_column_pattern) %>%
-    { setNames(.[,1], .[,2]) }
+    as_tibble(.name_repair = ~c("col", "type", "mass", "units"))
 
-  # check for required mass columns
-  req_mass_columns <- unique(c(ratio_columns$top, ratio_columns$bot))
-  if (!all(ok <- req_mass_columns %in% names(mass_lookup))) {
-    glue::glue("missing intensity column(s): '{paste(req_mass_columns[!ok], collapse = \"', '\")}'. ",
-               "These columns must exist as either current or voltage intensity columns.") %>%
+  # calculation columns
+  calc_columns <-
+    ratio_columns %>%
+    left_join(select(mass_lookup_df, type_top = type, col_top = col, units_top = units, top = mass), by = "top") %>%
+    left_join(select(mass_lookup_df, type_bot = type, col_bot = col, units_bot = units, bot = mass), by = "bot")
+  ok_calc_columns <- filter(calc_columns, type_top == type_bot)
+
+  # check for ratios with missing columns
+  prob_ratios <- filter(calc_columns, !column %in% ok_calc_columns$column)$ratio %>% unique()
+  if (length(prob_ratios) > 0) {
+    glue::glue("missing intensity column(s) for the following ratio(s): '{paste(prob_ratios, collapse = \"', '\")}'. ",
+               "The columns for each ratio must exist as current or voltage intensity columns.") %>%
       stop(call. = FALSE)
   }
 
@@ -103,13 +110,28 @@ iso_calculate_ratios.data.frame <- function(df, ratios, quiet = default(quiet)) 
       message()
   }
 
+  # ratios quo function:
+  generate_ratio_quo <- function(col_top, col_bot) {
+    if (length(col_top) == 1) {
+      return(quo(!!sym(col_top[1]) / !!sym(col_bot[1])))
+    } else if (length(col_top) == 2) {
+      return(quo(case_when(
+        !is.na(!!sym(col_top[1])) ~ !!sym(col_top[1]) / !!sym(col_bot[1]),
+        TRUE ~ !!sym(col_top[2]) / !!sym(col_bot[2])
+      )))
+    } else {
+      glue::glue("cannot deal with ratios that have {length(col_top)} valid column combinations", call. = FALSE)
+    }
+  }
+
   # ratio value quos
   ratio_quos <-
-    with(
-      ratio_columns,
-      map2(top, bot, ~quo(!!sym(mass_lookup[[.x]]) / !!sym(mass_lookup[[.y]]))) %>%
-        setNames(column)
+    ok_calc_columns %>%
+    dplyr::group_by(column) %>%
+    dplyr::summarize(
+      quo = list(generate_ratio_quo(col_top, col_bot))
     )
+  ratio_quos <- setNames(ratio_quos$quo, ratio_quos$column)
 
   # calculation
   df <- mutate(df, !!!ratio_quos)
