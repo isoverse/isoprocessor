@@ -464,7 +464,7 @@ run_grouped_regression <- function(dt, group_by = NULL, model = NULL, model_data
 #'
 #' @param dt data table with calibrations
 #' @param predict which value to calculate, must be one of the regression's independent variables
-#' @param calculate_error whether to estimate the standard error from the calibration (using the Wald method), stores the result in the new \code{predict_error} column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.
+#' @param calculate_error whether to estimate the standard error from the calibration (using the Wald method as described in \link[investr]{invest}), stores the result in the new \code{predict_error} column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.
 #' @inheritParams run_regression
 #' @inheritParams unnest_model_column
 #' @param predict_value the new column in the model_data that holds the predicted value

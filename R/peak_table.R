@@ -19,6 +19,9 @@ iso_set_peak_table <- function(iso_files, peak_table = tibble(file_id = characte
   if (!isoreader::iso_is_continuous_flow(iso_files))
     stop("peak table information can only be set for continuous flow files", call. = FALSE)
 
+  if (!is.data.frame(peak_table))
+    stop("peak_table must be a data frame", call. = FALSE)
+
   if (!"file_id" %in% names(peak_table))
     stop("peak_table does not have a 'file_id' column, cannot match to iso_files", call. = FALSE)
 
@@ -236,6 +239,10 @@ iso_mutate_peak_table.iso_file <- function(iso_files, ..., quiet = default(quiet
 #' @export
 iso_mutate_peak_table.iso_file_list <- function(iso_files, ..., quiet = default(quiet)) {
 
+  # continuous flow file check
+  if (!isoreader::iso_is_continuous_flow(iso_files))
+    stop("peak tables can only exist in continuous flow files", call. = FALSE)
+
   # information
   if (!quiet) {
     glue::glue("Info: mutating peak table for {length(iso_files)} data file(s)") %>%
@@ -245,11 +252,13 @@ iso_mutate_peak_table.iso_file_list <- function(iso_files, ..., quiet = default(
   # mutate iso_files' file info
   peak_table <- iso_get_peak_table(iso_files, quiet = TRUE)
   original_cols <- names(peak_table)
-  peak_table <- dplyr::mutate(peak_table, ...)
-  new_cols <- setdiff(names(peak_table), original_cols)
+  mutate_quos <- rlang::enquos(...)
+  new_cols <- names(mutate_quos)
+  peak_table <- dplyr::mutate(peak_table, !!!mutate_quos)
   split_peak_table <- split(peak_table, peak_table$file_id)
 
-  # mutate
+  # mutate this way to ensure that only original columns are kept rather than
+  # a bunch of NA columns if peak_tables differ between iso_files
   iso_files <- map(
     iso_files,
     ~{

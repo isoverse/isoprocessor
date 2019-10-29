@@ -12,6 +12,7 @@ test_that("test that setting peak table works", {
   # errors
   expect_error(iso_set_peak_table(1), "only.*for continuous flow")
   expect_error(iso_set_peak_table(isoreader:::make_di_data_structure("NA")), "only.*continuous flow")
+  expect_error(iso_set_peak_table(iso_file_a, peak_table = 1), "must be a data frame")
   expect_error(iso_set_peak_table(iso_file_a, peak_table = tibble()), "no.*file_id")
 
   # test data
@@ -105,6 +106,7 @@ test_that("test that peak table mutate works", {
 
   # mutate test
   expect_error(iso_mutate_peak_table(1L), "not defined")
+  expect_error(iso_mutate_peak_table(isoreader:::make_di_data_structure("a")), "only.*continuous flow")
   expect_silent(iso_mutate_peak_table(iso_file_a, quiet = TRUE))
   expect_message(out <- iso_mutate_peak_table(iso_file_a), "mutating.*1")
   expect_equal(out$peak_table, iso_file_a$peak_table)
