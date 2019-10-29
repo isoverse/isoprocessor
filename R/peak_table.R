@@ -208,6 +208,62 @@ iso_set_peak_table_from_isodat_vendor_data_table <- function(iso_files, quiet = 
   )
 }
 
+# mutate peak table =====
+
+#' Mutate peak table
+#'
+#' Mutate the peak table (\code{\link{iso_get_peak_table}}) within isofile objects by changing existing columns or introducing new ones. Works just like dplyr's \link[dplyr]{mutate}.
+#'
+#' @inheritParams isoreader::iso_get_raw_data
+#' @param ... dplyr-style \link[dplyr]{mutate} conditions applied to the combined peak_table (see \code{\link{iso_get_peak_table}})
+#' @family peak table functions
+#' @export
+iso_mutate_peak_table <- function(iso_files, ..., quiet = default(quiet)) {
+  UseMethod("iso_mutate_peak_table")
+}
+
+#' @export
+iso_mutate_peak_table.default <- function(iso_files, ..., quiet = default(quiet)) {
+  stop("this function is not defined for objects of type '",
+       class(iso_files)[1], "'", call. = FALSE)
+}
+
+#' @export
+iso_mutate_peak_table.iso_file <- function(iso_files, ..., quiet = default(quiet)) {
+  iso_mutate_peak_table(iso_as_file_list(iso_files), ..., quiet = quiet)[[1]]
+}
+
+#' @export
+iso_mutate_peak_table.iso_file_list <- function(iso_files, ..., quiet = default(quiet)) {
+
+  # information
+  if (!quiet) {
+    glue::glue("Info: mutating peak table for {length(iso_files)} data file(s)") %>%
+      message()
+  }
+
+  # mutate iso_files' file info
+  peak_table <- iso_get_peak_table(iso_files, quiet = TRUE)
+  original_cols <- names(peak_table)
+  peak_table <- dplyr::mutate(peak_table, ...)
+  new_cols <- setdiff(names(peak_table), original_cols)
+  split_peak_table <- split(peak_table, peak_table$file_id)
+
+  # mutate
+  iso_files <- map(
+    iso_files,
+    ~{
+      if (!is.null(.x$peak_table)) {
+        original_cols <- names(.x$peak_table)
+        .x$peak_table <- split_peak_table[[.x$file_info$file_id]][c(original_cols, new_cols)]
+      }
+      .x
+    })
+
+  # return
+  return(iso_as_file_list(iso_files))
+}
+
 # aggregation ======
 
 #' Aggregate peak table

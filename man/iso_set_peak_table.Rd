@@ -22,6 +22,7 @@ This funciton will issue a warning if the \code{peak_table} has \code{file_id} v
 }
 \seealso{
 Other peak table functions: \code{\link{iso_get_peak_table}},
+  \code{\link{iso_mutate_peak_table}},
   \code{\link{iso_set_peak_table_from_vendor_data_table}}
 }
 \concept{peak table functions}

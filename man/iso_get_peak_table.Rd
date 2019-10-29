@@ -23,7 +23,8 @@ iso_get_peak_table(iso_files, select = everything(),
 Aggregate peak table from continous flow files. The return peak table has implicit units, to make the units explicit, use \code{\link[isoreader]{iso_make_units_explicit}}.
 }
 \seealso{
-Other peak table functions: \code{\link{iso_set_peak_table_from_vendor_data_table}},
+Other peak table functions: \code{\link{iso_mutate_peak_table}},
+  \code{\link{iso_set_peak_table_from_vendor_data_table}},
   \code{\link{iso_set_peak_table}}
 }
 \concept{peak table functions}

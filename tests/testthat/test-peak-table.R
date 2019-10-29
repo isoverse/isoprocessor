@@ -92,6 +92,29 @@ test_that("test that setting peak table from vendor data table works", {
 
 })
 
+# peak table mutate =====
+
+test_that("test that peak table mutate works", {
+
+  # test data
+  iso_file_a <- isoreader:::make_cf_data_structure("a")
+  iso_file_a$peak_table <- tibble(a = 1, b1 = 1, b2 = 1)
+  iso_file_b <- isoreader:::make_cf_data_structure("b")
+  iso_file_b$peak_table <- tibble(b2 = 1, b3 = 1)
+  iso_files <- c(iso_file_a, iso_file_b)
+
+  # mutate test
+  expect_error(iso_mutate_peak_table(1L), "not defined")
+  expect_silent(iso_mutate_peak_table(iso_file_a, quiet = TRUE))
+  expect_message(out <- iso_mutate_peak_table(iso_file_a), "mutating.*1")
+  expect_equal(out$peak_table, iso_file_a$peak_table)
+  expect_message(out <- iso_mutate_peak_table(iso_files, x = 5 * b1), "mutating.*2")
+  expect_equal(out$a$peak_table, mutate(iso_file_a$peak_table, x = 5 * b1))
+  expect_equal(select(out$b$peak_table, -x), iso_file_b$peak_table)
+  expect_equal(out$b$peak_table$x, NA_real_)
+
+})
+
 # test aggregation =====
 
 test_that("test that peak table aggregation works", {

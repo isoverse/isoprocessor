@@ -40,6 +40,7 @@ Set the peak table from vendor data in each iso_file. Only the vendor data table
 }
 \seealso{
 Other peak table functions: \code{\link{iso_get_peak_table}},
+  \code{\link{iso_mutate_peak_table}},
   \code{\link{iso_set_peak_table}}
 }
 \concept{peak table functions}
