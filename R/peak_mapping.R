@@ -25,7 +25,7 @@ iso_map_peaks.iso_file <- function(iso_files, ...) {
 #' @rdname iso_map_peaks
 #' @param iso_files collection of continuous flow iso_file objects
 #' @param peak_maps data frame with the peak map(s). At minimum, this data frame must have a \code{compound} and \code{rt} column but may have additional information columns. If multiple peak maps are provided, the \code{peak_table} data frame requires a \code{map_id} column to identify which peak map should be used and the peak maps data frame must have a \code{rt:<map_id>} column for each used value of \code{map_id}. The names of all these columns can be changed if necessary using the \code{compound}, code{rt} and \code{map_id} parameters.
-#' @param map_id the column in peak_table that indicates which map to use for which file (only necessary if multiple peak maps are used)
+#' @param map_id the column that indicates which map to use for which file (only necessary if multiple peak maps are used)
 #' @param compound the column in peak_maps that holds compound information
 #' @param rt the column in peak_table and colum prefix in peak_maps ("rt:...") that holds retention time information
 #' @param rt_start the column in peak_table that holds start of peak retention times
@@ -53,8 +53,16 @@ iso_map_peaks.iso_file_list <- function(
     stop("peak tables can only exist in continuous flow files", call. = FALSE)
 
   # peak_table
+  map_id_quo <- resolve_defaults(enquo(map_id))
   peak_table <- iso_get_peak_table(iso_files, quiet = TRUE)
   if (nrow(peak_table) == 0) return(iso_files)
+
+  # see if map id column comes from file info
+  file_info <- iso_get_file_info(iso_files, select = !!map_id_quo, quiet = TRUE)
+  file_info_cols <- names(file_info) %>% stringr::str_subset(fixed("file_id"), negate = TRUE)
+  if (length(file_info_cols) > 0) {
+    peak_table <- dplyr::left_join(file_info, peak_table, by = "file_id")
+  }
 
   # map peaks
   mapped_peak_table <-
@@ -62,7 +70,7 @@ iso_map_peaks.iso_file_list <- function(
     iso_map_peaks(
       peak_maps = peak_maps,
       file_id = file_id,
-      map_id = !!enquo(map_id),
+      map_id = !!map_id_quo,
       compound = !!enquo(compound),
       rt = !!enquo(rt),
       rt_start = !!enquo(rt_start),
@@ -70,6 +78,11 @@ iso_map_peaks.iso_file_list <- function(
       rt_prefix_divider = rt_prefix_divider,
       quiet = quiet
     )
+
+  # remove extra file info columns again
+  if (length(file_info_cols) > 0) {
+    mapped_peak_table <- dplyr::select(mapped_peak_table, !!!map(file_info_cols, ~quo(-!!sym(.x))))
+  }
 
   # assign peak table (note: go for direct assigment even if it generates some
   # NAs in columns that differ between iso_files, at this point if files are
@@ -133,7 +146,7 @@ iso_map_peaks.data.frame <- function(
     # ignore empty rows (safety precaution)
     filter(!is.na(!!sym(pm_cols$compound))) %>%
     # add NA compound to map undefined peaks
-    bind_rows(tibble(compound = NA)) %>% unique() %>%
+    vctrs::vec_rbind(tibble(compound = NA_character_)) %>% unique() %>%
     # gather map retention times
     gather(..map_id.., ..rt_target.., starts_with(peak_table_cols$rt)) %>%
     # replace the rt prefix to get to the actual map name
@@ -234,7 +247,7 @@ iso_map_peaks.data.frame <- function(
 
   # combine found and missing peaks
   all_data <-
-    bind_rows(found_peaks, missing_peaks) %>%
+    vctrs::vec_rbind(found_peaks, missing_peaks) %>%
     # fill in convenience information columns and unify rt for missing peaks
     mutate(
       !!new_cols$is_identified := !is.na(compound),
@@ -342,11 +355,13 @@ iso_get_problematic_peak_mappings.iso_file <- function(iso_files, ...) {
 #' @param unidentified whether to include peaks that are problematics because they are unidentified
 #' @param missing whether to include peaks that are problematics because they are missing
 #' @param ambiguous whether to include peaks that are problematics because they are ambiguously identified
+#' @inheritParams iso_get_peak_table
 #' @inheritParams iso_show_default_processor_parameters
 #' @return data table with rows for problematic peaks and the \code{select}-identified columns
 #' @export
-iso_get_problematic_peak_mappings.iso_file_list <- function(iso_files, select = everything(), unidentified = TRUE, missing = TRUE, ambiguous = TRUE, quiet = default(quiet)) {
-  iso_files %>% iso_get_peak_table(quiet = TRUE) %>%
+iso_get_problematic_peak_mappings.iso_file_list <- function(iso_files, select = everything(), include_file_info = NULL, unidentified = TRUE, missing = TRUE, ambiguous = TRUE, quiet = default(quiet)) {
+  iso_files %>%
+    iso_get_peak_table(include_file_info = !!enquo(include_file_info), quiet = TRUE) %>%
     iso_get_problematic_peak_mappings(
       select = !!enquo(select),
       unidentified = unidentified,
@@ -432,14 +447,20 @@ iso_summarize_peak_mappings.iso_file <- function(iso_files, ...) {
 
 #' @rdname iso_summarize_peak_mappings
 #' @inheritParams iso_map_peaks.iso_file_list
+#' @inheritParams iso_get_peak_table
 #' @export
-iso_summarize_peak_mappings.iso_file_list <- function(iso_files, compound = default(compound), rt = default(rt)) {
-  iso_files %>% iso_get_peak_table(quiet = TRUE) %>%
-    iso_summarize_peak_mappings(
-      file_id = file_id,
-      compound = !!enquo(compound),
-      rt = !!enquo(rt)
-    )
+iso_summarize_peak_mappings.iso_file_list <- function(iso_files, include_file_info = NULL, compound = default(compound), rt = default(rt)) {
+  peak_table <- iso_get_peak_table(iso_files, quiet = TRUE)
+  file_info <- iso_get_file_info(iso_files, select = !!enquo(include_file_info), quiet = TRUE)
+  if (ncol(file_info) > 1) {
+    peak_table <- dplyr::left_join(file_info, peak_table, by = "file_id")
+  }
+  iso_summarize_peak_mappings(
+    peak_table,
+    file_id = !!names(file_info),
+    compound = !!enquo(compound),
+    rt = !!enquo(rt)
+  )
 }
 
 #' @rdname iso_summarize_peak_mappings

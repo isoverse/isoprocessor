@@ -167,15 +167,19 @@ test_that("testing that peak mapping works", {
 
   # test mapping with iso files
   iso_file_a <- isoreader:::make_cf_data_structure("a")
+  iso_file_a$read_options$file_info <- TRUE
   iso_file_b <- isoreader:::make_cf_data_structure("b")
+  iso_file_b$read_options$file_info <- TRUE
   iso_file_c <- isoreader:::make_cf_data_structure("c")
+  iso_file_c$read_options$file_info <- TRUE
   iso_files <- c(iso_file_a, iso_file_b, iso_file_c)
   expect_warning(iso_map_peaks(iso_file_a, my_peak_map), "no.*peak_table")
   expect_warning(iso_map_peaks(iso_files, my_peak_map), "no.*peak_table")
-  expect_message(iso_files <- iso_set_peak_table(iso_files, my_dt), "setting peak table for 3/3")
-  expect_equal(iso_files %>% iso_get_peak_table(), my_dt)
+  expect_message(iso_files <- iso_add_file_info(iso_files, select(my_dt, file_id, map_id) %>% unique(), by = "file_id"))
+  expect_message(iso_files <- iso_set_peak_table(iso_files, select(my_dt, -map_id)), "setting peak table for 3/3")
+  expect_equal(iso_files %>% iso_get_peak_table(include_file_info = map_id), my_dt)
   expect_message(mapped_iso <- iso_map_peaks(iso_files, my_peak_maps), "8 of 9 peaks in 3 files.*using 2 peak maps.*5.*ambiguous.*1.*not be mapped.*1.*missing")
-  expect_equal(iso_get_peak_table(mapped_iso), mapped_dt)
+  expect_equal(iso_get_peak_table(mapped_iso, include_file_info = map_id), mapped_dt)
 
   # test problematic peaks with iso_files
   expect_equal(
@@ -191,11 +195,15 @@ test_that("testing that peak mapping works", {
       select = c(file_id, rt, compound), ambiguous = TRUE, missing = FALSE, unidentified = FALSE),
     out3)
 
-
-  expect_equal(out4, mapped_iso %>% iso_remove_problematic_peak_mappings() %>% iso_get_peak_table())
-  expect_equal(out5, mapped_iso %>% iso_remove_problematic_peak_mappings(remove_ambiguous = FALSE, remove_unidentified = FALSE) %>% iso_get_peak_table())
-  expect_equal(out6, mapped_iso %>% iso_remove_problematic_peak_mappings(remove_ambiguous = FALSE, remove_missing = FALSE) %>% iso_get_peak_table())
-  expect_equal(out7, mapped_iso %>% iso_remove_problematic_peak_mappings(remove_missing = FALSE, remove_unidentified = FALSE) %>% iso_get_peak_table())
+  expect_equal(out4, mapped_iso %>% iso_remove_problematic_peak_mappings() %>% iso_get_peak_table(include_file_info = map_id))
+  expect_equal(out5, mapped_iso %>% iso_remove_problematic_peak_mappings(remove_ambiguous = FALSE, remove_unidentified = FALSE) %>%
+                 iso_get_peak_table(include_file_info = map_id))
+  expect_equal(out6, mapped_iso %>% iso_remove_problematic_peak_mappings(remove_ambiguous = FALSE, remove_missing = FALSE) %>%
+                 iso_get_peak_table(include_file_info = map_id))
+  expect_equal(out7, mapped_iso %>% iso_remove_problematic_peak_mappings(remove_missing = FALSE, remove_unidentified = FALSE) %>%
+                 iso_get_peak_table(include_file_info = map_id))
   expect_equal(iso_summarize_peak_mappings(mapped_dt), iso_summarize_peak_mappings(mapped_iso))
+  expect_equal(iso_summarize_peak_mappings(mapped_dt, file_id = c(file_id, map_id)),
+               iso_summarize_peak_mappings(mapped_iso, include_file_info = map_id))
 
 })
