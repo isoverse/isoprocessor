@@ -694,9 +694,7 @@ global_calibs_with_ranges %>%
 
 # create calibrated peak table
 peak_table_calibrated <- global_calibs_with_ranges %>% 
-  iso_unnest_data(select = everything()) %>% 
-  # give the new predicted variable the proper units
-  mutate(true_d13C_pred = iso_double_with_units(true_d13C_pred, "permil"))
+  iso_unnest_data(select = everything()) 
 ```
 
 # Evaluation
@@ -740,7 +738,7 @@ peak_table_calibrated %>%
   # visualize
   iso_plot_data(
     # x and y
-    x = `true_d13C [permil]`, y = `true_d13C_pred [permil]`, y_error = true_d13C_pred_se,
+    x = `true_d13C [permil]`, y = `true_d13C_pred [permil]`, y_error = `true_d13C_pred_se [permil]`,
     # aesthetics
     color = compound, size = `area44 [mVs]`,
     # geoms
@@ -768,7 +766,7 @@ peak_table_calibrated %>%
   # visualize
   iso_plot_data(
     # x and y
-    x = sample, y = `true_d13C_pred [permil]`, y_error = true_d13C_pred_se,
+    x = sample, y = `true_d13C_pred [permil]`, y_error = `true_d13C_pred_se [permil]`,
     # aesthetics
     color = in_range, size = rel_area,
     # geoms
