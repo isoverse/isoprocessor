@@ -2,6 +2,8 @@
 
 #' Find chromatographic peaks
 #'
+#' NOT YET IMPLEMENTED.
+#'
 #' @param ... S3 method placeholder parameters, see class specific functions for details on parameters
 #' @export
 iso_find_peaks <- function(...) {
