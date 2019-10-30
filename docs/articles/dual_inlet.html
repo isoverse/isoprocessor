@@ -13,8 +13,9 @@
 <link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png">
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/simplex/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous">
-<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- sticky kit --><script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous">
+<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
 <script src="../pkgdown.js"></script><meta property="og:title" content="Dual Inlet Examples">
 <meta property="og:description" content="">
 <meta name="twitter:card" content="summary">
@@ -42,7 +43,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.4.0</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.4.7</span>
       </span>
     </div>
 
@@ -86,12 +87,13 @@
 <!--/.navbar -->
 
       
+
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1>Dual Inlet Examples</h1>
             
-            <h4 class="date">2019-05-29</h4>
+            <h4 class="date">2019-10-30</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/isoverse/isoprocessor/blob/master/vignettes/dual_inlet.Rmd"><code>vignettes/dual_inlet.Rmd</code></a></small>
       <div class="hidden name"><code>dual_inlet.Rmd</code></div>
@@ -105,100 +107,120 @@
 <a href="#introduction" class="anchor"></a>Introduction</h1>
 <p>Isoprocessor supports several plotting and data conversion functions specifically for dual inlet data. This vignette shows some of the functionality for dual inlet files read by the <a href="http://isoprocessor.isoverse.org">isoreader package</a> (see the <a href="http://isoreader.isoverse.org/articles/dual_inlet.html">corresponding vignette</a> for details on data retrieval, storage and export).</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co"># load isoreader and isoprocessor packages</span></a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(isoreader)</a>
-<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(isoprocessor)</a></code></pre></div>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(isoreader)</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(isoprocessor)</a></code></pre></div>
 </div>
 <div id="reading-files" class="section level1">
 <h1 class="hasAnchor">
 <a href="#reading-files" class="anchor"></a>Reading files</h1>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co"># read dual inlet examples provided by the isoreader package</span></a>
 <a class="sourceLine" id="cb2-2" data-line-number="2">iso_files &lt;-<span class="st"> </span></a>
-<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="https://www.rdocumentation.org/packages/isoreader/topics/iso_read_dual_inlet">iso_read_dual_inlet</a></span>(</a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">    <span class="kw"><a href="https://www.rdocumentation.org/packages/isoreader/topics/iso_get_reader_example">iso_get_reader_example</a></span>(<span class="st">"dual_inlet_example.did"</span>),</a>
-<a class="sourceLine" id="cb2-5" data-line-number="5">    <span class="kw"><a href="https://www.rdocumentation.org/packages/isoreader/topics/iso_get_reader_example">iso_get_reader_example</a></span>(<span class="st">"dual_inlet_example2.did"</span>),</a>
-<a class="sourceLine" id="cb2-6" data-line-number="6">    <span class="kw"><a href="https://www.rdocumentation.org/packages/isoreader/topics/iso_get_reader_example">iso_get_reader_example</a></span>(<span class="st">"dual_inlet_example.caf"</span>)</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_read_dual_inlet.html">iso_read_dual_inlet</a></span>(</a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">    <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_get_reader_example.html">iso_get_reader_example</a></span>(<span class="st">"dual_inlet_example.did"</span>),</a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">    <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_get_reader_example.html">iso_get_reader_example</a></span>(<span class="st">"dual_inlet_example2.did"</span>),</a>
+<a class="sourceLine" id="cb2-6" data-line-number="6">    <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_get_reader_example.html">iso_get_reader_example</a></span>(<span class="st">"dual_inlet_example.caf"</span>)</a>
 <a class="sourceLine" id="cb2-7" data-line-number="7">  )</a>
-<a class="sourceLine" id="cb2-8" data-line-number="8"><span class="co">#&gt; Info: preparing to read 3 data files (all will be cached)...</span></a>
-<a class="sourceLine" id="cb2-9" data-line-number="9"><span class="co">#&gt; Info: reading file 'dual_inlet_example.did' from cache...</span></a>
-<a class="sourceLine" id="cb2-10" data-line-number="10"><span class="co">#&gt; Info: reading file 'dual_inlet_example2.did' from cache...</span></a>
-<a class="sourceLine" id="cb2-11" data-line-number="11"><span class="co">#&gt; Info: reading file 'dual_inlet_example.caf' from cache...</span></a>
-<a class="sourceLine" id="cb2-12" data-line-number="12"><span class="co">#&gt; Info: finished reading 3 files in 0.34 secs</span></a></code></pre></div>
+<a class="sourceLine" id="cb2-8" data-line-number="8"><span class="co">#&gt; Registered S3 method overwritten by 'R.oo':</span></a>
+<a class="sourceLine" id="cb2-9" data-line-number="9"><span class="co">#&gt;   method        from       </span></a>
+<a class="sourceLine" id="cb2-10" data-line-number="10"><span class="co">#&gt;   throw.default R.methodsS3</span></a>
+<a class="sourceLine" id="cb2-11" data-line-number="11"><span class="co">#&gt; Info: preparing to read 3 data files (all will be cached)...</span></a>
+<a class="sourceLine" id="cb2-12" data-line-number="12"><span class="co">#&gt; Info: reading file 'dual_inlet_example.did' with '.did' reader</span></a>
+<a class="sourceLine" id="cb2-13" data-line-number="13"><span class="co">#&gt; Info: reading file 'dual_inlet_example2.did' with '.did' reader</span></a>
+<a class="sourceLine" id="cb2-14" data-line-number="14"><span class="co">#&gt; Info: reading file 'dual_inlet_example.caf' with '.caf' reader</span></a>
+<a class="sourceLine" id="cb2-15" data-line-number="15"><span class="co">#&gt; Info: finished reading 3 files in 9.84 secs</span></a></code></pre></div>
 </div>
 <div id="visualization" class="section level1">
 <h1 class="hasAnchor">
 <a href="#visualization" class="anchor"></a>Visualization</h1>
 <p>Plotting the raw data can be done either with the generic <code><a href="../reference/iso_plot_raw_data.html">iso_plot_raw_data()</a></code> function for a simple plot with default parameters, or directly using the dual inlet specific <code><a href="../reference/iso_plot_dual_inlet_data.html">iso_plot_dual_inlet_data()</a></code>:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1">iso_files <span class="op">%&gt;%</span><span class="st"> </span><span class="kw"><a href="../reference/iso_plot_dual_inlet_data.html">iso_plot_dual_inlet_data</a></span>()</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw"><a href="../reference/iso_plot_dual_inlet_data.html">iso_plot_dual_inlet_data</a></span>(iso_files)</a></code></pre></div>
 <p><img src="dual_inlet_files/figure-html/all_data-1.png" width="1152"></p>
 <p>All customization options are described in the function help (<code><a href="../reference/iso_plot_dual_inlet_data.html">?iso_plot_dual_inlet_data</a></code>) and include, for example, plotting only a specific subset of masses:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1">iso_files <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="st">  </span><span class="co"># plot just masses 2, 44 and 45</span></a>
-<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_dual_inlet_data.html">iso_plot_dual_inlet_data</a></span>(</a>
-<a class="sourceLine" id="cb4-4" data-line-number="4">    <span class="dt">data =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"28"</span>, <span class="st">"44"</span>, <span class="st">"45"</span>)</a>
-<a class="sourceLine" id="cb4-5" data-line-number="5">  )</a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="co"># plot just masses 2, 44 and 45</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="kw"><a href="../reference/iso_plot_dual_inlet_data.html">iso_plot_dual_inlet_data</a></span>(</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3">  iso_files,</a>
+<a class="sourceLine" id="cb4-4" data-line-number="4">  <span class="dt">data =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"28"</span>, <span class="st">"44"</span>, <span class="st">"45"</span>)</a>
+<a class="sourceLine" id="cb4-5" data-line-number="5">)</a></code></pre></div>
 <p><img src="dual_inlet_files/figure-html/select_masses-1.png" width="960"></p>
 </div>
 <div id="isotope-ratios" class="section level1">
 <h1 class="hasAnchor">
 <a href="#isotope-ratios" class="anchor"></a>Isotope ratios</h1>
-<p>For dual inlet applications isotope ratios calculated using the recorded ion intensities are typically of primary interest. For this purpose, isoreader provides a dynamic ratio calculation function (<code><a href="../reference/iso_calculate_ratios.html">iso_calculate_ratios()</a></code>) that accepts any combination of masses, here demonstrated for several different ratios. In this context, another useful customization option of the plotting function is the option to adjust plot aesthetics such as color, shape, and paneling:</p>
+<p>For dual inlet applications isotope ratios calculated using the recorded ion intensities are typically of primary interest. For this purpose, isoprocessor provides a dynamic ratio calculation function (<code><a href="../reference/iso_calculate_ratios.html">iso_calculate_ratios()</a></code>) that accepts any combination of masses, here demonstrated for several different ratios. In this context, another useful customization option of the plotting function is the option to adjust plot aesthetics such as color, shape, and paneling:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1">iso_files &lt;-</a>
 <a class="sourceLine" id="cb5-2" data-line-number="2"><span class="st">  </span>iso_files <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb5-3" data-line-number="3"><span class="st">  </span><span class="co"># calculate 46/44, 45/44 and 32/28 (O2/N2) ratios</span></a>
-<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="st">  </span><span class="kw"><a href="../reference/iso_calculate_ratios.html">iso_calculate_ratios</a></span>(<span class="dt">ratios =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"46/44"</span>, <span class="st">"45/44"</span>, <span class="st">"32/28"</span>))</a>
-<a class="sourceLine" id="cb5-5" data-line-number="5"><span class="co">#&gt; Info: calculating ratio(s) in 3 data file(s): 46/44, 45/44, 32/28</span></a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="st">  </span><span class="kw"><a href="../reference/iso_calculate_ratios.html">iso_calculate_ratios</a></span>(<span class="dt">ratios =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"46/44"</span>, <span class="st">"45/44"</span>, <span class="st">"32/28"</span>))</a>
+<a class="sourceLine" id="cb5-5" data-line-number="5"><span class="co">#&gt; Info: calculating ratio(s) in 3 data file(s): r46/44, r45/44, r32/28</span></a>
 <a class="sourceLine" id="cb5-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb5-7" data-line-number="7">iso_files <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb5-8" data-line-number="8"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_dual_inlet_data.html">iso_plot_dual_inlet_data</a></span>(</a>
-<a class="sourceLine" id="cb5-9" data-line-number="9">    <span class="co"># visualize ratios</span></a>
-<a class="sourceLine" id="cb5-10" data-line-number="10">    <span class="dt">data =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"45/44"</span>, <span class="st">"46/44"</span>, <span class="st">"32/28"</span>),</a>
-<a class="sourceLine" id="cb5-11" data-line-number="11">    <span class="co"># panel the ratios vs. type (standard/sample)</span></a>
-<a class="sourceLine" id="cb5-12" data-line-number="12">    <span class="dt">panel =</span> data <span class="op">~</span><span class="st"> </span>type,</a>
-<a class="sourceLine" id="cb5-13" data-line-number="13">    <span class="co"># color by the file info stored in Identifier 1</span></a>
-<a class="sourceLine" id="cb5-14" data-line-number="14">    <span class="dt">color =</span> <span class="st">`</span><span class="dt">Identifier 1</span><span class="st">`</span></a>
-<a class="sourceLine" id="cb5-15" data-line-number="15">  )</a></code></pre></div>
+<a class="sourceLine" id="cb5-7" data-line-number="7"><span class="kw"><a href="../reference/iso_plot_dual_inlet_data.html">iso_plot_dual_inlet_data</a></span>(</a>
+<a class="sourceLine" id="cb5-8" data-line-number="8">  iso_files,</a>
+<a class="sourceLine" id="cb5-9" data-line-number="9">  <span class="co"># visualize ratios</span></a>
+<a class="sourceLine" id="cb5-10" data-line-number="10">  <span class="dt">data =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"45/44"</span>, <span class="st">"46/44"</span>, <span class="st">"32/28"</span>),</a>
+<a class="sourceLine" id="cb5-11" data-line-number="11">  <span class="co"># panel the ratios vs. type (standard/sample)</span></a>
+<a class="sourceLine" id="cb5-12" data-line-number="12">  <span class="dt">panel =</span> data <span class="op">~</span><span class="st"> </span>type,</a>
+<a class="sourceLine" id="cb5-13" data-line-number="13">  <span class="co"># color by the file info stored in Identifier 1</span></a>
+<a class="sourceLine" id="cb5-14" data-line-number="14">  <span class="dt">color =</span> <span class="st">`</span><span class="dt">Identifier 1</span><span class="st">`</span></a>
+<a class="sourceLine" id="cb5-15" data-line-number="15">)</a></code></pre></div>
 <p><img src="dual_inlet_files/figure-html/ratios-1.png" width="768"></p>
+</div>
+<div id="deltas" class="section level1">
+<h1 class="hasAnchor">
+<a href="#deltas" class="anchor"></a>Deltas</h1>
+<p>In addition, isoprocessor provides a dynamic raw delta calculation function (<code><a href="../reference/iso_calculate_deltas.html">iso_calculate_deltas()</a></code>) that calculates direct or bracketed sample-standard delta values as described in the function help. See code below for a few examples:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1">iso_files &lt;-</a>
+<a class="sourceLine" id="cb6-2" data-line-number="2"><span class="st">  </span>iso_files <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3"><span class="st">  </span><span class="co"># calculate 46/44, 45/44 and 32/28 (O2/N2) deltas</span></a>
+<a class="sourceLine" id="cb6-4" data-line-number="4"><span class="st">  </span><span class="kw"><a href="../reference/iso_calculate_deltas.html">iso_calculate_deltas</a></span>(<span class="dt">deltas =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"d46/44"</span>, <span class="st">"d45/44"</span>, <span class="st">"d32/28"</span>), </a>
+<a class="sourceLine" id="cb6-5" data-line-number="5">                       <span class="dt">bracket =</span> <span class="ot">TRUE</span>, <span class="dt">in_permil =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb6-6" data-line-number="6"><span class="co">#&gt; Info: calculating delta(s) in 3 data file(s): d46/44.permil, d45/44.permil, d32/28.permil</span></a>
+<a class="sourceLine" id="cb6-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb6-8" data-line-number="8"><span class="kw"><a href="../reference/iso_plot_dual_inlet_data.html">iso_plot_dual_inlet_data</a></span>(</a>
+<a class="sourceLine" id="cb6-9" data-line-number="9">  iso_files,</a>
+<a class="sourceLine" id="cb6-10" data-line-number="10">  <span class="co"># visualize deltas together with one of the ratios</span></a>
+<a class="sourceLine" id="cb6-11" data-line-number="11">  <span class="dt">data =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"45/44"</span>, <span class="st">"d45/44"</span>, <span class="st">"d46/44"</span>, <span class="st">"d32/28"</span>),</a>
+<a class="sourceLine" id="cb6-12" data-line-number="12">  <span class="co"># color by the file info stored in Identifier 1</span></a>
+<a class="sourceLine" id="cb6-13" data-line-number="13">  <span class="dt">color =</span> <span class="st">`</span><span class="dt">Identifier 1</span><span class="st">`</span></a>
+<a class="sourceLine" id="cb6-14" data-line-number="14">)</a></code></pre></div>
+<p><img src="dual_inlet_files/figure-html/deltas-1.png" width="768"></p>
 </div>
 <div id="signal-conversion" class="section level1">
 <h1 class="hasAnchor">
 <a href="#signal-conversion" class="anchor"></a>Signal conversion</h1>
-<p>Isoreader can convert between different signal units. This is particularly useful for comparing data files from different mass specs that record primary signals differentally. In dual inlet applications, this is typically less important than in continuous flow because data is usually visualized as ratios right away. However, occassionally it can be of interest to examine the primary ion currents.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1">iso_files<span class="op">$</span>dual_inlet_example.caf <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb6-2" data-line-number="2"><span class="st">  </span><span class="co"># convert all signals to nano ampere</span></a>
-<a class="sourceLine" id="cb6-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_convert_signals.html">iso_convert_signals</a></span>(<span class="dt">to =</span> <span class="st">"pA"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb6-4" data-line-number="4"><span class="st">  </span><span class="co"># plot primary ion currents</span></a>
-<a class="sourceLine" id="cb6-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_dual_inlet_data.html">iso_plot_dual_inlet_data</a></span>(</a>
-<a class="sourceLine" id="cb6-6" data-line-number="6">    <span class="dt">data =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"45"</span>, <span class="st">"47"</span>, <span class="st">"48"</span>),</a>
-<a class="sourceLine" id="cb6-7" data-line-number="7">    <span class="dt">color =</span> type</a>
-<a class="sourceLine" id="cb6-8" data-line-number="8">  )</a>
-<a class="sourceLine" id="cb6-9" data-line-number="9"><span class="co">#&gt; Info: converting signals to 'pA' for 1 continuous flow data file(s) with automatic resistor values from individual iso_files (if needed for conversion)</span></a></code></pre></div>
+<p>Isoprocessor can convert between different signal units. This is particularly useful for comparing data files from different mass specs that record primary signals differentally. In dual inlet applications, this is typically less important than in continuous flow because data is usually visualized as ratios right away. However, occassionally it can be of interest to examine the primary ion currents.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1">iso_files<span class="op">$</span>dual_inlet_example.caf <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="st">  </span><span class="co"># convert all signals to nano ampere</span></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_convert_signals.html">iso_convert_signals</a></span>(<span class="dt">to =</span> <span class="st">"pA"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="st">  </span><span class="co"># plot primary ion currents</span></a>
+<a class="sourceLine" id="cb7-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_dual_inlet_data.html">iso_plot_dual_inlet_data</a></span>(</a>
+<a class="sourceLine" id="cb7-6" data-line-number="6">    <span class="dt">data =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"45"</span>, <span class="st">"47"</span>, <span class="st">"48"</span>),</a>
+<a class="sourceLine" id="cb7-7" data-line-number="7">    <span class="dt">color =</span> type</a>
+<a class="sourceLine" id="cb7-8" data-line-number="8">  )</a>
+<a class="sourceLine" id="cb7-9" data-line-number="9"><span class="co">#&gt; Info: converting signals to 'pA' for 1 data file(s) with automatic resistor values from individual iso_files (if needed for conversion)</span></a></code></pre></div>
 <p><img src="dual_inlet_files/figure-html/signal_conversion-1.png" width="960"></p>
 </div>
 <div id="plot-styling" class="section level1">
 <h1 class="hasAnchor">
 <a href="#plot-styling" class="anchor"></a>Plot styling</h1>
-<p>Since all isoreader plots are standard <a href="http://ggplot2.tidyverse.org/">ggplot</a> objects, they can be modified with any ggplot commands. For example to add a horizontal line (using <a href="http://dplyr.tidyverse.org/">dplyr</a> for the calculations) and modify the themes:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(ggplot2)</a>
-<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="co">#&gt; Warning: package 'ggplot2' was built under R version 3.5.2</span></a>
-<a class="sourceLine" id="cb7-3" data-line-number="3"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(dplyr)</a>
-<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="co">#&gt; Warning: package 'dplyr' was built under R version 3.5.2</span></a>
-<a class="sourceLine" id="cb7-5" data-line-number="5">iso_files <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb7-6" data-line-number="6"><span class="st">  </span><span class="co"># replot</span></a>
-<a class="sourceLine" id="cb7-7" data-line-number="7"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_dual_inlet_data.html">iso_plot_dual_inlet_data</a></span>(</a>
-<a class="sourceLine" id="cb7-8" data-line-number="8">    <span class="dt">data =</span> <span class="st">"45/44"</span>,</a>
-<a class="sourceLine" id="cb7-9" data-line-number="9">    <span class="dt">panel =</span> type <span class="op">~</span><span class="st"> `</span><span class="dt">Identifier 1</span><span class="st">`</span>,</a>
-<a class="sourceLine" id="cb7-10" data-line-number="10">    <span class="dt">color =</span> <span class="st">`</span><span class="dt">Identifier 1</span><span class="st">`</span></a>
-<a class="sourceLine" id="cb7-11" data-line-number="11">  ) <span class="op">+</span></a>
-<a class="sourceLine" id="cb7-12" data-line-number="12"><span class="st">  </span><span class="co"># add horizontal line indicating the averages (using a ggplot geom)</span></a>
-<a class="sourceLine" id="cb7-13" data-line-number="13"><span class="st">  </span><span class="kw"><a href="https://www.rdocumentation.org/packages/ggplot2/topics/geom_abline">geom_hline</a></span>(</a>
-<a class="sourceLine" id="cb7-14" data-line-number="14">    <span class="dt">data =</span> <span class="cf">function</span>(df) {</a>
-<a class="sourceLine" id="cb7-15" data-line-number="15">      df <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb7-16" data-line-number="16"><span class="st">        </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="st">`</span><span class="dt">Identifier 1</span><span class="st">`</span>, type, data) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb7-17" data-line-number="17"><span class="st">        </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span>(<span class="dt">value =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/mean">mean</a></span>(value))</a>
-<a class="sourceLine" id="cb7-18" data-line-number="18">      }, </a>
-<a class="sourceLine" id="cb7-19" data-line-number="19">    <span class="dt">mapping =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/ggplot2/topics/aes">aes</a></span>(<span class="dt">yintercept =</span> value)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb7-20" data-line-number="20"><span class="st">  </span><span class="co"># modify plot styling (ggplot functionality)</span></a>
-<a class="sourceLine" id="cb7-21" data-line-number="21"><span class="st">  </span><span class="kw"><a href="https://www.rdocumentation.org/packages/ggplot2/topics/theme">theme</a></span>(<span class="dt">text =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/ggplot2/topics/element">element_text</a></span>(<span class="dt">size =</span> <span class="dv">20</span>))</a></code></pre></div>
+<p>Since all isoprocessor plots are standard <a href="http://ggplot2.tidyverse.org/">ggplot</a> objects, they can be modified with any ggplot commands. For example to add a horizontal line (using <a href="http://dplyr.tidyverse.org/">dplyr</a> for the calculations) and modify the themes:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(ggplot2)</a>
+<a class="sourceLine" id="cb8-2" data-line-number="2"><span class="co"># replot</span></a>
+<a class="sourceLine" id="cb8-3" data-line-number="3"><span class="kw"><a href="../reference/iso_plot_dual_inlet_data.html">iso_plot_dual_inlet_data</a></span>(</a>
+<a class="sourceLine" id="cb8-4" data-line-number="4">  iso_files, </a>
+<a class="sourceLine" id="cb8-5" data-line-number="5">  <span class="dt">data =</span> <span class="st">"45/44"</span>,</a>
+<a class="sourceLine" id="cb8-6" data-line-number="6">  <span class="dt">panel =</span> type <span class="op">~</span><span class="st"> `</span><span class="dt">Identifier 1</span><span class="st">`</span>,</a>
+<a class="sourceLine" id="cb8-7" data-line-number="7">  <span class="dt">color =</span> <span class="st">`</span><span class="dt">Identifier 1</span><span class="st">`</span></a>
+<a class="sourceLine" id="cb8-8" data-line-number="8">) <span class="op">+</span></a>
+<a class="sourceLine" id="cb8-9" data-line-number="9"><span class="st">  </span><span class="co"># add horizontal line indicating the averages (using a ggplot geom)</span></a>
+<a class="sourceLine" id="cb8-10" data-line-number="10"><span class="st">  </span><span class="kw"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_hline</a></span>(</a>
+<a class="sourceLine" id="cb8-11" data-line-number="11">    <span class="dt">data =</span> <span class="cf">function</span>(df) {</a>
+<a class="sourceLine" id="cb8-12" data-line-number="12">      df <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb8-13" data-line-number="13"><span class="st">        </span>dplyr<span class="op">::</span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="st">`</span><span class="dt">Identifier 1</span><span class="st">`</span>, type, data) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb8-14" data-line-number="14"><span class="st">        </span>dplyr<span class="op">::</span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span>(<span class="dt">value =</span> <span class="kw"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(value))</a>
+<a class="sourceLine" id="cb8-15" data-line-number="15">    }, </a>
+<a class="sourceLine" id="cb8-16" data-line-number="16">    <span class="dt">mapping =</span> <span class="kw"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="dt">yintercept =</span> value)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb8-17" data-line-number="17"><span class="st">  </span><span class="co"># modify plot styling (ggplot functionality)</span></a>
+<a class="sourceLine" id="cb8-18" data-line-number="18"><span class="st">  </span><span class="kw"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span>(<span class="dt">text =</span> <span class="kw"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span>(<span class="dt">size =</span> <span class="dv">20</span>))</a></code></pre></div>
 <p><img src="dual_inlet_files/figure-html/plot%20styling-1.png" width="768"></p>
 </div>
   </div>
@@ -212,6 +234,7 @@
       <li><a href="#reading-files">Reading files</a></li>
       <li><a href="#visualization">Visualization</a></li>
       <li><a href="#isotope-ratios">Isotope ratios</a></li>
+      <li><a href="#deltas">Deltas</a></li>
       <li><a href="#signal-conversion">Signal conversion</a></li>
       <li><a href="#plot-styling">Plot styling</a></li>
       </ul>
@@ -221,17 +244,20 @@
 </div>
 
 
+
       <footer><div class="copyright">
   <p>Developed by Sebastian Kopf.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
 </div>
+
       </footer>
 </div>
 
   
+
 
   </body>
 </html>

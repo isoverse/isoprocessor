@@ -23,13 +23,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
 
-<!-- sticky kit -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
+<!-- headroom.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -64,6 +66,7 @@
   gtag('config', 'UA-106138361-4');
 </script>
 
+
   </head>
 
   <body>
@@ -80,7 +83,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.4.0</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.4.7</span>
       </span>
     </div>
 
@@ -123,6 +126,7 @@
 </div><!--/.navbar -->
 
       
+
       </header>
 
 <div class="row">
@@ -143,21 +147,21 @@
 
 <span class='co'># S3 method for iso_file_list</span>
 <span class='fu'>iso_plot_continuous_flow_data</span>(<span class='no'>iso_files</span>,
-  <span class='kw'>data</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(), <span class='kw'>time_interval</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(), <span class='kw'>time_interval_units</span> <span class='kw'>=</span> <span class='st'>"seconds"</span>,
+  <span class='kw'>data</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(), <span class='kw'>time_interval</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(), <span class='kw'>time_interval_units</span> <span class='kw'>=</span> <span class='st'>"seconds"</span>,
   <span class='kw'>filter</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>normalize</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>zoom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>panel</span> <span class='kw'>=</span> <span class='no'>data</span>,
   <span class='kw'>color</span> <span class='kw'>=</span> <span class='no'>file_id</span>, <span class='kw'>linetype</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>label</span> <span class='kw'>=</span> <span class='no'>file_id</span>,
-  <span class='kw'>peak_table</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>file_id</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>file_id</span>), <span class='kw'>rt</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt</span>),
+  <span class='kw'>peak_table</span> <span class='kw'>=</span> <span class='fu'><a href='iso_get_peak_table.html'>iso_get_peak_table</a></span>(<span class='no'>iso_files</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>),
+  <span class='kw'>file_id</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>file_id</span>), <span class='kw'>rt</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt</span>),
   <span class='kw'>rt_start</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt_start</span>), <span class='kw'>rt_end</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt_end</span>),
-  <span class='kw'>rt_unit</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>peak_marker</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>peak_bounds</span> <span class='kw'>=</span> !<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/NULL'>is.null</a></span>(<span class='no'>peak_table</span>), <span class='kw'>peak_label</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>peak_label_filter</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>peak_label_size</span> <span class='kw'>=</span> <span class='fl'>2</span>,
-  <span class='kw'>peak_label_repel</span> <span class='kw'>=</span> <span class='fl'>1</span>)
+  <span class='kw'>rt_unit</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>peak_marker</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>peak_bounds</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>peak_bgrd</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>peak_label</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>peak_label_filter</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>peak_label_size</span> <span class='kw'>=</span> <span class='fl'>2</span>, <span class='kw'>peak_label_repel</span> <span class='kw'>=</span> <span class='fl'>1</span>)
 
 <span class='co'># S3 method for data.frame</span>
 <span class='fu'>iso_plot_continuous_flow_data</span>(<span class='no'>df</span>, <span class='kw'>panel</span> <span class='kw'>=</span> <span class='no'>data</span>,
   <span class='kw'>color</span> <span class='kw'>=</span> <span class='no'>file_id</span>, <span class='kw'>linetype</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>label</span> <span class='kw'>=</span> <span class='no'>file_id</span>,
-  <span class='kw'>peak_marker</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>peak_bounds</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>peak_label</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>peak_label_filter</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>peak_label_size</span> <span class='kw'>=</span> <span class='fl'>2</span>,
+  <span class='kw'>peak_marker</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>peak_bounds</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>peak_bgrd</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>peak_label</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>peak_label_filter</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>peak_label_size</span> <span class='kw'>=</span> <span class='fl'>2</span>,
   <span class='kw'>peak_label_repel</span> <span class='kw'>=</span> <span class='fl'>1</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -173,7 +177,7 @@
     </tr>
     <tr>
       <th>data</th>
-      <td><p>which masses and ratios to plot (e.g. <code><a href='https://www.rdocumentation.org/packages/base/topics/c'>c("44", "45", "45/44")</a></code> - without the units), if omitted, all available masses and ratios are plotted. Note that ratios should be calculated using <code><a href='iso_calculate_ratios.html'>iso_calculate_ratios</a></code> prior to plotting.</p></td>
+      <td><p>which masses and ratios to plot (e.g. <code><a href='https://rdrr.io/r/base/c.html'>c("44", "45", "45/44")</a></code> - without the units), if omitted, all available masses and ratios are plotted. Note that ratios should be calculated using <code><a href='iso_calculate_ratios.html'>iso_calculate_ratios</a></code> prior to plotting.</p></td>
     </tr>
     <tr>
       <th>time_interval</th>
@@ -205,19 +209,19 @@
     </tr>
     <tr>
       <th>linetype</th>
-      <td><p>whether to differentiate by linetype, options are the same as for <code>panel</code> but the default is <code>NULL</code> (i.e. no linetype aesthetic). Note that a limited number of linetypes (6) is defined by default and the plot will fail if a higher number is required unless specified using <code><a href='https://www.rdocumentation.org/packages/ggplot2/topics/scale_linetype'>scale_linetype</a></code>.</p></td>
+      <td><p>whether to differentiate by linetype, options are the same as for <code>panel</code> but the default is <code>NULL</code> (i.e. no linetype aesthetic). Note that a limited number of linetypes (6) is defined by default and the plot will fail if a higher number is required unless specified using <code><a href='https://ggplot2.tidyverse.org/reference/scale_linetype.html'>scale_linetype</a></code>.</p></td>
     </tr>
     <tr>
       <th>label</th>
-      <td><p>this is primarily of use for turning the generated ggplots into interactive plots via <code><a href='https://www.rdocumentation.org/packages/plotly/topics/ggplotly'>ggplotly</a></code> as the <code>label</code> will be rendered as an additional mousover label. Any unique file identifier is a useful choice, the default is <code>file_id</code>.</p></td>
+      <td><p>this is primarily of use for turning the generated ggplots into interactive plots via <code><a href='https://rdrr.io/pkg/plotly/man/ggplotly.html'>ggplotly</a></code> as the <code>label</code> will be rendered as an additional mousover label. Any unique file identifier is a useful choice, the default is <code>file_id</code>.</p></td>
     </tr>
     <tr>
       <th>peak_table</th>
-      <td><p>a data frame that describes the peaks in this chromatogram. By default, the chromatographic data is prepared WITHOUT peaks information. Supply this parameter to add in the peaks data. Note that the following parameters must also be set correctly IF <code>peak_table</code> is supplied: <code>file_id</code>, <code>rt</code>, <code>rt_start</code>, <code>rt_end</code>.</p></td>
+      <td><p>a data frame that describes the peaks in this chromatogram. By default, the peak table from the <code>iso_files</code> is used if any peak features are requested in the plot (e.g. <code>peak_marker=TRUE</code> or <code>peak_bounds=TRUE</code>). If <code>peak_table</code> is supplied with non-standard column names, the following parameters must also be set correctly: <code>file_id</code>, <code>rt</code>, <code>rt_start</code>, <code>rt_end</code>, and potentially <code>rt_unit</code>.</p></td>
     </tr>
     <tr>
       <th>file_id</th>
-      <td><p>the column (or columns) that uniquely identify each iso_file for proper matching of the raw chromatography data with the peak_table data. In most cases, the default (<code>file_id</code>) should work fine.</p></td>
+      <td><p>the column (or columns) that uniquely identifies individual analyses for proper matching of the raw chromatography data with the peak_table data. In most cases dealing with isoreader data, the default (<code>file_id</code>) should work fine.</p></td>
     </tr>
     <tr>
       <th>rt</th>
@@ -233,7 +237,7 @@
     </tr>
     <tr>
       <th>rt_unit</th>
-      <td><p>which time unit the retention time columns (<code>rt</code>, <code>rt_start</code>, <code>rt_end</code>) are in. If not specified (i.e. the default), assumes it is the same unit as the time column of the <code>iso_files</code> raw data.</p></td>
+      <td><p>which time unit the retention time columns (<code>rt</code>, <code>rt_start</code>, <code>rt_end</code>) are in. Only required if the retention time columns are not <code><a href='https://rdrr.io/pkg/isoreader/man/iso_double_with_units.html'>iso_double_with_units</a></code> columns and are not in the same unit as the time column of the raw data. If provided, will override column units.</p></td>
     </tr>
     <tr>
       <th>peak_marker</th>
@@ -241,11 +245,15 @@
     </tr>
     <tr>
       <th>peak_bounds</th>
-      <td><p>whether to mark the boundaries of identified peaks with a vertical ine at peak start and end retention times. Only works if a <code>peak_table</code> was provided to identify the peaks and will issue a warning if <code>peak_bounds = TRUE</code> but no peaks were identified.</p></td>
+      <td><p>whether to mark the boundaries of identified peaks with a vertical line at peak start and end retention times. Only works if a <code>peak_table</code> was provided to identify the peaks and will issue a warning if <code>peak_bounds = TRUE</code> but no peaks were identified.</p></td>
+    </tr>
+    <tr>
+      <th>peak_bgrd</th>
+      <td><p>NOT YET IMPLEMENTED whether to show the background of identified peaks from start to end retention times. Only works if a <code>peak_table</code> was provided that has <code>bgrdX_start</code> and <code>bgrdX_end</code> columns in the same units as the raw data.</p></td>
     </tr>
     <tr>
       <th>peak_label</th>
-      <td><p>whether to label identified peaks. Any valid column or complex expression is supported and ALL columns in the provided <code>peak_table</code> can be used in this expression. To provide more space for peak labels, it is sometimes useful to use a <code>zoom</code> value smaller than 1 to zoom out a bit, e.g. <code>zoom = 0.9</code>. If peak labels overlap, consider changing <code>peak_label_size</code> and/or <code>peak_label_repel</code>. Note that this only works if a <code>peak_table</code> was provided to identify the peaks and will issue a warning if <code>peak_label</code> is set but no peaks were identified. Also note that peaks whose value at the peak retention time is not visible on the panel due to e.g. a high <code>zoom</code> value will not have a visible label either.</p></td>
+      <td><p>whether to label identified peaks. Any valid column or complex expression is supported and ALL columns in the provided <code>peak_table</code> can be used in this expression. The easiest way to generate well constructed peak labels is via the <code><a href='iso_format.html'>iso_format</a></code> function. To provide more space for peak labels, it is sometimes useful to use a <code>zoom</code> value smaller than 1 to zoom out a bit, e.g. <code>zoom = 0.9</code>. If peak labels overlap, consider changing <code>peak_label_size</code> and/or <code>peak_label_repel</code>. Note that this only works if a <code>peak_table</code> was provided to identify the peaks and will issue a warning if <code>peak_label</code> is set but no peaks were identified. Also note that peaks whose value at the peak retention time is not visible on the panel due to e.g. a high <code>zoom</code> value will not have a visible label either.</p></td>
     </tr>
     <tr>
       <th>peak_label_filter</th>
@@ -267,7 +275,8 @@
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p>Other plot functions: <code><a href='iso_plot_dual_inlet_data.html'>iso_plot_dual_inlet_data</a></code>,
+    <div class='dont-index'><p>Other plot functions: <code><a href='iso_format.html'>iso_format</a></code>,
+  <code><a href='iso_plot_dual_inlet_data.html'>iso_plot_dual_inlet_data</a></code>,
   <code><a href='iso_plot_raw_data.html'>iso_plot_raw_data</a></code>,
   <code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a></code></p></div>
     
@@ -284,19 +293,23 @@
   </div>
 </div>
 
+
       <footer>
       <div class="copyright">
   <p>Developed by Sebastian Kopf.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
 </div>
+
       </footer>
    </div>
 
   
 
+
   </body>
 </html>
+
 
