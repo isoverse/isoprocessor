@@ -470,7 +470,7 @@ run_grouped_regression <- function(dt, group_by = NULL, model = NULL, model_data
 #' @inheritParams run_regression
 #' @inheritParams unnest_model_column
 #' @param predict_value the new column in the model_data that holds the predicted value
-#' @param predict_error the new column in the model_data that holds the error of the predicted value (only created if \code{calculate_error = TRUE})
+#' @param predict_error the new column in the model_data that holds the error of the predicted value (always created but \code{NA} if \code{calculate_error = FALSE})
 #' @param predict_range vector of 2 numbers, if provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the \code{predict_range} is usually only necessary if the calibration range should be extrapolated significantely.
 apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error = FALSE,
                              model_data = model_data, model_name = model_name,
@@ -561,6 +561,9 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
           # process data set for a single model
           function(d, fit, name, x, y, other_xs) {
 
+            # units of predict var
+            x_units <- iso_get_units(d[[x]])
+
             # range
             if(!is.null(predict_range)) {
               # parameter provided predict_range
@@ -642,11 +645,21 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
 
                 # return data
                 tibble(
-                  !!dt_new_cols$predict_value := estimate,
-                  !!dt_new_cols$predict_error := se,
+                  ..estimate.. := estimate,
+                  ..se.. := se,
                   ..problem.. = problem
                 )
-              })
+              }) %>% ungroup()
+
+            # units
+            if (!is.na(x_units)) {
+              d_prediction <-
+                d_prediction %>%
+                mutate(
+                  ..estimate.. = iso_double_with_units(..estimate.., units = x_units),
+                  ..se.. = iso_double_with_units(..se.., units = x_units)
+                )
+            }
 
             # warnings about problematic sets
             if (nrow(d_problematic <- filter(d_prediction, !is.na(..problem..))) > 0) {
@@ -660,14 +673,13 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
 
             }
 
-            # remove error estimate column if not calculated
-            if (!calculate_error) {
-              d_prediction <- d_prediction %>% select(-!!sym(dt_new_cols$predict_error))
-            }
-
             # return combined
             left_join(d, d_prediction, by = "..rn..") %>%
-              select(-..rn.., -..enough_data.., -..problem..)
+              select(-..rn.., -..enough_data.., -..problem..) %>%
+              rename(
+                !!dt_new_cols$predict_value := ..estimate..,
+                !!dt_new_cols$predict_error := ..se..
+              )
           })
     )
 
@@ -751,6 +763,7 @@ evaluate_range <- function(
         ~{
           # consider only data that is part of the regression
           d_in_calib <- .x[.x[[.y$in_reg]],]
+          my_d <<- d_in_calib
           if (nrow(d_in_calib) > 0) {
             # determine the ranges for all terms
             tryCatch(
@@ -758,6 +771,7 @@ evaluate_range <- function(
                 terms %>%
                 mutate(
                   values = map(q, ~rlang::eval_tidy(.x, data = d_in_calib)),
+                  units = map_chr(values, iso_get_units),
                   min = map_dbl(values, ~.x %>%
                                   { if(is.numeric(.)) { as.numeric(min(., na.rm = TRUE)) } else { NA_real_} }),
                   max = map_dbl(values, ~.x %>%
@@ -773,7 +787,7 @@ evaluate_range <- function(
             )
             return(terms_ranges)
           } else {
-            return(mutate(terms, min = NA_real_, max = NA_real_) %>% select(-q))
+            return(mutate(terms, units = NA_character_, min = NA_real_, max = NA_real_) %>% select(-q))
           }
         }
       )
