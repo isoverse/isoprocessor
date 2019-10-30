@@ -306,14 +306,14 @@ test_that("test that range evaluation works", {
       "'x' range NA, 'y' range NA, 'x * y' range NA")
   )
   expect_equal(
-    unnest(df_w_models_ranges2, my_range) %>% select(name, term, min, max) %>% arrange(name, term),
+    unnest(df_w_models_ranges2, my_range) %>% select(name, term, units, min, max) %>% arrange(name, term),
     bind_rows(
       test_df %>% filter(name == "a", y < 0.5) %>%
         {
           bind_rows(
-            summarize(., term = "x", min = min(x, na.rm = TRUE), max = max(x, na.rm = TRUE)),
-            summarize(., term = "y", min = min(y, na.rm = TRUE), max = max(y, na.rm = TRUE)),
-            summarize(., term = "x * y", min = min(x*y, na.rm = TRUE), max = max(x*y, na.rm = TRUE))
+            summarize(., term = "x", units = NA, min = min(x, na.rm = TRUE), max = max(x, na.rm = TRUE)),
+            summarize(., term = "y", units = "y", min = min(as.numeric(y), na.rm = TRUE), max = max(as.numeric(y), na.rm = TRUE)),
+            summarize(., term = "x * y", units = "y", min = min(x*as.numeric(y), na.rm = TRUE), max = max(x*as.numeric(y), na.rm = TRUE))
           )
         } %>%
         mutate(name = "a"),
