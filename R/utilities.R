@@ -126,7 +126,8 @@ iso_summarize_data_table <- function(dt, ..., cutoff = 1) {
   dt %>%
     dplyr::select(!!!c(grp_vars, vars)) %>%
     dplyr::summarize(n = dplyr::n(), !!!summarize_funcs) %>%
-    dplyr::filter(n >= cutoff)
+    dplyr::filter(n >= cutoff) %>%
+    dplyr::ungroup()
 }
 
 
@@ -365,7 +366,8 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
       # fit the model if there is any data
       !!dt_new_cols$model_fit :=
         pmap(list(m = model_quo, d = !!sym(dt_cols$model_data), run = !!sym(dt_new_cols$model_enough_data)),
-             function(m, d, run) if (run) eval_tidy(m, data = filter(d, !!filter_quo)) else NULL),
+             # strip units to avoid issues with non-numeric predictors
+             function(m, d, run) if (run) eval_tidy(m, data = filter(iso_strip_units(d), !!filter_quo)) else NULL),
       # figure out which fits actually have enough degrees of freedom
       !!dt_new_cols$model_enough_data :=
         map2_lgl(!!sym(dt_new_cols$model_fit), !!sym(dt_new_cols$model_enough_data),
@@ -582,6 +584,8 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
 
             # do the calculate for each row
             d_prediction <- d %>%
+              # strip units to avoid issues with non-numeric predictors
+              iso_strip_units() %>%
               # NOTE: use group by and do to get a more informative progress bar in interactive use
               group_by(..rn..) %>%
               do({
