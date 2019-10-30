@@ -5,7 +5,7 @@
 \title{Format iso numbers}
 \usage{
 iso_format(..., signif = 3, format_names = "\%s: ",
-  format_units = "\%s", sep = "\\n")
+  format_units = "\%s", replace_permil = TRUE, sep = "\\n")
 }
 \arguments{
 \item{...}{variable names with data. Must have the same dimensions if multiple are supplied. Can be named to rename variable name output. Will include units in output for all \link{iso_double_with_units}.}
@@ -15,6 +15,8 @@ iso_format(..., signif = 3, format_names = "\%s: ",
 \item{format_names}{how to format the variable names, set to \code{NULL} to remove names}
 
 \item{format_units}{how to format the units from \code{\link{iso_double_with_units}} variables, set to \code{NULL} to omit units}
+
+\item{replace_permil}{whether to replace the term 'permil' with the permil symbol (\\u2030)}
 
 \item{sep}{separator between variables if multiple are provided in \code{...}}
 }

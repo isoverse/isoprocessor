@@ -9,7 +9,8 @@
 iso_summarize_peak_mappings(...)
 
 \method{iso_summarize_peak_mappings}{iso_file_list}(iso_files,
-  compound = default(compound), rt = default(rt))
+  include_file_info = NULL, compound = default(compound),
+  rt = default(rt))
 
 \method{iso_summarize_peak_mappings}{data.frame}(peak_table,
   file_id = default(file_id), compound = default(compound),
@@ -19,6 +20,8 @@ iso_summarize_peak_mappings(...)
 \item{...}{S3 method placeholder parameters, see class specific functions for details on parameters}
 
 \item{iso_files}{collection of continuous flow iso_file objects}
+
+\item{include_file_info}{which file information to include (see \code{\link{iso_get_file_info}}). Use \code{c(...)} to select multiple, supports all \link[dplyr]{select} syntax including renaming columns.}
 
 \item{compound}{the column in peak_maps that holds compound information}
 

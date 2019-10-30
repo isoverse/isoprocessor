@@ -27,7 +27,7 @@ iso_map_peaks(...)
 
 \item{peak_maps}{data frame with the peak map(s). At minimum, this data frame must have a \code{compound} and \code{rt} column but may have additional information columns. If multiple peak maps are provided, the \code{peak_table} data frame requires a \code{map_id} column to identify which peak map should be used and the peak maps data frame must have a \code{rt:<map_id>} column for each used value of \code{map_id}. The names of all these columns can be changed if necessary using the \code{compound}, code{rt} and \code{map_id} parameters.}
 
-\item{map_id}{the column in peak_table that indicates which map to use for which file (only necessary if multiple peak maps are used)}
+\item{map_id}{the column that indicates which map to use for which file (only necessary if multiple peak maps are used)}
 
 \item{compound}{the column in peak_maps that holds compound information}
 

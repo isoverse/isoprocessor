@@ -23,5 +23,5 @@ iso_find_peaks(...)
 \item{df}{a data frame of raw continuouus flow data, must have at minimum the columns 'file_id'}
 }
 \description{
-Find chromatographic peaks
+NOT YET IMPLEMENTED.
 }
