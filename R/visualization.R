@@ -200,6 +200,7 @@ iso_prepare_continuous_flow_plot_data <- function(
 #' @param signif number of significant digits for numbered data
 #' @param format_names how to format the variable names, set to \code{NULL} to remove names
 #' @param format_units how to format the units from \code{\link{iso_double_with_units}} variables, set to \code{NULL} to omit units
+#' @param replace_permil whether to replace the term 'permil' with the permil symbol (\\u2030)
 #' @param sep separator between variables if multiple are provided in \code{...}
 #' @family plot functions
 #' @examples
@@ -208,7 +209,7 @@ iso_prepare_continuous_flow_plot_data <- function(
 #' iso_format(x, y)
 #' iso_format(amplitude = x, d13C = y)
 #' @export
-iso_format <- function(..., signif = 3, format_names = "%s: ", format_units="%s", sep = "\n") {
+iso_format <- function(..., signif = 3, format_names = "%s: ", format_units="%s", replace_permil = TRUE, sep = "\n") {
   # find variable names
   vars <- rlang::enquos(...)
   has_name <- nchar(names(vars)) > 0
@@ -235,7 +236,10 @@ iso_format <- function(..., signif = 3, format_names = "%s: ", format_units="%s"
   })
 
   # full text
-  return(do.call(paste, args = c(values, list(sep = "\n"))))
+  return(
+    do.call(paste, args = c(values, list(sep = "\n"))) %>%
+      stringr::str_replace(fixed("permil"), "\u2030")
+  )
 }
 
 # raw data plots =====
@@ -1030,6 +1034,9 @@ iso_plot_data <- function(dt, x, y, y_error = NULL, group = NULL, color = NULL, 
     glue("not the same number of y ({collapse(dt_cols$y, sep = ', ')}) and ",
          "y_error columns ({collapse(dt_cols$y_error, sep = ', ')}) provided") %>%
     stop(call. = FALSE)
+
+  # strip units if there are any
+  dt <- iso_strip_units(dt)
 
   # gather data
   dt$..row_id.. <- 1:nrow(dt)
