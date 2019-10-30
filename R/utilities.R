@@ -568,7 +568,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
             } else {
               # estimate predict range based on available values
               # NOTE: should this be only values that were used for calib? (i.e. have residual column set)
-              range <- base::range(d[[x]], na.rm = TRUE)
+              range <- base::range(as.numeric(d[[x]]), na.rm = TRUE)
             }
             range_tolerance_escalation <- c(0, 1, 10, 100, 1000)
 
