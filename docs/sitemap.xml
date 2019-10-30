@@ -7,6 +7,12 @@
     <loc>http://isoprocessor.isoverse.org//reference/apply_regression.html</loc>
   </url>
   <url>
+    <loc>http://isoprocessor.isoverse.org//reference/calculate_area.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/calculate_backgrounds.html</loc>
+  </url>
+  <url>
     <loc>http://isoprocessor.isoverse.org//reference/evaluate_range.html</loc>
   </url>
   <url>
@@ -19,7 +25,19 @@
     <loc>http://isoprocessor.isoverse.org//reference/iso_apply_calibration.html</loc>
   </url>
   <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_calculate_deltas.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_calculate_peak_delats.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_calculate_peak_ratios.html</loc>
+  </url>
+  <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_calculate_ratios.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_combine_raw_data_with_peak_table.html</loc>
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_convert_signals.html</loc>
@@ -34,6 +52,12 @@
     <loc>http://isoprocessor.isoverse.org//reference/iso_export_calibration_to_excel.html</loc>
   </url>
   <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_find_peaks.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_format.html</loc>
+  </url>
+  <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_generate_calibration.html</loc>
   </url>
   <url>
@@ -41,6 +65,9 @@
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_get_default_processor_parameters.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_get_peak_table.html</loc>
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_get_problematic_calibrations.html</loc>
@@ -55,10 +82,16 @@
     <loc>http://isoprocessor.isoverse.org//reference/iso_get_processor_example.html</loc>
   </url>
   <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_integrate_peaks.html</loc>
+  </url>
+  <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_map_peaks.html</loc>
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_mark_calibration_range.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_mutate_peak_table.html</loc>
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_plot_calibration_parameters.html</loc>
@@ -104,6 +137,12 @@
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_set_default_processor_parameters.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_set_peak_table.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_set_peak_table_from_vendor_data_table.html</loc>
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_show_default_processor_parameters.html</loc>
@@ -164,5 +203,8 @@
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//articles/operations.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//articles/tmp/Untitled.html</loc>
   </url>
 </urlset>

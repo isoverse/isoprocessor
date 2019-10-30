@@ -44,17 +44,17 @@ iso_files <-
 Plotting the raw data can be done either with the generic `iso_plot_raw_data()` function for a simple plot with default parameters, or directly using the dual inlet specific `iso_plot_dual_inlet_data()`:
 
 ```{r "all_data", fig.width = 12, fig.asp = 0.8}
-iso_files %>% iso_plot_dual_inlet_data()
+iso_plot_dual_inlet_data(iso_files)
 ```
 
 All customization options are described in the function help (`?iso_plot_dual_inlet_data`) and include, for example, plotting only a specific subset of masses:
 
 ```{r "select_masses", fig.width = 10, fig.asp = 0.3}
-iso_files %>% 
-  # plot just masses 2, 44 and 45
-  iso_plot_dual_inlet_data(
-    data = c("28", "44", "45")
-  )
+# plot just masses 2, 44 and 45
+iso_plot_dual_inlet_data(
+  iso_files,
+  data = c("28", "44", "45")
+)
 ```
 
 # Isotope ratios
@@ -67,15 +67,15 @@ iso_files <-
   # calculate 46/44, 45/44 and 32/28 (O2/N2) ratios
   iso_calculate_ratios(ratios = c("46/44", "45/44", "32/28"))
 
-iso_files %>% 
-  iso_plot_dual_inlet_data(
-    # visualize ratios
-    data = c("45/44", "46/44", "32/28"),
-    # panel the ratios vs. type (standard/sample)
-    panel = data ~ type,
-    # color by the file info stored in Identifier 1
-    color = `Identifier 1`
-  )
+iso_plot_dual_inlet_data(
+  iso_files,
+  # visualize ratios
+  data = c("45/44", "46/44", "32/28"),
+  # panel the ratios vs. type (standard/sample)
+  panel = data ~ type,
+  # color by the file info stored in Identifier 1
+  color = `Identifier 1`
+)
 ```
 
 # Deltas
@@ -89,13 +89,13 @@ iso_files <-
   iso_calculate_deltas(deltas = c("d46/44", "d45/44", "d32/28"), 
                        bracket = TRUE, in_permil = TRUE)
 
-iso_files %>% 
-  iso_plot_dual_inlet_data(
-    # visualize deltas together with one of the ratios
-    data = c("45/44", "d45/44", "d46/44", "d32/28"),
-    # color by the file info stored in Identifier 1
-    color = `Identifier 1`
-  )
+iso_plot_dual_inlet_data(
+  iso_files,
+  # visualize deltas together with one of the ratios
+  data = c("45/44", "d45/44", "d46/44", "d32/28"),
+  # color by the file info stored in Identifier 1
+  color = `Identifier 1`
+)
 ```
 
 
@@ -120,21 +120,20 @@ Since all isoprocessor plots are standard [ggplot](http://ggplot2.tidyverse.org/
 
 ```{r "plot styling", message=FALSE, fig.width = 8, fig.asp = 0.7}
 library(ggplot2)
-library(dplyr)
-iso_files %>% 
-  # replot
-  iso_plot_dual_inlet_data(
-    data = "45/44",
-    panel = type ~ `Identifier 1`,
-    color = `Identifier 1`
-  ) +
+# replot
+iso_plot_dual_inlet_data(
+  iso_files, 
+  data = "45/44",
+  panel = type ~ `Identifier 1`,
+  color = `Identifier 1`
+) +
   # add horizontal line indicating the averages (using a ggplot geom)
   geom_hline(
     data = function(df) {
       df %>% 
-        group_by(`Identifier 1`, type, data) %>% 
-        summarize(value = mean(value))
-      }, 
+        dplyr::group_by(`Identifier 1`, type, data) %>% 
+        dplyr::summarize(value = mean(value))
+    }, 
     mapping = aes(yintercept = value)) +
   # modify plot styling (ggplot functionality)
   theme(text = element_text(size = 20))

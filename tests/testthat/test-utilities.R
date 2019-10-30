@@ -165,21 +165,20 @@ test_that("inverting regressions work properly", {
 
   # sample data set
   set.seed(42)
-  test_df <- expand.grid(
+  test_df <- tidyr::crossing(
     x1 = seq(1,10, length.out = 5),
-    x2 = c(0.1, 0.5, 1),
+    x2 = iso_double_with_units(c(0.1, 0.5, 1), "x"),
     x3 = seq(0, 0.1, length.out = 4)
   ) %>%
-    as_tibble() %>%
     mutate(
       name = c("a", "a", "b", "a", sample(c("a", "b"), replace = TRUE, size = dplyr::n() - 4)),
       is_std_peak = c(rep(FALSE, 4), sample(c(TRUE, FALSE), replace = TRUE, size = dplyr::n() - 4)),
-      y = -1 + 5 * x1 + x1*x2*20 + 50 * sqrt(x2) + x3 + rnorm(length(x1), sd = 15),
+      y = -1 + 5 * x1 + x1*as.numeric(x2)*20 + 50 * sqrt(as.numeric(x2)) + x3 + rnorm(length(x1), sd = 15),
       # special case: missing data
-      x2 = ifelse(row_number() %in% c(1,2,3), NA_real_, x2),
+      x2 = { x2[row_number() <= 3] <- NA; x2 },
       # special case: way outside range
       #x2 = ifelse(row_number() %in% c(4), 1e20, x2),
-      y = ifelse(row_number() %in% c(4), -1e10, y)
+      y = ifelse(row_number() %in% c(4), -1e10, y) %>% iso_double_with_units("y")
     )
   nested_test_df <- nest_data(test_df, name, nested_data = model_data)
   models <- quo(list(m1 = lm(y ~ x1), m2 = lm(y ~ x1 + I(sqrt(x2)) + x1:x2 + x3)))
@@ -194,7 +193,7 @@ test_that("inverting regressions work properly", {
 
   # out of range troubles for the different data sets and models
   expect_warning(
-    df_w_models %>% filter(name == "a", model_name == "m2") %>% apply_regression(x2, predict_range = c(-10, -9.999)),
+    out_x2 <- df_w_models %>% filter(name == "a", model_name == "m2") %>% apply_regression(x2, predict_range = c(-10, -9.999)),
     "potential fit is too far outside the calibration range"
   )
   expect_silent(out_direct <- df_w_models %>% filter(name == "b", model_name == "m1") %>% apply_regression(x1))
@@ -213,7 +212,16 @@ test_that("inverting regressions work properly", {
 
   # check for new columns in the data frame
   base_cols <- c("x1", "x2", "x3", "is_std_peak", "y", "in_reg", "residual")
-  expect_equal(names(out_direct$model_data[[1]]), c(base_cols, "pred"))
+  expect_equal(names(out_direct$model_data[[1]]), c(base_cols, "pred", "pred_se"))
+  expect_equal(names(out_x2$model_data[[1]]), c(base_cols, "pred", "pred_se"))
+  expect_equal(
+    tidyr::unnest(select(out_direct, model_data), model_data) %>% iso_get_units(),
+    c(x1 = NA, x2 = "x", x3 = NA, is_std_peak = NA, y = "y", in_reg = NA, residual = NA, pred = NA, pred_se = NA)
+  )
+  expect_equal(
+    tidyr::unnest(select(out_x2, model_data), model_data) %>% iso_get_units(),
+    c(x1 = NA, x2 = "x", x3 = NA, is_std_peak = NA, y = "y", in_reg = NA, residual = NA, pred = "x", pred_se = "x")
+  )
   expect_equal(
     df_w_models %>% filter(name == "b", model_name == "m1") %>%
       apply_regression(x1, calculate_error = TRUE) %>%
@@ -246,7 +254,7 @@ test_that("test that range evaluation works", {
 
   # testing ranges
   set.seed(42)
-  test_df <- dplyr::tibble(name = rep(c("a", "b"), 10), x = runif(20), y = runif(20))
+  test_df <- dplyr::tibble(name = rep(c("a", "b"), 10), x = runif(20), y = iso_double_with_units(runif(20), "y"))
   nested_test_df <- nest_data(test_df, name, nested_data = model_data)
   df_w_models <- nested_test_df %>% run_regression(model = lm(y ~ x))
   df_w_nested_models <- nested_test_df %>% run_regression(model = lm(y ~ x), nest_model = TRUE)
@@ -272,10 +280,10 @@ test_that("test that range evaluation works", {
   expect_equal(unnest(df_w_models_ranges, model_data)$in_range %>% unique(), "in range")
   expect_equal(unnest(df_w_nested_models_ranges, model_data)$in_range %>% unique(), "in range")
   expect_equal(
-    unnest(df_w_models_ranges, model_range) %>% select(name, term, min, max) %>% arrange(name, term),
+    unnest(df_w_models_ranges, model_range) %>% select(name, term, units, min, max) %>% arrange(name, term),
     bind_rows(
-      test_df %>% group_by(name) %>% summarize(term = "x", min = min(x, na.rm = TRUE), max = max(x, na.rm = TRUE)),
-      test_df %>% group_by(name) %>% summarize(term = "y", min = min(y, na.rm = TRUE), max = max(y, na.rm = TRUE))
+      test_df %>% group_by(name) %>% summarize(term = "x", units = NA, min = min(x, na.rm = TRUE), max = max(x, na.rm = TRUE)),
+      test_df %>% group_by(name) %>% summarize(term = "y", units = "y", min = min(as.numeric(y), na.rm = TRUE), max = max(as.numeric(y), na.rm = TRUE))
     )
   )
 
@@ -298,14 +306,14 @@ test_that("test that range evaluation works", {
       "'x' range NA, 'y' range NA, 'x * y' range NA")
   )
   expect_equal(
-    unnest(df_w_models_ranges2, my_range) %>% select(name, term, min, max) %>% arrange(name, term),
+    unnest(df_w_models_ranges2, my_range) %>% select(name, term, units, min, max) %>% arrange(name, term),
     bind_rows(
       test_df %>% filter(name == "a", y < 0.5) %>%
         {
           bind_rows(
-            summarize(., term = "x", min = min(x, na.rm = TRUE), max = max(x, na.rm = TRUE)),
-            summarize(., term = "y", min = min(y, na.rm = TRUE), max = max(y, na.rm = TRUE)),
-            summarize(., term = "x * y", min = min(x*y, na.rm = TRUE), max = max(x*y, na.rm = TRUE))
+            summarize(., term = "x", units = NA, min = min(x, na.rm = TRUE), max = max(x, na.rm = TRUE)),
+            summarize(., term = "y", units = "y", min = min(as.numeric(y), na.rm = TRUE), max = max(as.numeric(y), na.rm = TRUE)),
+            summarize(., term = "x * y", units = "y", min = min(x*as.numeric(y), na.rm = TRUE), max = max(x*as.numeric(y), na.rm = TRUE))
           )
         } %>%
         mutate(name = "a"),

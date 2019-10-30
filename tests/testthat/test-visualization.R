@@ -1,4 +1,33 @@
-context("Visualization")
+context("Visualization Utils")
+
+# iso_format ====
+
+test_that("test that iso_format works properly", {
+
+  expect_error(iso_format(1:5, 1), "unequal lengths")
+  x <- 1:2
+  expect_equal(
+    iso_format(x, b = iso_double_with_units(pi * 1:2, "V"), signif = 3),
+    c("x: 1\nb: 3.14V", "x: 2\nb: 6.28V")
+  )
+  expect_equal(
+    iso_format(a = x, b = iso_double_with_units(pi * 1:2, "V"), signif = 3),
+    c("a: 1\nb: 3.14V", "a: 2\nb: 6.28V")
+  )
+  expect_equal(
+    iso_format(a = x, b = iso_double_with_units(pi * 1:2, "V"), signif = 4),
+    c("a: 1\nb: 3.142V", "a: 2\nb: 6.283V")
+  )
+  expect_equal(
+    iso_format(x, iso_double_with_units(pi * 1:2, "V"), signif = 3, format_names = NULL),
+    c("1\n3.14V", "2\n6.28V")
+  )
+  expect_equal(
+    iso_format(x, iso_double_with_units(pi * 1:2, "V"), signif = 3, format_names = NULL, format_units = NULL),
+    c("1\n3.14", "2\n6.28")
+  )
+
+})
 
 # raw data ========
 
@@ -11,16 +40,18 @@ test_that("test that raw data plot throws appropriate errors", {
 test_that("test that cf plot data prep works properly", {
 
   expect_error(iso_prepare_continuous_flow_plot_data())
-  expect_error(iso_prepare_continuous_flow_plot_data(c(isoreader:::make_di_data_structure())), "can only prepare continuous flow")
+  expect_error(iso_prepare_continuous_flow_plot_data(c(isoreader:::make_di_data_structure("NA"))), "can only prepare continuous flow")
 
   # FIXME: include more elaborate tests here
 
 })
 
+# continuous flow plot =====
+
 test_that("test that plot continuous flow works properly", {
 
   expect_error(iso_plot_continuous_flow_data(42), "not defined")
-  expect_is(cf <- isoreader:::make_cf_data_structure(), "continuous_flow")
+  expect_is(cf <- isoreader:::make_cf_data_structure("NA"), "continuous_flow")
   cf$read_options$file_info <- TRUE
   cf$read_options$raw_data <- TRUE
   expect_error(iso_plot_continuous_flow_data(cf), "no raw data in supplied iso_files")
@@ -76,10 +107,12 @@ test_that("test that plot continuous flow works properly", {
 
 })
 
+# dual inlet plot ====
+
 test_that("test that plot dual inlet works properly", {
 
   expect_error(iso_plot_dual_inlet_data(42), "can only plot dual inlet")
-  expect_is(di <- isoreader:::make_di_data_structure(), "dual_inlet")
+  expect_is(di <- isoreader:::make_di_data_structure("NA"), "dual_inlet")
   di$read_options$file_info <- TRUE
   di$read_options$raw_data <- TRUE
   expect_error(iso_plot_raw_data(di), "no raw data in supplied iso_files")

@@ -12,17 +12,17 @@ iso_plot_continuous_flow_data(...)
   data = c(), time_interval = c(), time_interval_units = "seconds",
   filter = NULL, normalize = FALSE, zoom = NULL, panel = data,
   color = file_id, linetype = NULL, label = file_id,
-  peak_table = NULL, file_id = default(file_id), rt = default(rt),
+  peak_table = iso_get_peak_table(iso_files, quiet = TRUE),
+  file_id = default(file_id), rt = default(rt),
   rt_start = default(rt_start), rt_end = default(rt_end),
-  rt_unit = NULL, peak_marker = FALSE,
-  peak_bounds = !is.null(peak_table), peak_label = NULL,
-  peak_label_filter = NULL, peak_label_size = 2,
-  peak_label_repel = 1)
+  rt_unit = NULL, peak_marker = FALSE, peak_bounds = FALSE,
+  peak_bgrd = FALSE, peak_label = NULL, peak_label_filter = NULL,
+  peak_label_size = 2, peak_label_repel = 1)
 
 \method{iso_plot_continuous_flow_data}{data.frame}(df, panel = data,
   color = file_id, linetype = NULL, label = file_id,
-  peak_marker = FALSE, peak_bounds = FALSE, peak_label = NULL,
-  peak_label_filter = NULL, peak_label_size = 2,
+  peak_marker = FALSE, peak_bounds = FALSE, peak_bgrd = FALSE,
+  peak_label = NULL, peak_label_filter = NULL, peak_label_size = 2,
   peak_label_repel = 1)
 }
 \arguments{
@@ -50,9 +50,9 @@ iso_plot_continuous_flow_data(...)
 
 \item{label}{this is primarily of use for turning the generated ggplots into interactive plots via \code{\link[plotly]{ggplotly}} as the \code{label} will be rendered as an additional mousover label. Any unique file identifier is a useful choice, the default is \code{file_id}.}
 
-\item{peak_table}{a data frame that describes the peaks in this chromatogram. By default, the chromatographic data is prepared WITHOUT peaks information. Supply this parameter to add in the peaks data. Note that the following parameters must also be set correctly IF \code{peak_table} is supplied: \code{file_id}, \code{rt}, \code{rt_start}, \code{rt_end}.}
+\item{peak_table}{a data frame that describes the peaks in this chromatogram. By default, the peak table from the \code{iso_files} is used if any peak features are requested in the plot (e.g. \code{peak_marker=TRUE} or \code{peak_bounds=TRUE}). If \code{peak_table} is supplied with non-standard column names, the following parameters must also be set correctly: \code{file_id}, \code{rt}, \code{rt_start}, \code{rt_end}, and potentially \code{rt_unit}.}
 
-\item{file_id}{the column (or columns) that uniquely identify each iso_file for proper matching of the raw chromatography data with the peak_table data. In most cases, the default (\code{file_id}) should work fine.}
+\item{file_id}{the column (or columns) that uniquely identifies individual analyses for proper matching of the raw chromatography data with the peak_table data. In most cases dealing with isoreader data, the default (\code{file_id}) should work fine.}
 
 \item{rt}{the column in the \code{peak_table} that holds the retention time of the peak.}
 
@@ -60,13 +60,15 @@ iso_plot_continuous_flow_data(...)
 
 \item{rt_end}{the column in the\code{peak_table} that holds the retention time where each peak ends.}
 
-\item{rt_unit}{which time unit the retention time columns (\code{rt}, \code{rt_start}, \code{rt_end}) are in. If not specified (i.e. the default), assumes it is the same unit as the time column of the \code{iso_files} raw data.}
+\item{rt_unit}{which time unit the retention time columns (\code{rt}, \code{rt_start}, \code{rt_end}) are in. Only required if the retention time columns are not \code{\link[isoreader]{iso_double_with_units}} columns and are not in the same unit as the time column of the raw data. If provided, will override column units.}
 
 \item{peak_marker}{whether to mark identified peaks with a vertical line at the peak retention time. Only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_marker = TRUE} but no peaks were identified.}
 
-\item{peak_bounds}{whether to mark the boundaries of identified peaks with a vertical ine at peak start and end retention times. Only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_bounds = TRUE} but no peaks were identified.}
+\item{peak_bounds}{whether to mark the boundaries of identified peaks with a vertical line at peak start and end retention times. Only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_bounds = TRUE} but no peaks were identified.}
 
-\item{peak_label}{whether to label identified peaks. Any valid column or complex expression is supported and ALL columns in the provided \code{peak_table} can be used in this expression. To provide more space for peak labels, it is sometimes useful to use a \code{zoom} value smaller than 1 to zoom out a bit, e.g. \code{zoom = 0.9}. If peak labels overlap, consider changing \code{peak_label_size} and/or \code{peak_label_repel}. Note that this only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_label} is set but no peaks were identified. Also note that peaks whose value at the peak retention time is not visible on the panel due to e.g. a high \code{zoom} value will not have a visible label either.}
+\item{peak_bgrd}{NOT YET IMPLEMENTED whether to show the background of identified peaks from start to end retention times. Only works if a \code{peak_table} was provided that has \code{bgrdX_start} and \code{bgrdX_end} columns in the same units as the raw data.}
+
+\item{peak_label}{whether to label identified peaks. Any valid column or complex expression is supported and ALL columns in the provided \code{peak_table} can be used in this expression. The easiest way to generate well constructed peak labels is via the \code{\link{iso_format}} function. To provide more space for peak labels, it is sometimes useful to use a \code{zoom} value smaller than 1 to zoom out a bit, e.g. \code{zoom = 0.9}. If peak labels overlap, consider changing \code{peak_label_size} and/or \code{peak_label_repel}. Note that this only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_label} is set but no peaks were identified. Also note that peaks whose value at the peak retention time is not visible on the panel due to e.g. a high \code{zoom} value will not have a visible label either.}
 
 \item{peak_label_filter}{a filter for the peak labels (if supplied). Can be useful for highlighting only a subset of peaks with peak labels (e.g. only one data trace, or only those in a certain portion of the chromatogram). Only interpreted if \code{peak_table} is set.}
 
@@ -80,7 +82,8 @@ iso_plot_continuous_flow_data(...)
 This function provides easy plotting for mass and ratio chromatograms from continuous flow IRMS data. It can be called either directly with a set of \code{iso_file} objects, or with a data frame prepared for plotting chromatographic data (see \code{\link{iso_prepare_continuous_flow_plot_data}}).
 }
 \seealso{
-Other plot functions: \code{\link{iso_plot_dual_inlet_data}},
+Other plot functions: \code{\link{iso_format}},
+  \code{\link{iso_plot_dual_inlet_data}},
   \code{\link{iso_plot_raw_data}},
   \code{\link{iso_prepare_continuous_flow_plot_data}}
 }

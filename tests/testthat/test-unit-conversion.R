@@ -64,7 +64,7 @@ test_that("test that time scaling works", {
 
 test_that("test that time conversion works for iso_files", {
   expect_error(iso_convert_time(42), "can only convert time in continuous flow iso_files")
-  cf <- isoreader:::make_cf_data_structure()
+  cf <- isoreader:::make_cf_data_structure("NA")
   expect_error(iso_convert_time(cf), "no time unit to convert to specified")
   expect_warning(iso_convert_time(cf, to = "min"), "read without extracting the raw data")
 
@@ -162,7 +162,7 @@ test_that("test that singal scaling works", {
 test_that("test that signal conversion works in iso_files", {
 
   expect_error(iso_convert_signals(42), "can only convert signals in .* iso_files")
-  cf <- isoreader:::make_cf_data_structure() # use continuous flow example, but dual inlet would work too
+  cf <- isoreader:::make_cf_data_structure("NA") # use continuous flow example, but dual inlet would work too
   expect_error(iso_convert_signals(cf), "no unit to convert to specified")
 
   cf$read_options$raw_data <- TRUE

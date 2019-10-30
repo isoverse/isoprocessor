@@ -12,3 +12,9 @@ iso_get_problematic_peaks(...)
 \description{
 Renamed to iso_get_problematic_peak_mappings
 }
+\seealso{
+Other peak mapping functions: \code{\link{iso_map_peaks}},
+  \code{\link{iso_remove_problematic_peak_mappings}},
+  \code{\link{iso_summarize_peak_mappings}}
+}
+\concept{peak mapping functions}
