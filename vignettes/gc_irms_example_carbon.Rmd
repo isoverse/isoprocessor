@@ -123,7 +123,9 @@ iso_files <- iso_files_raw %>%
   )
 
 # set peak table from vendor data table with default isodat template
-iso_files <- iso_set_peak_table_from_isodat_vendor_data_table(iso_files)
+iso_files <- iso_set_peak_table_from_isodat_vendor_data_table(iso_files) %>% 
+  # convert units from mV to V for amplitudes and area
+  iso_convert_peak_table_units(V = mV, Vs = mVs)
 ```
 
 ## Show file information
@@ -190,7 +192,7 @@ on_off_summary %>%
   # use generic data plot function
   iso_plot_data(
     x = file_datetime, y = `d13C [permil] sd`,
-    size = `amp44 [mV] mean`, color = id2,
+    size = `amp44 [V] mean`, color = id2,
     points = TRUE
   ) + 
   # customize resulting ggplot
@@ -224,7 +226,7 @@ linearity_summary <-
   # calculate linearity regression lines
   nest(data = -file_datetime) %>% 
   mutate(
-    fit = map(data, ~lm(`d13C [permil]` ~ `amp44 [mV]`, data = .x)),
+    fit = map(data, ~lm(`d13C [permil]` ~ `amp44 [V]`, data = .x)),
     coefs = map(fit, broom::tidy)
   )
 
@@ -232,7 +234,7 @@ linearity_summary <-
 linearity_summary %>%
   unnest(coefs) %>%
   select(file_datetime, term, estimate, std.error) %>%
-  filter(term == "`amp44 [mV]`") %>%
+  filter(term == "`amp44 [V]`") %>%
   mutate(
     term = "linearity [permil/V]",
     estimate = 1000 * signif(estimate, 2),
@@ -245,7 +247,7 @@ linearity_summary %>%
   unnest(data) %>% 
   # use generic data plot function
   iso_plot_data(
-    x = `amp44 [mV]`, y = `d13C [permil]`,
+    x = `amp44 [V]`, y = `d13C [permil]`,
     color = format(file_datetime),
     points = TRUE
   ) +
@@ -419,7 +421,7 @@ peak_table_analytes %>%
   # visualize with convenience function iso_plot_data
   iso_plot_data(
     # choose x and y (multiple y possible)
-    x = `area44 [mVs]`, y = c(`amp44 [mV]`, `d13C [permil]`),
+    x = `area44 [Vs]`, y = c(`amp44 [V]`, `d13C [permil]`),
     # choose aesthetics
     color = compound, shape = type, label = compound, size = 3,
     # decide what geoms to include
@@ -455,7 +457,7 @@ peak_table_analytes %>%
   # visualize
   iso_plot_data(
     # x and y
-    x = `injection [ng]`, y = c(`mean_area_identified [mVs]`, `mean_amp_identified [mV]`),
+    x = `injection [ng]`, y = c(`mean_area_identified [Vs]`, `mean_amp_identified [V]`),
     # aesthetics
     color = factor(`injection_volume [uL]`), shape = factor(`concentration [ng/uL]`), 
     size = file_datetime,
@@ -559,9 +561,9 @@ stds_w_calibs %>%
   # plot calibration parameters
   iso_plot_calibration_parameters(
     # x-axis, could also be e.g. Analysis or file_datetime (also use date_breaks!)
-    x = `mean_area_identified [mVs]`,
+    x = `mean_area_identified [Vs]`,
     # aesthetics
-    color = seed_oxidation, size = `mean_area_identified [mVs]`
+    color = seed_oxidation, size = `mean_area_identified [Vs]`
   ) + 
   # highlight RMSD threshold (0.5 is fairly liberal, can be stricter!)
   geom_hline(tibble(term = factor("RMSD"), threshold = 0.5),
@@ -618,7 +620,7 @@ global_calibs <-
     # - all std_peaks (this filter should always be included!)
     # - standard peaks between 5 and 100 Vs
     # - only analyses with seed oxidation (same as all the samples)
-    is_std_peak = is_std_peak & area44 > 5000 & area44 < 100000 & seed_oxidation == "yes"
+    is_std_peak = is_std_peak & area44 > 5 & area44 < 100 & seed_oxidation == "yes"
   )
 ```
 
@@ -712,7 +714,7 @@ peak_table_calibrated %>%
   # visualize with convenience function iso_plot_data
   iso_plot_data(
     # choose x and y (multiple y possible)
-    x = `area44 [mVs]`, y = `true_d13C_pred [permil]`,
+    x = `area44 [Vs]`, y = `true_d13C_pred [permil]`,
     # choose aesthetics
     color = in_range, shape = type, label = compound, size = 3,
     # decide what geoms to include
@@ -740,7 +742,7 @@ peak_table_calibrated %>%
     # x and y
     x = `true_d13C [permil]`, y = `true_d13C_pred [permil]`, y_error = `true_d13C_pred_se [permil]`,
     # aesthetics
-    color = compound, size = `area44 [mVs]`,
+    color = compound, size = `area44 [Vs]`,
     # geoms
     points = TRUE
   ) +
@@ -778,7 +780,7 @@ peak_table_calibrated %>%
   facet_wrap(~compound, scales = "free_y") +
   # color palette (here example of manual: www.google.com/search?q=color+picker)
   scale_color_manual(
-    values = c("#984EA3", "#E41A1C", "#E41A1C", "#377EB8", "#FF7F00", "#FF7F00", "#4DAF4A")
+    values = c("#984EA3", "#E41A1C", "#E41A1C", "#377EB8", "#4DAF4A")
   ) +
   # clarify size scale
   scale_size_continuous(breaks = c(0.01, 0.05, 0.1, 0.2, 0.3), 
