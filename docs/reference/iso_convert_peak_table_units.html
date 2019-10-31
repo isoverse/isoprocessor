@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Remove problematic peak mappings — iso_remove_problematic_peak_mappings • isoprocessor</title>
+<title>Convert peak table column units — iso_convert_peak_table_units • isoprocessor</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -39,9 +39,9 @@
 
 
 
-<meta property="og:title" content="Remove problematic peak mappings — iso_remove_problematic_peak_mappings" />
+<meta property="og:title" content="Convert peak table column units — iso_convert_peak_table_units" />
 
-<meta property="og:description" content="Remove peak mappings that were problematic (unidentified, missing, or ambiguous) during peak mapping." />
+<meta property="og:description" content="This is a convenience function to convert the units of multiple peak table columns that are of type iso_double_with_units with the same units to a different SI prefix, e.g. from mVs to Vs. Uses iso_scale_double_with_units internally." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -132,30 +132,26 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Remove problematic peak mappings</h1>
-    <small class="dont-index">Source: <a href='https://github.com/isoverse/isoprocessor/blob/master/R/peak_mapping.R'><code>R/peak_mapping.R</code></a></small>
-    <div class="hidden name"><code>iso_remove_problematic_peak_mappings.Rd</code></div>
+    <h1>Convert peak table column units</h1>
+    <small class="dont-index">Source: <a href='https://github.com/isoverse/isoprocessor/blob/master/R/unit_conversion.R'><code>R/unit_conversion.R</code></a></small>
+    <div class="hidden name"><code>iso_convert_peak_table_units.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>Remove peak mappings that were problematic (unidentified, missing, or ambiguous) during peak mapping.</p>
+    <p>This is a convenience function to convert the units of multiple peak table columns that are of type <code>iso_double_with_units</code> with the same units to a different SI prefix, e.g. from <code>mVs</code> to <code>Vs</code>. Uses <code><a href='iso_scale_double_with_units.html'>iso_scale_double_with_units</a></code> internally.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>iso_remove_problematic_peak_mappings</span>(<span class='no'>...</span>)
+    <pre class="usage"><span class='fu'>iso_convert_peak_table_units</span>(<span class='no'>...</span>)
 
 <span class='co'># S3 method for iso_file_list</span>
-<span class='fu'>iso_remove_problematic_peak_mappings</span>(<span class='no'>iso_files</span>,
-  <span class='kw'>remove_unidentified</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>remove_missing</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>remove_ambiguous</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>remove_mapping_info_columns</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))
+<span class='fu'>iso_convert_peak_table_units</span>(<span class='no'>iso_files</span>, <span class='no'>...</span>,
+  <span class='kw'>select</span> <span class='kw'>=</span> <span class='fu'>everything</span>(), <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))
 
 <span class='co'># S3 method for data.frame</span>
-<span class='fu'>iso_remove_problematic_peak_mappings</span>(<span class='no'>peak_table</span>,
-  <span class='kw'>remove_unidentified</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>remove_missing</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>remove_ambiguous</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>remove_mapping_info_columns</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))</pre>
+<span class='fu'>iso_convert_peak_table_units</span>(<span class='no'>peak_table</span>, <span class='no'>...</span>,
+  <span class='kw'>select</span> <span class='kw'>=</span> <span class='fu'>everything</span>(), <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -169,32 +165,26 @@
       <td><p>collection of continuous flow iso_file objects</p></td>
     </tr>
     <tr>
+      <th>select</th>
+      <td><p>which columns to consider when converting units. Supports all <a href='https://dplyr.tidyverse.org/reference/select.html'>select</a> syntax. Columns not matching <code>select</code> will always keep their existing units. By default considers all columns.</p></td>
+    </tr>
+    <tr>
       <th>quiet</th>
-      <td><p>whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages. Set parameter to overwrite global defaults for this function or set global defaults with calls to iso_turn_info_message_on and iso_turn_info_message_off</p></td>
+      <td><p>whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.</p></td>
     </tr>
     <tr>
       <th>peak_table</th>
-      <td><p>data frame with mapped peaks. Requires the <code>is_identified</code>, <code>is_missing</code> and <code>is_ambiguous</code> columns to be present.</p></td>
+      <td><p>a peak table data frame</p></td>
     </tr>
     <tr>
-      <th>remove_mapping_info_column</th>
-      <td><p>whether to automatically remove mapping info columns. If true and:</p><ul>
-<li><p><code>remove_unidentified = TRUE</code> - <code>is_identified</code> column automatically removed</p></li>
-<li><p><code>remove_missing = TRUE</code> - <code>is_missing</code> column automatically removed</p></li>
-<li><p><code>remove_ambiguous = TRUE</code> - <code>is_ambiguous</code>, <code>n_matches</code>, and <code>n_overlapping</code> columns automatically removed</p></li>
-</ul></td>
+      <th>...</th>
+      <td><p>which units to convert. Must be named character arguments - the values are the old units, the names are the new units. Each pair of old and new units must have the same base units and only differ in their SI prefix (e.g. <code>Vs = mVs, V = mV, nA = A, ...)</code>). For each unit to convert from, finds which columns amongst those found by <code>select</code> currently have those units.</p></td>
     </tr>
     </table>
     
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>the data with the problematic peak mappings remove</p>
-    
-    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
-
-    <div class='dont-index'><p>Other peak mapping functions: <code><a href='iso_get_problematic_peaks.html'>iso_get_problematic_peaks</a></code>,
-  <code><a href='iso_map_peaks.html'>iso_map_peaks</a></code>,
-  <code><a href='iso_summarize_peak_mappings.html'>iso_summarize_peak_mappings</a></code></p></div>
+    <p>At this time, this function cannot convert between different units yet (e.g. voltage and current), but this could be implemented using resistors values already available in the <code>iso_files</code> akin to the implementation in <a href='iso_convert_signals.html'>iso_convert_signals</a> for raw data.</p>
     
 
   </div>
@@ -203,9 +193,7 @@
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       
-      <li><a href="#value">Value</a></li>
-
-      <li><a href="#see-also">See also</a></li>
+      <li><a href="#details">Details</a></li>
           </ul>
 
   </div>

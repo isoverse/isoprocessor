@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Remove problematic peak mappings — iso_remove_problematic_peak_mappings • isoprocessor</title>
+<title>Scale a double with units — iso_scale_double_with_units • isoprocessor</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -39,9 +39,9 @@
 
 
 
-<meta property="og:title" content="Remove problematic peak mappings — iso_remove_problematic_peak_mappings" />
+<meta property="og:title" content="Scale a double with units — iso_scale_double_with_units" />
 
-<meta property="og:description" content="Remove peak mappings that were problematic (unidentified, missing, or ambiguous) during peak mapping." />
+<meta property="og:description" content="Scale an isoverse iso_double_with_units to a different SI prefix. Will error if units are incompatible or si prefix is unknown." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -132,69 +132,35 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Remove problematic peak mappings</h1>
-    <small class="dont-index">Source: <a href='https://github.com/isoverse/isoprocessor/blob/master/R/peak_mapping.R'><code>R/peak_mapping.R</code></a></small>
-    <div class="hidden name"><code>iso_remove_problematic_peak_mappings.Rd</code></div>
+    <h1>Scale a double with units</h1>
+    <small class="dont-index">Source: <a href='https://github.com/isoverse/isoprocessor/blob/master/R/unit_conversion.R'><code>R/unit_conversion.R</code></a></small>
+    <div class="hidden name"><code>iso_scale_double_with_units.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>Remove peak mappings that were problematic (unidentified, missing, or ambiguous) during peak mapping.</p>
+    <p>Scale an isoverse <a href='https://rdrr.io/pkg/isoreader/man/iso_double_with_units.html'>iso_double_with_units</a> to a different SI prefix. Will error if units are incompatible or si prefix is unknown.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>iso_remove_problematic_peak_mappings</span>(<span class='no'>...</span>)
-
-<span class='co'># S3 method for iso_file_list</span>
-<span class='fu'>iso_remove_problematic_peak_mappings</span>(<span class='no'>iso_files</span>,
-  <span class='kw'>remove_unidentified</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>remove_missing</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>remove_ambiguous</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>remove_mapping_info_columns</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))
-
-<span class='co'># S3 method for data.frame</span>
-<span class='fu'>iso_remove_problematic_peak_mappings</span>(<span class='no'>peak_table</span>,
-  <span class='kw'>remove_unidentified</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>remove_missing</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>remove_ambiguous</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>remove_mapping_info_columns</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))</pre>
+    <pre class="usage"><span class='fu'>iso_scale_double_with_units</span>(<span class='no'>x</span>, <span class='no'>to_units</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>...</th>
-      <td><p>S3 method placeholder parameters, see class specific functions for details on parameters</p></td>
+      <th>x</th>
+      <td><p>an <a href='https://rdrr.io/pkg/isoreader/man/iso_double_with_units.html'>iso_double_with_units</a> object</p></td>
     </tr>
     <tr>
-      <th>iso_files</th>
-      <td><p>collection of continuous flow iso_file objects</p></td>
+      <th>to_units</th>
+      <td><p>what unit to scale to (must be in the same base unit as <code>x</code>)</p></td>
     </tr>
     <tr>
-      <th>quiet</th>
-      <td><p>whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages. Set parameter to overwrite global defaults for this function or set global defaults with calls to iso_turn_info_message_on and iso_turn_info_message_off</p></td>
-    </tr>
-    <tr>
-      <th>peak_table</th>
-      <td><p>data frame with mapped peaks. Requires the <code>is_identified</code>, <code>is_missing</code> and <code>is_ambiguous</code> columns to be present.</p></td>
-    </tr>
-    <tr>
-      <th>remove_mapping_info_column</th>
-      <td><p>whether to automatically remove mapping info columns. If true and:</p><ul>
-<li><p><code>remove_unidentified = TRUE</code> - <code>is_identified</code> column automatically removed</p></li>
-<li><p><code>remove_missing = TRUE</code> - <code>is_missing</code> column automatically removed</p></li>
-<li><p><code>remove_ambiguous = TRUE</code> - <code>is_ambiguous</code>, <code>n_matches</code>, and <code>n_overlapping</code> columns automatically removed</p></li>
-</ul></td>
+      <th>return</th>
+      <td><p><code>x</code> scaled to the new <code>to_units</code></p></td>
     </tr>
     </table>
-    
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
-
-    <p>the data with the problematic peak mappings remove</p>
-    
-    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
-
-    <div class='dont-index'><p>Other peak mapping functions: <code><a href='iso_get_problematic_peaks.html'>iso_get_problematic_peaks</a></code>,
-  <code><a href='iso_map_peaks.html'>iso_map_peaks</a></code>,
-  <code><a href='iso_summarize_peak_mappings.html'>iso_summarize_peak_mappings</a></code></p></div>
     
 
   </div>
@@ -202,11 +168,7 @@
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
-      <li><a href="#value">Value</a></li>
-
-      <li><a href="#see-also">See also</a></li>
-          </ul>
+                </ul>
 
   </div>
 </div>

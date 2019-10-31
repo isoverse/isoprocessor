@@ -40,6 +40,9 @@
     <loc>http://isoprocessor.isoverse.org//reference/iso_combine_raw_data_with_peak_table.html</loc>
   </url>
   <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_convert_peak_table_units.html</loc>
+  </url>
+  <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_convert_signals.html</loc>
   </url>
   <url>
@@ -134,6 +137,9 @@
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_remove_problematic_peaks.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_scale_double_with_units.html</loc>
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_set_default_processor_parameters.html</loc>

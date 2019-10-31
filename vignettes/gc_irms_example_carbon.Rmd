@@ -53,7 +53,7 @@ All code chunks that contain a critical step towards the final data (i.e. do mor
 
 ## Read raw data files (*)
 
-```{r}
+```{r, warning=FALSE}
 # set file path(s) to data files, folders or rds collections 
 # can be multiple folders or mix of folders and files, using example data set here
 # (this is a reduced data set of mostly standards with just a few example samples)
