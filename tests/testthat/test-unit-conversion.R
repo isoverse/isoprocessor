@@ -3,6 +3,13 @@ context("Unit scaling")
 # Basic unit scaling ====
 
 test_that("common SI prefixes are supported", {
+
+  # finding base units
+  expect_error(get_base_unit(c("A", "V")), "cannot determine")
+  expect_error(get_base_unit(c("kA", "xA")), "unsupported prefixes.*x")
+  expect_equal(get_base_unit(c("mV", "V")), "V")
+  expect_equal(get_base_unit(c("mVs/m2", "Vs/m2")), "Vs/m2")
+
   # parameters missing
   expect_error(get_si_prefix_scaling(unit = "km"), "no unit suffix specified")
   expect_error(get_si_prefix_scaling(suffix = "m"), "no unit supplied")
@@ -31,6 +38,23 @@ test_that("common SI prefixes are supported", {
   expect_equal(
     get_si_prefix_scaling(unit = "fA", suffix = "A"),
     get_si_prefix_scaling(suffix = "A", unit = "fA"))
+
+  # scaling by figuring out base units directly
+  expect_equal(get_si_prefix_scaling(c("mVs", "Vs")), c(0.001, 1))
+  expect_equal(get_si_prefix_scaling(c("mVs", "mVs")), c(1, 1))
+
+  # conversion factor
+  expect_equal(get_unit_conversion_factor(c("mVs", "kA"), c("Vs", "nA")), c(1e-3, 1e12))
+
+  # double with units scaling
+  expect_equal(
+    iso_double_with_units(1:10, "mV") %>% iso_scale_double_with_units("V"),
+    iso_double_with_units( (1:10) / 1000, "V")
+  )
+  expect_equal(
+    iso_double_with_units(1:10, "kV") %>% iso_scale_double_with_units("mV"),
+    iso_double_with_units( (1:10) * 1e6, "mV")
+  )
 })
 
 test_that("test that proper units can be found", {
@@ -186,5 +210,66 @@ test_that("test that signal conversion works in iso_files", {
   expect_equal(result2$bgrd_data$v44.nV, cf2$bgrd_data$v44.mV*1e6)
 
   # FIXME: continug here - conversion with resistors
+
+})
+
+# Peak Table unit conversion ====
+
+context("Peak table unit conversion")
+
+test_that("test that peak table unit conversion works", {
+
+  df <- tibble(x = iso_double_with_units(1:5, "mV"), y = iso_double_with_units(1:5, "V"), z = iso_double_with_units(1:5, "V"))
+  expect_equal(iso_convert_peak_table_units(df), df)
+  expect_error(iso_convert_peak_table_units(df, 1), "must be named")
+  expect_error(iso_convert_peak_table_units(df, list(a = "1")), "must be named")
+  expect_error(iso_convert_peak_table_units(df, c(a = 1)), "must be named")
+  expect_error(iso_convert_peak_table_units(df, "1"), "must be named")
+
+  # test conversions
+  expect_silent(iso_convert_peak_table_units(df, kV = "mV", kV = "V", quiet = TRUE))
+  expect_message(
+    out <- iso_convert_peak_table_units(df,  kV = "mV", kV = "V"),
+    "converting.*mV.*V.*V.*kV.*everything"
+  )
+  expect_equal(
+    out,
+    mutate(
+      df,
+      x = iso_scale_double_with_units(x, "kV"),
+      y = iso_scale_double_with_units(y, "kV"),
+      z = iso_scale_double_with_units(z, "kV")
+    )
+  )
+  expect_equal(out, iso_convert_peak_table_units(df,kV = mV, kV = V))
+  expect_message(
+    out2 <- iso_convert_peak_table_units(df, kV = mV, kV = V, select = NULL),
+    "converting.*mV.*V.*V.*kV.*NULL"
+  )
+  expect_equal(out2, df)
+  expect_equal(
+    iso_convert_peak_table_units(df, kV = mV, kV = V, select = c(x, y)),
+    mutate(
+      df,
+      x = iso_scale_double_with_units(x, "kV"),
+      y = iso_scale_double_with_units(y, "kV")
+    )
+  )
+  expect_equal(
+    iso_convert_peak_table_units(df, kV = mV),
+    mutate(
+      df,
+      x = iso_scale_double_with_units(x, "kV")
+    )
+  )
+
+  # in iso_files
+  iso_file_a <- isoreader:::make_cf_data_structure("a")
+  iso_file_a$peak_table <- df
+  expect_equal(iso_convert_peak_table_units(iso_file_a, kV = mV, kV = V)$peak_table, out)
+
+  iso_file_b <- isoreader:::make_cf_data_structure("b")
+  iso_file_b$peak_table <- df
+  expect_equal(iso_convert_peak_table_units(c(iso_file_a, iso_file_b), kV = mV, kV = V) %>% iso_get_peak_table() %>% select(-file_id), vctrs::vec_rbind(out, out))
 
 })

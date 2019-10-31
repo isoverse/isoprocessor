@@ -29,7 +29,7 @@ apply_regression(dt, predict, nested_model = FALSE,
 
 \item{predict_value}{the new column in the model_data that holds the predicted value}
 
-\item{predict_error}{the new column in the model_data that holds the error of the predicted value (only created if \code{calculate_error = TRUE})}
+\item{predict_error}{the new column in the model_data that holds the error of the predicted value (always created but \code{NA} if \code{calculate_error = FALSE})}
 
 \item{predict_range}{vector of 2 numbers, if provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the \code{predict_range} is usually only necessary if the calibration range should be extrapolated significantely.}
 }
