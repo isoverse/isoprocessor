@@ -939,7 +939,8 @@ iso_mark_calibration_range <- function(p, calibration = "") {
       mutate(panel = as.character(panel)) %>%
       select(panel, !!sym(calib_vars$model_name), !!sym(calib_vars$model_params)) %>%
       unique() %>%
-      iso_unnest_calibration_range(keep_other_list_data = FALSE)
+      iso_unnest_calibration_range(keep_other_list_data = FALSE) %>%
+      mutate(term = ifelse(!is.na(units), sprintf("%s [%s]", term, units), term))
 
     # resulting data frame
     ranges <-
