@@ -24,6 +24,8 @@ navbar:
     href: articles/continuous_flow.html
   - text: "Processing Examples"
     menu:
+      - text: "Bulk carbon isotope analysis"
+        href: articles/ea_irms_example_carbon.html
       - text: "Compound specific carbon isotope analysis"
         href: articles/gc_irms_example_carbon.html
   - text: Reference

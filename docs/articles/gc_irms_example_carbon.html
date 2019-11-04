@@ -43,7 +43,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.0</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.1</span>
       </span>
     </div>
 
@@ -63,6 +63,9 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
+      <a href="../articles/ea_irms_example_carbon.html">Bulk carbon isotope analysis</a>
+    </li>
+    <li>
       <a href="../articles/gc_irms_example_carbon.html">Compound specific carbon isotope analysis</a>
     </li>
   </ul>
@@ -94,7 +97,7 @@
       <h1>GC-IRMS data processing example</h1>
             <h3 class="subtitle">carbon isotopes in alkanes</h3>
             
-            <h4 class="date">2019-10-30</h4>
+            <h4 class="date">2019-11-04</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/isoverse/isoprocessor/blob/master/vignettes/gc_irms_example_carbon.Rmd"><code>vignettes/gc_irms_example_carbon.Rmd</code></a></small>
       <div class="hidden name"><code>gc_irms_example_carbon.Rmd</code></div>
@@ -109,7 +112,7 @@
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(tidyverse) <span class="co"># general data wrangling and plotting</span></a>
 <a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(isoreader) <span class="co"># reading the raw data files</span></a>
 <a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(isoprocessor) <span class="co"># processing the data</span></a></code></pre></div>
-<p>This analysis was run using <a href="http://isoreader.kopflab.org">isoreader</a> version 1.0.11 and <a href="http://isoprocessor.kopflab.org/">isoprocessor</a> version 0.5.0.</p>
+<p>This analysis was run using <a href="http://isoreader.kopflab.org">isoreader</a> version 1.0.11 and <a href="http://isoprocessor.kopflab.org/">isoprocessor</a> version 0.5.1.</p>
 <p>For use as a data processing template, please follow the <code>Source</code> link above, download the raw file and adapt as needed. Knitting for stand-alone data analysis works best to <code>HTML</code> rather than the in-package default <code>html_vignette</code>.</p>
 <p>All code chunks that contain a critical step towards the final data (i.e. do more than visualization or a data summary) are marked with <code>(*)</code> in the header to make it easier to follow all key steps during interactive use.</p>
 </div>
@@ -138,7 +141,7 @@
 <a class="sourceLine" id="cb2-17" data-line-number="17"><span class="co">#&gt; Info: preparing to read 1 data files (all will be cached), setting up ...</span></a>
 <a class="sourceLine" id="cb2-18" data-line-number="18"><span class="co">#&gt; Info (process 1): reading file 'gc_irms_example_carbon.cf.rds' with '....</span></a>
 <a class="sourceLine" id="cb2-19" data-line-number="19"><span class="co">#&gt; Info (process 1): loaded data for 47 data files from R Data Storage - ...</span></a>
-<a class="sourceLine" id="cb2-20" data-line-number="20"><span class="co">#&gt; Info: finished reading 1 files in 10.43 secs</span></a>
+<a class="sourceLine" id="cb2-20" data-line-number="20"><span class="co">#&gt; Info: finished reading 1 files in 6.46 secs</span></a>
 <a class="sourceLine" id="cb2-21" data-line-number="21"><span class="co">#&gt; Info: encountered 2 problems in total</span></a>
 <a class="sourceLine" id="cb2-22" data-line-number="22"><span class="co">#&gt; # A tibble: 2 x 4</span></a>
 <a class="sourceLine" id="cb2-23" data-line-number="23"><span class="co">#&gt;   file_id         type  func            details                            </span></a>
@@ -3034,7 +3037,7 @@
 <a class="sourceLine" id="cb41-5" data-line-number="5">    <span class="co"># include data summary as an additional useful tab</span></a>
 <a class="sourceLine" id="cb41-6" data-line-number="6">    <span class="st">`</span><span class="dt">data summary</span><span class="st">`</span> =<span class="st"> </span>peak_data_summary</a>
 <a class="sourceLine" id="cb41-7" data-line-number="7">  )</a>
-<a class="sourceLine" id="cb41-8" data-line-number="8"><span class="co">#&gt; Info: exporting calibrations into Excel '20191030_gc_irms_example_carbon_export.xlsx'... Note: zip::zip() is deprecated, please use zip::zipr() instead</span></a>
+<a class="sourceLine" id="cb41-8" data-line-number="8"><span class="co">#&gt; Info: exporting calibrations into Excel '20191104_gc_irms_example_carbon_export.xlsx'... Note: zip::zip() is deprecated, please use zip::zipr() instead</span></a>
 <a class="sourceLine" id="cb41-9" data-line-number="9"><span class="co">#&gt; complete. Created tabs 'data summary', 'all data', 'calib coefs', 'calib summary' and 'calib range'.</span></a></code></pre></div>
 </div>
   </div>

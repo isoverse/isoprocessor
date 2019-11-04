@@ -4,6 +4,7 @@ pkgdown_sha: ~
 articles:
   continuous_flow: continuous_flow.html
   dual_inlet: dual_inlet.html
+  ea_irms_example_carbon: ea_irms_example_carbon.html
   gc_irms_example_carbon: gc_irms_example_carbon.html
   operations: operations.html
   Untitled: tmp/Untitled.html
