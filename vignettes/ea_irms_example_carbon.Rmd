@@ -127,7 +127,7 @@ iso_files %>%
 
 ## Example chromatograms
 
-```{r "example_chromatograms", fig.width=8, fig.height=8, warning=FALSE}
+```{r "example_chromatograms", fig.width=8, fig.height=6, warning=FALSE}
 # plot the chromatograms
 iso_files %>% 
   # select a few analyses to show
