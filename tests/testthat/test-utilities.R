@@ -330,7 +330,7 @@ test_that("example files are accessible", {
 
   expect_equal(
     iso_get_processor_examples()$filename,
-    c("gc_irms_example_carbon.cf.rds")
+    c("ea_irms_example_carbon.cf.rds","gc_irms_example_carbon.cf.rds")
   )
 
   expect_error(iso_get_processor_example(), "missing")
