@@ -526,8 +526,9 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
       # @FIXME: consider doing a two way split here and allowing regular predict on the dependent variable!
       # note: consider scenario though where dependent variable is e.g. log(y) or similar - possible to deal with that?
       .predict_x = dt_new_cols$predict,
-      .predict_info = map(.predict_vars, ~filter(.x, var == dt_new_cols$predict, !dependent)),
+      .predict_info = map(.predict_vars, ~filter(.x, var == dt_new_cols$predict)),
       .predict_ok = map_lgl(.predict_info, ~nrow(.x) == 1),
+      .predict_dependent = map_lgl(.predict_info, ~identical(.x$dependent, TRUE)),
       .predict_y = map(.predict_vars, ~filter(.x, dependent)$var),
       .predict_y_ok = map_lgl(.predict_y, ~length(.x) == 1),
       .predict_other_xs = map(.predict_vars, ~filter(.x, var != dt_new_cols$predict, !dependent)$var)
@@ -556,24 +557,14 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
       !!dt_cols$model_data :=
         pmap(
           list(d = !!sym(dt_cols$model_data), fit = !!sym(dt_cols$model_fit), name = !!sym(dt_cols$model_name),
-               x = .predict_x, y = .predict_y, other_xs = .predict_other_xs),
+               x = .predict_x, dependent = .predict_dependent,
+               y = .predict_y, other_xs = .predict_other_xs),
 
           # process data set for a single model
-          function(d, fit, name, x, y, other_xs) {
+          function(d, fit, name, x, dependent, y, other_xs) {
 
             # units of predict var
             x_units <- iso_get_units(d[[x]])
-
-            # range
-            if(!is.null(predict_range)) {
-              # parameter provided predict_range
-              range <- predict_range
-            } else {
-              # estimate predict range based on available values
-              # NOTE: should this be only values that were used for calib? (i.e. have residual column set)
-              range <- base::range(as.numeric(d[[x]]), na.rm = TRUE)
-            }
-            range_tolerance_escalation <- c(0, 1, 10, 100, 1000)
 
             # check for enough data (standard eval to avoid quoting trouble)
             d_enough_data <- rowSums(is.na(d[c(y, other_xs)]) * 1) == 0
@@ -585,71 +576,98 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
                 ..rn.. = 1:length(d_enough_data)
               )
 
-            # do the calculate for each row
-            d_prediction <- d %>%
-              # strip units to avoid issues with non-numeric predictors
-              iso_strip_units() %>%
-              # NOTE: use group by and do to get a more informative progress bar in interactive use
-              group_by(..rn..) %>%
-              do({
-                # values
-                estimate <- NA_real_
-                se <- NA_real_
-                problem <- NA_character_
-
-                # check whether have enough data
-                if (.$..enough_data..) {
-
-                  # cycle through range tolerance
-                  for(range_tolerance in range_tolerance_escalation) {
-                    # try to find fit
-                    out <- safe_invest(
-                      fit, y0 = .[[y]], x0.name = x, data = ., newdata = .[other_xs],
-                      interval = invest_interval_method,
-                      lower = range[1] - range_tolerance * diff(range),
-                      upper = range[2] + range_tolerance * diff(range),
-                      # NOTE: the following doesn't really do anything, using the tolerance ranges instead
-                      extendInt = "yes"
-                    )
-
-                    # break as soon as success or a different error
-                    if (is.null(out$error) || !str_detect(out$error$message, "not found in.*search interval")) {
-                      break
-                    }
-                  }
-
-                  # process outcome
-                  if (is.null(out$error) && calculate_error) {
-                    # with error estimates
-                    estimate <- out$result$estimate
-                    se <- out$result$se
-                  } else if (is.null(out$error)) {
-                    # no error estimates
-                    estimate <- out$result
-                  } else if (str_detect(out$error$message, "not found in the search interval")) {
-                    problem <- glue(
-                      "No solution for '{x}' in the interval {range[1] - range_tolerance * diff(range)} ",
-                      "to {range[2] + range_tolerance * diff(range)}, potential fit is too far outside ",
-                      "the calibration range",
-                      "- consider manually adjusting parameter 'predict_range'.") %>%
-                      as.character()
-                  } else {
-                    problem <- out$error$message
-                  }
-                } else {
-                  # not enough data
-                  problem <- glue("Not enough data, missing a value for at least one of the variables: ",
-                                  "'{collapse(c(y, other_xs), sep = \"', '\", last = \"' or '\")}'") %>%
-                    as.character()
-                }
-
-                # return data
+            if (dependent) {
+              # predict dependent variable by normal regression predict
+              new_data <- d %>% select(other_xs) %>% iso_strip_units()
+              pred <- predict.lm(fit, newdata = new_data, se.fit = TRUE)
+              d_prediction <-
                 tibble(
-                  ..estimate.. := estimate,
-                  ..se.. := se,
-                  ..problem.. = problem
+                  ..rn.. = d$..rn..,
+                  ..estimate.. = pred$fit,
+                  ..se.. = pred$se.fit,
+                  ..problem.. = NA_character_
                 )
-              }) %>% ungroup()
+
+            } else {
+              # predict independent variable by inversion
+
+              # range
+              if(!is.null(predict_range)) {
+                # parameter provided predict_range
+                range <- predict_range
+              } else {
+                # estimate predict range based on available values
+                # NOTE: should this be only values that were used for calib? (i.e. have residual column set)
+                range <- base::range(as.numeric(d[[x]]), na.rm = TRUE)
+              }
+              range_tolerance_escalation <- c(0, 1, 10, 100, 1000)
+
+              # do the calculate for each row
+              d_prediction <- d %>%
+                # strip units to avoid issues with non-numeric predictors
+                iso_strip_units() %>%
+                # NOTE: use group by and do to get a more informative progress bar in interactive use
+                group_by(..rn..) %>%
+                do({
+                  # values
+                  estimate <- NA_real_
+                  se <- NA_real_
+                  problem <- NA_character_
+
+                  # check whether have enough data
+                  if (.$..enough_data..) {
+
+                    # cycle through range tolerance
+                    for(range_tolerance in range_tolerance_escalation) {
+                      # try to find fit
+                      out <- safe_invest(
+                        fit, y0 = .[[y]], x0.name = x, data = ., newdata = .[other_xs],
+                        interval = invest_interval_method,
+                        lower = range[1] - range_tolerance * diff(range),
+                        upper = range[2] + range_tolerance * diff(range),
+                        # NOTE: the following doesn't really do anything, using the tolerance ranges instead
+                        extendInt = "yes"
+                      )
+
+                      # break as soon as success or a different error
+                      if (is.null(out$error) || !str_detect(out$error$message, "not found in.*search interval")) {
+                        break
+                      }
+                    }
+
+                    # process outcome
+                    if (is.null(out$error) && calculate_error) {
+                      # with error estimates
+                      estimate <- out$result$estimate
+                      se <- out$result$se
+                    } else if (is.null(out$error)) {
+                      # no error estimates
+                      estimate <- out$result
+                    } else if (str_detect(out$error$message, "not found in the search interval")) {
+                      problem <- glue(
+                        "No solution for '{x}' in the interval {range[1] - range_tolerance * diff(range)} ",
+                        "to {range[2] + range_tolerance * diff(range)}, potential fit is too far outside ",
+                        "the calibration range",
+                        "- consider manually adjusting parameter 'predict_range'.") %>%
+                        as.character()
+                    } else {
+                      problem <- out$error$message
+                    }
+                  } else {
+                    # not enough data
+                    problem <- glue("Not enough data, missing a value for at least one of the variables: ",
+                                    "'{collapse(c(y, other_xs), sep = \"', '\", last = \"' or '\")}'") %>%
+                      as.character()
+                  }
+
+                  # return data
+                  tibble(
+                    ..estimate.. := estimate,
+                    ..se.. := se,
+                    ..problem.. = problem
+                  )
+                }) %>% ungroup()
+            }
 
             # units
             if (!is.na(x_units)) {
