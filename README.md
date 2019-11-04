@@ -4,12 +4,12 @@
 # isoprocessor <a href='http://isoprocessor.isoverse.org'><img src='man/figures/isoprocessor_logo_thumb.png' align="right" height="138.5"/></a>
 
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/isoprocessor)](https://cran.r-project.org/package=isoprocessor)
-[![Git\_Hub\_Version](https://img.shields.io/badge/GitHub-0.4.0-orange.svg?style=flat-square)](/commits)
+[![Git\_Hub\_Version](https://img.shields.io/badge/GitHub-0.5.1-orange.svg?style=flat-square)](https://github.com/isoverse/isoprocessor/commits)
 [![Documentation](https://img.shields.io/badge/docs-online-green.svg)](http://isoprocessor.isoverse.org/)
 [![Build
 Status](https://travis-ci.org/isoverse/isoprocessor.svg?branch=master)](https://travis-ci.org/isoverse/isoprocessor)
 [![AppVeyor Build
-Status](https://ci.appveyor.com/api/projects/status/github/isoverse/isoprocessor?branch=master&svg=true)](https://ci.appveyor.com/project/isoverse/isoprocessor)
+Status](https://ci.appveyor.com/api/projects/status/github/isoverse/isoprocessor?branch=master&svg=true)](https://ci.appveyor.com/project/KopfLab/isoprocessor)
 [![Binder](https://img.shields.io/badge/launch-RStudio-blue.svg)](https://mybinder.org/v2/gh/isoverse/isoprocessor/binder?urlpath=rstudio)
 [![Binder](https://img.shields.io/badge/launch-Jupyter-orange.svg)](https://mybinder.org/v2/gh/isoverse/isoprocessor/binder?urlpath=lab)
 
@@ -61,7 +61,9 @@ devtools::install_github("isoverse/isoprocessor")
     notebook](http://isoprocessor.isoverse.org/other/how_isodat_calculates_R.html)**
   - additional vignettes on data reduction and calibration are in the
     works:
-      - example 1: **[compound specific carbon isotope
+      - example 1: **[bulk carbon isotope
+        analysis](http://isoprocessor.isoverse.org/articles/ea_irms_example_carbon.html)**
+      - example 2: **[compound specific carbon isotope
         analysis](http://isoprocessor.isoverse.org/articles/gc_irms_example_carbon.html)**
 
 ## Open Source

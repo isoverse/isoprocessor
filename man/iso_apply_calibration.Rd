@@ -17,7 +17,7 @@ iso_apply_calibration(dt, predict, calibration = "",
 
 \item{predict_range}{vector of 2 numbers, if provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the \code{predict_range} is usually only necessary if the calibration range should be extrapolated significantely.}
 
-\item{calculate_error}{whether to estimate the standard error from the calibration (using the Wald method), stores the result in the new \code{predict_error} column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.}
+\item{calculate_error}{whether to estimate the standard error from the calibration (using the Wald method as described in \link[investr]{invest}), stores the result in the new \code{predict_error} column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.}
 
 \item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
 }

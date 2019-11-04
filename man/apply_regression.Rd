@@ -17,7 +17,7 @@ apply_regression(dt, predict, nested_model = FALSE,
 
 \item{nested_model}{whether the model is nested, if TRUE, must also provide \code{model_params}}
 
-\item{calculate_error}{whether to estimate the standard error from the calibration (using the Wald method), stores the result in the new \code{predict_error} column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.}
+\item{calculate_error}{whether to estimate the standard error from the calibration (using the Wald method as described in \link[investr]{invest}), stores the result in the new \code{predict_error} column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.}
 
 \item{model_data}{the nested model data column}
 
@@ -29,7 +29,7 @@ apply_regression(dt, predict, nested_model = FALSE,
 
 \item{predict_value}{the new column in the model_data that holds the predicted value}
 
-\item{predict_error}{the new column in the model_data that holds the error of the predicted value (only created if \code{calculate_error = TRUE})}
+\item{predict_error}{the new column in the model_data that holds the error of the predicted value (always created but \code{NA} if \code{calculate_error = FALSE})}
 
 \item{predict_range}{vector of 2 numbers, if provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the \code{predict_range} is usually only necessary if the calibration range should be extrapolated significantely.}
 }

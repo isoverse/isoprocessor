@@ -9,7 +9,7 @@ iso_plot_data(dt, x, y, y_error = NULL, group = NULL, color = NULL,
   label = NULL, lines = FALSE, points = FALSE)
 }
 \arguments{
-\item{dt}{data frame with peak data}
+\item{dt}{data table}
 
 \item{x}{the x axis aesthetic for the calibration parameters, can be datetime, text or numeric}
 

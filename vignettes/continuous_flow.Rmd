@@ -40,41 +40,51 @@ iso_files <-
 
 # Chromatograms
 
-Plotting the raw data (i.e. the mass chromatograms) can be done either with the generic `iso_plot_raw_data()` function for a simple plot with default parameters, or directly using the continuous flow specific `iso_plot_continuous_flow()` which can be highly customized. Note that the following plot shows the data from all files in their originally recorded signal intensity units. For examples of how to convert to a common unit, see the section on **Signal conversion** further down.
+Plotting the raw data (i.e. the mass chromatograms) can be done either with the generic `iso_plot_raw_data()` function for a simple plot with default parameters, or directly using the continuous flow specific `iso_plot_continuous_flow()` (recommended), which can be highly customized. Note that the following plot shows the data from all files in their originally recorded signal intensity units. For examples of how to convert to a common unit, see the section on **Signal conversion** further down.
 
 ```{r "all data", fig.width = 10, fig.asp = 2}
-iso_files %>% iso_plot_continuous_flow_data()
+iso_plot_continuous_flow_data(iso_files)
 ```
 
 All customization options are described in the function help (`?iso_plot_continuous_flow_data`) and include, for example, plotting only a specific subset of masses (which will omit data from files that don't include this mass):
 
 ```{r "select masses", fig.width = 10, fig.asp = 1}
-iso_files %>% 
-  # plot just masses 2, 44 and 45
-  iso_plot_continuous_flow_data(
-    data = c("2", "44", "45")
-  )
+# plot just masses 2, 44 and 45
+iso_plot_continuous_flow_data(
+  iso_files,
+  data = c("2", "44", "45")
+)
+```
+
+# Peak Table
+
+Continuous flow data is usually interpreted in the context of the individiual peaks in the chromatogram. For this purpose, isoprocessor provides several functions to set the peak table including `iso_set_peak_table()` (set a peak table manually), `iso_set_peak_table_from_vendor_data_table()` (use the data table precomputed by the vendor software and extracted from the data files by isoreader), and `iso_find_peaks()` (find peaks de novo from the raw chromatographic data). The latter is not yet implemented but coming soon. Here we provide the example of setting the peak table from Isodat-computed data.
+
+```{r}
+# this is a convenience function to set peak table from isodat data table, it 
+# provides detailed information on the information copied to the peak table
+iso_files <- iso_set_peak_table_from_isodat_vendor_data_table(iso_files)
+
+# display the resulting peak table now stored in the iso_files for the first file
+iso_files[1] %>% iso_get_peak_table() %>% rmarkdown::paged_table()
 ```
 
 # Peak Labels
 
-Since peak information is often key for interpretating chromatograms, the `iso_plot_continuous_flow_data` function also provides a suite of peak data integration parameters that make it easy to highlight peaks in the chromatogram and label them with any number of desired information. For example, the following code illustrates how the `vendor_data_table` provided by some file formats can be used as a source for this information:
+Since peak information is often key for interpretating chromatograms, the `iso_plot_continuous_flow_data` function also provides a suite of peak data integration parameters that make it easy to highlight peaks in the chromatogram and label them with any number of desired information. Now that the collection of `iso_files` has peak table information stored within, it is easy to make use of these for visualization.
 
 ```{r "with_peak_labels", fig.width = 9, fig.asp = 0.4}
-iso_files %>% 
-  iso_plot_continuous_flow_data(
-    # select which data to plot and how to plot it
-    data = c("2", "3"), color = data, panel = NULL,
-    # provide source for peak information
-    peak_table = iso_get_vendor_data_table(iso_files),
-    # specify the names of key columns in the peak_table 
-    rt = Rt, rt_start = Start, rt_end = End,
-    # specify what to label the peaks with
-    peak_label = sprintf("rt=%.0f", Rt),
-    peak_label_size = 3,
-    # specify which labels to display (only the 2 trace, between 500 and 1500s)
-    peak_label_filter = data == "2 [mV]" & dplyr::between(time.s, 500, 1500)
-  )
+iso_plot_continuous_flow_data(
+  iso_files, 
+  # select which data to plot and how to plot it
+  data = c("2", "3"), color = data, panel = NULL,
+  # specify what to highlight about the peaks (here: bounds, ret. time and dD)
+  peak_bounds = TRUE,
+  peak_label = iso_format(rt, dD = d2H, signif = 3),
+  peak_label_size = 3,
+  # specify which labels to display (only the 2 trace, between 500 and 1500s)
+  peak_label_filter = data == "2 [mV]" & dplyr::between(time.s, 500, 1500)
+)
 ```
 
 
@@ -88,14 +98,13 @@ iso_files <-
   # calculate 46/44 and 45/44 ratios
   iso_calculate_ratios(ratios = c("46/44", "45/44"))
 
-iso_files %>% 
-  iso_plot_continuous_flow_data(
-    # visualize ratios along with main ion
-    data = c("44", "45/44", "46/44"),
-    # plot all masses but ratios only 0 to 2 to omit peak jump artifacts
-    filter = category == "mass" | dplyr::between(value, 0, 2)
-  ) + 
-  ggplot2::expand_limits(y = -0.3)
+iso_plot_continuous_flow_data(
+  iso_files,
+  # visualize ratios along with main ion
+  data = c("44", "45/44", "46/44"),
+  # plot all masses but ratios only 0 to 2 to omit peak jump artifacts
+  filter = category == "mass" | dplyr::between(value, 0, 2)
+) + ggplot2::expand_limits(y = -0.3)
 ```
 
 # Time conversion
@@ -103,14 +112,11 @@ iso_files %>%
 Most continuous flow data is reported in time units of seconds but this is not always the most useful unit. Isoreader provides easy time scaling functionality that will work for all standard time units (minutes, hours, days, etc.) regardless of which time units individual isofiles were initially recorded in. 
 
 ```{r "time conversion", fig.width = 10, fig.asp = 0.5}
-iso_files <- 
-  iso_files %>% 
-  # convert to minutes
-  iso_convert_time(to = "minutes") 
+# convert to minutes
+iso_files <- iso_convert_time(iso_files, to = "minutes") 
 
-iso_files %>% 
-  # plot masses 2 and 3
-  iso_plot_continuous_flow_data(data = c(2, 3))
+# plot masses 2 and 3
+iso_plot_continuous_flow_data(iso_files, data = c(2, 3))
 ```
 
 In this context, another useful customization option of the plotting function is the option to select a specific time window (in any time units, regardless of what is plotted), and the possibility to adjust plot aesthetics such as color, linetype, and paneling:
@@ -126,7 +132,10 @@ iso_files %>%
     time_interval_units = "minutes",
     # adjust plot aesthetics to panel by masses vs. ratios and color by traces
     panel = category,
-    color = data
+    color = data,
+    # add peak labels
+    peak_label = iso_format(RT = rt, A = amp2),
+    peak_label_filter = data == "2 [mV]", peak_label_size = 4
   )
 ```
 
@@ -156,9 +165,8 @@ Since all isoreader plots are standard [ggplot](http://ggplot2.tidyverse.org/) o
 
 ```{r "styling", fig.width = 10, fig.asp = 0.5}
 library(ggplot2)
-iso_files %>% 
-  # replot
-  iso_plot_continuous_flow_data(data = c(2,3)) +
+# replot
+iso_plot_continuous_flow_data(iso_files, data = c(2,3)) +
   # add vertical dashed line (ggplot functionality)
   geom_vline(xintercept = 15, linetype = 2) +
   # modify plot styling (ggplot functionality)

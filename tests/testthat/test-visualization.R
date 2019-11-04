@@ -1,4 +1,33 @@
-context("Visualization")
+context("Visualization Utils")
+
+# iso_format ====
+
+test_that("test that iso_format works properly", {
+
+  expect_error(iso_format(1:5, 1), "unequal lengths")
+  x <- 1:2
+  expect_equal(
+    iso_format(x, b = iso_double_with_units(pi * 1:2, "V"), signif = 3),
+    c("x: 1\nb: 3.14V", "x: 2\nb: 6.28V")
+  )
+  expect_equal(
+    iso_format(a = x, b = iso_double_with_units(pi * 1:2, "V"), signif = 3),
+    c("a: 1\nb: 3.14V", "a: 2\nb: 6.28V")
+  )
+  expect_equal(
+    iso_format(a = x, b = iso_double_with_units(pi * 1:2, "V"), signif = 4),
+    c("a: 1\nb: 3.142V", "a: 2\nb: 6.283V")
+  )
+  expect_equal(
+    iso_format(x, iso_double_with_units(pi * 1:2, "V"), signif = 3, format_names = NULL),
+    c("1\n3.14V", "2\n6.28V")
+  )
+  expect_equal(
+    iso_format(x, iso_double_with_units(pi * 1:2, "V"), signif = 3, format_names = NULL, format_units = NULL),
+    c("1\n3.14", "2\n6.28")
+  )
+
+})
 
 # raw data ========
 
@@ -11,16 +40,18 @@ test_that("test that raw data plot throws appropriate errors", {
 test_that("test that cf plot data prep works properly", {
 
   expect_error(iso_prepare_continuous_flow_plot_data())
-  expect_error(iso_prepare_continuous_flow_plot_data(c(isoreader:::make_di_data_structure())), "can only prepare continuous flow")
+  expect_error(iso_prepare_continuous_flow_plot_data(c(isoreader:::make_di_data_structure("NA"))), "can only prepare continuous flow")
 
   # FIXME: include more elaborate tests here
 
 })
 
+# continuous flow plot =====
+
 test_that("test that plot continuous flow works properly", {
 
   expect_error(iso_plot_continuous_flow_data(42), "not defined")
-  expect_is(cf <- isoreader:::make_cf_data_structure(), "continuous_flow")
+  expect_is(cf <- isoreader:::make_cf_data_structure("NA"), "continuous_flow")
   cf$read_options$file_info <- TRUE
   cf$read_options$raw_data <- TRUE
   expect_error(iso_plot_continuous_flow_data(cf), "no raw data in supplied iso_files")
@@ -50,10 +81,10 @@ test_that("test that plot continuous flow works properly", {
 
   # aesthetics, mapping, panelling formatting tests - defaults first
   expect_true(all(names(p$mapping) %in% c("colour", "x", "y", "group", "label")))
-  expect_true("file_id" %in% as.character(p$mapping$colour))
-  expect_true("time.s" %in% as.character(p$mapping$x))
-  expect_true("value" %in% as.character(p$mapping$y))
-  expect_true("file_id" %in% as.character(p$mapping$label))
+  expect_true("file_id" %in% rlang::as_label(p$mapping$colour))
+  expect_true("time.s" %in% rlang::as_label(p$mapping$x))
+  expect_true("value" %in% rlang::as_label(p$mapping$y))
+  expect_true("file_id" %in% rlang::as_label(p$mapping$label))
   expect_equal(class(p$facet)[1], "FacetGrid")
   expect_equal(names(p$facet$params$rows), "..panel") # always ..panel because expressions not possible
   expect_equal(names(p$facet$params$cols) %>% length(), 0)
@@ -62,12 +93,12 @@ test_that("test that plot continuous flow works properly", {
   expect_true(is.ggplot(p <- iso_plot_raw_data(cf, panel = NULL, color = data, linetype = file_id)))
   expect_true(all(p$data$data %in% c("44 [mV]", "46 [mV]", "46/44"))) # all selected by default
   expect_true(all(names(p$mapping) %in% c("colour", "x", "y", "group", "linetype", "label")))
-  expect_true("data" %in% as.character(p$mapping$colour))
-  expect_true("file_id" %in% as.character(p$mapping$linetype))
+  expect_true("data" %in% rlang::as_label(p$mapping$colour))
+  expect_true("file_id" %in% rlang::as_label(p$mapping$linetype))
   expect_equal(class(p$facet)[1], "FacetNull")
   expect_true(is.ggplot(p <- iso_plot_raw_data(cf, "44", panel = file_id, color = NULL, linetype = data)))
   expect_true(all(names(p$mapping) %in% c("x", "y", "group", "linetype", "label")))
-  expect_true("data" %in% as.character(p$mapping$linetype))
+  expect_true("data" %in% rlang::as_label(p$mapping$linetype))
   expect_equal(class(p$facet)[1], "FacetGrid")
   expect_equal(names(p$facet$params$rows), "..panel") # always ..panel because expressions not possible
   expect_equal(names(p$facet$params$cols) %>% length(), 0)
@@ -76,10 +107,12 @@ test_that("test that plot continuous flow works properly", {
 
 })
 
+# dual inlet plot ====
+
 test_that("test that plot dual inlet works properly", {
 
   expect_error(iso_plot_dual_inlet_data(42), "can only plot dual inlet")
-  expect_is(di <- isoreader:::make_di_data_structure(), "dual_inlet")
+  expect_is(di <- isoreader:::make_di_data_structure("NA"), "dual_inlet")
   di$read_options$file_info <- TRUE
   di$read_options$raw_data <- TRUE
   expect_error(iso_plot_raw_data(di), "no raw data in supplied iso_files")
@@ -106,11 +139,11 @@ test_that("test that plot dual inlet works properly", {
 
   # aesthetics, mapping, panelling formatting tests - defaults first
   expect_true(all(names(p$mapping) %in% c("colour", "x", "y", "group", "shape", "label")))
-  expect_true("file_id" %in% as.character(p$mapping$colour))
-  expect_true("cycle" %in% as.character(p$mapping$x))
-  expect_true("value" %in% as.character(p$mapping$y))
-  expect_true("type" %in% as.character(p$mapping$shape))
-  expect_true("file_id" %in% as.character(p$mapping$label))
+  expect_true("file_id" %in% rlang::as_label(p$mapping$colour))
+  expect_true("cycle" %in% rlang::as_label(p$mapping$x))
+  expect_true("value" %in% rlang::as_label(p$mapping$y))
+  expect_true("type" %in% rlang::as_label(p$mapping$shape))
+  expect_true("file_id" %in% rlang::as_label(p$mapping$label))
   expect_equal(class(p$facet)[1], "FacetWrap")
   expect_equal(names(p$facet$params$facets), "data")
 
@@ -118,14 +151,14 @@ test_that("test that plot dual inlet works properly", {
   expect_true(is.ggplot(p <- iso_plot_raw_data(di, panel = NULL, color = data, linetype = file_id, shape = NULL)))
   expect_true(all(p$data$data %in% c("44 [mV]", "46 [mV]", "46/44"))) # all selected by default
   expect_true(all(names(p$mapping) %in% c("colour", "x", "y", "group", "linetype", "label")))
-  expect_true("data" %in% as.character(p$mapping$colour))
-  expect_true("file_id" %in% as.character(p$mapping$linetype))
+  expect_true("data" %in% rlang::as_label(p$mapping$colour))
+  expect_true("file_id" %in% rlang::as_label(p$mapping$linetype))
   expect_equal(class(p$facet)[1], "FacetNull")
   expect_true(is.ggplot(p <- iso_plot_raw_data(di, "44", panel = file_id, color = type, linetype = data, shape = file_id)))
   expect_true(all(names(p$mapping) %in% c("x", "y", "group", "colour", "linetype", "shape", "label")))
-  expect_true("type" %in% as.character(p$mapping$colour))
-  expect_true("data" %in% as.character(p$mapping$linetype))
-  expect_true("file_id" %in% as.character(p$mapping$shape))
+  expect_true("type" %in% rlang::as_label(p$mapping$colour))
+  expect_true("data" %in% rlang::as_label(p$mapping$linetype))
+  expect_true("file_id" %in% rlang::as_label(p$mapping$shape))
   expect_equal(class(p$facet)[1], "FacetWrap")
   expect_equal(names(p$facet$params$facets), "file_id")
 
@@ -149,9 +182,9 @@ test_that("test that referencd peak visualization works", {
 
   # simple generation tests
   expect_true((p <- iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = TRUE, ratio = displ, group_id = model)) %>% ggplot2::is.ggplot())
-  expect_true("ref_peak_nr" %in% as.character(p$mapping$fill))
-  expect_true("model" %in% as.character(p$mapping$x))
-  expect_true("total_delta_deviation" %in% as.character(p$mapping$y))
+  expect_true("ref_peak_nr" %in% rlang::as_label(p$mapping$fill))
+  expect_true("model" %in% rlang::as_label(p$mapping$x))
+  expect_true("total_delta_deviation" %in% rlang::as_label(p$mapping$y))
   expect_true(iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = TRUE, ratio = c(displ, hwy), group_id = model) %>% ggplot2::is.ggplot())
   expect_true(iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = cyl > 6, ratio = c(displ, hwy), group_id = model) %>% ggplot2::is.ggplot())
 

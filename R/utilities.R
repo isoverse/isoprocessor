@@ -84,7 +84,7 @@ iso_print_data_table <- function(dt, select = everything(), filter = TRUE, print
 #' @param ... deprecated
 #' @export
 iso_generate_summary_table <- function(...) {
-  warning("this function was renamed --> calling iso_generate_summary_table() instead",
+  warning("this function was renamed --> calling iso_summarize_data_table() instead",
           immediate. = TRUE, call. = FALSE)
   iso_summarize_data_table(...)
 }
@@ -126,7 +126,8 @@ iso_summarize_data_table <- function(dt, ..., cutoff = 1) {
   dt %>%
     dplyr::select(!!!c(grp_vars, vars)) %>%
     dplyr::summarize(n = dplyr::n(), !!!summarize_funcs) %>%
-    dplyr::filter(n >= cutoff)
+    dplyr::filter(n >= cutoff) %>%
+    dplyr::ungroup()
 }
 
 
@@ -146,7 +147,7 @@ nest_data <- function(dt, group_by = NULL, nested_data = nested_data) {
   # perform the nest
   dt %>%
     as_tibble() %>% # nest requires tbl
-    nest(!!!map(dt_cols$group_by, ~quo(-!!sym(.x))), .key = !!nested_col)
+    nest(!!nested_col := -!!dt_cols$group_by)
 }
 
 #' Remove nested data
@@ -202,7 +203,7 @@ unnest_select_data <- function(dt, select = everything(), nested_data = nested_d
   } else
     renested_dt <- unnested_dt[keep_cols]
 
-  # merge the extra columns back in
+  # merge the extra columns back in (easier this way with the renest than using unnest for this)
   if (keep_other_list_data && length(list_cols) > 0) {
     renested_dt <- left_join(renested_dt, dt[c("..row..", list_cols)], by = "..row..")
   }
@@ -241,7 +242,7 @@ unnest_model_column <- function(dt, model_column, model_params = model_params, n
 
     # unnest model params
     original_cols <- names(dt)
-    dt <- unnest(dt, !!sym(dt_cols$model_params), .drop = FALSE)
+    dt <- unnest(dt, !!sym(dt_cols$model_params))
     model_cols <- setdiff(names(dt), original_cols)
   }
 
@@ -258,7 +259,7 @@ unnest_model_column <- function(dt, model_column, model_params = model_params, n
     dt <-
       inner_join(
         dt %>% dplyr::select(!!!map(model_cols, ~quo(-!!sym(.x)))),
-        dt %>% dplyr::select(..row_id.., !!!map(model_cols, sym)) %>% nest(-..row_id.., .key = !!dt_cols$model_params),
+        dt %>% dplyr::select(..row_id.., !!!map(model_cols, sym)) %>% nest(!!dt_cols$model_params := c(-..row_id..)),
         by = "..row_id.."
       ) %>%
       dplyr::select(-..row_id..)
@@ -308,17 +309,17 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   if (missing(model)) stop("no regression model supplied", call. = FALSE)
   model_quos <- enquo(model)
   # resolve list of models
-  if (quo_is_call(model_quos) && quo_text(lang_head(model_quos)) %in% c("c", "list")) {
-    lquos <- quos(!!!lang_args(model_quos))
+  if (quo_is_call(model_quos) && rlang::call_name(model_quos) %in% c("c", "list")) {
+    lquos <- quos(!!!rlang::call_args(model_quos))
   } else {
-    lquos <- quos(!!!model_quos)
+    lquos <- quos(!!model_quos)
   }
 
   # safety checks on models
   if (length(lquos) == 0) stop("no regression model supplied", call. = FALSE)
   # @NOTE: loess and nls not currently supported because would have to find a way to make inversion work
   supported_models <- c("lm", "glm", "lme")
-  lquos_are_models <- map_lgl(lquos, function(lq) quo_is_call(lq) && quo_text(lang_head(lq)) %in% supported_models)
+  lquos_are_models <- map_lgl(lquos, function(lq) quo_is_call(lq) && rlang::call_name(lq) %in% supported_models)
   if(!all(ok <- lquos_are_models)) {
     params <-
       str_c(names(lquos)[!ok] %>% { ifelse(nchar(.) > 0, str_c(., " = "), .) },
@@ -337,7 +338,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
     tibble(
       model_formula = map_chr(lquos, quo_text),
       !!dt_new_cols$model_name := ifelse(nchar(names(lquos)) > 0, names(lquos), model_formula),
-      model_quo = lquos
+      model_quo = map(lquos, identity)
     ) %>%
     # don't keep separate formula column
     select(-model_formula)
@@ -365,7 +366,8 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
       # fit the model if there is any data
       !!dt_new_cols$model_fit :=
         pmap(list(m = model_quo, d = !!sym(dt_cols$model_data), run = !!sym(dt_new_cols$model_enough_data)),
-             function(m, d, run) if (run) eval_tidy(m, data = filter(d, !!filter_quo)) else NULL),
+             # strip units to avoid issues with non-numeric predictors
+             function(m, d, run) if (run) eval_tidy(m, data = filter(iso_strip_units(d), !!filter_quo)) else NULL),
       # figure out which fits actually have enough degrees of freedom
       !!dt_new_cols$model_enough_data :=
         map2_lgl(!!sym(dt_new_cols$model_fit), !!sym(dt_new_cols$model_enough_data),
@@ -429,7 +431,8 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
     data_w_models <-
       inner_join(
         data_w_models %>% select(!!!map(model_cols, ~quo(-!!sym(.x)))),
-        data_w_models %>% select(..row_id.., !!!map(model_cols, sym)) %>% nest(-..row_id.., .key = !!dt_new_cols$model_params),
+        data_w_models %>% select(..row_id.., !!!map(model_cols, sym)) %>%
+          nest(!!dt_new_cols$model_params := -..row_id..),
         by = "..row_id.."
       ) %>%
       select(-..row_id..)
@@ -463,11 +466,11 @@ run_grouped_regression <- function(dt, group_by = NULL, model = NULL, model_data
 #'
 #' @param dt data table with calibrations
 #' @param predict which value to calculate, must be one of the regression's independent variables
-#' @param calculate_error whether to estimate the standard error from the calibration (using the Wald method), stores the result in the new \code{predict_error} column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.
+#' @param calculate_error whether to estimate the standard error from the calibration (using the Wald method as described in \link[investr]{invest}), stores the result in the new \code{predict_error} column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.
 #' @inheritParams run_regression
 #' @inheritParams unnest_model_column
 #' @param predict_value the new column in the model_data that holds the predicted value
-#' @param predict_error the new column in the model_data that holds the error of the predicted value (only created if \code{calculate_error = TRUE})
+#' @param predict_error the new column in the model_data that holds the error of the predicted value (always created but \code{NA} if \code{calculate_error = FALSE})
 #' @param predict_range vector of 2 numbers, if provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the \code{predict_range} is usually only necessary if the calibration range should be extrapolated significantely.
 apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error = FALSE,
                              model_data = model_data, model_name = model_name,
@@ -497,7 +500,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
       mutate(
         !!dt_cols$model_fit := map(!!sym(dt_cols$model_params), ~.x[[dt_cols$model_fit]])
       ) %>%
-      unnest(!!sym(dt_cols$model_fit), .drop = FALSE)
+      unnest(!!sym(dt_cols$model_fit))
   } else {
     # not nested model
     dt_cols <- get_column_names(
@@ -523,8 +526,9 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
       # @FIXME: consider doing a two way split here and allowing regular predict on the dependent variable!
       # note: consider scenario though where dependent variable is e.g. log(y) or similar - possible to deal with that?
       .predict_x = dt_new_cols$predict,
-      .predict_info = map(.predict_vars, ~filter(.x, var == dt_new_cols$predict, !dependent)),
+      .predict_info = map(.predict_vars, ~filter(.x, var == dt_new_cols$predict)),
       .predict_ok = map_lgl(.predict_info, ~nrow(.x) == 1),
+      .predict_dependent = map_lgl(.predict_info, ~identical(.x$dependent, TRUE)),
       .predict_y = map(.predict_vars, ~filter(.x, dependent)$var),
       .predict_y_ok = map_lgl(.predict_y, ~length(.x) == 1),
       .predict_other_xs = map(.predict_vars, ~filter(.x, var != dt_new_cols$predict, !dependent)$var)
@@ -553,21 +557,14 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
       !!dt_cols$model_data :=
         pmap(
           list(d = !!sym(dt_cols$model_data), fit = !!sym(dt_cols$model_fit), name = !!sym(dt_cols$model_name),
-               x = .predict_x, y = .predict_y, other_xs = .predict_other_xs),
+               x = .predict_x, dependent = .predict_dependent,
+               y = .predict_y, other_xs = .predict_other_xs),
 
           # process data set for a single model
-          function(d, fit, name, x, y, other_xs) {
+          function(d, fit, name, x, dependent, y, other_xs) {
 
-            # range
-            if(!is.null(predict_range)) {
-              # parameter provided predict_range
-              range <- predict_range
-            } else {
-              # estimate predict range based on available values
-              # NOTE: should this be only values that were used for calib? (i.e. have residual column set)
-              range <- base::range(d[[x]], na.rm = TRUE)
-            }
-            range_tolerance_escalation <- c(0, 1, 10, 100, 1000)
+            # units of predict var
+            x_units <- iso_get_units(d[[x]])
 
             # check for enough data (standard eval to avoid quoting trouble)
             d_enough_data <- rowSums(is.na(d[c(y, other_xs)]) * 1) == 0
@@ -579,69 +576,108 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
                 ..rn.. = 1:length(d_enough_data)
               )
 
-            # do the calculate for each row
-            d_prediction <- d %>%
-              # NOTE: use group by and do to get a more informative progress bar in interactive use
-              group_by(..rn..) %>%
-              do({
-                # values
-                estimate <- NA_real_
-                se <- NA_real_
-                problem <- NA_character_
-
-                # check whether have enough data
-                if (.$..enough_data..) {
-
-                  # cycle through range tolerance
-                  for(range_tolerance in range_tolerance_escalation) {
-                    # try to find fit
-                    out <- safe_invest(
-                      fit, y0 = .[[y]], x0.name = x, data = ., newdata = .[other_xs],
-                      interval = invest_interval_method,
-                      lower = range[1] - range_tolerance * diff(range),
-                      upper = range[2] + range_tolerance * diff(range),
-                      # NOTE: the following doesn't really do anything, using the tolerance ranges instead
-                      extendInt = "yes"
-                    )
-
-                    # break as soon as success or a different error
-                    if (is.null(out$error) || !str_detect(out$error$message, "not found in.*search interval")) {
-                      break
-                    }
-                  }
-
-                  # process outcome
-                  if (is.null(out$error) && calculate_error) {
-                    # with error estimates
-                    estimate <- out$result$estimate
-                    se <- out$result$se
-                  } else if (is.null(out$error)) {
-                    # no error estimates
-                    estimate <- out$result
-                  } else if (str_detect(out$error$message, "not found in the search interval")) {
-                    problem <- glue(
-                      "No solution for '{x}' in the interval {range[1] - range_tolerance * diff(range)} ",
-                      "to {range[2] + range_tolerance * diff(range)}, potential fit is too far outside ",
-                      "the calibration range",
-                      "- consider manually adjusting parameter 'predict_range'.") %>%
-                      as.character()
-                  } else {
-                    problem <- out$error$message
-                  }
-                } else {
-                  # not enough data
-                  problem <- glue("Not enough data, missing a value for at least one of the variables: ",
-                                  "'{collapse(c(y, other_xs), sep = \"', '\", last = \"' or '\")}'") %>%
-                    as.character()
-                }
-
-                # return data
+            if (dependent) {
+              # predict dependent variable by normal regression predict
+              new_data <- d %>% select(other_xs) %>% iso_strip_units()
+              pred <- predict.lm(fit, newdata = new_data, se.fit = TRUE)
+              d_prediction <-
                 tibble(
-                  !!dt_new_cols$predict_value := estimate,
-                  !!dt_new_cols$predict_error := se,
-                  ..problem.. = problem
+                  ..rn.. = d$..rn..,
+                  ..estimate.. = pred$fit,
+                  ..se.. = pred$se.fit,
+                  ..problem.. = NA_character_
                 )
-              })
+
+            } else {
+              # predict independent variable by inversion
+
+              # range
+              if(!is.null(predict_range)) {
+                # parameter provided predict_range
+                range <- predict_range
+              } else {
+                # estimate predict range based on available values
+                # NOTE: should this be only values that were used for calib? (i.e. have residual column set)
+                range <- base::range(as.numeric(d[[x]]), na.rm = TRUE)
+              }
+              range_tolerance_escalation <- c(0, 1, 10, 100, 1000)
+
+              # do the calculate for each row
+              d_prediction <- d %>%
+                # strip units to avoid issues with non-numeric predictors
+                iso_strip_units() %>%
+                # NOTE: use group by and do to get a more informative progress bar in interactive use
+                group_by(..rn..) %>%
+                do({
+                  # values
+                  estimate <- NA_real_
+                  se <- NA_real_
+                  problem <- NA_character_
+
+                  # check whether have enough data
+                  if (.$..enough_data..) {
+
+                    # cycle through range tolerance
+                    for(range_tolerance in range_tolerance_escalation) {
+                      # try to find fit
+                      out <- safe_invest(
+                        fit, y0 = .[[y]], x0.name = x, data = ., newdata = .[other_xs],
+                        interval = invest_interval_method,
+                        lower = range[1] - range_tolerance * diff(range),
+                        upper = range[2] + range_tolerance * diff(range),
+                        # NOTE: the following doesn't really do anything, using the tolerance ranges instead
+                        extendInt = "yes"
+                      )
+
+                      # break as soon as success or a different error
+                      if (is.null(out$error) || !str_detect(out$error$message, "not found in.*search interval")) {
+                        break
+                      }
+                    }
+
+                    # process outcome
+                    if (is.null(out$error) && calculate_error) {
+                      # with error estimates
+                      estimate <- out$result$estimate
+                      se <- out$result$se
+                    } else if (is.null(out$error)) {
+                      # no error estimates
+                      estimate <- out$result
+                    } else if (str_detect(out$error$message, "not found in the search interval")) {
+                      problem <- glue(
+                        "No solution for '{x}' in the interval {range[1] - range_tolerance * diff(range)} ",
+                        "to {range[2] + range_tolerance * diff(range)}, potential fit is too far outside ",
+                        "the calibration range",
+                        "- consider manually adjusting parameter 'predict_range'.") %>%
+                        as.character()
+                    } else {
+                      problem <- out$error$message
+                    }
+                  } else {
+                    # not enough data
+                    problem <- glue("Not enough data, missing a value for at least one of the variables: ",
+                                    "'{collapse(c(y, other_xs), sep = \"', '\", last = \"' or '\")}'") %>%
+                      as.character()
+                  }
+
+                  # return data
+                  tibble(
+                    ..estimate.. := estimate,
+                    ..se.. := se,
+                    ..problem.. = problem
+                  )
+                }) %>% ungroup()
+            }
+
+            # units
+            if (!is.na(x_units)) {
+              d_prediction <-
+                d_prediction %>%
+                mutate(
+                  ..estimate.. = iso_double_with_units(..estimate.., units = x_units),
+                  ..se.. = iso_double_with_units(..se.., units = x_units)
+                )
+            }
 
             # warnings about problematic sets
             if (nrow(d_problematic <- filter(d_prediction, !is.na(..problem..))) > 0) {
@@ -655,14 +691,13 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
 
             }
 
-            # remove error estimate column if not calculated
-            if (!calculate_error) {
-              d_prediction <- d_prediction %>% select(-!!sym(dt_new_cols$predict_error))
-            }
-
             # return combined
             left_join(d, d_prediction, by = "..rn..") %>%
-              select(-..rn.., -..enough_data.., -..problem..)
+              select(-..rn.., -..enough_data.., -..problem..) %>%
+              rename(
+                !!dt_new_cols$predict_value := ..estimate..,
+                !!dt_new_cols$predict_error := ..se..
+              )
           })
     )
 
@@ -746,6 +781,7 @@ evaluate_range <- function(
         ~{
           # consider only data that is part of the regression
           d_in_calib <- .x[.x[[.y$in_reg]],]
+          my_d <<- d_in_calib
           if (nrow(d_in_calib) > 0) {
             # determine the ranges for all terms
             tryCatch(
@@ -753,6 +789,7 @@ evaluate_range <- function(
                 terms %>%
                 mutate(
                   values = map(q, ~rlang::eval_tidy(.x, data = d_in_calib)),
+                  units = map_chr(values, iso_get_units),
                   min = map_dbl(values, ~.x %>%
                                   { if(is.numeric(.)) { as.numeric(min(., na.rm = TRUE)) } else { NA_real_} }),
                   max = map_dbl(values, ~.x %>%
@@ -768,7 +805,7 @@ evaluate_range <- function(
             )
             return(terms_ranges)
           } else {
-            return(mutate(terms, min = NA_real_, max = NA_real_) %>% select(-q))
+            return(mutate(terms, units = NA_character_, min = NA_real_, max = NA_real_) %>% select(-q))
           }
         }
       )

@@ -78,7 +78,7 @@ iso_convert_signals <- function(iso_files, to, R, R_units = NA, quiet = default(
   auto_R <- missing(R)
 
   if (!quiet) {
-    sprintf("Info: converting signals to '%s' for %d continuous flow data file(s) with %s",
+    sprintf("Info: converting signals to '%s' for %d data file(s) with %s",
             to, length(iso_files),
             if (auto_R) "automatic resistor values from individual iso_files (if needed for conversion)"
             else str_c("specific resistor value(s): ", str_c(str_c(names(R),"=",R, R_units), collapse = ", "))
@@ -98,11 +98,22 @@ iso_convert_signals <- function(iso_files, to, R, R_units = NA, quiet = default(
     # don't try to convert if raw data not present or otherwise empty
     if (!iso_file$read_options$raw_data || nrow(iso_file$raw_data) == 0) return(iso_file)
 
+    # check whether background data exists that needs to be converted too
+    convert_bgrd <- !is.null(iso_file$bgrd_data) && nrow(iso_file$bgrd_data) > 0
+
     # column names
-    col_names <- names(iso_file$raw_data) %>% stringr::str_subset(signal_pattern)
-    if (length(col_names) == 0) {
-      return(register_warning(
-        iso_file, func = func, details = "could not find any voltage or current data columns"))
+    data_col_names <- stringr::str_subset(names(iso_file$raw_data), signal_pattern)
+    if (convert_bgrd) {
+      bgrd_col_names <- stringr::str_subset(names(iso_file$bgrd_data), signal_pattern)
+      col_names <- c(data_col_names, bgrd_col_names)
+    } else {
+      col_names <- data_col_names
+    }
+
+    # safety check on data columns
+    if (length(data_col_names) == 0) {
+      return(isoreader:::register_warning(
+        iso_file, func = func, details = "could not find any voltage or current data columns", warn = FALSE))
     }
 
     # see if resistors are required (i.e. any columns are v/i and 'to' is not the same)
@@ -113,24 +124,26 @@ iso_convert_signals <- function(iso_files, to, R, R_units = NA, quiet = default(
     # resistors
     if (scaling_only) {
       # scaling only
-      iso_file$raw_data <- scale_signals(iso_file$raw_data, col_names, to = to, quiet = TRUE)
+      iso_file$raw_data <- scale_signals(iso_file$raw_data, data_col_names, to = to, quiet = TRUE)
+      if (convert_bgrd)
+        iso_file$bgrd_data <- scale_signals(iso_file$bgrd_data, bgrd_col_names, to = to, quiet = TRUE)
       return(iso_file)
     }
 
     if (!scaling_only && auto_R) {
       # find resistors from files
       if (!iso_file$read_options$method_info) {
-        return(register_warning(
+        return(isoreader:::register_warning(
           iso_file, func = func,
           details = "cannot automatically determine resistor values, method info not available (read_method_info = FALSE)"))
       } else if (is.null(iso_file$method_info$resistors) || nrow(iso_file$method_info$resistors) == 0) {
-        return(register_warning(
+        return(isoreader:::register_warning(
           iso_file, func = func,
-          details = "cannot automatically determine resistor values, no resistor data available"))
+          details = "cannot automatically determine resistor values, no resistor data available", warn = FALSE))
       } else if (!"mass" %in% names(iso_file$method_info$resistors)) {
-        return(register_warning(
+        return(isoreader:::register_warning(
           iso_file, func = func,
-          details = "cannot automatically determine resistor values, resistor data not linked to masses"))
+          details = "cannot automatically determine resistor values, resistor data not linked to masses", warn = FALSE))
       } else {
         R <- iso_file$method_info$resistors %>%
           mutate(R_name = str_c("R", mass)) %>%
@@ -140,7 +153,29 @@ iso_convert_signals <- function(iso_files, to, R, R_units = NA, quiet = default(
     }
 
     # convert signals
-    iso_file$raw_data <- scale_signals(iso_file$raw_data, col_names, to = to, R = R, R_units = R_units, quiet = TRUE)
+    iso_file$raw_data <-
+      scale_signals(
+        iso_file$raw_data,
+        data_col_names,
+        to = to,
+        R = R,
+        R_units = R_units,
+        quiet = TRUE
+      )
+
+    # convert background
+    if (convert_bgrd) {
+      iso_file$bgrd_data <-
+        scale_signals(
+          iso_file$bgrd_data,
+          bgrd_col_names,
+          to = to,
+          R = R,
+          R_units = R_units,
+          quiet = TRUE
+        )
+    }
+
     return(iso_file)
   }) %>% iso_as_file_list()
 
@@ -160,6 +195,115 @@ iso_convert_signals <- function(iso_files, to, R, R_units = NA, quiet = default(
 }
 
 
+# peak table unit conversion -----
+
+
+#' Convert peak table column units
+#'
+#' This is a convenience function to convert the units of multiple peak table columns that are of type \code{\link{iso_double_with_units}} with the same units to a different SI prefix, e.g. from \code{mVs} to \code{Vs}. Uses \code{\link{iso_scale_double_with_units}} internally.
+#'
+#' @details At this time, this function cannot convert between different units yet (e.g. voltage and current), but this could be implemented using resistors values already available in the \code{iso_files} akin to the implementation in \link{iso_convert_signals} for raw data.
+#'
+#' @param ... S3 method placeholder parameters, see class specific functions for details on parameters
+#' @export
+iso_convert_peak_table_units <- function(...) {
+  UseMethod("iso_convert_peak_table_units")
+}
+
+#' @export
+iso_convert_peak_table_units.default <- function(...) {
+  if(length(list(...)) == 0) stop("missing parameters", call. = FALSE)
+  stop("this function is not defined for objects of type '",
+       class(..1)[1], "'", call. = FALSE)
+}
+
+#' @export
+iso_convert_peak_table_units.iso_file <- function(iso_files, ...) {
+  iso_convert_peak_table_units(iso_as_file_list(iso_files), ...)[[1]]
+}
+
+#' @rdname iso_convert_peak_table_units
+#' @param iso_files collection of continuous flow iso_file objects
+#' @param ... which units to convert. Must be named character arguments - the values are the old units, the names are the new units. Each pair of old and new units must have the same base units and only differ in their SI prefix (e.g. \code{Vs = mVs, V = mV, nA = A, ...)}). For each unit to convert from, finds which columns amongst those found by \code{select} currently have those units.
+#' @param select which columns to consider when converting units. Supports all \link[dplyr]{select} syntax. Columns not matching \code{select} will always keep their existing units. By default considers all columns.
+#' @inheritParams iso_show_default_processor_parameters
+#' @export
+iso_convert_peak_table_units.iso_file_list <- function(iso_files, ..., select = everything(), quiet = default(quiet)) {
+
+  # quo
+  select_quo <- enquo(select)
+  convert_quos <- rlang::enquos(...)
+  if (length(convert_quos) == 0) return(iso_files)
+
+  # info message
+  if (!quiet) {
+    convert <- purrr::map_chr(convert_quos, ~if (rlang::quo_is_symbol(.x) || rlang::quo_is_call(.x)) { rlang::as_label(.x) } else { rlang::eval_tidy(.x) })
+
+    glue::glue(
+      "Info: converting peak table column units where applicable from ",
+      glue::glue_collapse(sprintf("'%s'->'%s'", convert, names(convert)), sep = ", ", last = " and "),
+      " for columns matching '{rlang::as_label(select_quo)}'") %>%
+      message()
+  }
+
+  # convert peaks
+  iso_files <-
+    map(iso_files,
+      ~{
+        if (!is.null(.x$peak_table)) {
+          .x$peak_table <- iso_convert_peak_table_units(.x$peak_table, !!!convert_quos, select = !!select_quo, quiet = TRUE)
+        }
+        .x
+      }
+    )
+
+  return(iso_as_file_list(iso_files))
+}
+
+#' @rdname iso_convert_peak_table_units
+#' @param peak_table a peak table data frame
+#' @export
+iso_convert_peak_table_units.data.frame <- function(peak_table, ..., select = everything(), quiet = default(quiet)) {
+
+  select_quo <- enquo(select)
+  convert_quos <- rlang::enquos(...)
+  if (length(convert_quos) == 0) return(peak_table)
+
+  convert <- purrr::map_chr(convert_quos, ~if (rlang::quo_is_symbol(.x) || rlang::quo_is_call(.x)) { rlang::as_label(.x) } else { rlang::eval_tidy(.x) })
+  if (!is.character(convert) || !rlang::is_named(convert))
+    stop("all unit conversion parameters (...) must be named", call. = FALSE)
+
+  # info message
+  if (!quiet) {
+    glue::glue(
+      "Info: converting peak table column units where applicable from ",
+      glue::glue_collapse(sprintf("'%s'->'%s'", convert, names(convert)), sep = ", ", last = " and "),
+      " for columns matching '{rlang::as_label(select_quo)}'") %>%
+      message()
+  }
+
+  all_cols <- tidyselect::vars_select(names(peak_table), !!select_quo, .strict = FALSE)
+  all_units <- iso_get_units(peak_table[all_cols])
+  all_cols <- all_cols[!is.na(all_units)]
+  all_units <- all_units[!is.na(all_units)]
+  if (length(all_cols) == 0) return(peak_table)
+
+  # get quos for the mutate
+  generate_quo <- function(col, to) {
+    quo(iso_scale_double_with_units(!!rlang::sym(col), to_units = !!to))
+  }
+  conversions <- tibble(
+    from_units = as.character(convert),
+    to_units = names(convert),
+    col = map(from_units, ~names(all_cols)[all_units == .x])
+  ) %>% tidyr::unnest(col) %>%
+    mutate(quos = map2(col, to_units, generate_quo))
+
+  # run mutate
+  return(mutate(peak_table, !!!with(conversions, setNames(quos, col))))
+}
+
+
 
 # processing functions ----
 
@@ -176,18 +320,55 @@ scale_time <- function(time, to, from = NULL) {
   time / lubridate::duration(1, to)
 }
 
+# get all supported SI prefixes
+get_supported_si_prefixes <- function() {
+  c(f = 1e-15, p = 1e-12, n = 1e-9,
+    "\U00B5" = 1e-6, m = 1e-3, 1,
+    k = 1e3, M = 1e6, G = 1e9, T = 1e12)
+}
+
+# find the base unit given a set of units and the available SI prefixes
+# @param vector of units all with the same base unit
+get_base_unit <- function(units, si_prefixes = get_supported_si_prefixes()) {
+  chars <- units %>% strsplit("") %>% purrr::map(rev)
+  shortest <- min(purrr::map_int(chars, length))
+  shared <- 0L
+  while(shared < shortest) {
+    if (!all(chars %>% purrr::map_chr(shared + 1L) %>% {. == .[1]})) break
+    shared <- shared + 1L
+  }
+  if (shared == 0)
+    glue::glue("cannot determine shared base unit from these units: {paste(units, collapse = ', ')}") %>%
+    stop(call. = FALSE)
+
+  # determine base unit
+  base_unit <- chars[[1]][1:shared] %>% rev() %>% paste0(collapse = "")
+
+  # check for prefixes
+  prefixes <- map_chr(chars, ~.x[-(1:shared)] %>% rev() %>% paste0(collapse = ""))
+  ok <- prefixes %in% names(get_supported_si_prefixes())
+  if (any(!ok))
+    glue::glue(
+      "encountered unsupported prefixes ",
+      "'{paste(prefixes[!ok], collapse = \"', '\")}', for units ",
+      "'{paste(units[!ok], collapse = \"', '\")}' ",
+      "(base unit was determined to be '{base_unit}')") %>%
+    stop(call. = FALSE)
+
+  return(base_unit)
+}
+
 # get the scaling factor for a simple si unit prefix
-# @param unit the unit to find the suffix for (e.g. mm, kg, ms, nA, kV)
-# @param suffix the expected suffix (e.g. m, g, s, A, V)
+# @param unit the unit to find the prefix for (e.g. mm, kg, ms, nA, kV)
+# @param suffix the expected suffix (e.g. m, g, s, A, V), by default dtermined from the units themselves (only if they have a common base unit)
 # @note does not currently process compound units (e.g. m/s) or powers (e.g. cm2 s-1)
-get_si_prefix_scaling <- function(unit, suffix) {
+get_si_prefix_scaling <- function(unit, suffix = get_base_unit(unit)) {
   #safety checks
   if(missing(unit)) stop("no unit supplied", call. = FALSE)
-  if(missing(suffix)) stop("no unit suffix specified", call. = FALSE)
+  if(length(unit) == 1 && missing(suffix)) stop("no unit suffix specified, cannot determine base unit from a single unit", call. = FALSE)
 
   # supported prefixes
-  prefix <- c(f = 1e-15, p = 1e-12, n = 1e-9, "\U00B5" = 1e-6, m = 1e-3, 1,
-              k = 1e3, M = 1e6, G = 1e9, T = 1e12)
+  prefix <- get_supported_si_prefixes()
 
   # generate pattern
   prefix_pattern <- prefix %>% names() %>% str_c(collapse="|")
@@ -220,6 +401,26 @@ get_unit_scaling <- function(unit, base_units) {
     base_unit = base_unit,
     si_scaling = get_si_prefix_scaling(unit, base_unit)
   )
+}
+
+# get a conversion factor from one SI unit to another
+get_unit_conversion_factor <- function(from_units, to_units) {
+  purrr::map2_dbl(from_units, to_units, ~get_si_prefix_scaling(c(.x,.y)) %>% {.[1]/.[2]})
+}
+
+# scale SI
+#' Scale a double with units
+#'
+#' Scale an isoverse \link[isoreader]{iso_double_with_units} to a different SI prefix. Will error if units are incompatible or si prefix is unknown.
+#'
+#' @param x an \link[isoreader]{iso_double_with_units} object
+#' @param to_units what unit to scale to (must be in the same base unit as \code{x})
+#' @param return \code{x} scaled to the new \code{to_units}
+#' @export
+iso_scale_double_with_units <- function(x, to_units) {
+  if(!iso_is_double_with_units(x)) stop("can only scale double with units using this function", call. = FALSE)
+  conv_factor <- get_unit_conversion_factor(from_units = iso_get_units(x), to_units = to_units)
+  iso_double_with_units(x * conv_factor, units = to_units)
 }
 
 # Scale signal (voltage or current)

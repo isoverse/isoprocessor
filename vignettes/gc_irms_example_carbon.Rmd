@@ -11,6 +11,8 @@ output:
     toc: yes
     toc_depth: 3
     toc_float: yes
+editor_options:
+  chunk_output_type: console
 vignette: >
   %\VignetteEncoding{UTF-8}
   %\VignetteIndexEntry{GC-IRMS data processing example: carbon}
@@ -51,7 +53,7 @@ All code chunks that contain a critical step towards the final data (i.e. do mor
 
 ## Read raw data files (*)
 
-```{r}
+```{r, warning=FALSE}
 # set file path(s) to data files, folders or rds collections 
 # can be multiple folders or mix of folders and files, using example data set here
 # (this is a reduced data set of mostly standards with just a few example samples)
@@ -67,7 +69,7 @@ iso_files_raw <-
   iso_filter_files_with_problems()
 ```
 
-## Process file information (*)
+## Process file info & peak table (*)
 
 ```{r}
 # process file information
@@ -89,12 +91,14 @@ iso_files <- iso_files_raw %>%
     # was there seed oxidation?
     seed_oxidation = ifelse(`Seed Oxidation` == "1", "yes", "no"),
     # what was the injection volume based on the AS method name?
-    injection_volume.uL = str_extract(`AS Method`, "AS PTV [0-9.]+") %>% 
-      parse_number(),
+    injection_volume = str_extract(`AS Method`, "AS PTV [0-9.]+") %>% 
+      parse_number() %>% iso_double_with_units("uL"),
     # what was the concentration? (assuming Preparation = concentration or volume)
-    conc.ng_uL = str_extract(Preparation, "[0-9.]+ ?ng( per |/)uL") %>% parse_number(),
+    concentration = str_extract(Preparation, "[0-9.]+ ?ng( per |/)uL") %>% 
+      parse_number() %>% iso_double_with_units("ng/uL"),
     # or the volume?
-    volume.uL = str_extract(Preparation, "[0-9.]+ ?uL") %>% parse_number(),
+    volume = str_extract(Preparation, "[0-9.]+ ?uL") %>% 
+      parse_number() %>% iso_double_with_units("uL"),
     # what folder are the data files in? (assuming folder = sequence)
     folder = basename(dirname(file_path))
   ) %>% 
@@ -115,30 +119,39 @@ iso_files <- iso_files_raw %>%
   # focus only on the relevant file info, discarding the rest
   iso_select_file_info(
     folder, Analysis, file_datetime, id1, id2, type, sample, 
-    seed_oxidation, injection_volume.uL, conc.ng_uL, volume.uL
+    seed_oxidation, injection_volume, concentration, volume
   )
+
+# set peak table from vendor data table with default isodat template
+iso_files <- iso_set_peak_table_from_isodat_vendor_data_table(iso_files) %>% 
+  # convert units from mV to V for amplitudes and area
+  iso_convert_peak_table_units(V = mV, Vs = mVs)
 ```
 
 ## Show file information
 
 ```{r}
 # display file information
-iso_files %>% iso_get_file_info() %>% select(-file_id, -folder) %>% knitr::kable()
+iso_files %>% iso_get_file_info() %>% select(-file_id, -folder) %>% 
+  iso_make_units_explicit() %>% knitr::kable()
 ```
 
 ## Example chromatograms
 
 ```{r "example_chromatograms", fig.width=8, fig.height=8}
-iso_files %>% 
+# plot the chromatograms
+iso_plot_continuous_flow_data(
   # select a few analyses (these #s must exist!)
-  iso_filter_files(Analysis %in% c(2046, 2106, 2107)) %>% 
-  # plot the chromatograms
-  iso_plot_continuous_flow_data(
-    # select data and aesthetics
-    data = c(44), color = id1, panel = Analysis,
-    # zoom in on time interval
-    time_interval = c(1000, 3200)
-  ) +
+  iso_filter_files(iso_files, Analysis %in% c(2046, 2106, 2107)),
+  # select data and aesthetics
+  data = c(44), color = id1, panel = Analysis,
+  # zoom in on time interval
+  time_interval = c(1000, 3200),
+  # peak labels for all peaks > 2V
+  peak_label = iso_format(rt, d13C, signif = 3),
+  peak_label_size = 3,
+  peak_label_filter = amp44 > 2000
+) +
   # customize resulting ggplot
   theme(legend.position = "bottom")
 ```
@@ -150,7 +163,7 @@ iso_files %>%
 on_offs <- iso_files %>% iso_filter_files(type == "on_off") 
 
 # visualize the on/offs  
-on_offs %>% iso_plot_continuous_flow_data(data = 44, color = id2)
+iso_plot_continuous_flow_data(on_offs, data = 44, color = id2)
 ```
 
 ## Summary
@@ -159,24 +172,27 @@ on_offs %>% iso_plot_continuous_flow_data(data = 44, color = id2)
 # calculate on/off summary
 on_off_summary <- 
   on_offs %>% 
-  # retrieve data table
-  iso_get_vendor_data_table(
-    select = c(`Ampl 44 [mV]`, `Intensity 44 [Vs]`, `d 13C/12C [permil]`),
-    include_file_info = c(file_datetime, id2),
-    with_units = TRUE
+  # retrieve peak table
+  iso_get_peak_table(
+    select = c(amp44, area44, d13C),
+    include_file_info = c(file_datetime, id2)
   ) %>% 
+  # make units explicit
+  iso_make_units_explicit() %>% 
   # summarize information
   group_by(file_datetime, id2) %>% 
-  iso_summarize_data_table()
+  iso_summarize_data_table() 
+  
 
 # table
 on_off_summary %>% knitr::kable(digits = 3)
+
 # plot
 on_off_summary %>% 
   # use generic data plot function
   iso_plot_data(
-    x = file_datetime, y = `d 13C/12C [permil] sd`,
-    size = `Ampl 44 [mV] mean`, color = id2,
+    x = file_datetime, y = `d13C [permil] sd`,
+    size = `amp44 [V] mean`, color = id2,
     points = TRUE
   ) + 
   # customize resulting ggplot
@@ -191,7 +207,7 @@ on_off_summary %>%
 lins <- iso_files %>% iso_filter_files(type == "lin") 
 
 # visualize the linearity runs
-lins %>% iso_plot_continuous_flow_data(data = 44, color = format(file_datetime))
+iso_plot_continuous_flow_data(lins, data = 44, color = format(file_datetime))
 ```
 
 ## Summary
@@ -201,15 +217,16 @@ lins %>% iso_plot_continuous_flow_data(data = 44, color = format(file_datetime))
 linearity_summary <- 
   lins %>% 
   # retrieve data table
-  iso_get_vendor_data_table(
-    select = c(`Ampl 44 [mV]`, `Intensity 44 [Vs]`, `d 13C/12C [permil]`),
-    include_file_info = file_datetime,
-    with_units = TRUE
+  iso_get_peak_table(
+    select = c(amp44, area44, d13C),
+    include_file_info = c(file_datetime)
   ) %>% 
+  # make units explicit
+  iso_make_units_explicit() %>% 
   # calculate linearity regression lines
-  nest(-file_datetime) %>% 
+  nest(data = -file_datetime) %>% 
   mutate(
-    fit = map(data, ~lm(`d 13C/12C [permil]` ~ `Ampl 44 [mV]`, data = .x)),
+    fit = map(data, ~lm(`d13C [permil]` ~ `amp44 [V]`, data = .x)),
     coefs = map(fit, broom::tidy)
   )
 
@@ -217,19 +234,20 @@ linearity_summary <-
 linearity_summary %>%
   unnest(coefs) %>%
   select(file_datetime, term, estimate, std.error) %>%
-  filter(term == "`Ampl 44 [mV]`") %>%
+  filter(term == "`amp44 [V]`") %>%
   mutate(
     term = "linearity [permil/V]",
     estimate = 1000 * signif(estimate, 2),
     std.error = 1000 * signif(std.error, 1)
   ) %>% 
   knitr::kable(digits = 4)
+
 # plot
 linearity_summary %>% 
   unnest(data) %>% 
   # use generic data plot function
   iso_plot_data(
-    x = `Ampl 44 [mV]`, y = `d 13C/12C [permil]`,
+    x = `amp44 [V]`, y = `d13C [permil]`,
     color = format(file_datetime),
     points = TRUE
   ) +
@@ -238,36 +256,7 @@ linearity_summary %>%
   geom_smooth(method = "lm")
 ```
 
-# Data table (*)
-
-```{r}
-# retrieve the peak data table
-peak_table <- iso_files %>% 
-  # focus on standards and samples only
-  iso_filter_files(type %in% c("std", "sample")) %>% 
-  # filter out analyses that
-  ## a) did not inject
-  iso_filter_files(!Analysis %in% c(2031, 2040, 2069, 2098, 2116, 2138)) %>%
-  ## b) had double or rogue peaks from mis-injection
-  iso_filter_files(!Analysis %in% c(2044, 2132, 2134)) %>% 
-  # retrieve peak data table from vendor data
-  iso_get_vendor_data_table(
-    select = c(
-      # ref peak info (which one was used to calculate raw delta values)
-      is_ref = `Is Ref.?`,
-      # retention time info
-      rt_start = Start, rt = Rt, rt_end = End,
-      # peak amplitude and area info
-      amp44.mV = `Ampl 44`, area44.Vs = `Intensity 44`, area.Vs = `Intensity All`,
-      # isotopic info
-      ratio = `R 45CO2/44CO2`, d13C = `d 13C/12C`
-    ),
-    # include all file info in the data table
-    include_file_info = everything()
-  ) 
-```
-
-# Peak Identification
+# Samples and Standards
 
 ## Load peak maps
 
@@ -311,21 +300,22 @@ peak_maps <-
 peak_maps %>% knitr::kable(digits = 0)
 ```
 
-## Identify peaks (*)
+## Fetch peak table (*)
 
 ```{r}
-# get all data vendor data table, map peaks, calculate averages, add known dDs
-peak_table_w_ids <- 
-  peak_table %>% 
+# identify peaks
+peak_table_w_ids <- iso_files %>% 
+  # focus on standards and samples only
+  iso_filter_files(type %in% c("std", "sample")) %>% 
+  # filter out analyses that
+  ## a) did not inject
+  iso_filter_files(!Analysis %in% c(2031, 2040, 2069, 2098, 2116, 2138)) %>%
+  ## b) had double or rogue peaks from mis-injection
+  iso_filter_files(!Analysis %in% c(2044, 2132, 2134)) %>% 
   # map peaks
-  iso_map_peaks(
-    # provide peak maps
-    peak_maps = peak_maps,
-    # specify which file info columns identify an individual file
-    file_id = c(file_id, Analysis),
-    # specify which file info column identifies the peak map to use for each file
-    map_id = type
-  ) 
+  iso_map_peaks(peak_maps, map_id = type) %>% 
+  # peak table
+  iso_get_peak_table(include_file_info = everything())
 ```
 
 ## Inspect peak mappings
@@ -333,17 +323,16 @@ peak_table_w_ids <-
 ```{r "example_chromatograms_with_peaks", fig.width = 8, fig.height = 8}
 # use same plotting as earlier, except now with peak features added in
 iso_files %>% 
-  # select the example chromatograms again
   iso_filter_files(Analysis %in% c(2046, 2106, 2107)) %>% 
   iso_plot_continuous_flow_data(
     # select data and aesthetics
     data = 44, color = id1, panel = Analysis,
     # zoom in on time interval
     time_interval = c(1000, 3200),
-    # provide peak table information
+    # provide our peak table with ids
     peak_table = peak_table_w_ids, 
     # define peak labels, this can be any valid expression
-    peak_label = paste0(peak_info, "\nd13C=", round(d13C, 1)), 
+    peak_label = iso_format(id = peak_info, d13C), 
     # specify which labels to show (removing the !is_identified or putting a 
     # restriction by retention time can help a lot with busy chromatograms)
     peak_label_filter = is_identified | !is_identified | is_missing
@@ -363,7 +352,7 @@ iso_files %>%
 # as needed: iterate on peak map update, then peak mapping inspection
 peak_table_w_ids %>% 
   iso_get_problematic_peak_mappings() %>% 
-  iso_summarize_peak_mappings(file_id = c(Analysis, type))
+  iso_summarize_peak_mappings()
 ```
 
 # Reference peaks
@@ -378,7 +367,7 @@ peak_table_w_ids %>%
            factor() %>% fct_inorder()) %>% 
   # calculate deviations from average measured ratio in each file
   group_by(file_id) %>% 
-  mutate(delta_vs_avg = (ratio / mean(ratio) - 1) * 1000) %>% 
+  mutate(delta_vs_avg = (`r45/44` / mean(`r45/44`) - 1) * 1000) %>% 
   ungroup() %>% 
   # visualize
   ggplot() +
@@ -403,17 +392,22 @@ peak_table_analytes <- peak_table_w_ids %>%
   # omit reference peaks for further processing (i.e. analyte peaks only)
   filter(is.na(ref_nr)) %>% 
   # for each analysis, calculate a few useful summary statistics
-  group_by(file_id) %>%
+  # Note: using a nest/unnest instead of group/ungroup to preserve units
+  # which is not (yet) supported in grouped mutates
+  nest(data = -file_id) %>%
   mutate(
-   # calculate relative area for individual peaks
-    rel_area = area.Vs / sum(area.Vs, na.rm = TRUE),
-    # calculate mean area for all peaks
-    mean_area.Vs = mean(area.Vs, na.rm = TRUE),
-    # calculate mean area and amplitude for identified peaks
-    mean_area_identified.Vs = mean(area.Vs[!is.na(compound)], na.rm = TRUE),
-    mean_amp_identified.mV = mean(amp44.mV[!is.na(compound)], na.rm = TRUE)
+    data = map(data, ~mutate(
+      .x, 
+      # calculate relative area for individual peaks
+      rel_area = area44 / sum(area44, na.rm = TRUE),
+      # calculate mean area for all peaks
+      mean_area = mean(area44, na.rm = TRUE),
+      # calculate mean area and amplitude for identified peaks
+      mean_area_identified = mean(area44[!is.na(compound)], na.rm = TRUE),
+      mean_amp_identified = mean(amp44[!is.na(compound)], na.rm = TRUE)
+    ))
   ) %>%
-  ungroup()
+  unnest(data) 
 ```
 
 ## First look
@@ -422,10 +416,12 @@ peak_table_analytes <- peak_table_w_ids %>%
 peak_table_analytes %>% 
   # focus on identified peaks (comment out this line to see ALL peaks)
   filter(!is.na(compound)) %>% 
+  # use explicit units for plotting
+  iso_make_units_explicit() %>% 
   # visualize with convenience function iso_plot_data
   iso_plot_data(
     # choose x and y (multiple y possible)
-    x = area.Vs, y = c(amp44.mV, d13C),
+    x = `area44 [Vs]`, y = c(`amp44 [V]`, `d13C [permil]`),
     # choose aesthetics
     color = compound, shape = type, label = compound, size = 3,
     # decide what geoms to include
@@ -454,14 +450,17 @@ ggplotly(dynamicTicks = TRUE)
 peak_table_analytes %>% 
   # focus on standards
   filter(type == "std") %>% 
+  # use explicit units
+  iso_make_units_explicit() %>% 
   # calculate injection amount
-  mutate(injection.ng = injection_volume.uL * conc.ng_uL) %>% 
+  mutate(`injection [ng]` = `injection_volume [uL]` * `concentration [ng/uL]`) %>% 
   # visualize
   iso_plot_data(
     # x and y
-    x = injection.ng, y = c(mean_area_identified.Vs, mean_amp_identified.mV),
+    x = `injection [ng]`, y = c(`mean_area_identified [Vs]`, `mean_amp_identified [V]`),
     # aesthetics
-    color = factor(injection_volume.uL), shape = factor(conc.ng_uL), size = file_datetime,
+    color = factor(`injection_volume [uL]`), shape = factor(`concentration [ng/uL]`), 
+    size = file_datetime,
     points = TRUE
   ) +
   # modify plot with trendline and axis limits
@@ -494,7 +493,11 @@ standards <-
     "nC28",			-33.20,
     "nC29",			-29.10,
     "nC30",			-29.84
-  ) %>% mutate(type = "std")
+  ) %>% 
+  mutate(
+    type = "std", 
+    true_d13C = iso_double_with_units(true_d13C, "permil")
+  )
 standards %>% knitr::kable(digits = 2)
 ```
 
@@ -526,7 +529,7 @@ stds_w_calibs <- peak_table_w_stds %>%
   iso_generate_calibration(model = lm(d13C ~ true_d13C)) %>% 
   # unnest some useful file information for visualization
   iso_unnest_data(
-    select = c(file_datetime, injection_volume.uL, seed_oxidation, mean_area_identified.Vs))
+    select = c(file_datetime, injection_volume, seed_oxidation, mean_area_identified))
 
 # check for problematic calibrations
 stds_w_calibs %>% iso_get_problematic_calibrations() -> problematic.calibs
@@ -553,11 +556,14 @@ stds_w_calibs %>%
 
 # visualize the calibration coefficients
 stds_w_calibs %>% 
+  # work with explicit units
+  iso_make_units_explicit() %>% 
+  # plot calibration parameters
   iso_plot_calibration_parameters(
     # x-axis, could also be e.g. Analysis or file_datetime (also use date_breaks!)
-    x = mean_area_identified.Vs,
+    x = `mean_area_identified [Vs]`,
     # aesthetics
-    color = seed_oxidation, size = mean_area_identified.Vs
+    color = seed_oxidation, size = `mean_area_identified [Vs]`
   ) + 
   # highlight RMSD threshold (0.5 is fairly liberal, can be stricter!)
   geom_hline(tibble(term = factor("RMSD"), threshold = 0.5),
@@ -576,7 +582,7 @@ stds_w_calibs %>%
   group_by(Analysis) %>% 
   mutate(
     `Var: residual [permil]` = resid,
-    `Var: area diff from mean [%]` = (area.Vs/mean(area.Vs) - 1) * 100
+    `Var: area diff from mean [%]` = (area44/mean(area44) - 1) * 100
   ) %>%
   ungroup() %>% 
   # visualize
@@ -607,14 +613,14 @@ global_calibs <-
   iso_generate_calibration(
     model = c(
       linear = lm(d13C ~ true_d13C),
-      with_area = lm(d13C ~ true_d13C + area.Vs),
-      with_area_cross = lm(d13C ~ true_d13C * area.Vs)
+      with_area = lm(d13C ~ true_d13C + area44),
+      with_area_cross = lm(d13C ~ true_d13C * area44)
     ),
     # specify which peaks to include in the calibration, here:
     # - all std_peaks (this filter should always be included!)
     # - standard peaks between 5 and 100 Vs
     # - only analyses with seed oxidation (same as all the samples)
-    is_std_peak = is_std_peak & area.Vs > 5 & area.Vs < 100 & seed_oxidation == "yes"
+    is_std_peak = is_std_peak & area44 > 5 & area44 < 100 & seed_oxidation == "yes"
   )
 ```
 
@@ -680,7 +686,7 @@ global_calibs_applied <-
 global_calibs_with_ranges <-
   global_calibs_applied %>% 
   # evaluate calibration range for the measured area.Vs and predicted d13C
-  iso_evaluate_calibration_range(area.Vs, true_d13C_pred) 
+  iso_evaluate_calibration_range(area44, true_d13C_pred) 
 
 # show calibration ranges
 global_calibs_with_ranges %>% 
@@ -690,7 +696,7 @@ global_calibs_with_ranges %>%
 
 # create calibrated peak table
 peak_table_calibrated <- global_calibs_with_ranges %>% 
-  iso_unnest_data(select = everything())
+  iso_unnest_data(select = everything()) 
 ```
 
 # Evaluation
@@ -700,13 +706,15 @@ peak_table_calibrated <- global_calibs_with_ranges %>%
 ```{r "data_overview", fig.width=7, fig.height=9}
 # replicate earlier overview plot but now with the calibrated delta values
 # and with a higlight of the calibration ranges and which points are in range
-peak_table_calibrated  %>% 
+peak_table_calibrated %>% 
   # focus on identified peaks (comment out this line to see ALL peaks)
   filter(!is.na(compound)) %>% 
+  # plot with explicit units
+  iso_make_units_explicit() %>% 
   # visualize with convenience function iso_plot_data
   iso_plot_data(
     # choose x and y (multiple y possible)
-    x = area.Vs, y = true_d13C_pred,
+    x = `area44 [Vs]`, y = `true_d13C_pred [permil]`,
     # choose aesthetics
     color = in_range, shape = type, label = compound, size = 3,
     # decide what geoms to include
@@ -727,12 +735,14 @@ peak_table_calibrated  %>%
 peak_table_calibrated %>% 
   # focus on peaks in calibration
   filter(in_calib) %>% 
+  # plot with explicit units
+  iso_make_units_explicit() %>% 
   # visualize
   iso_plot_data(
     # x and y
-    x = true_d13C, y = true_d13C_pred, y_error = true_d13C_pred_se,
+    x = `true_d13C [permil]`, y = `true_d13C_pred [permil]`, y_error = `true_d13C_pred_se [permil]`,
     # aesthetics
-    color = compound, size = area.Vs,
+    color = compound, size = `area44 [Vs]`,
     # geoms
     points = TRUE
   ) +
@@ -753,10 +763,12 @@ peak_table_calibrated %>%
   # focus on identified peaks (comment out this line to see ALL peaks)
   # if there's a lot of data, might need to hone in on a few at a time
   filter(!is.na(compound)) %>% 
+  # plot with explicit units
+  iso_make_units_explicit() %>% 
   # visualize
   iso_plot_data(
     # x and y
-    x = sample, y = true_d13C_pred, y_error = true_d13C_pred_se,
+    x = sample, y = `true_d13C_pred [permil]`, y_error = `true_d13C_pred_se [permil]`,
     # aesthetics
     color = in_range, size = rel_area,
     # geoms
@@ -768,13 +780,13 @@ peak_table_calibrated %>%
   facet_wrap(~compound, scales = "free_y") +
   # color palette (here example of manual: www.google.com/search?q=color+picker)
   scale_color_manual(
-    values = c("#984EA3", "#E41A1C", "#E41A1C", "#377EB8", "#FF7F00", "#4DAF4A")
+    values = c("#984EA3", "#E41A1C", "#E41A1C", "#377EB8", "#4DAF4A")
   ) +
   # clarify size scale
   scale_size_continuous(breaks = c(0.01, 0.05, 0.1, 0.2, 0.3), 
                         labels = function(x) paste0(100*x, "%")) +
   # plot labels
-  labs(x = NULL, y = "d13C [permil]")
+  labs(x = NULL)
 ```
 
 ### Relative abundances
@@ -810,8 +822,8 @@ peak_data <-
   # focus on identified peaks in the samples
   filter(type == "sample", !is.na(compound)) %>% 
   select(sample, compound, Analysis, 
-         area.Vs, true_d13C_pred, true_d13C_pred_se, in_range) %>% 
-  arrange(sample, compound, Analysis)
+         area44, true_d13C_pred, true_d13C_pred_se, in_range) %>% 
+  arrange(sample, compound, Analysis) 
 
 # summarize replicates
 # this example data set does not contain any replicates but typically all
@@ -825,9 +837,9 @@ peak_data_summary <-
   ) %>% 
   # summarize for each sample and compound
   group_by(sample, compound) %>% 
-  iso_summarize_data_table(area.Vs, true_d13C_pred)
+  iso_summarize_data_table(area44, true_d13C_pred)
 
-peak_data_summary %>% knitr::kable(d = 12)
+peak_data_summary %>% iso_make_units_explicit() %>% knitr::kable(d = 2)
 ```
 
 # Final
