@@ -237,16 +237,23 @@ iso_mutate_peak_table.iso_file <- function(iso_files, ..., quiet = default(quiet
 }
 
 #' @rdname iso_mutate_peak_table
+#' @param group_by a single \link[dplyr]{group_by} column to group by before applying the mutate statement
 #' @export
-iso_mutate_peak_table.iso_file_list <- function(iso_files, ..., quiet = default(quiet)) {
+iso_mutate_peak_table.iso_file_list <- function(iso_files, ..., group_by = NULL, quiet = default(quiet)) {
 
   # continuous flow file check
   if (!isoreader::iso_is_continuous_flow(iso_files))
     stop("peak tables can only exist in continuous flow files", call. = FALSE)
 
+  # group by
+  group_by_quo <- enquo(group_by)
+
   # information
   if (!quiet) {
-    glue::glue("Info: mutating peak table for {length(iso_files)} data file(s)") %>%
+    glue::glue(
+      "Info: mutating peak table for {length(iso_files)} data file(s)",
+      if (!rlang::quo_is_null(group_by_quo) > 0)
+        " grouped by '{rlang::as_label(group_by_quo)}'" else "") %>%
       message(appendLF = FALSE)
   }
 
@@ -255,7 +262,7 @@ iso_mutate_peak_table.iso_file_list <- function(iso_files, ..., quiet = default(
   mutate_quos <- rlang::enquos(...)
   new_cols <- names(mutate_quos)
   original_cols <- names(peak_table)
-  peak_table <- dplyr::mutate(peak_table, !!!mutate_quos)
+  peak_table <- iso_mutate_peak_table(peak_table, !!!mutate_quos, group_by = !!group_by_quo, quiet = TRUE)
   split_peak_table <- split(peak_table, peak_table$file_id)
 
   # information
@@ -288,7 +295,6 @@ iso_mutate_peak_table.iso_file_list <- function(iso_files, ..., quiet = default(
 #' @rdname iso_mutate_peak_table
 #' @export
 #' @param peak_table data frame with the peak table (can be grouped prior to this function call or via the \code{group_by} parameter)
-#' @param group_by a single \link[dplyr]{group_by} column to group by before applying the mutate statement. If multiple columns are required for a group_by, please use the \link[dplyr]{group_by} statement directly prior to calling this function.
 iso_mutate_peak_table.data.frame <- function(peak_table, ..., group_by = NULL, quiet = default(quiet)) {
 
   # safety check
