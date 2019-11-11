@@ -99,21 +99,38 @@ test_that("test that peak table mutate works", {
 
   # test data
   iso_file_a <- isoreader:::make_cf_data_structure("a")
-  iso_file_a$peak_table <- tibble(a = 1, b1 = 1, b2 = 1)
+  iso_file_a$peak_table <- tibble(a = 1, b1 = 1, b2 = iso_double_with_units(1, "V"))
   iso_file_b <- isoreader:::make_cf_data_structure("b")
-  iso_file_b$peak_table <- tibble(b2 = 1, b3 = 1)
+  iso_file_b$peak_table <- tibble(b2 = iso_double_with_units(1, "V"), b3 = iso_double_with_units(1, "mV"))
   iso_files <- c(iso_file_a, iso_file_b)
 
-  # mutate test
+  # mutate test in isofiles
   expect_error(iso_mutate_peak_table(1L), "not defined")
   expect_error(iso_mutate_peak_table(isoreader:::make_di_data_structure("a")), "only.*continuous flow")
   expect_silent(iso_mutate_peak_table(iso_file_a, quiet = TRUE))
   expect_message(out <- iso_mutate_peak_table(iso_file_a), "mutating.*1")
   expect_equal(out$peak_table, iso_file_a$peak_table)
-  expect_message(out <- iso_mutate_peak_table(iso_files, x = 5 * b1), "mutating.*2")
+  expect_message(iso_mutate_peak_table(iso_files, x = 5 * b1), "mutating.*2")
+  expect_message(out <- iso_mutate_peak_table(iso_files, x = 5 * b1), "column.*x.*added")
   expect_equal(out$a$peak_table, mutate(iso_file_a$peak_table, x = 5 * b1))
+  expect_equal(iso_get_peak_table(out)$b3, iso_double_with_units(c(NA, 1), "mV"))
   expect_equal(select(out$b$peak_table, -x), iso_file_b$peak_table)
   expect_equal(out$b$peak_table$x, NA_real_)
+  expect_message(iso_mutate_peak_table(iso_files, b2 = 5 * b2), "mutating.*2")
+  expect_message(out <- iso_mutate_peak_table(iso_files, b2 = 5 * b2), "column.*b2.*update")
+  expect_equal(iso_get_peak_table(out)$b2, iso_double_with_units(c(5, 5), "V"))
+
+  # mutate test in data frames
+  expect_message(out <- iso_files %>% iso_get_peak_table() %>% iso_mutate_peak_table(), "mutating")
+  expect_message(iso_files %>% iso_get_peak_table() %>% iso_mutate_peak_table(x = 5 * b1), "mutating")
+  expect_message(out <- iso_files %>% iso_get_peak_table() %>% iso_mutate_peak_table(x = 5 * b1), "column.*x.*added")
+  expect_equal(out, iso_files %>% iso_get_peak_table() %>% mutate(x = 5 * b1))
+  expect_equal(out$b3, iso_double_with_units(c(NA, 1), "mV"))
+  expect_equal(select(out, -x), iso_files %>% iso_get_peak_table())
+  expect_equal(out$x, c(5, NA_real_))
+  expect_message(iso_files %>% iso_get_peak_table() %>% iso_mutate_peak_table(b2 = 5 * b2), "mutating")
+  expect_message(out <- iso_files %>% iso_get_peak_table() %>% iso_mutate_peak_table(b2 = 5 * b2), "column.*b2.*update")
+  expect_equal(out$b2, iso_double_with_units(c(5, 5), "V"))
 
 })
 

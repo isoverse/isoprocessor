@@ -2,9 +2,17 @@
 % Please edit documentation in R/peak_table.R
 \name{iso_mutate_peak_table}
 \alias{iso_mutate_peak_table}
+\alias{iso_mutate_peak_table.iso_file_list}
+\alias{iso_mutate_peak_table.data.frame}
 \title{Mutate peak table}
 \usage{
 iso_mutate_peak_table(iso_files, ..., quiet = default(quiet))
+
+\method{iso_mutate_peak_table}{iso_file_list}(iso_files, ...,
+  quiet = default(quiet))
+
+\method{iso_mutate_peak_table}{data.frame}(peak_table, ...,
+  group_by = NULL, quiet = default(quiet))
 }
 \arguments{
 \item{iso_files}{collection of iso_file objects}
@@ -12,9 +20,13 @@ iso_mutate_peak_table(iso_files, ..., quiet = default(quiet))
 \item{...}{dplyr-style \link[dplyr]{mutate} conditions applied to the combined peak_table (see \code{\link{iso_get_peak_table}})}
 
 \item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages. Set parameter to overwrite global defaults for this function or set global defaults with calls to \link[=iso_info_messages]{iso_turn_info_message_on} and \link[=iso_info_messages]{iso_turn_info_message_off}}
+
+\item{peak_table}{data frame with the peak table (can be grouped prior to this function call or via the \code{group_by} parameter)}
+
+\item{group_by}{a single \link[dplyr]{group_by} column to group by before applying the mutate statement. If multiple columns are required for a group_by, please use the \link[dplyr]{group_by} statement directly prior to calling this function.}
 }
 \description{
-Mutate the peak table (\code{\link{iso_get_peak_table}}) within isofile objects by changing existing columns or introducing new ones. Works just like dplyr's \link[dplyr]{mutate}.
+Mutate a peak table data frame either stand-alone (\code{\link{iso_get_peak_table}}) or within isofile objects. Works just like dplyr's \link[dplyr]{mutate} for changing existing columns or introducing new ones, except that it provides an information message and preserves column units even in grouped operations (\link[dplyr]{mutate} should gain this functionality in version 0.9).
 }
 \seealso{
 Other peak table functions: \code{\link{iso_get_peak_table}},

@@ -215,7 +215,7 @@ iso_set_peak_table_from_isodat_vendor_data_table <- function(iso_files, quiet = 
 
 #' Mutate peak table
 #'
-#' Mutate the peak table (\code{\link{iso_get_peak_table}}) within isofile objects by changing existing columns or introducing new ones. Works just like dplyr's \link[dplyr]{mutate}.
+#' Mutate a peak table data frame either stand-alone (\code{\link{iso_get_peak_table}}) or within isofile objects. Works just like dplyr's \link[dplyr]{mutate} for changing existing columns or introducing new ones, except that it provides an information message and preserves column units even in grouped operations (\link[dplyr]{mutate} should gain this functionality in version 0.9).
 #'
 #' @inheritParams isoreader::iso_get_raw_data
 #' @param ... dplyr-style \link[dplyr]{mutate} conditions applied to the combined peak_table (see \code{\link{iso_get_peak_table}})
@@ -236,6 +236,7 @@ iso_mutate_peak_table.iso_file <- function(iso_files, ..., quiet = default(quiet
   iso_mutate_peak_table(iso_as_file_list(iso_files), ..., quiet = quiet)[[1]]
 }
 
+#' @rdname iso_mutate_peak_table
 #' @export
 iso_mutate_peak_table.iso_file_list <- function(iso_files, ..., quiet = default(quiet)) {
 
@@ -246,16 +247,27 @@ iso_mutate_peak_table.iso_file_list <- function(iso_files, ..., quiet = default(
   # information
   if (!quiet) {
     glue::glue("Info: mutating peak table for {length(iso_files)} data file(s)") %>%
-      message()
+      message(appendLF = FALSE)
   }
 
   # mutate iso_files' file info
   peak_table <- iso_get_peak_table(iso_files, quiet = TRUE)
-  original_cols <- names(peak_table)
   mutate_quos <- rlang::enquos(...)
   new_cols <- names(mutate_quos)
+  original_cols <- names(peak_table)
   peak_table <- dplyr::mutate(peak_table, !!!mutate_quos)
   split_peak_table <- split(peak_table, peak_table$file_id)
+
+  # information
+  if (!quiet) {
+    update_cols <- intersect(new_cols, original_cols)
+    really_new_cols <- setdiff(new_cols, original_cols)
+    glue::glue(
+      if (length(update_cols) > 0) ", column(s) '{glue::glue_collapse(update_cols, sep = \"', '\")}' updated" else "",
+      if (length(really_new_cols) > 0) ", column(s) '{glue::glue_collapse(really_new_cols, sep = \"', '\")}' added" else "",
+      ".") %>%
+      message()
+  }
 
   # mutate this way to ensure that only original columns are kept rather than
   # a bunch of NA columns if peak_tables differ between iso_files
@@ -271,6 +283,64 @@ iso_mutate_peak_table.iso_file_list <- function(iso_files, ..., quiet = default(
 
   # return
   return(iso_as_file_list(iso_files))
+}
+
+#' @rdname iso_mutate_peak_table
+#' @export
+#' @param peak_table data frame with the peak table (can be grouped prior to this function call or via the \code{group_by} parameter)
+#' @param group_by a single \link[dplyr]{group_by} column to group by before applying the mutate statement. If multiple columns are required for a group_by, please use the \link[dplyr]{group_by} statement directly prior to calling this function.
+iso_mutate_peak_table.data.frame <- function(peak_table, ..., group_by = NULL, quiet = default(quiet)) {
+
+  # safety check
+  if (nrow(peak_table) == 0) return(peak_table)
+
+  # grouping columns
+  group_by_quo <- enquo(group_by)
+  if (!rlang::quo_is_null(group_by_quo)) peak_table <- dplyr::group_by(peak_table, !!group_by_quo)
+  grp_vars <- dplyr::group_vars(peak_table) %>% { setNames(., .) }
+
+  # information
+  if (!quiet) {
+    glue::glue(
+      "Info: mutating peak table",
+      if (length(grp_vars) > 0) " grouped by '{glue::glue_collapse(grp_vars, sep = \"', '\")}'" else ""
+    ) %>% message(appendLF = FALSE)
+  }
+
+  # quos
+  mutate_quos <- rlang::enquos(...)
+  new_cols <- names(mutate_quos)
+  original_cols <- names(peak_table)
+
+  # mutate by nesting to preserve units
+  # this should work directly once dplyr v. 0.9 is released
+  if (length(grp_vars) > 0) {
+    peak_table <- peak_table %>%
+      tidyr::nest(data = c(!!!map(grp_vars, ~quo(-!!sym(.x))))) %>%
+      dplyr::mutate(
+        data = purrr::map(data, ~dplyr::mutate(.x, !!!mutate_quos))
+      ) %>%
+      tidyr::unnest(data)
+  } else {
+    peak_table <- dplyr::mutate(peak_table, !!!mutate_quos)
+  }
+
+  # information
+  if (!quiet) {
+    update_cols <- intersect(new_cols, original_cols)
+    really_new_cols <- setdiff(new_cols, original_cols)
+    glue::glue(
+      if (length(update_cols) > 0) ", column(s) '{glue::glue_collapse(update_cols, sep = \"', '\")}' updated" else "",
+      if (length(really_new_cols) > 0) ", column(s) '{glue::glue_collapse(really_new_cols, sep = \"', '\")}' added" else "",
+      ".") %>%
+      message()
+  }
+
+  # ungroup
+  if (!rlang::quo_is_null(group_by_quo)) peak_table <- dplyr::ungroup(peak_table)
+
+  # return values
+  return(peak_table)
 }
 
 # aggregation ======
