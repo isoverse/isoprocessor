@@ -216,6 +216,14 @@ ggplotly(dynamicTicks = TRUE)
 
 Examine the variation in each of the standards. Could discuss whether the scale2 outlier is an erroneous measurement.
 
+```{r}
+peak_table %>% 
+  group_by(type) %>% 
+  mutate(mean = mean(d13C), sd = sd(d13C)) %>% 
+  ungroup()
+```
+
+
 ```{r "standards_variation", fig.height=10, fig.width=7}
 peak_table %>% 
   filter(type != "sample") %>% 
@@ -282,12 +290,14 @@ There is no temporal drift so no correction is applied.
 # run a set of regressions to evaluate drift
 calib_drift <- 
   peak_table_w_standards %>%
+  # calculate 13C difference from the mean 
+  iso_mutate_peak_table(d13C_drift = d13C - mean(d13C), group_by = type) %>% 
   # prepare for calibration
   iso_prepare_for_calibration() %>% 
   # run different calibrations
   iso_generate_calibration(
     calibration = "drift",
-    model = c(lm(d13C ~ 1), lm(d13C ~ file_datetime)),
+    model = c(lm(d13C_drift ~ 1), lm(d13C_drift ~ file_datetime)),
     is_std_peak = is_std_peak & type == "drift"
   )
 ```
