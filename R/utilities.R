@@ -381,10 +381,10 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
           mutate(as_tibble(tidy(.x)),
                  # add in significant level summary
                  signif = case_when(
-                   p.value < 0.001 ~ "***",
-                   p.value < 0.01 ~ "**",
-                   p.value < 0.05 ~ "*",
-                   p.value < 0.1 ~ ".",
+                   p.value < 0.001 ~ "*** (p < 0.001)",
+                   p.value < 0.01 ~  "**  (p < 0.01)",
+                   p.value < 0.05 ~  "*   (p < 0.05)",
+                   p.value < 0.1 ~   ".   (p < 0.1)",
                    TRUE ~ "-")
           )
         } else NULL),
@@ -398,7 +398,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   if ((not_enough <- sum(!data_w_models[[dt_new_cols$model_enough_data]])) > 0)
     glue("{not_enough} of {nrow(data_w_models)} regressions have insufficient ",
          "degrees of freedom (not enough data given the regression models and/or ",
-         "requested minimum number of data points) - please double check that all",
+         "requested minimum number of data points) - please double check that all ",
          "peaks are mapped correctly (see ?iso_get_problematic_peak_mappings and ",
          "?iso_summarize_peak_mappings)") %>%
     warning(immediate. = TRUE, call. = FALSE)
