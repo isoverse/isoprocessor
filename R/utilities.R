@@ -411,11 +411,12 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
     # evaluation of model
     mutate(
       # check if there is any data
-      !!dt_new_cols$model_enough_data := map_lgl(!!sym(dt_cols$model_data), ~{
+      ..n_data_points.. = map_int(!!sym(dt_cols$model_data), ~{
         data <- .x
         check_expressions(data, filter_quo)
-        nrow(filter(data, !!filter_quo)) >= min_n_datapoints
+        nrow(filter(data, !!filter_quo))
       }),
+      !!dt_new_cols$model_enough_data := ..n_data_points.. >= min_n_datapoints,
       # fit the model if there is any data
       !!dt_new_cols$model_fit :=
         pmap(list(m = model_quo, d = !!sym(dt_cols$model_data), run = !!sym(dt_new_cols$model_enough_data)),
@@ -463,13 +464,28 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   }
 
   # warnings
-  if ((not_enough <- sum(!data_w_models[[dt_new_cols$model_enough_data]])) > 0)
+  if ((not_enough <- sum(!data_w_models[[dt_new_cols$model_enough_data]])) > 0) {
+
     glue("{not_enough} of {nrow(data_w_models)} regressions have insufficient ",
          "degrees of freedom (not enough data given the regression models and/or ",
-         "requested minimum number of data points) - please double check that all ",
-         "peaks are mapped correctly (see ?iso_get_problematic_peak_mappings and ",
-         "?iso_summarize_peak_mappings)") %>%
+         "requested minimum number of data points):\n - ",
+         # note: difficult to account for groupings here but it's important to provide some information
+         paste(
+           sprintf("model %d ('%s'): %s", 1:nrow(data_w_models),
+                   data_w_models[[dt_new_cols$model_name]],
+                   ifelse(
+                     data_w_models[[dt_new_cols$model_enough_data]],
+                     sprintf("%d data points (enough)", data_w_models$..n_data_points..),
+                     sprintf("%d data points (NOT enough)", data_w_models$..n_data_points..)
+                   )),
+           collapse = "\n - "
+         ),
+         "\nPlease double check that all peaks are mapped correctly ",
+         "(see ?iso_get_problematic_peak_mappings and ",
+         "?iso_summarize_peak_mappings) and that the filter condition ",
+         "('{quo_text(filter_quo)}') is correct. ") %>%
     warning(immediate. = TRUE, call. = FALSE)
+  }
 
   # add residuals
   data_w_models <-
@@ -498,8 +514,8 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
             return(d)
           })
     ) %>%
-    # remove .model_ys and ..unique_id..
-    select(-.model_ys, -..unique_id..)
+    # remove temp variables
+    select(-.model_ys, -..unique_id.., -..n_data_points..)
 
   # nest model
   if (nest_model) {
