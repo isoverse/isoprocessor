@@ -328,6 +328,7 @@ tidy.loess <- function(m) {
 #' @param model_filter_condition a filter to apply to the data before running the regression (if only a subset of the data is part of the calibration data) - stored in \code{in_reg}, by default no filter
 #' @param model_name new column with the model formulae or names if supplied
 #' @param model_enough_data new column with information on whether the model has enough data (based on the required degrees of freedom for the model)
+#' @param model_data_points new column with information on the number of data points the model is based on
 #' @param model_fit the new model objects column
 #' @param model_coefs the new model coefficients nested data frame column
 #' @param model_summary the new model summary nested data frame column
@@ -337,6 +338,7 @@ tidy.loess <- function(m) {
 run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
                            model_data = model_data, model_filter_condition = NULL,
                            model_name = model_name, model_enough_data = model_enough_data,
+                           model_data_points = model_data_points,
                            model_fit = model_fit, model_coefs = model_coefs,
                            model_summary = model_summary, model_params = model_params,
                            in_reg = in_reg, residual = residual) {
@@ -346,7 +348,8 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   dt_quo <- enquo(dt)
   dt_cols <- get_column_names(!!dt_quo, model_data = enquo(model_data), type_reqs = list(model_data = "list"))
   dt_new_cols <- get_new_column_names(
-    model_name = enquo(model_name), model_enough_data = enquo(model_enough_data),
+    model_name = enquo(model_name),
+    model_enough_data = enquo(model_enough_data), model_data_points = enquo(model_data_points),
     model_fit = enquo(model_fit), model_coefs = enquo(model_coefs), model_summary = enquo(model_summary),
     model_params = enquo(model_params),
     in_reg = enquo(in_reg), residual = enquo(residual))
@@ -417,6 +420,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
         nrow(filter(data, !!filter_quo))
       }),
       !!dt_new_cols$model_enough_data := ..n_data_points.. >= min_n_datapoints,
+      !!dt_new_cols$model_data_points := ..n_data_points..,
       # fit the model if there is any data
       !!dt_new_cols$model_fit :=
         pmap(list(m = model_quo, d = !!sym(dt_cols$model_data), run = !!sym(dt_new_cols$model_enough_data)),

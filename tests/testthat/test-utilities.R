@@ -67,9 +67,9 @@ test_that("regression functions work properly", {
   expect_s3_class(df_w_models <- nested_test_df %>% run_regression(model = lm(y ~ x)), "tbl")
   expect_equal(nrow(df_w_models), 2L)
   expect_equal(df_w_models$model_fit[[1]]$residuals %>% length(), filter(test_df, name == "a") %>% nrow())
-  expect_equal(names(df_w_models), c("name", "model_data", "model_name", "model_enough_data", "model_fit", "model_coefs", "model_summary"))
+  expect_equal(names(df_w_models), c("name", "model_data", "model_name", "model_enough_data", "model_data_points", "model_fit", "model_coefs", "model_summary"))
   expect_equal(names(df_w_coefs <- unnest(df_w_models, model_coefs)),
-               c("name", "model_data", "model_name", "model_enough_data", "model_fit", "term", "estimate", "std.error", "statistic", "p.value", "signif", "model_summary"))
+               c("name", "model_data", "model_name", "model_enough_data", "model_data_points", "model_fit", "term", "estimate", "std.error", "statistic", "p.value", "signif", "model_summary"))
   expect_equal(nrow(df_w_coefs), 2*2)
   expect_true(all(df_w_coefs$term %in% c("(Intercept)", "x")))
   expect_equal( # columns
@@ -91,20 +91,25 @@ test_that("regression functions work properly", {
 
   # single model nested outcome
   expect_s3_class(df_w_nested_models <- nested_test_df %>% run_regression(model = lm(y ~ x), nest_model = TRUE), "tbl")
-  expect_equal(names(df_w_nested_models), c("name", "model_data", "model_name", "model_enough_data", "model_params"))
+  expect_equal(names(df_w_nested_models), c("name", "model_data", "model_name", "model_enough_data", "model_data_points", "model_params"))
   expect_equal(names(unnest(df_w_nested_models, model_params)),
-               c("name", "model_data", "model_name", "model_enough_data", "model_fit", "model_coefs", "model_summary"))
+               c("name", "model_data", "model_name", "model_enough_data", "model_data_points", "model_fit", "model_coefs", "model_summary"))
+  expect_equal(df_w_nested_models$model_enough_data, c(TRUE, TRUE))
+  expect_equal(df_w_nested_models$model_data_points, c(10, 10))
 
   # single model with filter
   expect_error(nested_test_df %>% run_regression(model = lm(y ~ x), model_filter_condition = DNE < 0.5), "not a valid expression")
   expect_s3_class(df_w_models <- nested_test_df %>% run_regression(model = lm(y ~ x), model_filter_condition = y < 0.5) , "tbl")
+  expect_equal(df_w_models$model_enough_data, c(TRUE, TRUE))
+  expect_equal(df_w_models$model_data_points, c(6, 2))
   expect_equal(nrow(df_w_models), 2L)
   expect_equal(df_w_models$model_fit[[1]]$residuals %>% length(), filter(test_df, name == "a", y < 0.5) %>% nrow())
   expect_equal(df_w_models$model_name, c("lm(y ~ x)", "lm(y ~ x)"))
 
   # single model not enough data
   expect_warning(out <- nested_test_df %>% run_regression(model = lm(y ~ x), model_filter_condition = y < 0), "insufficient degrees of freedom")
-  expect_equal(out$model_enough_data %>% unname(), c(FALSE, FALSE))
+  expect_equal(out$model_enough_data, c(FALSE, FALSE))
+  expect_equal(out$model_data_points, c(0, 0))
 
   # multi model
   expect_error(nested_test_df %>% run_regression(list(m1 = lm(y ~ x), m1 = lm(y ~ x*I(x^2)))), "encountered duplicates")
@@ -116,7 +121,7 @@ test_that("regression functions work properly", {
   expect_equal(df_w_models2$name, c("a", "a", "a", "b", "b", "b"))
   expect_equal(df_w_models2$model_name, c("m1", "m2", "m3", "m1", "m2", "m3"))
   expect_equal(names(df_w_coefs2 <- unnest_select_data(df_w_models2, select = term, nested_data = model_coefs)),
-               c("name", "model_name", "model_enough_data", "term", "model_coefs", "model_data", "model_fit", "model_summary"))
+               c("name", "model_name", "model_enough_data", "model_data_points", "term", "model_coefs", "model_data", "model_fit", "model_summary"))
   expect_equal(nrow(df_w_coefs2), 2*2 + 2*4)
   expect_equal(filter(df_w_coefs2, model_name == "m1")$term %>% unique(), c("(Intercept)", "x"))
   expect_equal(filter(df_w_coefs2, model_name == "m2")$term %>% unique(), c("(Intercept)", "x", "I(x^2)", "x:I(x^2)"))
@@ -125,29 +130,29 @@ test_that("regression functions work properly", {
   # unnest coefficients (unnested model)
   expect_error(unnest_model_column(df_w_models, select = c(term, p.value)), "specify which .* to unnest")
   expect_equal(unnest_model_column(df_w_models, select = c(term, p.value), model_column = model_coefs) %>% names(),
-               c("name", "model_name", "model_enough_data", "term", "p.value"))
+               c("name", "model_name", "model_enough_data", "model_data_points", "term", "p.value"))
   expect_equal(unnest_model_column(df_w_models2, select = c(term, p.value), model_column = model_coefs) %>% names(),
-               c("name", "model_name", "model_enough_data", "term", "p.value"))
+               c("name", "model_name", "model_enough_data", "model_data_points", "term", "p.value"))
   expect_error(unnest_model_column(df_w_models, model_column = DNE), "unknown column")
   expect_equal(df_w_models %>% mutate(my_test = model_coefs) %>%
                  unnest_model_column(select = c(term, p.value, signif), model_column = my_test) %>% names(),
-               c("name", "model_name", "model_enough_data", "term", "p.value", "signif"))
+               c("name", "model_name", "model_enough_data", "model_data_points", "term", "p.value", "signif"))
 
   # unnest coefficients (nested model)
   expect_error(unnest_model_column(df_w_nested_models, model_column = model_coefs, nested_model = TRUE, model_params = DNE),
                "unknown column")
   expect_equal(unnest_model_column(df_w_nested_models, model_column = model_coefs, select = c(term, p.value), nested_model = TRUE) %>% names(),
-               c("name", "model_name", "model_enough_data", "term", "p.value"))
+               c("name", "model_name", "model_enough_data", "model_data_points", "term", "p.value"))
   expect_equal(unnest_model_column(df_w_nested_models, model_column = model_coefs, select = c(term, p.value), nested_model = TRUE, keep_other_list_data = TRUE) %>% names(),
-               c("name", "model_name", "model_enough_data", "term", "p.value", "model_data", "model_params"))
+               c("name", "model_name", "model_enough_data", "model_data_points", "term", "p.value", "model_data", "model_params"))
 
   # unnest summary
   expect_equal(unnest_model_column(df_w_models, select = c(r.squared, p.value, sigma), model_column = model_summary) %>% names(),
-               c("name", "model_name", "model_enough_data", "r.squared", "p.value", "sigma"))
+               c("name", "model_name", "model_enough_data", "model_data_points", "r.squared", "p.value", "sigma"))
   expect_equal(unnest_model_column(df_w_nested_models, select = c(r.squared, p.value, sigma), model_column = model_summary, nested_model = TRUE) %>% names(),
-               c("name", "model_name", "model_enough_data", "r.squared", "p.value", "sigma"))
+               c("name", "model_name", "model_enough_data", "model_data_points", "r.squared", "p.value", "sigma"))
   expect_equal(unnest_model_column(df_w_nested_models, select = c(r.squared, p.value, "sigma"), model_column = model_summary, nested_model = TRUE, keep_other_list_data = TRUE) %>% names(),
-               c("name", "model_name", "model_enough_data", "r.squared", "p.value", "sigma", "model_data", "model_params"))
+               c("name", "model_name", "model_enough_data", "model_data_points", "r.squared", "p.value", "sigma", "model_data", "model_params"))
 
   # unnest summary for multiple models
   expect_equal(nrow(m_sum <- unnest_model_column(df_w_models2, select = c(r.squared, p.value, sigma), model_column = model_summary)), 6L)
@@ -162,10 +167,11 @@ test_that("regression functions work properly", {
                                            model_data = test1,
                                            model_name = test2,
                                            model_enough_data = test3,
-                                           model_fit = test4,
-                                           model_coefs = test5,
-                                           model_summary = test6) , "tbl")
-  expect_equal(names(df_w_models3), c("name", "test1", "test2", "test3", "test4", "test5", "test6"))
+                                           model_data_points = test4,
+                                           model_fit = test5,
+                                           model_coefs = test6,
+                                           model_summary = test7) , "tbl")
+  expect_equal(names(df_w_models3), c("name", "test1", "test2", "test3", "test4", "test5", "test6", "test7"))
 })
 
 # applying regressions (both for dependent and independent variables) =====
@@ -238,11 +244,11 @@ test_that("applying regressions work properly", {
   # check return columns
   expect_equal(names(out_direct_x1),
                c("name", "model_data", "model_name", "model_enough_data",
-                 "model_fit", "model_coefs", "model_summary"))
+                "model_data_points", "model_fit", "model_coefs", "model_summary"))
   expect_equal(names(out_direct_x1), names(out_direct_y1))
   expect_equal(names(out_nested_x1),
                c("name", "model_data", "model_name", "model_enough_data",
-                 "model_params"))
+                 "model_data_points", "model_params"))
   expect_equal(names(out_nested_x1), names(out_nested_y1))
 
   # check nested and unnested equivalency
