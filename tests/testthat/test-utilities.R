@@ -52,14 +52,16 @@ test_that("nesting and unnesting functions work properly", {
 test_that("regression functions work properly", {
 
   set.seed(42)
-  test_df <- dplyr::tibble(name = rep(c("a", "b"), 10), x = runif(20), y = runif(20))
+  test_df <- dplyr::tibble(name = rep(c("a", "b"), 10), x = runif(20), y = runif(20), z = iso_double_with_units(runif(20), "z"))
   nested_test_df <- nest_data(test_df, name, nested_data = model_data)
   expect_error(run_regression(), "no data table supplied")
   expect_error(run_regression(test_df), "model_data.* unknown column")
   expect_error(run_regression(nested_test_df), "no .* model")
   expect_error(run_regression(nested_test_df, model = list()), "no .* model")
   expect_error(run_regression(nested_test_df, model = x), "not .* valid model")
+  expect_error(run_regression(nested_test_df, model = nls(y ~ x)), "not .* valid model")
   expect_error(run_regression(nested_test_df, model = lm(y ~ x), model_data = name), "not .* correct column type")
+  expect_error(run_regression(nested_test_df, model = lm(y + x ~ x)), "multiple dependent.*variables")
 
   # single model
   expect_s3_class(df_w_models <- nested_test_df %>% run_regression(model = lm(y ~ x)), "tbl")
@@ -70,6 +72,22 @@ test_that("regression functions work properly", {
                c("name", "model_data", "model_name", "model_enough_data", "model_fit", "term", "estimate", "std.error", "statistic", "p.value", "signif", "model_summary"))
   expect_equal(nrow(df_w_coefs), 2*2)
   expect_true(all(df_w_coefs$term %in% c("(Intercept)", "x")))
+  expect_equal( # columns
+    df_w_models %>% select(name, model_data) %>% unnest(model_data) %>% names(),
+    c("name", "x", "y", "z", "in_reg", "residual")
+  )
+  expect_equal( # units
+    df_w_models %>% select(name, model_data) %>% unnest(model_data) %>% iso_get_units(),
+    c(name = NA, x = NA, y = NA, z = "z", in_reg = NA, residual = NA)
+  )
+  expect_equal( # units in residuals
+    nested_test_df %>% run_regression(model = lm(z ~ x)) %>% select(name, model_data) %>% unnest(model_data) %>% iso_get_units(),
+    c(name = NA, x = NA, y = NA, z = "z", in_reg = NA, residual = "z")
+  )
+  expect_equal( # data
+    df_w_models %>% select(name, model_data) %>% unnest(model_data) %>% select(-in_reg, -residual),
+    test_df
+  )
 
   # single model nested outcome
   expect_s3_class(df_w_nested_models <- nested_test_df %>% run_regression(model = lm(y ~ x), nest_model = TRUE), "tbl")
@@ -91,16 +109,18 @@ test_that("regression functions work properly", {
   # multi model
   expect_error(nested_test_df %>% run_regression(list(m1 = lm(y ~ x), m1 = lm(y ~ x*I(x^2)))), "encountered duplicates")
   expect_error(nested_test_df %>% run_regression(list(lm(y ~ x), lm(y ~ x))), "encountered duplicates")
-  expect_s3_class(df_w_models2 <- nested_test_df %>% run_regression(list(m1 = lm(y ~ x), m2 = lm(y ~ x*I(x^2)))) , "tbl")
-  expect_equal(nrow(df_w_models2), 4L)
-  expect_equal(df_w_models2$name, c("a", "a", "b", "b"))
-  expect_equal(df_w_models2$model_name, c("m1", "m2", "m1", "m2"))
-  # FIXME: continue here, this is also a consequence of list vs. vector list!
+  expect_s3_class(
+    df_w_models2 <- nested_test_df %>% run_regression(list(m1 = lm(y ~ x), m2 = lm(y ~ x*I(x^2)), m3 = loess(y ~ x))),
+  "tbl")
+  expect_equal(nrow(df_w_models2), 6L)
+  expect_equal(df_w_models2$name, c("a", "a", "a", "b", "b", "b"))
+  expect_equal(df_w_models2$model_name, c("m1", "m2", "m3", "m1", "m2", "m3"))
   expect_equal(names(df_w_coefs2 <- unnest_select_data(df_w_models2, select = term, nested_data = model_coefs)),
                c("name", "model_name", "model_enough_data", "term", "model_coefs", "model_data", "model_fit", "model_summary"))
   expect_equal(nrow(df_w_coefs2), 2*2 + 2*4)
   expect_equal(filter(df_w_coefs2, model_name == "m1")$term %>% unique(), c("(Intercept)", "x"))
   expect_equal(filter(df_w_coefs2, model_name == "m2")$term %>% unique(), c("(Intercept)", "x", "I(x^2)", "x:I(x^2)"))
+  expect_equal(filter(df_w_coefs2, model_name == "m3")$term, character(0))
 
   # unnest coefficients (unnested model)
   expect_error(unnest_model_column(df_w_models, select = c(term, p.value)), "specify which .* to unnest")
@@ -122,12 +142,18 @@ test_that("regression functions work properly", {
                c("name", "model_name", "model_enough_data", "term", "p.value", "model_data", "model_params"))
 
   # unnest summary
-  expect_equal(unnest_model_column(df_w_models, select = c(r.squared, p.value), model_column = model_summary) %>% names(),
-               c("name", "model_name", "model_enough_data", "r.squared", "p.value"))
-  expect_equal(unnest_model_column(df_w_nested_models, select = c(r.squared, p.value), model_column = model_summary, nested_model = TRUE) %>% names(),
-               c("name", "model_name", "model_enough_data", "r.squared", "p.value"))
-  expect_equal(unnest_model_column(df_w_nested_models, select = c(r.squared, p.value), model_column = model_summary, nested_model = TRUE, keep_other_list_data = TRUE) %>% names(),
-               c("name", "model_name", "model_enough_data", "r.squared", "p.value", "model_data", "model_params"))
+  expect_equal(unnest_model_column(df_w_models, select = c(r.squared, p.value, sigma), model_column = model_summary) %>% names(),
+               c("name", "model_name", "model_enough_data", "r.squared", "p.value", "sigma"))
+  expect_equal(unnest_model_column(df_w_nested_models, select = c(r.squared, p.value, sigma), model_column = model_summary, nested_model = TRUE) %>% names(),
+               c("name", "model_name", "model_enough_data", "r.squared", "p.value", "sigma"))
+  expect_equal(unnest_model_column(df_w_nested_models, select = c(r.squared, p.value, "sigma"), model_column = model_summary, nested_model = TRUE, keep_other_list_data = TRUE) %>% names(),
+               c("name", "model_name", "model_enough_data", "r.squared", "p.value", "sigma", "model_data", "model_params"))
+
+  # unnest summary for multiple models
+  expect_equal(nrow(m_sum <- unnest_model_column(df_w_models2, select = c(r.squared, p.value, sigma), model_column = model_summary)), 6L)
+  expect_equal(round(m_sum$r.squared, 3), c(0.131, 0.29, NA, 0.013, 0.132, NA))
+  expect_equal(round(m_sum$p.value, 3), c(0.304, 0.529, NA, 0.752, 0.821, NA))
+  expect_equal(round(m_sum$sigma, 3), c(0.378, 0.394, 0.408, 0.299, 0.324, 0.347))
 
   # grouped regressions
   expect_s3_class(df_w_models3 <- test_df %>%
@@ -142,9 +168,9 @@ test_that("regression functions work properly", {
   expect_equal(names(df_w_models3), c("name", "test1", "test2", "test3", "test4", "test5", "test6"))
 })
 
-# inverting regressions =====
+# applying regressions (both for dependent and independent variables) =====
 
-test_that("inverting regressions work properly", {
+test_that("applying regressions work properly", {
 
   # parameter errors
   expect_error(apply_regression(), "no data table supplied")
@@ -172,23 +198,28 @@ test_that("inverting regressions work properly", {
   ) %>%
     mutate(
       name = c("a", "a", "b", "a", sample(c("a", "b"), replace = TRUE, size = dplyr::n() - 4)),
-      is_std_peak = c(rep(FALSE, 4), sample(c(TRUE, FALSE), replace = TRUE, size = dplyr::n() - 4)),
+      use_for_calib = c(rep(FALSE, 4), sample(c(TRUE, FALSE), replace = TRUE, size = dplyr::n() - 4)),
       y = -1 + 5 * x1 + x1*as.numeric(x2)*20 + 50 * sqrt(as.numeric(x2)) + x3 + rnorm(length(x1), sd = 15),
       # special case: missing data
       x2 = { x2[row_number() <= 3] <- NA; x2 },
-      # special case: way outside range
-      #x2 = ifelse(row_number() %in% c(4), 1e20, x2),
       y = ifelse(row_number() %in% c(4), -1e10, y) %>% iso_double_with_units("y")
     )
   nested_test_df <- nest_data(test_df, name, nested_data = model_data)
-  models <- quo(list(m1 = lm(y ~ x1), m2 = lm(y ~ x1 + I(sqrt(x2)) + x1:x2 + x3)))
-  df_w_models <- nested_test_df %>% run_regression(!!models, model_filter_condition = is_std_peak)
-  df_w_nested_models <- nested_test_df %>% run_regression(!!models, nest_model = TRUE, model_filter_condition = is_std_peak)
+  models <- quo(list(m1 = lm(y ~ x1), m2 = lm(y ~ x1 + I(sqrt(x2)) + x1:x2 + x3), m3 = loess(y ~ x1, span = 0.75)))
+  expect_warning(
+    df_w_models <- nested_test_df %>% run_regression(!!models, model_filter_condition = use_for_calib),
+    "singularities" # because of the loess for case a with the big outlier at y[1]
+  )
+  expect_warning(
+    df_w_nested_models <- nested_test_df %>% run_regression(!!models, nest_model = TRUE, model_filter_condition = use_for_calib),
+    "singularities" # because of the loess for case a with the big outlier at y[1]
+  )
 
-  # apply regression
-  expect_error(apply_regression(df_w_models, predict = DNE), "not a regressor.*m1, m2")
-  expect_error(apply_regression(df_w_models, predict = x2), "not a regressor.*m1")
-  expect_error(nested_test_df %>% run_regression(lm(y + x1 ~ x2), model_filter_condition = is_std_peak) %>% apply_regression(x2),
+  # expected errors from regression application
+  expect_error(apply_regression(df_w_models, predict = DNE), "not a variable.*m1, m2")
+  expect_error(apply_regression(df_w_models, predict = x2), "not a variable.*m1")
+  expect_error(apply_regression(df_w_models, predict = x1), "cannot be inverted")
+  expect_error(nested_test_df %>% run_regression(lm(y + x1 ~ x2), model_filter_condition = use_for_calib) %>% apply_regression(x2),
                "multiple dependent.*not supported")
 
   # out of range troubles for the different data sets and models
@@ -196,31 +227,43 @@ test_that("inverting regressions work properly", {
     out_x2 <- df_w_models %>% filter(name == "a", model_name == "m2") %>% apply_regression(x2, predict_range = c(-10, -9.999)),
     "potential fit is too far outside the calibration range"
   )
-  expect_silent(out_direct <- df_w_models %>% filter(name == "b", model_name == "m1") %>% apply_regression(x1))
-  expect_silent(out_nested <- df_w_nested_models %>% filter(name == "b", model_name == "m1") %>%
+
+  # direct and nested regressions
+  expect_silent(out_direct_y1 <- df_w_models %>% apply_regression(y))
+  expect_silent(out_nested_y1 <- df_w_nested_models %>% apply_regression(y, nested_model = TRUE))
+  expect_silent(out_direct_x1 <- df_w_models %>% filter(name == "b", model_name == "m1") %>% apply_regression(x1))
+  expect_silent(out_nested_x1 <- df_w_nested_models %>% filter(name == "b", model_name == "m1") %>%
                    apply_regression(x1, nested_model = TRUE))
 
   # check return columns
-  expect_equal(names(out_direct),
+  expect_equal(names(out_direct_x1),
                c("name", "model_data", "model_name", "model_enough_data",
                  "model_fit", "model_coefs", "model_summary"))
-  expect_equal(names(out_nested),
+  expect_equal(names(out_direct_x1), names(out_direct_y1))
+  expect_equal(names(out_nested_x1),
                c("name", "model_data", "model_name", "model_enough_data",
                  "model_params"))
+  expect_equal(names(out_nested_x1), names(out_nested_y1))
+
   # check nested and unnested equivalency
-  expect_equal(out_direct$model_data[[1]], out_nested$model_data[[1]])
+  expect_equal(out_direct_x1$model_data[[1]], out_nested_x1$model_data[[1]])
 
   # check for new columns in the data frame
-  base_cols <- c("x1", "x2", "x3", "is_std_peak", "y", "in_reg", "residual")
-  expect_equal(names(out_direct$model_data[[1]]), c(base_cols, "pred", "pred_se"))
+  base_cols <- c("x1", "x2", "x3", "use_for_calib", "y", "in_reg", "residual")
+  expect_equal(names(out_direct_y1$model_data[[1]]), c(base_cols, "pred", "pred_se"))
+  expect_equal(names(out_direct_x1$model_data[[1]]), c(base_cols, "pred", "pred_se"))
   expect_equal(names(out_x2$model_data[[1]]), c(base_cols, "pred", "pred_se"))
   expect_equal(
-    tidyr::unnest(select(out_direct, model_data), model_data) %>% iso_get_units(),
-    c(x1 = NA, x2 = "x", x3 = NA, is_std_peak = NA, y = "y", in_reg = NA, residual = NA, pred = NA, pred_se = NA)
+    tidyr::unnest(select(out_direct_y1, model_data), model_data) %>% iso_get_units(),
+    c(x1 = NA, x2 = "x", x3 = NA, use_for_calib = NA, y = "y", in_reg = NA, residual = "y", pred = "y", pred_se = "y")
+  )
+  expect_equal(
+    tidyr::unnest(select(out_direct_x1, model_data), model_data) %>% iso_get_units(),
+    c(x1 = NA, x2 = "x", x3 = NA, use_for_calib = NA, y = "y", in_reg = NA, residual = "y", pred = NA, pred_se = NA)
   )
   expect_equal(
     tidyr::unnest(select(out_x2, model_data), model_data) %>% iso_get_units(),
-    c(x1 = NA, x2 = "x", x3 = NA, is_std_peak = NA, y = "y", in_reg = NA, residual = NA, pred = "x", pred_se = "x")
+    c(x1 = NA, x2 = "x", x3 = NA, use_for_calib = NA, y = "y", in_reg = NA, residual = "y", pred = "x", pred_se = "x")
   )
   expect_equal(
     df_w_models %>% filter(name == "b", model_name == "m1") %>%
@@ -239,6 +282,18 @@ test_that("inverting regressions work properly", {
       apply_regression(x1, calculate_error = TRUE, predict_value = value, predict_error = error) %>%
       { .$model_data[[1]] } %>% names(),
     c(base_cols, "value", "error")
+  )
+
+  # check for which values are NA
+  expect_equal(out_direct_y1 %>% filter(model_name == "m1") %>% unnest(model_data) %>% filter(is.na(pred)) %>% nrow(), 0L)
+  expect_equal(
+    out_direct_y1 %>% filter(model_name == "m2") %>% unnest(model_data) %>% filter(is.na(pred)) %>% dplyr::pull(x2),
+    iso_double_with_units(c(NA, NA, NA), "x")
+  )
+
+  # check for expected predicted values
+  expect_true(
+    all(with(filter(unnest(out_direct_y1, model_data), in_reg), abs(as.numeric(y) - as.numeric(residual) - as.numeric(pred))) < 1e10)
   )
 
 })
@@ -320,7 +375,6 @@ test_that("test that range evaluation works", {
       tibble(name = "b", term = c("x", "y", "x * y"))
     )
   )
-
 
 })
 
