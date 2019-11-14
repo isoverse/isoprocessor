@@ -1105,11 +1105,9 @@ iso_plot_residuals <- function(
   # get calibration vars symbols
   calibration_model_name <- function() calib_vars$model_name
   eval_calibration_var <- function(pquo) {
-    if (!rlang::quo_is_symbol(pquo) && rlang::as_label(rlang::quo_squash(pquo)) == "calibration_model_name()") {
+    if (rlang::quo_is_call(pquo) && rlang::call_name(pquo) == "calibration_model_name")
       sym(calibration_model_name())
-    } else {
-      pquo
-    }
+    else pquo
   }
   y_quo <- sym(calib_vars$residual)
   color_quo <- enquo(color) %>% eval_calibration_var()
@@ -1201,12 +1199,9 @@ iso_plot_calibration_parameters <- function(
   # quos
   calibration_model_name <- function() calib_vars$model_name
   eval_calibration_var <- function(pquo) {
-    if (!rlang::quo_is_null(pquo) && !rlang::quo_is_symbol(pquo) &&
-        rlang::as_label(rlang::quo_squash(pquo)) == "calibration_model_name()") {
+    if (rlang::quo_is_call(pquo) && rlang::call_name(pquo) == "calibration_model_name")
       sym(calibration_model_name())
-    } else {
-      pquo
-    }
+    else pquo
   }
   x_quo <- enquo(x) %>% eval_calibration_var()
   panel_quo <- enquo(panel) %>% eval_calibration_var()
