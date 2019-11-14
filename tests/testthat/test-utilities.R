@@ -40,9 +40,9 @@ test_that("nesting and unnesting functions work properly", {
   mutated_nested_df <- mutate(nested_df, test_data = purrr::map(nested_data, ~dplyr::rename(.x, x2=x, z2=z)))
   expect_equal(unnest_select_data(mutated_nested_df, z) %>% names(), c("y", "z", "nested_data", "test_data"))
   expect_error(unnest_select_data(nested_df, z, nested = test_data), "refers to unknown column")
-  expect_equal(unnest_select_data(mutated_nested_df, z2, nested = test_data) %>% names(), c("y", "z2", "test_data", "nested_data"))
+  expect_equal(unnest_select_data(mutated_nested_df, z2, nested = test_data) %>% names(), c("y", "nested_data", "z2", "test_data"))
   expect_equal(unnest_select_data(mutated_nested_df, z2, nested = test_data, keep_other_list_data = FALSE) %>% names(), c("y", "z2", "test_data"))
-  expect_equal(unnest_select_data(mutated_nested_df, z2, nested = test_data, keep_remaining_nested_data = FALSE) %>% names(), c("y", "z2", "nested_data"))
+  expect_equal(unnest_select_data(mutated_nested_df, z2, nested = test_data, keep_remaining_nested_data = FALSE) %>% names(), c("y", "nested_data", "z2"))
   expect_equal(unnest_select_data(mutated_nested_df, z2, nested = test_data, keep_other_list_data = FALSE, keep_remaining_nested_data = FALSE) %>% names(), c("y", "z2"))
 
 })
@@ -121,7 +121,7 @@ test_that("regression functions work properly", {
   expect_equal(df_w_models2$name, c("a", "a", "a", "b", "b", "b"))
   expect_equal(df_w_models2$model_name, c("m1", "m2", "m3", "m1", "m2", "m3"))
   expect_equal(names(df_w_coefs2 <- unnest_select_data(df_w_models2, select = term, nested_data = model_coefs)),
-               c("name", "model_name", "model_enough_data", "model_data_points", "term", "model_coefs", "model_data", "model_fit", "model_summary"))
+               c("name", "model_data", "model_name", "model_enough_data", "model_data_points", "model_fit", "term", "model_coefs", "model_summary"))
   expect_equal(nrow(df_w_coefs2), 2*2 + 2*4)
   expect_equal(filter(df_w_coefs2, model_name == "m1")$term %>% unique(), c("(Intercept)", "x"))
   expect_equal(filter(df_w_coefs2, model_name == "m2")$term %>% unique(), c("(Intercept)", "x", "I(x^2)", "x:I(x^2)"))
@@ -144,7 +144,7 @@ test_that("regression functions work properly", {
   expect_equal(unnest_model_column(df_w_nested_models, model_column = model_coefs, select = c(term, p.value), nested_model = TRUE) %>% names(),
                c("name", "model_name", "model_enough_data", "model_data_points", "term", "p.value"))
   expect_equal(unnest_model_column(df_w_nested_models, model_column = model_coefs, select = c(term, p.value), nested_model = TRUE, keep_other_list_data = TRUE) %>% names(),
-               c("name", "model_name", "model_enough_data", "model_data_points", "term", "p.value", "model_data", "model_params"))
+               c("name", "model_data", "model_name", "model_enough_data", "model_data_points", "term", "p.value", "model_params"))
 
   # unnest summary
   expect_equal(unnest_model_column(df_w_models, select = c(r.squared, p.value, sigma), model_column = model_summary) %>% names(),
@@ -152,7 +152,7 @@ test_that("regression functions work properly", {
   expect_equal(unnest_model_column(df_w_nested_models, select = c(r.squared, p.value, sigma), model_column = model_summary, nested_model = TRUE) %>% names(),
                c("name", "model_name", "model_enough_data", "model_data_points", "r.squared", "p.value", "sigma"))
   expect_equal(unnest_model_column(df_w_nested_models, select = c(r.squared, p.value, "sigma"), model_column = model_summary, nested_model = TRUE, keep_other_list_data = TRUE) %>% names(),
-               c("name", "model_name", "model_enough_data", "model_data_points", "r.squared", "p.value", "sigma", "model_data", "model_params"))
+               c("name", "model_data", "model_name", "model_enough_data", "model_data_points", "r.squared", "p.value", "sigma", "model_params"))
 
   # unnest summary for multiple models
   expect_equal(nrow(m_sum <- unnest_model_column(df_w_models2, select = c(r.squared, p.value, sigma), model_column = model_summary)), 6L)

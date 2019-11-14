@@ -178,6 +178,10 @@ unnest_select_data <- function(dt, select = everything(), nested_data = nested_d
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   dt_cols <- get_column_names(!!enquo(dt), nested_data = enquo(nested_data), type_reqs = list(nested_data = "list"))
 
+  # columns before the nested data
+  original_cols <- names(dt)
+  before_nd_cols <- tidyselect::vars_select(original_cols, 1:!!sym(dt_cols$nested_data))
+
   # add row number and remove NULL columns
   dt <-
     dt %>%
@@ -208,11 +212,19 @@ unnest_select_data <- function(dt, select = everything(), nested_data = nested_d
     renested_dt <- left_join(renested_dt, dt[c("..row..", list_cols)], by = "..row..")
   }
 
+  # remaining before_nd_cols and new cols
+  before_nd_cols <- intersect(before_nd_cols, names(renested_dt))
+  new_cols <- setdiff(names(renested_dt), original_cols) %>% setdiff(before_nd_cols)
+  if (dt_cols$nested_data %in% before_nd_cols) before_nd_cols <- head(before_nd_cols, -1)
+
+
   # return
   renested_dt %>%
     # make sure no replication if only partial dataframe is unnested and rows are replicated despite remaining unique
     # includes ..row.. on purpose to make sure no unanticipated row collapes is possible
     unique() %>%
+    # reconstruct order
+    dplyr::select(!!!c(before_nd_cols, new_cols), everything()) %>%
     # rename the select columns
     dplyr::rename(!!!select_cols$select) %>%
     # remove the ..row.. again (just used for ID purposes)
