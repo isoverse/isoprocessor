@@ -4,20 +4,20 @@
 \alias{iso_apply_calibration}
 \title{Apply calibration}
 \usage{
-iso_apply_calibration(dt, predict, calibration = "",
+iso_apply_calibration(dt, predict, calibration = last_calibration(dt),
   predict_range = NULL, calculate_error = FALSE,
   quiet = default(quiet))
 }
 \arguments{
 \item{dt}{nested data table with \code{all_data} and calibration columns (see \link{iso_generate_calibration})}
 
-\item{predict}{which value to calculate, must be one of the regression's independent variables}
+\item{predict}{which value to calculate, must be the regression's independent variable (regression is applied directly) or one of the independent variables (regression will be automatically inverted).}
 
 \item{calibration}{name of the calibration to apply, must match the name used in \link{iso_generate_calibration} (if any)}
 
-\item{predict_range}{vector of 2 numbers, if provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the \code{predict_range} is usually only necessary if the calibration range should be extrapolated significantely.}
+\item{predict_range}{vector of 2 numbers. Only relevant for predicting dependent variables (regression inversion). If provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the \code{predict_range} is usually only necessary if the calibration range must be extrapolated significantely.}
 
-\item{calculate_error}{whether to estimate the standard error from the calibration (using the Wald method as described in \link[investr]{invest}), stores the result in the new \code{predict_error} column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.}
+\item{calculate_error}{whether to estimate the standard error from the calibration. Stores the result in the new \code{predict_error} column. If the \code{predict} variable is a dependent variable, will do so using the Wald method (as described in \link[investr]{invest}). Note that error calculation for dependent variables slows this function down a fair bit and is therefore disabled by default.}
 
 \item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
 }

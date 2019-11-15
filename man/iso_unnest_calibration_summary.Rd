@@ -4,7 +4,7 @@
 \alias{iso_unnest_calibration_summary}
 \title{Unnest calibration summary}
 \usage{
-iso_unnest_calibration_summary(dt, calibration = "",
+iso_unnest_calibration_summary(dt, calibration = last_calibration(dt),
   select = everything(), keep_remaining_nested_data = FALSE,
   keep_other_list_data = TRUE)
 }

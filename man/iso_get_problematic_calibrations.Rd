@@ -4,7 +4,7 @@
 \alias{iso_get_problematic_calibrations}
 \title{Fetch problematic calibrations}
 \usage{
-iso_get_problematic_calibrations(dt, calibration = "",
+iso_get_problematic_calibrations(dt, calibration = last_calibration(dt),
   select = everything(), quiet = default(quiet))
 }
 \arguments{

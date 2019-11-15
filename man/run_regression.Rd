@@ -7,9 +7,9 @@
 run_regression(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   model_data = model_data, model_filter_condition = NULL,
   model_name = model_name, model_enough_data = model_enough_data,
-  model_fit = model_fit, model_coefs = model_coefs,
-  model_summary = model_summary, model_params = model_params,
-  in_reg = in_reg, residual = residual)
+  model_data_points = model_data_points, model_fit = model_fit,
+  model_coefs = model_coefs, model_summary = model_summary,
+  model_params = model_params, in_reg = in_reg, residual = residual)
 }
 \arguments{
 \item{dt}{data table}
@@ -27,6 +27,8 @@ run_regression(dt, model, nest_model = FALSE, min_n_datapoints = 1,
 \item{model_name}{new column with the model formulae or names if supplied}
 
 \item{model_enough_data}{new column with information on whether the model has enough data (based on the required degrees of freedom for the model)}
+
+\item{model_data_points}{new column with information on the number of data points the model is based on}
 
 \item{model_fit}{the new model objects column}
 
