@@ -24,7 +24,7 @@ iso_export_calibration_to_excel <- function(
   if(missing(calibs_df) || !is.data.frame(calibs_df)) stop("calibs_df must be a data frame", call. = FALSE)
   if(!"all_data" %in% names(calibs_df)) stop("no all_data column, make sure this is still a nested calibration data frame (i.e. the direct output of iso_generate_calibration, iso_apply_calibration, or iso_evaluate_calibration_range", call. = FALSE)
   if(!is(calibs_df$all_data, "list")) stop("all_data column is not a list, make sure this is still a nested calibration data frame (i.e. the direct output of iso_generate_calibration, iso_apply_calibration, or iso_evaluate_calibration_range", call. = FALSE)
-  calibs <- find_calibrations(calibs_df)
+  calibs <- all_calibrations(calibs_df)
   if (length(calibs) == 0) stop("there do not seem to be any calibrations in this data frame, make sure to generate calibrations using iso_generate_calibration", call. = FALSE)
 
   # explicit units

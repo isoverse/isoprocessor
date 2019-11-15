@@ -280,7 +280,7 @@ unnest_model_column <- function(dt, model_column, model_params = model_params, n
   return(dt)
 }
 
-# model aux functions =====
+# regression aux functions =====
 
 # internal information on supported models
 get_supported_models <- function() {
@@ -294,7 +294,42 @@ get_supported_models <- function() {
   )
 }
 
-# internal functiont o parse regression objects for information
+# get all variables used in a formula (in order of appearance)
+# @param formula_q quoted formula expression of form y1 + y2 + ... ~ x1 + x2 + x3
+get_formula_variables <- function(formula_q, get_x = TRUE, get_y = TRUE) {
+
+  # safety check
+  if (!rlang::is_call(formula_q) || !rlang::call_name(formula_q) == "~")
+    stop("not a valid formula of form 'y ~ ...': ", rlang::as_label(formula_q), call. = FALSE)
+
+  # deconstruct a call
+  get_vars <- function(q) {
+    q_syms <- list()
+    if (rlang::is_symbol(q)) q_syms <- rlang::as_label(q)
+    else if (rlang::is_call(q)) q_syms <- map(rlang::call_args(q), deconstruct)
+    return(unique(unlist(q_syms)))
+  }
+
+  # take apart the formula
+  left_q <- rlang::call_args(formula_q)[[1]]
+  right_q <- rlang::call_args(formula_q)[[2]]
+  vars <- c()
+  if (get_y) vars <- c(vars, get_vars(left_q))
+  if (get_x) vars <- c(vars, get_vars(right_q))
+  return(vars)
+}
+
+# get model formula variables
+# @param model_q quoted model
+# @param ... passed on to get_formula_variables
+get_model_formula_variables <- function(model_q, ...) {
+  args <- rlang::call_args(model_q)
+  formula_idx <- which(names(args) == "formula")
+  if (length(formula_idx) != 1L) formula_idx <- 1L
+  get_formula_variables(args[[formula_idx]], ...)
+}
+
+# internal functiont to parse regression objects for information
 parse_regressions <- function(df, reg_col) {
   stopifnot(is.data.frame(df))
   stopifnot(reg_col %in% names(df))
@@ -391,12 +426,12 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
       glue::glue_collapse(sep = ", ", last = " and ")
     if (sum(!ok) > 1)
       glue::glue(
-        "'{params}' do not refer to valid models ",
+        "'{params}' do not refer to supported models ",
         "({glue::glue_collapse(supported_models, sep = ', ', last = ' or ')})") %>%
       stop(call. = FALSE)
     else
       glue::glue(
-        "'{params}' does not refer to a valid model ",
+        "'{params}' does not refer to a supported model ",
         "({glue::glue_collapse(supported_models, sep = ', ', last = ' or ')})") %>%
       stop(call. = FALSE)
   }

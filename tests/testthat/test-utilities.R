@@ -1,5 +1,7 @@
 context("Utilities and other convenience functions")
 
+# nesting and unnesting ======
+
 test_that("nesting and unnesting functions work properly", {
 
   # testing the nest data function
@@ -47,6 +49,11 @@ test_that("nesting and unnesting functions work properly", {
 
 })
 
+# regression variables ===
+
+# FIXME: implement tests for get_model_formula_variables
+# FIXME: use get_model_formula_variables to do the y variable tests in generate_regression
+
 # regression functions =====
 
 test_that("regression functions work properly", {
@@ -58,8 +65,8 @@ test_that("regression functions work properly", {
   expect_error(run_regression(test_df), "model_data.* unknown column")
   expect_error(run_regression(nested_test_df), "no .* model")
   expect_error(run_regression(nested_test_df, model = list()), "no .* model")
-  expect_error(run_regression(nested_test_df, model = x), "not .* valid model")
-  expect_error(run_regression(nested_test_df, model = nls(y ~ x)), "not .* valid model")
+  expect_error(run_regression(nested_test_df, model = x), "not .* supported model")
+  expect_error(run_regression(nested_test_df, model = nls(y ~ x)), "not .* supported model")
   expect_error(run_regression(nested_test_df, model = lm(y ~ x), model_data = name), "not .* correct column type")
   expect_error(run_regression(nested_test_df, model = lm(y + x ~ x)), "multiple dependent.*variables")
 
