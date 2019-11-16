@@ -467,6 +467,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   # models data frame
   models <-
     tibble(
+      ..model_id.. = 1:length(lquos),
       model_formula = map_chr(lquos, quo_text),
       !!dt_new_cols$model_name := ifelse(nchar(names(lquos)) > 0, names(lquos), model_formula),
       ..model_quo.. = map(lquos, identity),
@@ -597,8 +598,8 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   }
 
   data_w_models %>%
-    arrange(..group_id..) %>%
-    select(-..group_id.., -..model_quo..)
+    arrange(..group_id.., ..model_id..) %>%
+    select(-..group_id.., -..model_quo.., -..model_id..)
 }
 
 # run regressions in grouped blocks (uses nest_data and run_regression)

@@ -1082,7 +1082,8 @@ iso_plot_data <- function(
 #' @inheritParams iso_plot_data
 #' @inheritParams iso_prepare_for_calibration
 #' @param dt data frame to plot data from
-#' @param smooth_method whether to add a smoothing ribbon to the residuals plot, by default using the \code{loess} method. Use \code{smooth_method = NULL} to omit smoothing curve.
+#' @param trendlines whether to add trendlines to the residuals plot to highlight patterns more easily. To customize more, set \code{trendlines=FALSE} and provide a manual \code{geom_smooth()} in the \code{...} of this function.
+#' @param value_ranges whether to add value ranges (via \link{iso_mark_value_range}) to the plot to highlight residuals variation. To customize more, set \code{value_ranges=FALSE} and add ranges back in using \link{iso_mark_value_range} directly.
 #' @param ... additional parameters passed to \link{iso_plot_data}
 #' @family plot functions
 #' @export
@@ -1091,7 +1092,8 @@ iso_plot_residuals <- function(
   color = calibration_model_name(),
   panel = calibration_model_name(),
   points = TRUE,
-  smooth_method = "loess",
+  trendlines = TRUE,
+  value_ranges = TRUE,
   ...) {
 
   # safety checks
@@ -1117,6 +1119,10 @@ iso_plot_residuals <- function(
     # fetch peak table with the added residuals from the calibration
     iso_get_calibration_data() %>%
     filter(!!sym(calib_vars$in_reg)) %>%
+    mutate(!!sym(calib_vars$model_name) :=
+             if (is.factor(!!sym(calib_vars$model_name))) !!sym(calib_vars$model_name)
+             else forcats::as_factor(!!sym(calib_vars$model_name)) %>% forcats::fct_inorder()
+    ) %>%
     # visualize
     iso_plot_data(
       x = !!enquo(x), y = !!y_quo,
@@ -1125,10 +1131,12 @@ iso_plot_residuals <- function(
       panel = !!panel_quo, panel_scales = "fixed",
       ...,
       geom_hline(yintercept = 0, color = "black", size = 1, linetype = 2),
-      if (!is.null(smooth_method)) geom_smooth(method = smooth_method)
+      if (trendlines) geom_smooth(method = "loess", se = FALSE)
     ) +
-    theme(legend.position = "bottom", legend.direction = "vertical") +
-    labs(color = NULL)
+    theme(legend.position = "bottom", legend.direction = "vertical")
+
+  if (value_ranges)
+    p <- iso_mark_value_range(p, mean = FALSE, sd = 1)
 
   return(p)
 }
@@ -1246,7 +1254,7 @@ iso_mark_value_range <- function(p, mean = TRUE, sd = 1:2) {
 
   # panel asethetics
   if (!is.null(p$facet$params)) {
-    group_quos <- c(group_quos, p$facet$params$cols, p$facet$params$rows)
+    group_quos <- c(group_quos, p$facet$params$facets, p$facet$params$cols, p$facet$params$rows)
   }
 
   # make std_devs quos
