@@ -299,14 +299,14 @@ get_supported_models <- function() {
 get_formula_variables <- function(formula_q, get_x = TRUE, get_y = TRUE) {
 
   # safety check
-  if (!rlang::is_call(formula_q) || !rlang::call_name(formula_q) == "~")
+  if (!rlang::quo_is_call(formula_q) || !rlang::call_name(formula_q) == "~")
     stop("not a valid formula of form 'y ~ ...': ", rlang::as_label(formula_q), call. = FALSE)
 
   # deconstruct a call
-  get_vars <- function(q) {
+  get_vars <- function(arg) {
     q_syms <- list()
-    if (rlang::is_symbol(q)) q_syms <- rlang::as_label(q)
-    else if (rlang::is_call(q)) q_syms <- map(rlang::call_args(q), deconstruct)
+    if (rlang::is_symbol(arg)) q_syms <- rlang::as_label(arg)
+    else if (rlang::is_call(arg)) q_syms <- map(rlang::call_args(arg), get_vars)
     return(unique(unlist(q_syms)))
   }
 
@@ -326,7 +326,7 @@ get_model_formula_variables <- function(model_q, ...) {
   args <- rlang::call_args(model_q)
   formula_idx <- which(names(args) == "formula")
   if (length(formula_idx) != 1L) formula_idx <- 1L
-  get_formula_variables(args[[formula_idx]], ...)
+  get_formula_variables(quo(!!args[[formula_idx]]), ...)
 }
 
 # internal functiont to parse regression objects for information
@@ -335,7 +335,7 @@ parse_regressions <- function(df, reg_col) {
   stopifnot(reg_col %in% names(df))
   supported_models <- get_supported_models()
   df %>%
-    mutate(.model_func = map_chr(!!sym(reg_col), ~class(.x)[1])) %>%
+    mutate(.model_func = map_chr(!!sym(reg_col), ~class(.x)[1]) %>% as.character()) %>%
     left_join(get_supported_models(), by = ".model_func") %>%
     mutate(
       .model_supported = !is.na(.model_invertible),
@@ -394,6 +394,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   dt_quo <- enquo(dt)
   dt_cols <- get_column_names(!!dt_quo, model_data = enquo(model_data), type_reqs = list(model_data = "list"))
+  dt <- eval_tidy(dt_quo)
   dt_new_cols <- get_new_column_names(
     model_name = enquo(model_name),
     model_enough_data = enquo(model_enough_data), model_data_points = enquo(model_data_points),
@@ -405,34 +406,61 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   # models
   if (missing(model)) stop("no regression model supplied", call. = FALSE)
   model_quos <- enquo(model)
-  # resolve list of models
-  if (quo_is_call(model_quos) && rlang::call_name(model_quos) %in% c("c", "list")) {
-    lquos <- quos(!!!rlang::call_args(model_quos))
+  if (rlang::quo_is_call(model_quos) && rlang::call_name(model_quos) == "quos") {
+    lquos <- rlang::eval_tidy(model_quos)
   } else {
-    lquos <- quos(!!model_quos)
+    # resolve list of models
+    if (rlang::quo_is_call(model_quos) && rlang::call_name(model_quos) %in% c("c", "list")) {
+      lquos <- quos(!!!rlang::call_args(model_quos))
+    } else {
+      lquos <- quos(!!model_quos)
+    }
   }
 
   # safety checks on models
   if (length(lquos) == 0) stop("no regression model supplied", call. = FALSE)
   supported_models <- get_supported_models()$.model_func
   lquos_are_models <- map_lgl(lquos, function(lq) rlang::quo_is_call(lq) && rlang::call_name(lq) %in% supported_models)
+  lquos_info <-
+    ifelse(
+      nchar(names(lquos)) > 0,
+      sprintf("%s = '%s'", names(lquos), map_chr(lquos, quo_text)),
+      sprintf("'%s'", map_chr(lquos, quo_text))
+    )
   if(!all(ok <- lquos_are_models)) {
-    params <-
-      ifelse(
-        nchar(names(lquos)[!ok]) > 0,
-        sprintf("%s = '%s'", names(lquos)[!ok], map_chr(lquos[!ok], quo_text)),
-        sprintf("'%s'", map_chr(lquos[!ok], quo_text))
-      ) %>%
-      glue::glue_collapse(sep = ", ", last = " and ")
     if (sum(!ok) > 1)
       glue::glue(
-        "'{params}' do not refer to supported models ",
+        "{glue::glue_collapse(lquos_info[!ok], sep = \", \", last = \" and \")} ",
+        "do not refer to supported models ",
         "({glue::glue_collapse(supported_models, sep = ', ', last = ' or ')})") %>%
       stop(call. = FALSE)
     else
       glue::glue(
-        "'{params}' does not refer to a supported model ",
+        "{glue::glue_collapse(lquos_info[!ok], sep = \", \", last = \" and \")} ",
+        "does not refer to a supported model ",
         "({glue::glue_collapse(supported_models, sep = ', ', last = ' or ')})") %>%
+      stop(call. = FALSE)
+  }
+
+  # safety checks on variables
+  model_vars_y <- map(lquos, get_model_formula_variables, get_x = FALSE)
+  model_vars_x <- map(lquos, get_model_formula_variables, get_y = FALSE)
+  dt_names <- map(dt[[dt_cols$model_data]], names) %>% unlist() %>% unique()
+  missing_cols <- map2(model_vars_x, model_vars_y, ~setdiff(c(.x, .y), dt_names))
+  all_cols_available <- map_lgl(missing_cols, ~length(.x) == 0)
+  if (!all(ok <- all_cols_available)) {
+    glue::glue(
+      "not all variables exist in the data set:\n - ",
+      sprintf("model %s is missing column(s) '%s'", lquos_info[!ok], map_chr(missing_cols[!ok], ~paste(.x, collapse = "', '"))) %>%
+        paste(collapse = "\n - ")) %>%
+      stop(call. = FALSE)
+  }
+
+  # safety check on independent variables
+  model_ny <- map_int(model_vars_y, length)
+  if (!all(ok <- model_ny == 1L)) {
+    glue("multiple dependent (y) variables are not supported, problematic model(s): ",
+         "{paste(lquos_info[!ok], collapse = ', ')}") %>%
       stop(call. = FALSE)
   }
 
@@ -441,7 +469,8 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
     tibble(
       model_formula = map_chr(lquos, quo_text),
       !!dt_new_cols$model_name := ifelse(nchar(names(lquos)) > 0, names(lquos), model_formula),
-      model_quo = map(lquos, identity)
+      ..model_quo.. = map(lquos, identity),
+      ..model_ys.. = model_vars_y,
     ) %>%
     # don't keep separate formula column
     select(-model_formula)
@@ -455,7 +484,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
 
   # combination of data and model
   data_w_models <-
-    eval_tidy(dt_quo) %>%
+    dt %>%
     mutate(..group_id.. = row_number()) %>% # for easier sorting
     tidyr::crossing(models) %>%
     # evaluation of model
@@ -470,7 +499,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
       !!dt_new_cols$model_data_points := ..n_data_points..,
       # fit the model if there is any data
       !!dt_new_cols$model_fit :=
-        pmap(list(m = model_quo, d = !!sym(dt_cols$model_data), run = !!sym(dt_new_cols$model_enough_data)),
+        pmap(list(m = ..model_quo.., d = !!sym(dt_cols$model_data), run = !!sym(dt_new_cols$model_enough_data)),
              # strip units to avoid issues with non-numeric predictors
              function(m, d, run) if (run) eval_tidy(m, data = filter(iso_strip_units(d), !!filter_quo)) else NULL),
       # figure out which fits actually have enough degrees of freedom
@@ -496,23 +525,8 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
       # get the summary
       !!dt_new_cols$model_summary :=
         map2(!!sym(dt_new_cols$model_fit), !!sym(dt_new_cols$model_enough_data),
-             ~if (.y) { as_tibble(glance(.x)) } else { NULL }),
-      # unique id
-      ..unique_id.. = row_number()
+             ~if (.y) { as_tibble(glance(.x)) } else { NULL })
     )
-
-  # check number of indepedent variables
-  model_info <-
-    data_w_models %>%
-    filter(!!sym(dt_new_cols$model_enough_data)) %>%
-    select("..unique_id..", dt_new_cols$model_fit, dt_new_cols$model_name) %>%
-    parse_regressions(reg_col = dt_new_cols$model_fit)
-
-  if (!all(model_info$.model_ny == 1L)) {
-    glue("multiple dependent (y) variables are not supported, problematic model(s): ",
-         "{collapse(filter(model_info, .model_ny != 1L)[[dt_new_cols$model_name]] %>% unique(), sep = ', ')}") %>%
-      stop(call. = FALSE)
-  }
 
   # warnings
   if ((not_enough <- sum(!data_w_models[[dt_new_cols$model_enough_data]])) > 0) {
@@ -541,11 +555,10 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   # add residuals
   data_w_models <-
     data_w_models %>%
-    left_join(select(model_info, ..unique_id.., .model_ys), by = "..unique_id..") %>%
     mutate(
       !!dt_cols$model_data :=
         pmap(
-          list(d = !!sym(dt_cols$model_data), fit = !!sym(dt_new_cols$model_fit), run = !!sym(dt_new_cols$model_enough_data), y = .model_ys),
+          list(d = !!sym(dt_cols$model_data), fit = !!sym(dt_new_cols$model_fit), run = !!sym(dt_new_cols$model_enough_data), y = ..model_ys..),
           function(d, fit, run, y) {
             d[[dt_new_cols$in_reg]] <- FALSE
             d[[dt_new_cols$residual]] <- NA_real_
@@ -566,7 +579,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
           })
     ) %>%
     # remove temp variables
-    select(-.model_ys, -..unique_id.., -..n_data_points..)
+    select(-..n_data_points.., -..model_ys..)
 
   # nest model
   if (nest_model) {
@@ -585,7 +598,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
 
   data_w_models %>%
     arrange(..group_id..) %>%
-    select(-..group_id.., -model_quo)
+    select(-..group_id.., -..model_quo..)
 }
 
 # run regressions in grouped blocks (uses nest_data and run_regression)

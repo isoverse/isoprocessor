@@ -51,8 +51,22 @@ test_that("nesting and unnesting functions work properly", {
 
 # regression variables ===
 
-# FIXME: implement tests for get_model_formula_variables
-# FIXME: use get_model_formula_variables to do the y variable tests in generate_regression
+test_that("test that model variables work", {
+
+  expect_error(get_formula_variables(1), "must be a quosure")
+  expect_error(get_formula_variables(quo(1)), "not a valid formula")
+  expect_error(get_formula_variables(quo(x)), "not a valid formula")
+  expect_error(get_formula_variables(quo(x+y)), "not a valid formula")
+  expect_equal(get_formula_variables(quo(y~.)), c("y", "."))
+  expect_equal(get_formula_variables(quo(.~x)), c(".", "x"))
+  expect_equal(get_formula_variables(quo(y~x)), c("y", "x"))
+  expect_equal(get_formula_variables(quo(y1+y2~x1+x2)), c("y1", "y2", "x1", "x2"))
+  expect_equal(get_formula_variables(quo(y1+y2~x1+x2^2+x2*x3+sqrt(x4)^I(x5))), c("y1", "y2", "x1", "x2", "x3", "x4", "x5"))
+  expect_equal(get_formula_variables(quo(y1+y2~x1+x2^2+x2*x3+sqrt(x4)^I(x5)), get_x = FALSE), c("y1", "y2"))
+  expect_equal(get_formula_variables(quo(y1+y2~x1+x2^2+x2*x3+sqrt(x4)^I(x5)), get_y = FALSE), c("x1", "x2", "x3", "x4", "x5"))
+  expect_null(get_formula_variables(quo(y~x), get_x = FALSE, get_y = FALSE))
+
+})
 
 # regression functions =====
 
@@ -68,6 +82,7 @@ test_that("regression functions work properly", {
   expect_error(run_regression(nested_test_df, model = x), "not .* supported model")
   expect_error(run_regression(nested_test_df, model = nls(y ~ x)), "not .* supported model")
   expect_error(run_regression(nested_test_df, model = lm(y ~ x), model_data = name), "not .* correct column type")
+  expect_error(run_regression(nested_test_df, model = lm(y ~ DNE)), "not all variables exist")
   expect_error(run_regression(nested_test_df, model = lm(y + x ~ x)), "multiple dependent.*variables")
 
   # single model
