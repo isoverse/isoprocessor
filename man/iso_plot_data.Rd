@@ -33,7 +33,7 @@ iso_plot_data(dt, x, y, ..., y_error = NULL, group = NULL,
 
 \item{linetype}{variable to use for linetype aesthetic for the plot}
 
-\item{alpha}{variable to use for the opacity aesthetic for the plot (1 = 100% opaque, 0 = completely transparent)}
+\item{alpha}{variable to use for the opacity aesthetic for the plot (1 = 100%% opaque, 0 = completely transparent)}
 
 \item{label}{this is primarily of use for turning the generated ggplots into interactive plots via \code{\link[plotly]{ggplotly}} as the \code{label} will be rendered as an additional mousover label.}
 
