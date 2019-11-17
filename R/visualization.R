@@ -1167,7 +1167,7 @@ iso_plot_calibration_parameters <- function(
 
   # pull out all coefficients (all for now, should always show all?)
   calib_coefs <- dt %>%
-    iso_unnest_calibration_coefs(
+    iso_get_calibration_coefs(
       calibration = calibration,
       keep_other_list_data = FALSE
     )
@@ -1175,7 +1175,7 @@ iso_plot_calibration_parameters <- function(
   # pull out requested summary
   select_quo <- enquo(select_from_summary)
   calib_summary <- dt %>%
-    iso_unnest_calibration_summary(
+    iso_get_calibration_summary(
       calibration = calibration,
       select = everything(),
       keep_other_list_data = FALSE
