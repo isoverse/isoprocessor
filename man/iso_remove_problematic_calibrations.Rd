@@ -4,8 +4,9 @@
 \alias{iso_remove_problematic_calibrations}
 \title{Remove problematic calibrations}
 \usage{
-iso_remove_problematic_calibrations(dt, calibration = "",
-  remove_calib_ok_column = TRUE, quiet = default(quiet))
+iso_remove_problematic_calibrations(dt,
+  calibration = last_calibration(dt), remove_calib_ok_column = TRUE,
+  quiet = default(quiet))
 }
 \arguments{
 \item{dt}{nested data table with column \code{all_data} (see \link{iso_prepare_for_calibration})}

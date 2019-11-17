@@ -178,6 +178,10 @@ unnest_select_data <- function(dt, select = everything(), nested_data = nested_d
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   dt_cols <- get_column_names(!!enquo(dt), nested_data = enquo(nested_data), type_reqs = list(nested_data = "list"))
 
+  # columns before the nested data
+  original_cols <- names(dt)
+  before_nd_cols <- tidyselect::vars_select(original_cols, 1:!!sym(dt_cols$nested_data))
+
   # add row number and remove NULL columns
   dt <-
     dt %>%
@@ -190,31 +194,58 @@ unnest_select_data <- function(dt, select = everything(), nested_data = nested_d
   regular_cols <- setdiff(names(dt), c(list_cols, dt_cols$nested))
 
   # only unnest the main list column
-  unnested_dt <- unnest(dt[c(regular_cols, dt_cols$nested_data)], !!sym(dt_cols$nested_data))
+  unnested_dt <- unnest(dt[c("..row..", dt_cols$nested_data)], !!sym(dt_cols$nested_data))
 
   # safety check on whether the select columns exist in the unnested df
-  select_cols <- get_column_names(unnested_dt, select = enquo(select), n_reqs = list(select = "*"))
+  select_cols <- get_column_names(unnested_dt, select = enquo(select), n_reqs = list(select = "*"))$select
+
+  # remove ..row.. from select cols
+  select_cols <- select_cols[select_cols != "..row.."]
+
+  # rename
+  unnested_dt <- dplyr::rename(unnested_dt, !!!select_cols)
+  select_cols <- names(select_cols)
+
+  # check if there are naming conflicts between the select_cols and existing columns
+  if (length(overlap <- intersect(regular_cols, select_cols)) > 0) {
+    glue::glue(
+      "some newly unnested columns have conflicting name(s) with existing ",
+      "columns in the data frame and will be omitted from the unnested ",
+      "data frame. Please rename these columns in the select statement to ",
+      "preserve them: '{paste(overlap, collapse = \"', '\")}'") %>%
+      warning(immediate. = TRUE, call. = FALSE)
+    select_cols <- setdiff(select_cols, regular_cols)
+  }
 
   # renest without the selected parameters
-  keep_cols <- c(regular_cols, select_cols$select) %>% unique()
+  keep_cols <- c("..row..", select_cols) %>% unique()
   if (length(setdiff(names(unnested_dt), keep_cols)) > 0 && keep_remaining_nested_data) {
     # renest if un-nesting is incomplete (i.e. data remains) and remaining data should be kept
     renested_dt <- unnested_dt %>% nest_data(group_by = !!keep_cols, nested = !!sym(dt_cols$nested_data))
   } else
     renested_dt <- unnested_dt[keep_cols]
 
-  # merge the extra columns back in (easier this way with the renest than using unnest for this)
+  # merge back with the original data frame
+  renested_dt <- dt[regular_cols] %>% right_join(renested_dt, by = "..row..")
+
+  # merge the extra list columns back in (easier this way with the renest than using unnest for this)
   if (keep_other_list_data && length(list_cols) > 0) {
     renested_dt <- left_join(renested_dt, dt[c("..row..", list_cols)], by = "..row..")
   }
+
+  # remaining before_nd_cols and new cols
+  before_nd_cols <- intersect(before_nd_cols, names(renested_dt))
+  new_cols <- setdiff(names(renested_dt), original_cols) %>% setdiff(before_nd_cols)
+  if (dt_cols$nested_data %in% before_nd_cols) before_nd_cols <- head(before_nd_cols, -1)
+
 
   # return
   renested_dt %>%
     # make sure no replication if only partial dataframe is unnested and rows are replicated despite remaining unique
     # includes ..row.. on purpose to make sure no unanticipated row collapes is possible
     unique() %>%
-    # rename the select columns
-    dplyr::rename(!!!select_cols$select) %>%
+    # reconstruct order
+    dplyr::select(!!!c(before_nd_cols, new_cols), everything()) %>%
     # remove the ..row.. again (just used for ID purposes)
     dplyr::select(-..row..)
 }
@@ -268,6 +299,88 @@ unnest_model_column <- function(dt, model_column, model_params = model_params, n
   return(dt)
 }
 
+# regression aux functions =====
+
+# internal information on supported models
+get_supported_models <- function() {
+  # nls not supported for now
+  tibble::tribble(
+    ~.model_func,  ~.model_invertible,
+    "lm",         TRUE,
+    "glm",        TRUE,
+    "lme",        TRUE,
+    "loess",      FALSE
+  )
+}
+
+# get all variables used in a formula (in order of appearance)
+# @param formula_q quoted formula expression of form y1 + y2 + ... ~ x1 + x2 + x3
+get_formula_variables <- function(formula_q, get_x = TRUE, get_y = TRUE) {
+
+  # safety check
+  if (!rlang::quo_is_call(formula_q) || !rlang::call_name(formula_q) == "~")
+    stop("not a valid formula of form 'y ~ ...': ", rlang::as_label(formula_q), call. = FALSE)
+
+  # deconstruct a call
+  get_vars <- function(arg) {
+    q_syms <- list()
+    if (rlang::is_symbol(arg)) q_syms <- rlang::as_label(arg)
+    else if (rlang::is_call(arg)) q_syms <- map(rlang::call_args(arg), get_vars)
+    return(unique(unlist(q_syms)))
+  }
+
+  # take apart the formula
+  left_q <- rlang::call_args(formula_q)[[1]]
+  right_q <- rlang::call_args(formula_q)[[2]]
+  vars <- c()
+  if (get_y) vars <- c(vars, get_vars(left_q))
+  if (get_x) vars <- c(vars, get_vars(right_q))
+  return(vars)
+}
+
+# get model formula variables
+# @param model_q quoted model
+# @param ... passed on to get_formula_variables
+get_model_formula_variables <- function(model_q, ...) {
+  args <- rlang::call_args(model_q)
+  formula_idx <- which(names(args) == "formula")
+  if (length(formula_idx) != 1L) formula_idx <- 1L
+  get_formula_variables(quo(!!args[[formula_idx]]), ...)
+}
+
+# internal functiont to parse regression objects for information
+parse_regressions <- function(df, reg_col) {
+  stopifnot(is.data.frame(df))
+  stopifnot(reg_col %in% names(df))
+  supported_models <- get_supported_models()
+  df %>%
+    mutate(.model_func = map_chr(!!sym(reg_col), ~class(.x)[1]) %>% as.character()) %>%
+    left_join(get_supported_models(), by = ".model_func") %>%
+    mutate(
+      .model_supported = !is.na(.model_invertible),
+      .model_invertible = .model_supported & .model_invertible,
+      .model_vars = map(!!sym(reg_col), ~tibble(var = all.vars(.x$terms), dependent = var %in% all.vars(.x$terms[[2]]))),
+      .model_xs = map(.model_vars, ~filter(.x, !dependent)$var),
+      .model_nx = map_int(.model_xs, length),
+      .model_ys = map(.model_vars, ~filter(.x, dependent)$var),
+      .model_ny = map_int(.model_ys, length)
+    )
+}
+
+# implement a simple glance dispatch for loess models since this is not available form the broom package
+# pulls out all the single values and renames s to sigma for consistency with glance.lm
+glance.loess <- function(m) {
+  smry <- summary(m)
+  tibble::as_tibble(smry[map_int(smry, length) == 1L]) %>%
+    dplyr::rename(sigma = s)
+}
+
+# implement a simple tidy dispatch for loess models since this is not available from the broom package
+# coefficients don't make sense for loess models so returns an empty data frame
+tidy.loess <- function(m) {
+  tibble(term = character(0), estimate = double(0), std.error = double(0), statistic = double(0), p.value = double(0))
+}
+
 # regressions =====
 
 # note - documented but not exported
@@ -281,6 +394,7 @@ unnest_model_column <- function(dt, model_column, model_params = model_params, n
 #' @param model_filter_condition a filter to apply to the data before running the regression (if only a subset of the data is part of the calibration data) - stored in \code{in_reg}, by default no filter
 #' @param model_name new column with the model formulae or names if supplied
 #' @param model_enough_data new column with information on whether the model has enough data (based on the required degrees of freedom for the model)
+#' @param model_data_points new column with information on the number of data points the model is based on
 #' @param model_fit the new model objects column
 #' @param model_coefs the new model coefficients nested data frame column
 #' @param model_summary the new model summary nested data frame column
@@ -290,6 +404,7 @@ unnest_model_column <- function(dt, model_column, model_params = model_params, n
 run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
                            model_data = model_data, model_filter_condition = NULL,
                            model_name = model_name, model_enough_data = model_enough_data,
+                           model_data_points = model_data_points,
                            model_fit = model_fit, model_coefs = model_coefs,
                            model_summary = model_summary, model_params = model_params,
                            in_reg = in_reg, residual = residual) {
@@ -298,8 +413,10 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   dt_quo <- enquo(dt)
   dt_cols <- get_column_names(!!dt_quo, model_data = enquo(model_data), type_reqs = list(model_data = "list"))
+  dt <- eval_tidy(dt_quo)
   dt_new_cols <- get_new_column_names(
-    model_name = enquo(model_name), model_enough_data = enquo(model_enough_data),
+    model_name = enquo(model_name),
+    model_enough_data = enquo(model_enough_data), model_data_points = enquo(model_data_points),
     model_fit = enquo(model_fit), model_coefs = enquo(model_coefs), model_summary = enquo(model_summary),
     model_params = enquo(model_params),
     in_reg = enquo(in_reg), residual = enquo(residual))
@@ -308,37 +425,72 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   # models
   if (missing(model)) stop("no regression model supplied", call. = FALSE)
   model_quos <- enquo(model)
-  # resolve list of models
-  if (quo_is_call(model_quos) && rlang::call_name(model_quos) %in% c("c", "list")) {
-    lquos <- quos(!!!rlang::call_args(model_quos))
+  if (rlang::quo_is_call(model_quos) && rlang::call_name(model_quos) == "quos") {
+    lquos <- rlang::eval_tidy(model_quos)
   } else {
-    lquos <- quos(!!model_quos)
+    # resolve list of models
+    if (rlang::quo_is_call(model_quos) && rlang::call_name(model_quos) %in% c("c", "list")) {
+      lquos <- quos(!!!rlang::call_args(model_quos))
+    } else {
+      lquos <- quos(!!model_quos)
+    }
   }
 
   # safety checks on models
   if (length(lquos) == 0) stop("no regression model supplied", call. = FALSE)
-  # @NOTE: loess and nls not currently supported because would have to find a way to make inversion work
-  supported_models <- c("lm", "glm", "lme")
-  lquos_are_models <- map_lgl(lquos, function(lq) quo_is_call(lq) && rlang::call_name(lq) %in% supported_models)
+  supported_models <- get_supported_models()$.model_func
+  lquos_are_models <- map_lgl(lquos, function(lq) rlang::quo_is_call(lq) && rlang::call_name(lq) %in% supported_models)
+  lquos_info <-
+    ifelse(
+      nchar(names(lquos)) > 0,
+      sprintf("%s = '%s'", names(lquos), map_chr(lquos, quo_text)),
+      sprintf("'%s'", map_chr(lquos, quo_text))
+    )
   if(!all(ok <- lquos_are_models)) {
-    params <-
-      str_c(names(lquos)[!ok] %>% { ifelse(nchar(.) > 0, str_c(., " = "), .) },
-            map_chr(lquos[!ok], quo_text)) %>%
-      collapse("', '", last = "' and '")
     if (sum(!ok) > 1)
-      glue("'{params}' do not refer to valid models ",
-           "({collapse(supported_models, sep = ', ', last = ' or ')})") %>% stop(call. = FALSE)
+      glue::glue(
+        "{glue::glue_collapse(lquos_info[!ok], sep = \", \", last = \" and \")} ",
+        "do not refer to supported models ",
+        "({glue::glue_collapse(supported_models, sep = ', ', last = ' or ')})") %>%
+      stop(call. = FALSE)
     else
-      glue("'{params}' does not refer to a valid model ",
-           "({collapse(supported_models, sep = ', ', last = ' or ')})") %>% stop(call. = FALSE)
+      glue::glue(
+        "{glue::glue_collapse(lquos_info[!ok], sep = \", \", last = \" and \")} ",
+        "does not refer to a supported model ",
+        "({glue::glue_collapse(supported_models, sep = ', ', last = ' or ')})") %>%
+      stop(call. = FALSE)
+  }
+
+  # safety checks on variables
+  model_vars_y <- map(lquos, get_model_formula_variables, get_x = FALSE)
+  model_vars_x <- map(lquos, get_model_formula_variables, get_y = FALSE)
+  dt_names <- map(dt[[dt_cols$model_data]], names) %>% unlist() %>% unique()
+  missing_cols <- map2(model_vars_x, model_vars_y, ~setdiff(c(.x, .y), dt_names))
+  all_cols_available <- map_lgl(missing_cols, ~length(.x) == 0)
+  if (!all(ok <- all_cols_available)) {
+    glue::glue(
+      "not all variables exist in the data set:\n - ",
+      sprintf("model %s is missing column(s) '%s'", lquos_info[!ok], map_chr(missing_cols[!ok], ~paste(.x, collapse = "', '"))) %>%
+        paste(collapse = "\n - ")) %>%
+      stop(call. = FALSE)
+  }
+
+  # safety check on independent variables
+  model_ny <- map_int(model_vars_y, length)
+  if (!all(ok <- model_ny == 1L)) {
+    glue("multiple dependent (y) variables are not supported, problematic model(s): ",
+         "{paste(lquos_info[!ok], collapse = ', ')}") %>%
+      stop(call. = FALSE)
   }
 
   # models data frame
   models <-
     tibble(
+      ..model_id.. = 1:length(lquos),
       model_formula = map_chr(lquos, quo_text),
       !!dt_new_cols$model_name := ifelse(nchar(names(lquos)) > 0, names(lquos), model_formula),
-      model_quo = map(lquos, identity)
+      ..model_quo.. = map(lquos, identity),
+      ..model_ys.. = model_vars_y,
     ) %>%
     # don't keep separate formula column
     select(-model_formula)
@@ -352,20 +504,22 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
 
   # combination of data and model
   data_w_models <-
-    eval_tidy(dt_quo) %>%
+    dt %>%
     mutate(..group_id.. = row_number()) %>% # for easier sorting
     tidyr::crossing(models) %>%
     # evaluation of model
     mutate(
       # check if there is any data
-      !!dt_new_cols$model_enough_data := map_lgl(!!sym(dt_cols$model_data), ~{
+      ..n_data_points.. = map_int(!!sym(dt_cols$model_data), ~{
         data <- .x
         check_expressions(data, filter_quo)
-        nrow(filter(data, !!filter_quo)) >= min_n_datapoints
+        nrow(filter(data, !!filter_quo))
       }),
+      !!dt_new_cols$model_enough_data := ..n_data_points.. >= min_n_datapoints,
+      !!dt_new_cols$model_data_points := ..n_data_points..,
       # fit the model if there is any data
       !!dt_new_cols$model_fit :=
-        pmap(list(m = model_quo, d = !!sym(dt_cols$model_data), run = !!sym(dt_new_cols$model_enough_data)),
+        pmap(list(m = ..model_quo.., d = !!sym(dt_cols$model_data), run = !!sym(dt_new_cols$model_enough_data)),
              # strip units to avoid issues with non-numeric predictors
              function(m, d, run) if (run) eval_tidy(m, data = filter(iso_strip_units(d), !!filter_quo)) else NULL),
       # figure out which fits actually have enough degrees of freedom
@@ -381,10 +535,10 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
           mutate(as_tibble(tidy(.x)),
                  # add in significant level summary
                  signif = case_when(
-                   p.value < 0.001 ~ "***",
-                   p.value < 0.01 ~ "**",
-                   p.value < 0.05 ~ "*",
-                   p.value < 0.1 ~ ".",
+                   p.value < 0.001 ~ "*** (p < 0.001)",
+                   p.value < 0.01 ~  "**  (p < 0.01)",
+                   p.value < 0.05 ~  "*   (p < 0.05)",
+                   p.value < 0.1 ~   ".   (p < 0.1)",
                    TRUE ~ "-")
           )
         } else NULL),
@@ -395,13 +549,28 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
     )
 
   # warnings
-  if ((not_enough <- sum(!data_w_models[[dt_new_cols$model_enough_data]])) > 0)
+  if ((not_enough <- sum(!data_w_models[[dt_new_cols$model_enough_data]])) > 0) {
+
     glue("{not_enough} of {nrow(data_w_models)} regressions have insufficient ",
          "degrees of freedom (not enough data given the regression models and/or ",
-         "requested minimum number of data points) - please double check that all",
-         "peaks are mapped correctly (see ?iso_get_problematic_peak_mappings and ",
-         "?iso_summarize_peak_mappings)") %>%
+         "requested minimum number of data points):\n - ",
+         # note: difficult to account for groupings here but it's important to provide some information
+         paste(
+           sprintf("model %d ('%s'): %s", 1:nrow(data_w_models),
+                   data_w_models[[dt_new_cols$model_name]],
+                   ifelse(
+                     data_w_models[[dt_new_cols$model_enough_data]],
+                     sprintf("%d data points (enough)", data_w_models$..n_data_points..),
+                     sprintf("%d data points (NOT enough)", data_w_models$..n_data_points..)
+                   )),
+           collapse = "\n - "
+         ),
+         "\nPlease double check that all peaks are mapped correctly ",
+         "(see ?iso_get_problematic_peak_mappings and ",
+         "?iso_summarize_peak_mappings) and that the filter condition ",
+         "('{quo_text(filter_quo)}') is correct. ") %>%
     warning(immediate. = TRUE, call. = FALSE)
+  }
 
   # add residuals
   data_w_models <-
@@ -409,19 +578,28 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
     mutate(
       !!dt_cols$model_data :=
         pmap(
-          list(d = !!sym(dt_cols$model_data), fit = !!sym(dt_new_cols$model_fit), run = !!sym(dt_new_cols$model_enough_data)),
-          function(d, fit, run) {
+          list(d = !!sym(dt_cols$model_data), fit = !!sym(dt_new_cols$model_fit), run = !!sym(dt_new_cols$model_enough_data), y = ..model_ys..),
+          function(d, fit, run, y) {
             d[[dt_new_cols$in_reg]] <- FALSE
             d[[dt_new_cols$residual]] <- NA_real_
             if (run) {
               # find which ones are in reg
               d[[dt_new_cols$in_reg]] <- rlang::eval_tidy(filter_quo, data = d)
-              # add residuals
-              d[d[[dt_new_cols$in_reg]], dt_new_cols$residual] <- residuals(fit)
+              # calculate residuals
+              resids <- rep(NA_real_, nrow(d))
+              resids[d[[dt_new_cols$in_reg]]] <- residuals(fit)
+              # process units
+              y_units <- iso_get_units(d[[y]])
+              if (!is.na(y_units)) {
+                resids <- iso_double_with_units(resids, units = y_units)
+              }
+              d[[dt_new_cols$residual]] <- resids
             }
             return(d)
           })
-    )
+    ) %>%
+    # remove temp variables
+    select(-..n_data_points.., -..model_ys..)
 
   # nest model
   if (nest_model) {
@@ -439,8 +617,8 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   }
 
   data_w_models %>%
-    arrange(..group_id..) %>%
-    select(-..group_id.., -model_quo)
+    arrange(..group_id.., ..model_id..) %>%
+    select(-..group_id.., -..model_quo.., -..model_id..)
 }
 
 # run regressions in grouped blocks (uses nest_data and run_regression)
@@ -460,18 +638,18 @@ run_grouped_regression <- function(dt, group_by = NULL, model = NULL, model_data
 # note - documented but not exported
 # @FIXME: fix documentation, the inheritance from run_regression is not quite right
 # @NOTE: model_name is only included for error reporting purposes - is that silly?
-#' invert a regression for calibration purposes
+#' apply a regression for calibration purposes
 #'
-#' note: this is optimized for inverting regressions, but should also do prediction for regular regression at some point
+#' this function can predict dependent variables (y) from calibration regressions as well as independent variables (xs) by regression inversion for single and multi-variate linear regressions
 #'
 #' @param dt data table with calibrations
-#' @param predict which value to calculate, must be one of the regression's independent variables
-#' @param calculate_error whether to estimate the standard error from the calibration (using the Wald method as described in \link[investr]{invest}), stores the result in the new \code{predict_error} column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.
+#' @param predict which value to calculate, must be the regression's independent variable (regression is applied directly) or one of the independent variables (regression will be automatically inverted).
+#' @param calculate_error whether to estimate the standard error from the calibration. Stores the result in the new \code{predict_error} column. If the \code{predict} variable is a dependent variable, will do so using the Wald method (as described in \link[investr]{invest}). Note that error calculation for dependent variables slows this function down a fair bit and is therefore disabled by default.
 #' @inheritParams run_regression
 #' @inheritParams unnest_model_column
 #' @param predict_value the new column in the model_data that holds the predicted value
 #' @param predict_error the new column in the model_data that holds the error of the predicted value (always created but \code{NA} if \code{calculate_error = FALSE})
-#' @param predict_range vector of 2 numbers, if provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the \code{predict_range} is usually only necessary if the calibration range should be extrapolated significantely.
+#' @param predict_range vector of 2 numbers. Only relevant for predicting dependent variables (regression inversion). If provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the \code{predict_range} is usually only necessary if the calibration range must be extrapolated significantely.
 apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error = FALSE,
                              model_data = model_data, model_name = model_name,
                              model_fit = model_fit, model_params = model_params,
@@ -514,35 +692,33 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
     predict = enquo(predict), predict_value = enquo(predict_value),
     predict_error = enquo(predict_error))
 
-  # check that predict variable is part of all regressions
+  # figure out all the necesary information for applying the regression
+  supported_models <- get_supported_models()
   dt <-
     dt %>%
+    # general information about the model parameters
+    parse_regressions(reg_col = dt_cols$model_fit) %>%
     mutate(
-      .predict_vars = map(
-        !!sym(dt_cols$model_fit),
-        ~tibble(var = all.vars(.x$terms), dependent = var %in% all.vars(.x$terms[[2]]))
-      ),
-      # only allowing inverting regression for independent variables
-      # @FIXME: consider doing a two way split here and allowing regular predict on the dependent variable!
-      # note: consider scenario though where dependent variable is e.g. log(y) or similar - possible to deal with that?
-      .predict_x = dt_new_cols$predict,
-      .predict_info = map(.predict_vars, ~filter(.x, var == dt_new_cols$predict)),
-      .predict_ok = map_lgl(.predict_info, ~nrow(.x) == 1),
+      # information about the prediction variable
+      .predict_var = dt_new_cols$predict,
+      .predict_info = map(.model_vars, ~filter(.x, var == dt_new_cols$predict)),
+      .predict_var_ok = map_lgl(.predict_info, ~nrow(.x) == 1),
       .predict_dependent = map_lgl(.predict_info, ~identical(.x$dependent, TRUE)),
-      .predict_y = map(.predict_vars, ~filter(.x, dependent)$var),
-      .predict_y_ok = map_lgl(.predict_y, ~length(.x) == 1),
-      .predict_other_xs = map(.predict_vars, ~filter(.x, var != dt_new_cols$predict, !dependent)$var)
+      # y variable of the model (only 1, this is checked during run_regression)
+      .predict_y = .model_ys,
+      # x variables (including the predict_var if it's an x value)
+      .predict_xs = map(.model_vars, ~filter(.x, var != dt_new_cols$predict, !dependent)$var)
     )
 
   # safety checks
-  if (!all(dt$.predict_ok)) {
-    glue("cannot apply regression - variable '{dt_new_cols$predict}' is not a regressor in the following model(s): ",
-         "{collapse(filter(dt, !.predict_ok)[[dt_cols$model_name]] %>% unique(), sep = ', ')}") %>%
+  if (!all(dt$.predict_var_ok)) {
+    glue("cannot apply regression - variable '{dt_new_cols$predict}' is not a variable in the following model(s): ",
+         "{collapse(filter(dt, !.predict_var_ok)[[dt_cols$model_name]] %>% unique(), sep = ', ')}") %>%
       stop(call. = FALSE)
   }
-  if (!all(dt$.predict_y_ok)) {
-    glue("cannot apply regression - multiple dependent (y) variables are not supported, problematic model(s): ",
-         "{collapse(filter(dt, !.predict_y_ok)[[dt_cols$model_name]] %>% unique(), sep = ', ')}") %>%
+  if (!all(dt$.predict_dependent | dt$.model_invertible)) {
+    glue("encountered regression model type(s) that cannot be inverted (only dependent variables can be predicted for these): ",
+         "{collapse(filter(dt, !.predict_dependent & !.model_invertible)$.model_func %>% unique(), sep = ', ')}") %>%
       stop(call. = FALSE)
   }
 
@@ -550,24 +726,26 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
   safe_invest <- safely(invest)
   invest_interval_method <- if (calculate_error) "Wald" else "none"
 
-  # apply inversion
+  # apply regression
   dt <-
     dt %>%
     mutate(
       !!dt_cols$model_data :=
         pmap(
           list(d = !!sym(dt_cols$model_data), fit = !!sym(dt_cols$model_fit), name = !!sym(dt_cols$model_name),
-               x = .predict_x, dependent = .predict_dependent,
-               y = .predict_y, other_xs = .predict_other_xs),
+               var = .predict_var, dependent = .predict_dependent,
+               y = .predict_y, xs = .predict_xs),
 
           # process data set for a single model
-          function(d, fit, name, x, dependent, y, other_xs) {
+          function(d, fit, name, var, dependent, y, xs) {
 
             # units of predict var
-            x_units <- iso_get_units(d[[x]])
+            var_units <- iso_get_units(d[[var]])
 
             # check for enough data (standard eval to avoid quoting trouble)
-            d_enough_data <- rowSums(is.na(d[c(y, other_xs)]) * 1) == 0
+            d_enough_data <-
+              if (dependent) rowSums(is.na(d[c(y, xs)]) * 1) == 0
+              else rowSums(is.na(d[xs]) * 1) == 0
 
             # data with rows
             d <- d %>%
@@ -577,19 +755,20 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
               )
 
             if (dependent) {
-              # predict dependent variable by normal regression predict
-              new_data <- d %>% select(other_xs) %>% iso_strip_units()
-              pred <- predict.lm(fit, newdata = new_data, se.fit = TRUE)
+              # normal predict =====
+              # predict dependent variable (y) by normal regression predict
+              new_data <- d %>% select(xs) %>% iso_strip_units()
+              pred <- stats::predict(fit, newdata = new_data)
               d_prediction <-
                 tibble(
                   ..rn.. = d$..rn..,
-                  ..estimate.. = pred$fit,
-                  ..se.. = pred$se.fit,
+                  ..estimate.. = if (calculate_error) pred$fit else pred,
+                  ..se.. = if (calculate_error) pred$se.fit else NA_real_,
                   ..problem.. = NA_character_
                 )
-
             } else {
-              # predict independent variable by inversion
+              # inversion predict ======
+              # predict an independent variable by inversion
 
               # range
               if(!is.null(predict_range)) {
@@ -598,7 +777,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
               } else {
                 # estimate predict range based on available values
                 # NOTE: should this be only values that were used for calib? (i.e. have residual column set)
-                range <- base::range(as.numeric(d[[x]]), na.rm = TRUE)
+                range <- base::range(as.numeric(d[[var]]), na.rm = TRUE)
               }
               range_tolerance_escalation <- c(0, 1, 10, 100, 1000)
 
@@ -621,7 +800,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
                     for(range_tolerance in range_tolerance_escalation) {
                       # try to find fit
                       out <- safe_invest(
-                        fit, y0 = .[[y]], x0.name = x, data = ., newdata = .[other_xs],
+                        fit, y0 = .[[y]], x0.name = var, data = ., newdata = .[xs],
                         interval = invest_interval_method,
                         lower = range[1] - range_tolerance * diff(range),
                         upper = range[2] + range_tolerance * diff(range),
@@ -645,7 +824,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
                       estimate <- out$result
                     } else if (str_detect(out$error$message, "not found in the search interval")) {
                       problem <- glue(
-                        "No solution for '{x}' in the interval {range[1] - range_tolerance * diff(range)} ",
+                        "No solution for '{var}' in the interval {range[1] - range_tolerance * diff(range)} ",
                         "to {range[2] + range_tolerance * diff(range)}, potential fit is too far outside ",
                         "the calibration range",
                         "- consider manually adjusting parameter 'predict_range'.") %>%
@@ -656,7 +835,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
                   } else {
                     # not enough data
                     problem <- glue("Not enough data, missing a value for at least one of the variables: ",
-                                    "'{collapse(c(y, other_xs), sep = \"', '\", last = \"' or '\")}'") %>%
+                                    "'{collapse(c(y, xs), sep = \"', '\", last = \"' or '\")}'") %>%
                       as.character()
                   }
 
@@ -670,12 +849,12 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
             }
 
             # units
-            if (!is.na(x_units)) {
+            if (!is.na(var_units)) {
               d_prediction <-
                 d_prediction %>%
                 mutate(
-                  ..estimate.. = iso_double_with_units(..estimate.., units = x_units),
-                  ..se.. = iso_double_with_units(..se.., units = x_units)
+                  ..estimate.. = iso_double_with_units(..estimate.., units = var_units),
+                  ..se.. = iso_double_with_units(..se.., units = var_units)
                 )
             }
 
@@ -685,7 +864,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
                 group_by(..problem..) %>%
                 summarize(n = length(..rn..), rows = collapse(..rn.., sep = ", ", last = " and ")) %>%
                 mutate(message = glue("{n} data rows ({rows}) failed with the following error/warning: {..problem..}"))
-              glue("failed to calculate '{x}' with regression model '{name}' for {nrow( d_problematic)}/{nrow(d_prediction)} data entries:\n",
+              glue("failed to calculate '{var}' with regression model '{name}' for {nrow( d_problematic)}/{nrow(d_prediction)} data entries:\n",
                    " - {collapse(problems$message, sep = '\n - ')}") %>%
                 warning(immediate. = TRUE, call. = FALSE)
 
@@ -704,7 +883,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
   # cleanup
   dt <- dt %>%
     # remove helper columns
-    select(-starts_with(".predict"))
+    select(-starts_with(".predict"), -starts_with(".model"))
 
   # remove unnested columns if in nested mode
   if (nested_model) {

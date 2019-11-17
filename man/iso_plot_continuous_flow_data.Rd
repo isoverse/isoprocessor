@@ -83,8 +83,13 @@ This function provides easy plotting for mass and ratio chromatograms from conti
 }
 \seealso{
 Other plot functions: \code{\link{iso_format}},
+  \code{\link{iso_mark_calibration_range}},
+  \code{\link{iso_mark_outliers}},
+  \code{\link{iso_mark_value_range}},
+  \code{\link{iso_plot_data}},
   \code{\link{iso_plot_dual_inlet_data}},
   \code{\link{iso_plot_raw_data}},
+  \code{\link{iso_plot_residuals}},
   \code{\link{iso_prepare_continuous_flow_plot_data}}
 }
 \concept{plot functions}

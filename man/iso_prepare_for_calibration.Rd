@@ -5,12 +5,14 @@
 \title{Prepare data set for calibration}
 \usage{
 iso_prepare_for_calibration(dt, group_by = NULL,
-  quiet = default(quiet))
+  nest_existing_calibrations = FALSE, quiet = default(quiet))
 }
 \arguments{
 \item{dt}{data table}
 
 \item{group_by}{what to group by for indidual calibration calculations (use c(...) to select multiple) - set \code{group_by = NULL} to avoid grouping}
+
+\item{nest_existing_calibrations}{whether to nest existing calibrations. This is usually not necessary and only leads to larger data objects. By default, existing calibrations are therefore never included in the nested data set.}
 
 \item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
 }
@@ -18,5 +20,5 @@ iso_prepare_for_calibration(dt, group_by = NULL,
 a nested data set with the \code{group_by} columns out front and the remaining data in a new nested column named \code{all_data}
 }
 \description{
-Nests data set in preparation for calibration calculations. Use the \code{group_by} parameter to group analyses as appropriate for calibration. Use \link{iso_unnest_data} to easily pull out additional columns from the nested data frame in \code{all_data} at any point before, during or after calibration.
+Nests data set in preparation for calibration calculations. Use the \code{group_by} parameter to group analyses as appropriate for calibration. Use \link{iso_get_calibration_data} to easily pull out columns from the nested data frame in \code{all_data} at any point before, during or after calibration.
 }

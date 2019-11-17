@@ -83,7 +83,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.1</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.5</span>
       </span>
     </div>
 
@@ -156,7 +156,7 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>calibs_df</th>
-      <td><p>calibration(s) data frame (i.e. the output of functions like <a href='iso_generate_calibration.html'>iso_generate_calibration</a>, <a href='iso_apply_calibration.html'>iso_apply_calibration</a>, <a href='iso_evaluate_calibration_range.html'>iso_evaluate_calibration_range</a>). Must still be nested (i.e. before running any of the <code>iso_unnest...</code> functions) to make sure it contains alll information.</p></td>
+      <td><p>data frame that includes calibration columns (i.e. the output of functions like <a href='iso_generate_calibration.html'>iso_generate_calibration</a>, <a href='iso_apply_calibration.html'>iso_apply_calibration</a>, <a href='iso_evaluate_calibration_range.html'>iso_evaluate_calibration_range</a>). Can be the output from <a href='iso_get_calibration_data.html'>iso_get_calibration_data</a> if called after a calibration has been generated.</p></td>
     </tr>
     <tr>
       <th>filepath</th>

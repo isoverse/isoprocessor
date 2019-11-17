@@ -42,9 +42,9 @@ test_that("test that calibration variables work properly", {
   # get calibration vars function
   expect_error(get_calibration_vars(), "missing")
   expect_equal(get_calibration_vars(""),
-               list(calib_name = "", model_name = "calib", model_enough_data = "calib_ok", model_params = "calib_params", residual = "resid", in_reg = "in_calib", in_range = "in_range"))
+               list(calib_name = "", model_name = "calib", model_enough_data = "calib_ok", model_data_points = "calib_points", model_params = "calib_params", residual = "resid", in_reg = "in_calib", in_range = "in_range"))
   expect_equal(vars <- get_calibration_vars("x"),
-               list(calib_name = "'x' ", model_name = "x_calib", model_enough_data = "x_calib_ok", model_params = "x_calib_params", residual = "x_resid", in_reg = "x_in_calib", in_range = "x_in_range"))
+               list(calib_name = "'x' ", model_name = "x_calib", model_enough_data = "x_calib_ok", model_data_points = "x_calib_points", model_params = "x_calib_params", residual = "x_resid", in_reg = "x_in_calib", in_range = "x_in_range"))
 
   # check calibration cols function
   expect_error(check_calibration_cols(42), "not a data frame")
@@ -59,36 +59,62 @@ test_that("test that calibration variables work properly", {
 test_that("test default behavior of calibrations", {
 
   # test calibration
-  expect_message(df <- iso_prepare_for_calibration(ggplot2::mpg, group_by = cyl),
-                 "preparing.*calibration")
-  expect_equal(df %>% find_calibrations(), character(0))
-  expect_message(
-    df_calib <- df %>% iso_generate_calibration(model = lm(hwy ~ cty), is_std_peak = TRUE),
-    "generating calibration.*1 model.*4 data group.*filter \'TRUE\'.*new column \'resid\'.*new column \'in_calib\'"
+  expect_message(df <- iso_prepare_for_calibration(
+    mutate(ggplot2::mpg, datetime = Sys.time(), `Date & Time` = Sys.time()), group_by = year),
+    "preparing.*calibration")
+  expect_equal(df %>% all_calibrations(), character(0))
+  expect_equal(df %>% last_calibration(check = FALSE), character(0))
+  expect_error(df %>% last_calibration(), "not find.*calibration")
+  expect_warning(
+    df %>% iso_generate_calibration(model = lm(hwy ~ cty), is_std_peak = TRUE),
+    "parameter.*was renamed to.*use_in_calib"
   )
-  expect_equal(df_calib %>% find_calibrations(), "")
-  expect_message(
-    df_calib2 <- df_calib %>% iso_generate_calibration(model = lm(cty ~ hwy), calibration = "x", is_std_peak = TRUE),
-    "generating \'x\' calibration.*1 model.*4 data group.*filter \'TRUE\'.*new column \'x_resid\'.*new column \'x_in_calib\'"
+  expect_warning(
+    df %>% iso_generate_calibration(model = lm(hwy ~ cty), is_standard = TRUE),
+    "parameter.*was renamed to.*use_in_calib"
   )
-  expect_equal(df_calib2 %>% find_calibrations(),c("", "x"))
+  expect_message(
+    df_calib <- df %>% iso_generate_calibration(model = lm(hwy ~ cty), use_in_calib = TRUE),
+    "generating calibration.*1 model.*2 data group.*filter \'TRUE\'.*new column \'resid\'.*new column \'in_calib\'"
+  )
+  expect_equal(df_calib %>% all_calibrations(), "")
+  expect_equal(df_calib %>% last_calibration(), "")
+  expect_error(df_calib %>% iso_generate_calibration(model = lm(cty ~ hwy)), "already has an unnamed calibration")
+  expect_message(
+    df_calib2 <- df_calib %>% iso_generate_calibration(model = lm(cty ~ hwy), calibration = "x", use_in_calib = TRUE),
+    "generating \'x\' calibration.*1 model.*2 data group.*filter \'TRUE\'.*new column \'x_resid\'.*new column \'x_in_calib\'"
+  )
+  expect_equal(df_calib2 %>% all_calibrations(), c("", "x"))
+  expect_equal(df_calib2 %>% last_calibration(), "x")
+  expect_error(df_calib2 %>% iso_generate_calibration(model = lm(cty ~ hwy), calibration = "x"), "already has a calibration name.*x")
+
+  # loess
+  expect_equal(correct_loess_date_time(df, quos(lm(y ~ datetime))), quos(lm(y ~ datetime)))
+  expect_equal(correct_loess_date_time(df, quos(loess(y ~ datetime))), quos(`loess(y ~ datetime)` = loess(y ~ as.numeric(datetime))))
+  expect_equal(correct_loess_date_time(df, quos(x = loess(y ~ `Date & Time`))), quos(x = loess(y ~ as.numeric(`Date & Time`))))
+  expect_equal(
+    correct_loess_date_time(df, quos(lm(y ~ datetime), loess(y ~ cty), loess(y ~ `Date & Time`), y = loess(y ~ datetime + datetime * `Date & Time`^2))),
+    quos(lm(y ~ datetime), loess(y ~ cty), `loess(y ~ \`Date & Time\`)` = loess(y ~ as.numeric(`Date & Time`)), y = loess(y ~ as.numeric(datetime) + as.numeric(datetime) * as.numeric(`Date & Time`)^2))
+  )
+  expect_warning(df %>% iso_generate_calibration(model = loess(cty ~ hwy), use_in_calib = TRUE, quiet = TRUE), "discouraged")
+  expect_silent(df %>% iso_generate_calibration(model = loess(cty ~ hwy), calibration = "drift", use_in_calib = TRUE, quiet = TRUE))
+
 
   # FIXME: continue testin these!
-
 })
 
 # problematic calibrations ====
 
 test_that("test that problematic calibrations can be removed properly", {
 
-  expect_error(iso_get_problematic_calibrations(), "no data table")
-  expect_error(iso_get_problematic_calibrations(42), "not a data frame")
-  expect_error(iso_get_problematic_calibrations(tibble()), "unknown column")
-  expect_message(iso_get_problematic_calibrations(tibble(calib_ok = TRUE)), "no problematic calibrations")
-  expect_message(out <- iso_get_problematic_calibrations(tibble(name = c("x", "y"), calib_ok = c(TRUE, FALSE)), select = name), "fetching problematic.*1 of 2")
+  expect_error(iso_get_problematic_calibrations(), "no data frame")
+  expect_error(iso_get_problematic_calibrations(42), "no data frame")
+  expect_error(iso_get_problematic_calibrations(tibble()), "could not find.*calibration")
+  expect_message(iso_get_problematic_calibrations(tibble(calib_ok = TRUE, calib_params = list(tibble()))), "no problematic calibrations")
+  expect_message(out <- iso_get_problematic_calibrations(tibble(name = c("x", "y"), calib_ok = c(TRUE, FALSE), calib_params = list(tibble())), select = name), "fetching problematic.*1 of 2")
   expect_equal(out, tibble(name = "y"))
 
-  expect_message(out <- iso_remove_problematic_calibrations(tibble(name = c("x", "y"), calib_ok = c(TRUE, FALSE))), "removing problematic.*1 of 2")
-  expect_equal(out, tibble(name = "x"))
+  expect_message(out <- iso_remove_problematic_calibrations(tibble(name = c("x", "y"), calib_ok = c(TRUE, FALSE), calib_params = list(tibble()))), "removing problematic.*1 of 2")
+  expect_equal(select(out, name), tibble(name = "x"))
 
 })

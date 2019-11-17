@@ -83,7 +83,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.1</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.5</span>
       </span>
     </div>
 
@@ -146,7 +146,7 @@
     
     </div>
 
-    <pre class="usage"><span class='fu'>iso_apply_calibration</span>(<span class='no'>dt</span>, <span class='no'>predict</span>, <span class='kw'>calibration</span> <span class='kw'>=</span> <span class='st'>""</span>,
+    <pre class="usage"><span class='fu'>iso_apply_calibration</span>(<span class='no'>dt</span>, <span class='no'>predict</span>, <span class='kw'>calibration</span> <span class='kw'>=</span> <span class='fu'>last_calibration</span>(<span class='no'>dt</span>),
   <span class='kw'>predict_range</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>calculate_error</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))</pre>
     
@@ -159,7 +159,7 @@
     </tr>
     <tr>
       <th>predict</th>
-      <td><p>which value to calculate, must be one of the regression's independent variables</p></td>
+      <td><p>which value to calculate, must be the regression's independent variable (regression is applied directly) or one of the independent variables (regression will be automatically inverted).</p></td>
     </tr>
     <tr>
       <th>calibration</th>
@@ -167,11 +167,11 @@
     </tr>
     <tr>
       <th>predict_range</th>
-      <td><p>vector of 2 numbers, if provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the <code>predict_range</code> is usually only necessary if the calibration range should be extrapolated significantely.</p></td>
+      <td><p>vector of 2 numbers. Only relevant for predicting dependent variables (regression inversion). If provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the <code>predict_range</code> is usually only necessary if the calibration range must be extrapolated significantely.</p></td>
     </tr>
     <tr>
       <th>calculate_error</th>
-      <td><p>whether to estimate the standard error from the calibration (using the Wald method as described in <a href='https://rdrr.io/pkg/investr/man/invest.html'>invest</a>), stores the result in the new <code>predict_error</code> column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.</p></td>
+      <td><p>whether to estimate the standard error from the calibration. Stores the result in the new <code>predict_error</code> column. If the <code>predict</code> variable is a dependent variable, will do so using the Wald method (as described in <a href='https://rdrr.io/pkg/investr/man/invest.html'>invest</a>). Note that error calculation for dependent variables slows this function down a fair bit and is therefore disabled by default.</p></td>
     </tr>
     <tr>
       <th>quiet</th>

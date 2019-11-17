@@ -4,20 +4,24 @@
 \alias{iso_plot_data}
 \title{Visualize the data}
 \usage{
-iso_plot_data(dt, x, y, y_error = NULL, group = NULL, color = NULL,
-  fill = NULL, shape = NULL, size = 4, linetype = NULL,
-  label = NULL, lines = FALSE, points = FALSE)
+iso_plot_data(dt, x, y, ..., y_error = NULL, group = NULL,
+  color = NULL, fill = NULL, shape = NULL, size = 4,
+  linetype = NULL, alpha = NULL, label = NULL, panel = panel ~ .,
+  panel_scales = "free_y", lines = FALSE, points = FALSE,
+  date_breaks = NULL, date_labels = "\%d \%b \%H:\%M")
 }
 \arguments{
-\item{dt}{data table}
+\item{dt}{data frame to plot data from}
 
-\item{x}{the x axis aesthetic for the calibration parameters, can be datetime, text or numeric}
+\item{x}{the column for the x-axis aesthetic. Can be a numeric, text or datetime column (text and datetime column labels will be automatically rotated by 90 degrees). For clarity of the plot, only single variables are allowed. Use named vector with \code{c(new_x = x)} to rename the x variable on the fly. By default will show units in the axis names if there are any. If a datetime column is provided for \code{x}, parameters \code{date_breaks} (example: \code{date_breaks = "2 hours"}) and \code{date_labels} can be set to fine-tune the x-axis appearance. See \link[ggplot2]{scale_date} for additional details. Note that \code{x} can also be \code{x = NULL} for single data point plots - in this case the x axis is completely omitted.}
 
-\item{y}{which columns to visualize, combine with c()}
+\item{y}{which columns to visualize. Combine with \code{c(y1, y2)} to show multiple variables in a \link[ggplot2]{facet_wrap}. Use named vector with \code{c(new_y1 = y1)} to rename variables on the fly. By default will show units in the axis names if there are any.}
+
+\item{...}{additional ggplot objects (e.g. \code{geom_smooth()}) that should be added to the plot PRIOR to the automatically generated layers for error bars, points and lines. Notet that to add geoms on top, please use regular \code{iso_plot_data() + geom_smooth() + ...} syntax instead.}
 
 \item{y_error}{an error column for drawing y error bars - if multiple \code{y} are provided, error needs to point to the same number of columns}
 
-\item{group}{what to group by, multiple columns allowed (combine with paste(...)), usually not necessary if groupings are fully defined through other aesthetics}
+\item{group}{what to group by, multiple columns allowed (combine with \code{paste(...)}), usually not necessary if groupings are fully defined through other aesthetics}
 
 \item{color}{variable to use for color aesthetic for the plot}
 
@@ -29,17 +33,34 @@ iso_plot_data(dt, x, y, y_error = NULL, group = NULL, color = NULL,
 
 \item{linetype}{variable to use for linetype aesthetic for the plot}
 
+\item{alpha}{variable to use for the opacity aesthetic for the plot (1 = 100\% opaque, 0 = completely transparent)}
+
 \item{label}{this is primarily of use for turning the generated ggplots into interactive plots via \code{\link[plotly]{ggplotly}} as the \code{label} will be rendered as an additional mousover label.}
+
+\item{panel}{whether to panel the data by anything. If using a single parameter (e.g. \code{panel = panel}), will generate a \link[ggplot2]{facet_wrap}. If using a formula (e.g. \code{panel = panel ~ .} or \code{panel = file_id ~ panel}), will generate a \link[ggplot2]{facet_grid}. The default for this parameter is to panel via facet grid by the y variable name but only if multiple \code{y} columns are provided. Otherwise will not generate any facets. If additional facet parameters are desired, please leave use \link[ggplot2]{facet_wrap} and \link[ggplot2]{facet_grid} diretly.}
+
+\item{panel_scales}{the \code{scales} parameter for the facets (if any are used)}
 
 \item{lines}{whether to plot lines (FALSE by default)}
 
 \item{points}{whether to plot points (FALSE by default)}
+
+\item{date_breaks}{what breaks to use for the x axis if it is a datetime}
+
+\item{date_labels}{datetime label pattern for x axis if it is a datetime}
 }
 \description{
-General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with \link[ggplot2]{facet_wrap} or \link[ggplot2]{theme} calls). Make sure to specify \code{lines = TRUE} and/or \code{points = TRUE} to add the layers.
+General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with \link[ggplot2]{facet_wrap} or \link[ggplot2]{theme} calls). Make sure to specify \code{lines = TRUE} and/or \code{points = TRUE} to add the lines/points respectively. Accepts multiple y variables in which case they are plotted in a \link[ggplot2]{facet_wrap} with new variables \code{panel} holding the name of the y variable panels, \code{y_value} holding the values and \code{y_error} holding the error values (if \code{y_error} is supplied). Also always generates a new column called \code{variable} that holds the variable names (\code{y}) supplied to this function.
 }
-\note{
-should probably make sure that the default columns for gather 'panel' and 'value' do not exist...
-
-it would be great to allow renaming of the columns via this (especially the y column)
+\seealso{
+Other plot functions: \code{\link{iso_format}},
+  \code{\link{iso_mark_calibration_range}},
+  \code{\link{iso_mark_outliers}},
+  \code{\link{iso_mark_value_range}},
+  \code{\link{iso_plot_continuous_flow_data}},
+  \code{\link{iso_plot_dual_inlet_data}},
+  \code{\link{iso_plot_raw_data}},
+  \code{\link{iso_plot_residuals}},
+  \code{\link{iso_prepare_continuous_flow_plot_data}}
 }
+\concept{plot functions}

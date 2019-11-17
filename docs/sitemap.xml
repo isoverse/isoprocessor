@@ -67,6 +67,21 @@
     <loc>http://isoprocessor.isoverse.org//reference/iso_generate_summary_table.html</loc>
   </url>
   <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_get_calibration_coefs.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_get_calibration_data.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_get_calibration_parameters.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_get_calibration_range.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_get_calibration_summary.html</loc>
+  </url>
+  <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_get_default_processor_parameters.html</loc>
   </url>
   <url>
@@ -94,6 +109,12 @@
     <loc>http://isoprocessor.isoverse.org//reference/iso_mark_calibration_range.html</loc>
   </url>
   <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_mark_outliers.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_mark_value_range.html</loc>
+  </url>
+  <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_mutate_peak_table.html</loc>
   </url>
   <url>
@@ -116,6 +137,9 @@
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_plot_ref_peaks.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_plot_residuals.html</loc>
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_prepare_continuous_flow_plot_data.html</loc>
@@ -158,21 +182,6 @@
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_summarize_peak_mappings.html</loc>
-  </url>
-  <url>
-    <loc>http://isoprocessor.isoverse.org//reference/iso_unnest_calibration_coefs.html</loc>
-  </url>
-  <url>
-    <loc>http://isoprocessor.isoverse.org//reference/iso_unnest_calibration_parameters.html</loc>
-  </url>
-  <url>
-    <loc>http://isoprocessor.isoverse.org//reference/iso_unnest_calibration_range.html</loc>
-  </url>
-  <url>
-    <loc>http://isoprocessor.isoverse.org//reference/iso_unnest_calibration_summary.html</loc>
-  </url>
-  <url>
-    <loc>http://isoprocessor.isoverse.org//reference/iso_unnest_data.html</loc>
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/isoprocessor-package.html</loc>

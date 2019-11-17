@@ -98,7 +98,7 @@ test_that("testing that peak mapping works", {
   expect_message(iso_map_peaks(mutate(my_dt, compound = "test"), my_peak_maps), "previous peak mappings.*9.*overwritten")
 
   # test get problematic peaks
-  expect_warning(try(iso_get_problematic_peaks()), "renamed")
+  expect_warning(tryCatch(iso_get_problematic_peaks(tibble()), error = function(e) {}), "renamed")
   expect_error(iso_get_problematic_peak_mappings(5), "not defined")
   expect_error(iso_get_problematic_peak_mappings(tibble()), "unknown columns")
   expect_error(iso_get_problematic_peak_mappings(mapped_dt, select = c()), "not.*correct number")

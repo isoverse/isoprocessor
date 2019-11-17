@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>invert a regression for calibration purposes — apply_regression • isoprocessor</title>
+<title>apply a regression for calibration purposes — apply_regression • isoprocessor</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -39,9 +39,9 @@
 
 
 
-<meta property="og:title" content="invert a regression for calibration purposes — apply_regression" />
+<meta property="og:title" content="apply a regression for calibration purposes — apply_regression" />
 
-<meta property="og:description" content="note: this is optimized for inverting regressions, but should also do prediction for regular regression at some point" />
+<meta property="og:description" content="this function can predict dependent variables (y) from calibration regressions as well as independent variables (xs) by regression inversion for single and multi-variate linear regressions" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -83,7 +83,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.1</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.5</span>
       </span>
     </div>
 
@@ -135,14 +135,14 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>invert a regression for calibration purposes</h1>
+    <h1>apply a regression for calibration purposes</h1>
     <small class="dont-index">Source: <a href='https://github.com/isoverse/isoprocessor/blob/master/R/utilities.R'><code>R/utilities.R</code></a></small>
     <div class="hidden name"><code>apply_regression.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>note: this is optimized for inverting regressions, but should also do prediction for regular regression at some point</p>
+    <p>this function can predict dependent variables (y) from calibration regressions as well as independent variables (xs) by regression inversion for single and multi-variate linear regressions</p>
     
     </div>
 
@@ -161,7 +161,7 @@
     </tr>
     <tr>
       <th>predict</th>
-      <td><p>which value to calculate, must be one of the regression's independent variables</p></td>
+      <td><p>which value to calculate, must be the regression's independent variable (regression is applied directly) or one of the independent variables (regression will be automatically inverted).</p></td>
     </tr>
     <tr>
       <th>nested_model</th>
@@ -169,7 +169,7 @@
     </tr>
     <tr>
       <th>calculate_error</th>
-      <td><p>whether to estimate the standard error from the calibration (using the Wald method as described in <a href='https://rdrr.io/pkg/investr/man/invest.html'>invest</a>), stores the result in the new <code>predict_error</code> column. Note that error calculation slows this function down a fair bit and is therefore disabled by default.</p></td>
+      <td><p>whether to estimate the standard error from the calibration. Stores the result in the new <code>predict_error</code> column. If the <code>predict</code> variable is a dependent variable, will do so using the Wald method (as described in <a href='https://rdrr.io/pkg/investr/man/invest.html'>invest</a>). Note that error calculation for dependent variables slows this function down a fair bit and is therefore disabled by default.</p></td>
     </tr>
     <tr>
       <th>model_data</th>
@@ -197,7 +197,7 @@
     </tr>
     <tr>
       <th>predict_range</th>
-      <td><p>vector of 2 numbers, if provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the <code>predict_range</code> is usually only necessary if the calibration range should be extrapolated significantely.</p></td>
+      <td><p>vector of 2 numbers. Only relevant for predicting dependent variables (regression inversion). If provided will be used for finding the solution for the predict variable. By default uses the range observed in the calibration variables. Specifying the <code>predict_range</code> is usually only necessary if the calibration range must be extrapolated significantely.</p></td>
     </tr>
     </table>
     
