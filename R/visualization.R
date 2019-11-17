@@ -1223,7 +1223,7 @@ iso_plot_calibration_parameters <- function(
     panel = !!panel_quo,
     panel_scales = panel_scales,
     ...
-  ) + labs(x = NULL, y = NULL)
+  ) + labs(y = NULL)
 
 }
 
