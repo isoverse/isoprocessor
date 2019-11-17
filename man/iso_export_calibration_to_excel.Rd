@@ -10,7 +10,7 @@ iso_export_calibration_to_excel(calibs_df, filepath, ...,
   with_explicit_units = TRUE, quiet = default(quiet))
 }
 \arguments{
-\item{calibs_df}{calibration(s) data frame (i.e. the output of functions like \link{iso_generate_calibration}, \link{iso_apply_calibration}, \link{iso_evaluate_calibration_range}). Must still be nested (i.e. before running any of the \code{iso_unnest...} functions) to make sure it contains alll information.}
+\item{calibs_df}{data frame that includes calibration columns (i.e. the output of functions like \link{iso_generate_calibration}, \link{iso_apply_calibration}, \link{iso_evaluate_calibration_range}). Can be the output from \link{iso_get_calibration_data} if called after a calibration has been generated.}
 
 \item{filepath}{the path where to store the Excel file.}
 
