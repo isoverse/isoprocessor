@@ -49,6 +49,7 @@ tmp
 *.png
 *.jpg
 *.docx
+*.xlsx
 
 # documentation
 !/docs/**/*

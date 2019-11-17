@@ -209,3 +209,147 @@ iso_calculate_peak_delats <- function(...) {
   stop("sorry, not yet implemented", call. = FALSE)
 }
 
+# calculate backgrounds ======
+
+# should become part of iso_integrate_peaks
+#' Calculate background signals
+#'
+#' This function calculates peak backgrounds from a chromatographic trace with peak table data (see \code{\link{iso_combine_raw_data_with_peak_table}}).
+#'
+#' @param data the data frame with chromatographic and peak information
+#' @param signal_pattern pattern for signal columns (by default detects voltages starting with e.g. v45 and currents starting with e.g. i45)
+#' @param time column name of the time column to use to find peak centers
+#' @param peak column name of the peak id column that identifies different peaks
+#' @param file column name of the filename column
+#' @param method what method to use to calculate backgrounds (backgrounds are ALWAYS based solely on time points marked as background)
+#'    run_const = constant background averaged across entire run
+#'    run_linear = linear background across run @FIXME NOT IMPELEMENTED YET
+#'    peak_const = constant background across single peak @FIXME NOT IMPELEMENTED YET
+#'    peak_linear = linear background across peak @FIXME NOT IMPELEMENTED YET
+#' @param bg_suffix the suffix for the new background columns
+#' @return data frame with new signal columns with bg_suffix added, as well as a p.calc_bgrd_method
+#' @note perhaps implement possibilty to pass with an actual function as method that takes the sub data frame as parameter?
+calculate_backgrounds <- function(data, method, signal_pattern = "^[vi]\\d+", bg_suffix = "_bgrd",
+                                  time = default("time"), peak = default("peak"), bgrd = default("bgrd"), file = default("file"), quiet = default("quiet")) {
+
+  # --- method functions
+  is_bg <- lazyeval::interp(~var, var = as.name(bgrd))
+  is_peak <- lazyeval::interp(~!is.na(var), var = as.name(peak))
+  make_bg_grps <- lazyeval::interp(~ c(0, diff(var)) %>% {(.>0)*1} %>% cumsum(), var = as.name(bgrd))
+  methods <- list(
+    # constat background across run
+    run_const = function(sdf) {
+      # calculate constant backgrounds from everything identified as background for all signal columns
+      bgrds <- sdf %>% filter_(.dots = is_bg) %>% select_(.dots = c(time, sig_cols)) %>% unique() %>% select_(.dots = sig_cols) %>% summarize_all(mean)
+      for (i in 1:length(sig_cols)) {
+        # assign background for whole run (if valid background was calculated)
+        sdf[[bg_cols[i]]] <- bgrds[[sig_cols[i]]] %>% { if(!is.nan(.)) . else NA_real_ }
+      }
+      return(sdf)
+    },
+
+    # linear background across run
+    run_linear = function(sdf) {
+
+      # calculate average background (and avg time) for each background group
+      bgrds <- sdf %>% identify_background_groups(target = "bg_grp", quiet = TRUE) %>% filter_(.dots = is_bg) %>%
+        select_(.dots = c(time, "bg_grp", sig_cols)) %>% group_by_("bg_grp") %>% summarize_all(mean)
+      for (i in 1:length(sig_cols)) {
+        # calculate linear regressions for the signal through time and predict backgrounds based on it
+        m <- lm(y ~ time,
+                data = bgrds %>% rename_(.dots = c(time, sig_cols[i]) %>% setNames(c("time", "y"))))
+        sdf[[bg_cols[i]]] <- predict(m, data_frame(time = sdf[[time]]))
+      }
+      return(sdf)
+    }
+  )
+
+  # safety checks
+  if(missing(data) || !is.data.frame(data))  stop("data has to be supplied as a data frame to ", sys.call(0), call. = FALSE)
+  sapply(c(file, peak, time, bgrd), col_check, data, sys.call())
+  if(missing(method)) stop("method for calculating backgrounds not specified", call. = FALSE)
+  else if (!method %in% names(methods)) stop("method not supported: '", method, "' (available: ", str_c(names(methods), collapse = ", "), ")", call. = FALSE)
+
+  # find signal columns
+  sig_cols <- names(data)[names(data) %>% str_detect(signal_pattern)]
+  if (length(sig_cols) == 0) stop("no signal columnes found (pattern=", sig_pattern, ")", call. = FALSE)
+  prefix <- sig_cols %>% str_match(signal_pattern) %>% { .[,1] }
+  bg_cols <- sig_cols %>% str_replace(prefix, str_c(prefix, bg_suffix))
+
+  # --- calculate background
+  data[,bg_cols] <- NULL
+  df <- data %>%
+    # group by file
+    group_by_(.dots = file) %>%
+    do({
+      # perform background calculation
+      sdf <- .
+      if (sdf %>% filter_(.dots = is_bg) %>% nrow() == 0) {
+        warning("cannot calculate run background (no timepoints identified as background) in file '",
+                unique(sdf[[file]]), "'", call. = FALSE, immediate. = TRUE)
+        sdf[,bg_cols] <- NA_real_
+      } else {
+        # calculate using specified method
+        sdf <- methods[[method]](sdf)
+      }
+      if (!all(bg_cols %in% names(sdf)))
+        stop("background calculation method did not produce the necessary background columns", call. = FALSE)
+      return(sdf)
+    }) %>%
+    ungroup() %>%
+    mutate(p.calc_bgrd_method = method)
+
+  # --- information
+  if (!quiet) {
+    sprintf("Info: backgrounds calculated for %d signals (%s) in %d file(s) using method '%s':",
+            sig_cols %>% length(), sig_cols %>% str_c(collapse = ", "),
+            df %>% select_(.dots = file) %>% unique() %>% nrow(),
+            method) %>% message()
+    df %>% select_(.dots = c(file, bg_cols)) %>% group_by_(.dots = file) %>%
+      summarize_all(function(x) {
+        range(x, na.rm = T) %>% {
+          if(is.na(.[1])) "NA" else if (.[1] == .[2]) signif(.[1], 3) else str_c(signif(.[1], 3), "-", signif(.[2], 3))
+        }
+      }) %>%
+      as.data.frame() %>% print(row.names = FALSE)
+  }
+
+  return(df)
+}
+
+
+# calculate areas ==============
+
+# should also become part of integrate peaks
+#' calculates area of peak from discrete signal and time measurements
+#' can deal with time points out of order as long as time and signal indices are matched
+#' @param t the time points
+#' @param y the signal data
+#' @param tstart the starting time of the signal to integrate, NULL (default) starts with the signal from the first time point
+#' @param tend the ending time of the signal to integrate, NULL (default) ends with the signal at the last time point
+#' @param const_dt if the time interval between data points is knonw to be constant use TRUE to make the computation slightly faster (~2-3 times with peaks 10,000 data points wide), default is FALSE
+#' @return integrated area in units of [y units][t units]
+calculate_area <- function(t, y, tstart = NULL, tend = NULL, const_dt = FALSE) {
+  # select range
+  if (!is.null(tstart)) {
+    y <- y[t >= tstart]
+    t <- t[t >= tstart]
+  }
+  if (!is.null(tend)) {
+    y <- y[t <= tend]
+    t <- t[t <= tend]
+  }
+
+  # sort in increasing time
+  y <- y[order(t)]
+  t <- sort(t)
+
+  # integrate
+  if (const_dt)
+    (sum(y) - 1/2 * y[1] - 1/2 * tail(y, 1)) * (t[2] - t[1]) # slightly faster but only with const dt
+  else {
+    sum((head(y, -1) + diff(y)/2) * diff(t)) # slightly slower but universal
+  }
+}
+
+

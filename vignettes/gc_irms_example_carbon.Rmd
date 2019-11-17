@@ -193,11 +193,11 @@ on_off_summary %>%
   iso_plot_data(
     x = file_datetime, y = `d13C [permil] sd`,
     size = `amp44 [V] mean`, color = id2,
-    points = TRUE
+    points = TRUE,
+    date_labels = "%b %d - %H:%M"
   ) + 
   # customize resulting ggplot
-  expand_limits(y = 0) +
-  scale_x_datetime(NULL, date_labels = "%b %d - %H:%M") 
+  expand_limits(y = 0) 
 ```
 
 # Linearity
@@ -221,12 +221,10 @@ linearity_summary <-
     select = c(amp44, area44, d13C),
     include_file_info = c(file_datetime)
   ) %>% 
-  # make units explicit
-  iso_make_units_explicit() %>% 
   # calculate linearity regression lines
   nest(data = -file_datetime) %>% 
   mutate(
-    fit = map(data, ~lm(`d13C [permil]` ~ `amp44 [V]`, data = .x)),
+    fit = map(data, ~lm(d13C ~ amp44, data = iso_strip_units(.x))),
     coefs = map(fit, broom::tidy)
   )
 
@@ -234,7 +232,7 @@ linearity_summary <-
 linearity_summary %>%
   unnest(coefs) %>%
   select(file_datetime, term, estimate, std.error) %>%
-  filter(term == "`amp44 [V]`") %>%
+  filter(term == "amp44") %>%
   mutate(
     term = "linearity [permil/V]",
     estimate = 1000 * signif(estimate, 2),
@@ -247,7 +245,7 @@ linearity_summary %>%
   unnest(data) %>% 
   # use generic data plot function
   iso_plot_data(
-    x = `amp44 [V]`, y = `d13C [permil]`,
+    x = amp44, y = d13C,
     color = format(file_datetime),
     points = TRUE
   ) +
@@ -369,17 +367,14 @@ peak_table_w_ids %>%
   group_by(file_id) %>% 
   mutate(delta_vs_avg = (`r45/44` / mean(`r45/44`) - 1) * 1000) %>% 
   ungroup() %>% 
-  # visualize
-  ggplot() +
-  aes(factor(Analysis), delta_vs_avg, fill = factor(ref_info)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        strip.text = element_text(size = 6, hjust = 0)) +
+  mutate(Analysis = factor(Analysis)) %>% 
+   # visualize
+  iso_plot_data(
+    x = Analysis, y = delta_vs_avg, fill = ref_info,
+    geom_bar(stat = "identity", position = "dodge")
+  ) + 
   labs(x = "Analysis", y = "Deviation from run average (permil)", 
-       color = "Reference\npeak", fill = "Reference\npeak") # +
-  ## optional addition: panel by folder/seq
-  # facet_grid(. ~ folder, scale = "free_x", space = "free_x")
+       color = "Reference\npeak", fill = "Reference\npeak")
 ```
 
 # Analyte peaks
@@ -394,20 +389,15 @@ peak_table_analytes <- peak_table_w_ids %>%
   # for each analysis, calculate a few useful summary statistics
   # Note: using a nest/unnest instead of group/ungroup to preserve units
   # which is not (yet) supported in grouped mutates
-  nest(data = -file_id) %>%
-  mutate(
-    data = map(data, ~mutate(
-      .x, 
-      # calculate relative area for individual peaks
-      rel_area = area44 / sum(area44, na.rm = TRUE),
-      # calculate mean area for all peaks
-      mean_area = mean(area44, na.rm = TRUE),
-      # calculate mean area and amplitude for identified peaks
-      mean_area_identified = mean(area44[!is.na(compound)], na.rm = TRUE),
-      mean_amp_identified = mean(amp44[!is.na(compound)], na.rm = TRUE)
-    ))
-  ) %>%
-  unnest(data) 
+  iso_mutate_peak_table(
+    group_by = file_id,
+    rel_area = area44 / sum(area44, na.rm = TRUE),
+    # calculate mean area for all peaks
+    mean_area = mean(area44, na.rm = TRUE),
+    # calculate mean area and amplitude for identified peaks
+    mean_area_identified = mean(area44[!is.na(compound)], na.rm = TRUE),
+    mean_amp_identified = mean(amp44[!is.na(compound)], na.rm = TRUE)
+  )
 ```
 
 ## First look
@@ -416,12 +406,10 @@ peak_table_analytes <- peak_table_w_ids %>%
 peak_table_analytes %>% 
   # focus on identified peaks (comment out this line to see ALL peaks)
   filter(!is.na(compound)) %>% 
-  # use explicit units for plotting
-  iso_make_units_explicit() %>% 
   # visualize with convenience function iso_plot_data
   iso_plot_data(
     # choose x and y (multiple y possible)
-    x = `area44 [Vs]`, y = c(`amp44 [V]`, `d13C [permil]`),
+    x = area44, y = c(amp44, d13C),
     # choose aesthetics
     color = compound, shape = type, label = compound, size = 3,
     # decide what geoms to include
@@ -450,16 +438,15 @@ ggplotly(dynamicTicks = TRUE)
 peak_table_analytes %>% 
   # focus on standards
   filter(type == "std") %>% 
-  # use explicit units
-  iso_make_units_explicit() %>% 
   # calculate injection amount
-  mutate(`injection [ng]` = `injection_volume [uL]` * `concentration [ng/uL]`) %>% 
+  mutate(injection = iso_double_with_units(
+    as.numeric(injection_volume) * as.numeric(concentration), units = "ng")) %>% 
   # visualize
   iso_plot_data(
     # x and y
-    x = `injection [ng]`, y = c(`mean_area_identified [Vs]`, `mean_amp_identified [V]`),
+    x = injection, y = c(mean_area_identified, mean_amp_identified),
     # aesthetics
-    color = factor(`injection_volume [uL]`), shape = factor(`concentration [ng/uL]`), 
+    color = factor(injection_volume), shape = factor(concentration), 
     size = file_datetime,
     points = TRUE
   ) +
@@ -528,7 +515,7 @@ stds_w_calibs <- peak_table_w_stds %>%
   # run calibration
   iso_generate_calibration(model = lm(d13C ~ true_d13C)) %>% 
   # unnest some useful file information for visualization
-  iso_unnest_data(
+  iso_get_calibration_data(
     select = c(file_datetime, injection_volume, seed_oxidation, mean_area_identified))
 
 # check for problematic calibrations
@@ -545,7 +532,7 @@ stds_w_calibs <- stds_w_calibs %>% iso_remove_problematic_calibrations()
 # look at coefficients and summary
 stds_w_calibs %>% 
   # unnest calibration parameters
-  iso_unnest_calibration_parameters(
+  iso_get_calibration_parameters(
     select_from_coefs = 
       c(term, estimate, SE = std.error, signif),
     select_from_summary = 
@@ -556,14 +543,12 @@ stds_w_calibs %>%
 
 # visualize the calibration coefficients
 stds_w_calibs %>% 
-  # work with explicit units
-  iso_make_units_explicit() %>% 
   # plot calibration parameters
   iso_plot_calibration_parameters(
     # x-axis, could also be e.g. Analysis or file_datetime (also use date_breaks!)
-    x = `mean_area_identified [Vs]`,
+    x = mean_area_identified,
     # aesthetics
-    color = seed_oxidation, size = `mean_area_identified [Vs]`
+    color = seed_oxidation, size = mean_area_identified
   ) + 
   # highlight RMSD threshold (0.5 is fairly liberal, can be stricter!)
   geom_hline(tibble(term = factor("RMSD"), threshold = 0.5),
@@ -575,16 +560,16 @@ stds_w_calibs %>%
 ```{r "single_analysis_residuals", fig.width=7, fig.height=6}
 stds_w_calibs %>% 
   # pull out all peak data to including residuals
-  iso_unnest_data(select = everything()) %>% 
+  iso_get_calibration_data() %>% 
   # focus on standard peaks
   filter(is_std_peak) %>% 
   # calculate parameters to visualize
-  group_by(Analysis) %>% 
-  mutate(
-    `Var: residual [permil]` = resid,
-    `Var: area diff from mean [%]` = (area44/mean(area44) - 1) * 100
-  ) %>%
-  ungroup() %>% 
+  iso_mutate_peak_table(
+    group_by = Analysis,
+     `Var: residual` = resid,
+    `Var: area diff from mean` = 
+      iso_double_with_units((area44/mean(area44) - 1) * 100, "%")
+  ) %>% 
   # visualize
   iso_plot_data(
     # x and y 
@@ -620,7 +605,8 @@ global_calibs <-
     # - all std_peaks (this filter should always be included!)
     # - standard peaks between 5 and 100 Vs
     # - only analyses with seed oxidation (same as all the samples)
-    is_std_peak = is_std_peak & area44 > 5 & area44 < 100 & seed_oxidation == "yes"
+    use_in_calib = is_std_peak & area44 > iso_double_with_units(5, "Vs") & 
+      area44 < iso_double_with_units(100, "Vs") & seed_oxidation == "yes"
   )
 ```
 
@@ -630,7 +616,7 @@ global_calibs <-
 # look at coefficients and summary
 global_calibs %>% 
   # unnest calibration parameters
-  iso_unnest_calibration_parameters(
+  iso_get_calibration_parameters(
     select_from_coefs = 
       c(term, estimate, SE = std.error, signif),
     select_from_summary = 
@@ -640,34 +626,18 @@ global_calibs %>%
   knitr::kable(digits = 4)
 
 # visualize coefficients for the different global calibrations
-global_calibs %>% iso_plot_calibration_parameters(x = calib, color = signif)
+global_calibs %>% iso_plot_calibration_parameters()
 ```
 
 ### Residuals
 
 ```{r "global_calibration_residuals", fig.width=8, fig.height=4}
 global_calibs %>% 
-  # pull out all peak data to including residuals
-  iso_unnest_data(select = everything()) %>% 
-  # focus on standard peaks included in the calibration
-  filter(in_calib) %>% 
-  # visualize
-  iso_plot_data(
-    # aesthetics
-    x = compound, y = resid, color = calib, group = paste(Analysis, calib),
-    # geoms
-    lines = TRUE
-  ) +
-  # plot modifications
-  facet_grid(. ~ calib) + theme(legend.position = "bottom")
-```
-
-### Pick global calibration
-
-```{r}
-# which calibration to use? can include multiple if desired to see the result
-# in this case, the area conscious calibrations are not necessary
-calib_to_use <- "linear"
+  iso_plot_residuals(
+    x = compound, group = paste(Analysis, calib), 
+    points = FALSE, lines = TRUE,
+    trendlines = FALSE, value_ranges = FALSE
+  ) 
 ```
 
 ### Apply global calibration (*)
@@ -677,8 +647,9 @@ calib_to_use <- "linear"
 # for faster calculations, chose calculate_error = FALSE
 global_calibs_applied <- 
   global_calibs %>% 
-  # decide which calibration to apply based on 
-  filter(calib %in% calib_to_use) %>% 
+  # which calibration to use? can include multiple if desired to see the result
+  # in this case, the area conscious calibrations are not necessary
+  filter(calib == "linear") %>% 
   # apply calibration indication what should be calcculated
   iso_apply_calibration(true_d13C, calculate_error = TRUE)
 
@@ -690,13 +661,13 @@ global_calibs_with_ranges <-
 
 # show calibration ranges
 global_calibs_with_ranges %>% 
-  iso_unnest_calibration_range() %>% 
+  iso_get_calibration_range() %>% 
   iso_remove_list_columns() %>% 
   knitr::kable(d = 2)
 
 # create calibrated peak table
 peak_table_calibrated <- global_calibs_with_ranges %>% 
-  iso_unnest_data(select = everything()) 
+  iso_get_calibration_data()
 ```
 
 # Evaluation
@@ -709,12 +680,10 @@ peak_table_calibrated <- global_calibs_with_ranges %>%
 peak_table_calibrated %>% 
   # focus on identified peaks (comment out this line to see ALL peaks)
   filter(!is.na(compound)) %>% 
-  # plot with explicit units
-  iso_make_units_explicit() %>% 
   # visualize with convenience function iso_plot_data
   iso_plot_data(
     # choose x and y (multiple y possible)
-    x = `area44 [Vs]`, y = `true_d13C_pred [permil]`,
+    x = area44, y = true_d13C_pred,
     # choose aesthetics
     color = in_range, shape = type, label = compound, size = 3,
     # decide what geoms to include
@@ -735,19 +704,17 @@ peak_table_calibrated %>%
 peak_table_calibrated %>% 
   # focus on peaks in calibration
   filter(in_calib) %>% 
-  # plot with explicit units
-  iso_make_units_explicit() %>% 
   # visualize
   iso_plot_data(
     # x and y
-    x = `true_d13C [permil]`, y = `true_d13C_pred [permil]`, y_error = `true_d13C_pred_se [permil]`,
+    x = true_d13C, y = true_d13C_pred, y_error = true_d13C_pred_se,
     # aesthetics
-    color = compound, size = `area44 [Vs]`,
+    color = compound, size = area44,
     # geoms
-    points = TRUE
-  ) +
-  # add 1:1 trendline
-  geom_abline(slope = 1, intercept = 0)
+    points = TRUE,
+    # add 1:1 trendline
+    geom_abline(slope = 1, intercept = 0)
+  ) 
 ```
 
 ## Data
@@ -763,21 +730,19 @@ peak_table_calibrated %>%
   # focus on identified peaks (comment out this line to see ALL peaks)
   # if there's a lot of data, might need to hone in on a few at a time
   filter(!is.na(compound)) %>% 
-  # plot with explicit units
-  iso_make_units_explicit() %>% 
   # visualize
   iso_plot_data(
     # x and y
-    x = sample, y = `true_d13C_pred [permil]`, y_error = `true_d13C_pred_se [permil]`,
+    x = sample, y = true_d13C_pred, y_error = true_d13C_pred_se,
     # aesthetics
-    color = in_range, size = rel_area,
+    color = in_range, size = rel_area, 
+    # paneling
+    panel = compound, panel_scales = "fixed",
     # geoms
     points = TRUE
   ) %>% 
   # mark calibration range (include optionally)
   iso_mark_calibration_range() +
-  # add facet wrap
-  facet_wrap(~compound, scales = "free_y") +
   # color palette (here example of manual: www.google.com/search?q=color+picker)
   scale_color_manual(
     values = c("#984EA3", "#E41A1C", "#E41A1C", "#377EB8", "#4DAF4A")
@@ -803,10 +768,10 @@ peak_table_calibrated %>%
     # x and y
     x = sample, y = rel_area,
     # aesthetics
-    fill = compound
+    fill = compound,
+    # barchart
+    geom_bar(stat = "identity")
   ) +
-  # barchart
-  geom_bar(stat = "identity") +
   # scales
   scale_y_continuous(labels = function(x) paste0(100*x, "%"), expand = c(0, 0)) +
   # plot labels
@@ -855,7 +820,7 @@ Final data processing and visualization usually depends on the type of data and 
 
 ```{r}
 # export the global calibration with all its information and data to Excel
-global_calibs_with_ranges %>% 
+peak_table_calibrated %>% 
   iso_export_calibration_to_excel(
     filepath = format(Sys.Date(), "%Y%m%d_gc_irms_example_carbon_export.xlsx"),
     # include data summary as an additional useful tab

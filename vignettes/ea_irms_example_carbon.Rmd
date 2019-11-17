@@ -69,9 +69,11 @@ iso_files_raw <-
 iso_files <- iso_files_raw %>% 
   # rename key file info columns
   iso_rename_file_info(
-    id1 = `Identifier 1`, id2 = `Identifier 2`, prep = Preparation) %>% 
+    id1 = `Identifier 1`, id2 = `Identifier 2`, prep = Preparation,
+    seq_nr = Row, analysis = Analysis
+  ) %>% 
   # parse text info into numbers
-  iso_parse_file_info(number = Analysis) %>% 
+  iso_parse_file_info(number = c(seq_nr, analysis)) %>% 
   # process specific sequence file information
   iso_mutate_file_info(
     # what is the type of each analysis?
@@ -84,11 +86,13 @@ iso_files <- iso_files_raw %>%
       id1 == "EDTA2"      ~ "scale2",
       TRUE                ~ "sample"
     ),
-    # what is the weight of the sample?
-    weight = parse_number(id2) %>% iso_double_with_units("ug")
+    # what is the mass of the sample?
+    mass = parse_number(id2) %>% iso_double_with_units("ug"),
+    # what folder are the data files in? (usually folder = sequence)
+    folder = basename(dirname(file_path))
   ) %>% 
   # focus only on the relevant file info, discarding the rest
-  iso_select_file_info(Analysis, file_datetime, id1, id2, type, weight) %>% 
+  iso_select_file_info(folder, analysis, seq_nr, file_datetime, id1, id2, type, mass) %>% 
   # filter out emptys at the beginning of the run
   iso_filter_files(type != "empty")
 ```
@@ -113,6 +117,12 @@ iso_files <- iso_set_peak_table_from_isodat_vendor_data_table(iso_files) %>%
   iso_convert_peak_table_units(V = mV, Vs = mVs) %>% 
   # identify peaks
   iso_map_peaks(peak_map)
+
+# show first few rows of the peak mappings summary (unmapped peaks = N2)
+iso_files %>% 
+  iso_summarize_peak_mappings() %>% 
+  head(10) %>% 
+  knitr::kable()
 ```
 
 ## Show file information
@@ -131,9 +141,9 @@ iso_files %>%
 # plot the chromatograms
 iso_files %>% 
   # select a few analyses to show
-  iso_filter_files(Analysis %in% c(19642, 19656, 19681)) %>% 
+  iso_filter_files(analysis %in% c(19642, 19656, 19681)) %>% 
   # introduce a label column for coloring the lines
-  iso_mutate_file_info(label = sprintf("#%d: %s (%s)", Analysis, id1, type)) %>% 
+  iso_mutate_file_info(label = sprintf("#%d: %s (%s)", analysis, id1, type)) %>% 
   # generate plot
   iso_plot_continuous_flow_data(
     # select data and aesthetics
@@ -150,7 +160,7 @@ iso_files %>%
 ```{r "ref_peak_variation", fig.width=10, fig.height=4}
 # examine variation in the reference peaks
 iso_files %>%
-  iso_get_peak_table(include_file_info = Analysis) %>% 
+  iso_get_peak_table(include_file_info = c(seq_nr, analysis)) %>% 
   # focus on reference peaks only
   filter(!is.na(ref_nr)) %>% 
   # mark ref peak used in isodat to calculate delta values
@@ -160,14 +170,14 @@ iso_files %>%
   mutate(delta_vs_avg = (`r45/44` / mean(`r45/44`) - 1) * 1000) %>% 
   ungroup() %>% 
   # visualize
-  ggplot() +
-  aes(Analysis, delta_vs_avg, fill = ref_info) +
-  geom_bar(stat = "identity", position = "dodge") +
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        strip.text = element_text(size = 6, hjust = 0)) +
-  labs(x = "Analysis", y = "Deviation from run average (permil)", 
-       color = "Reference\npeak", fill = "Reference\npeak") 
+  iso_plot_data(
+    x = seq_nr, y = delta_vs_avg, fill = ref_info,
+    geom_bar(stat = "identity", position = "dodge")
+  ) +
+  labs(
+    x = "Sequence #",
+    y = "Deviation from average (permil) within each analysis", 
+    fill = "Reference\npeak") 
 ```
 
 # Inspect data
@@ -178,22 +188,27 @@ iso_files %>%
 peak_table <- iso_files %>% 
   # whole peak table
   iso_get_peak_table(include_file_info = everything()) %>% 
-  # analyte peak
-  filter(compound == "CO2 analyte")
+  # focus on analyte peak only
+  filter(compound == "CO2 analyte") %>% 
+  # calculate 13C mean, sd and deviation from mean within each type
+  iso_mutate_peak_table(
+    group_by = type,
+    d13C_mean = mean(d13C),
+    d13C_sd = sd(d13C),
+    d13C_dev = d13C - d13C_mean
+  )
 ```
 
 ## First look
 
 ```{r "all_data_first_look", fig.width=7, fig.height=6}
 peak_table %>% 
-  # use explicit units for plotting
-  iso_make_units_explicit() %>% 
   # add info column
-  mutate(info = sprintf("%s (%d)", id1, Analysis)) %>% 
+  mutate(info = sprintf("%s (%d)", id1, analysis)) %>% 
   # visualize with convenience function iso_plot_data
   iso_plot_data(
     # choose x and y (multiple y possible)
-    x = `weight [ug]`, y = c(`area44 [Vs]`, `d13C [permil]`),
+    x = mass, y = c(area44, d13C),
     # choose aesthetics
     color = type, size = 3, label = info,
     # decide what geoms to include
@@ -214,35 +229,28 @@ ggplotly(dynamicTicks = TRUE)
 
 ## Standards variation
 
-Examine the variation in each of the standards. Could discuss whether the scale2 outlier is an erroneous measurement.
+Examine the variation in each of the standards. 
 
 ```{r "standards_variation", fig.height=10, fig.width=7}
 peak_table %>% 
+  # everything but the sample
   filter(type != "sample") %>% 
-  iso_make_units_explicit() %>% 
   # generate plot
-  ggplot() +
-  # define aesthetics
-  aes(x = `weight [ug]`, y = `d13C [permil]`, color = type) +
-  # add data points
-  geom_point(size = 3) +
-  # add mean and sigma lines
-  geom_hline(data = function(x) 
-    group_by(x, type) %>% 
-      summarize(
-        mean = mean(`d13C [permil]`),
-        sd = sd(`d13C [permil]`),
-        `mean + 1 sigma` = mean + sd,
-        `mean - 1 sigma` = mean - sd,
-        `mean + 2 sigma` = mean + 2*sd,
-        `mean - 2 sigma` = mean - 2*sd,
-      ) %>% 
-      gather("line", "y", starts_with("mean")),
-    mapping = aes(yintercept = y, color = type, linetype = line)
-  ) +
-  # panel by type
-  facet_grid(type ~ ., scales = "free_y") +
-  theme_bw()
+  iso_plot_data(x = mass, y = d13C, color = type, size = 3, points = TRUE, panel = type ~ .) %>% 
+  # mark +/- 1, 2, 3 std. deviation value ranges
+  iso_mark_value_range(sd = c(1,2,3)) %>% 
+  # mark outliers (those outside the 3 sigma range)
+  iso_mark_outliers(condition = abs(d13C - d13C_mean) > 3 * d13C_sd, label = analysis)
+```
+
+## Identify outliers (*)
+
+Analys #19691 is more than 3 standard deviations outside the scale2 standard mean and therefore explicitly flagged as an is_outlier.
+
+```{r}
+# mark outlier
+peak_table <- peak_table %>% 
+  iso_mutate_peak_table(is_outlier = analysis %in% c(19691))
 ```
 
 
@@ -266,6 +274,8 @@ standards <-
     true_d13C = iso_double_with_units(true_d13C, "permil"),
     percent_C = iso_double_with_units(percent_C, "%")
   )
+
+# printout standards table
 standards %>% iso_make_units_explicit() %>% knitr::kable(digits = 2)
 
 # add standards
@@ -276,55 +286,68 @@ peak_table_w_standards <-
 
 ## Evaluate temporal drift
 
-There is no temporal drift so no correction is applied.
+Look at changes in the drift standard over the course of the run:
 
-```{r}
-# run a set of regressions to evaluate drift
+```{r "drift_vs_time", fig.width = 6, fig.height=7}
+peak_table_w_standards %>% 
+  filter(type == "drift") %>% 
+  iso_plot_data(
+    # alternatively could use x = seq_nr, or x = analysis
+    x = file_datetime, y = d13C, size = area44,
+    points = TRUE, date_breaks = "2 hours",
+    # add some potential calibration model lines
+    geom_smooth(method = "lm", color = "red", se = FALSE),
+    geom_smooth(method = "loess", color = "blue", se = FALSE)
+  ) %>% 
+  # mark the total value range
+  iso_mark_value_range()
+```
+
+This looks like random scatter rather than any systematic drift but let's check with a linear regression to confirm:
+
+```{r "drift_residuals", fig.width = 8, fig.height=4}
 calib_drift <- 
   peak_table_w_standards %>%
   # prepare for calibration
   iso_prepare_for_calibration() %>% 
   # run different calibrations
   iso_generate_calibration(
-    calibration = "drift",
-    model = c(lm(d13C ~ 1), lm(d13C ~ file_datetime)),
-    is_std_peak = is_std_peak & type == "drift"
-  )
+    # provide a calibration name
+    calibration = "drift", 
+    # provide different regression models to test if there is any
+    # systematic pattern in d13C_dev (deviation from the mean)
+    model = c(
+      lm(d13C_dev ~ 1), 
+      lm(d13C_dev ~ file_datetime),
+      loess(d13C_dev ~ file_datetime, span = 0.5)
+    ),
+    # specify which data points to use in the calibration
+    use_in_calib = is_std_peak & type == "drift" & !is_outlier
+  ) %>% 
+  # remove problematic calibrations if there are any
+  iso_remove_problematic_calibrations()
+
+# visualize residuals
+calib_drift %>% iso_plot_residuals(x = file_datetime, date_breaks = "3 hours") 
 ```
 
-```{r "drift_coefs", fig.width = 6, fig.height=4}
-# show calibration coefficients
-calib_drift %>% 
-  iso_plot_calibration_parameters(
-    calibration = "drift",
-    x = "value", color = signif,
-    date_breaks = "3 hours",
-    select_from_summary = c()
-  ) + labs(x = "") + 
-  theme(axis.text.x = element_blank())
-```
-
-```{r "drift_residuals", fig.width = 8, fig.height=4}
-# show residuals
-calib_drift %>% 
-  # fetch peak table with the added residuals from the calibration
-  iso_unnest_data(select = everything()) %>% 
-  filter(drift_in_calib) %>% 
-  # visualize
-  ggplot() +
-  aes(file_datetime, drift_resid, color = drift_calib) +
-  geom_smooth(method = "loess") +
-  geom_hline(yintercept = 0, size = 1) +
-  geom_point(size = 4) + 
-  scale_x_datetime(date_labels = "%H:%M", breaks = "3 hours") +
-  labs(x = "time", y = "d13C residuals [permil]") +
-  theme_bw() + theme(legend.position = "bottom") +
-  facet_wrap(~drift_calib)
-```
+Although a local polynomial (`loess`) correction would improve the overall variation in the residuals, this improvement is minor (<0.01 permil) and it is not clear that this correction addresses any systemic trend. Therefore, no drift correction is applied.
 
 ## Evaluate linearity (*)
 
-Small but significant linearity effect. Using the ` ~ area44` correction because it explains most of the variation in the signal range that the samples fall (~ 100-250 Vs).
+Look at the response of the linearity standard and the range the samples are in:
+
+```{r "linearity_vs_area", fig.width = 6, fig.height=7}
+peak_table_w_standards %>% 
+  filter(type %in% c("linearity", "sample")) %>% 
+  iso_plot_data(
+    x = area44, y = d13C, panel = type ~ ., color = type, points = TRUE,
+    # add a trendline to the linearity panel highlighting the variation
+    geom_smooth(data = function(df) filter(df, type == "linearity"), method = "lm")
+  ) 
+```
+
+The linearity standard shows a systematic area-dependent effect on the measured isotopic composition that is likely to have a small effect on the sample isotopic compositions. In runs that include two isotopically different standards (2 point scale calibration) both across the entire linearity range, isotopic offset, discrimination, and linearity can all be evaluated in one joint multi-variate regression. However, this run included only one linearity standard which can be used to correct for linearity prior to offset and discrimination corrections.
 
 ```{r}
 # run a set of regressions to evaluate linearity
@@ -335,68 +358,87 @@ calib_linearity <-
   # run different calibrations
   iso_generate_calibration(
     calibration = "lin",
-    model = c(lm(d13C ~ 1), 
-              lm(d13C ~ area44), 
-              lm(d13C ~ I(area44^(1/2))), 
-              lm(d13C ~ I(area44^-1))),
-    is_std_peak = is_std_peak & type == "linearity"
-  )
-```
-
-```{r "linearity_coefs", fig.width = 8, fig.height=6}
-# show calibration coefficients
-calib_linearity %>% 
-  iso_plot_calibration_parameters(
-    calibration = "lin",
-    x = "value", color = signif,
-    date_breaks = "3 hours"
-  ) + labs(x = "") + 
-  theme(axis.text.x = element_blank())
+    # again evaluating different regression models of the deviation from the mean
+    model = c(
+      lm(d13C_dev ~ 1),
+      lm(d13C_dev ~ area44), 
+      lm(d13C_dev ~ sqrt(area44)), 
+      lm(d13C_dev ~ 1/area44)
+    ),
+    use_in_calib = is_std_peak & type == "linearity" & !is_outlier
+  ) %>% 
+  # remove problematic calibrations if there are any
+  iso_remove_problematic_calibrations()
 ```
 
 ```{r "linearity_residuals", fig.width = 8, fig.height=6}
-# show residuals
-calib_linearity %>% 
-  # fetch peak table with the added residuals from the calibration
-  iso_unnest_data(select = everything()) %>% 
-  filter(lin_in_calib) %>% 
-  iso_make_units_explicit() %>% 
-  # visualize
-  ggplot() +
-  aes(`area44 [Vs]`, lin_resid, color = lin_calib) +
-  geom_smooth(method = "loess") +
-  geom_hline(yintercept = 0, size = 1) +
-  geom_point(size = 4) + 
-  labs(y = "d13C residuals [permil]") +
-  theme_bw() + theme(legend.position = "bottom") +
-  facet_wrap(~lin_calib)
+# visualizing residuals
+calib_linearity %>% iso_plot_residuals(x = area44)
 ```
 
-### Apply linearity correction (*)
+```{r "linearity_coefs", fig.width = 7, fig.height=9}
+# show calibration coefficients
+calib_linearity %>% iso_plot_calibration_parameters()
+```
+
+It is clear that there is a small (~0.02 permil improvement in the residual) but significant (p < 0.05) linearity effect that could be reasonably corrected with any of the assessed area dependences. However, we will use the ` ~ area44` correction because it explains more of the variation in the signal range that the samples fall into (~ 100-250 Vs) as can be seen in the residuals plot.
+
+## Apply linearity correction (*)
 
 ```{r}
-# show linearity correction range
-calib_linearity %>%
-  iso_evaluate_calibration_range(area44, calibration = "lin") %>% 
-  iso_unnest_calibration_range(calibration = "lin") %>% 
-  iso_remove_list_columns() %>% 
-  knitr::kable(d = 2)
-
 # apply calibration
-peak_table_lin_corr <- 
+calib_linearity_applied <- 
   calib_linearity %>% 
   # decide which calibration to apply
-  filter(lin_calib == "lm(d13C ~ area44)") %>% 
+  filter(lin_calib == "lm(d13C_dev ~ area44)") %>% 
   # apply calibration indication what should be calcculated
-  iso_apply_calibration(d13C, calibration = "lin") %>% 
-  # resulting corrected value
-  iso_unnest_data(select = everything()) %>% 
-  mutate(d13C_lin_corr = d13C - d13C_pred)
+  iso_apply_calibration(predict = d13C_dev) %>% 
+  # evaluate calibration range across area44
+  iso_evaluate_calibration_range(area44)
+
+# show linearity correction range
+calib_linearity_applied %>%
+  iso_get_calibration_range() %>%
+  knitr::kable(d = 2)
+
+# fetch peak table from applied calibration
+peak_table_lin_corr <- 
+  calib_linearity_applied %>% 
+  iso_get_calibration_data() %>% 
+  # calculate the corrected d13C value
+  mutate(d13C_lin_corr = d13C - d13C_dev_pred)
+```
+
+## Check linearity correction
+
+Check the improvement in standard deviation of the linearity standard:
+
+```{r "linearity_check", fig.width=7, fig.height=5}
+peak_table_lin_corr %>% 
+  filter(type == "linearity") %>% 
+  iso_plot_data(
+    area44, c(d13C, d13C_lin_corr), color = variable, panel = NULL, points = TRUE
+  ) %>% 
+  # show standard deviation range
+  iso_mark_value_range(mean = FALSE, sd = 1)
 ```
 
 ## Evaluate isotopic scaling (*)
 
-Correct for isotopic scale contraction (discrimination). Note that this can be done all in one with the linearity evaluation *if* at least two isotopic standards were tested at a range of intensities (which was not the case in this analysis).
+Look at the linearity corrected isotopic measurement of the two discrimnation standardds relative to their known isotopic value:
+
+```{r "measured_vs_true", fig.width = 6, fig.height=7}
+peak_table_lin_corr %>% 
+  filter(type %in% c("scale1", "scale2")) %>% 
+  iso_plot_data(
+    x = true_d13C, y = d13C_lin_corr, color = id1, 
+    points = TRUE,
+    # add 1:1 slope for a visual check on scaling and offset
+    geom_abline(slope = 1, intercept = 0) 
+  ) 
+```
+
+Correct for isotopic scale contraction (discrimination) and offset: 
 
 ```{r}
 # run a set of regressions to evaluate linearity
@@ -408,99 +450,101 @@ calib_scale <-
   iso_generate_calibration(
     calibration = "scale",
     # compare scale correction with and without the prior linearity correction
-    model = c(lm(d13C ~ true_d13C), lm(d13C_lin_corr ~ true_d13C)),
-    is_std_peak = is_std_peak & type %in% c("scale1", "scale2", "linearity")
-  )
+    model = lm(d13C_lin_corr ~ true_d13C),
+    use_in_calib = is_std_peak & type %in% c("scale1", "scale2") & !is_outlier
+  ) %>% 
+  # remove problematic calibrations if there are any
+  iso_remove_problematic_calibrations()
+```
+
+```{r "scale_residuals", fig.width = 8, fig.height=6}
+# visualizing residuals
+calib_scale %>% 
+  iso_plot_residuals(x = d13C, shape = id1, size = area44, trendlines = FALSE)
 ```
 
 ```{r "scale_coefs", fig.width = 6, fig.height=4}
 # show calibration coefficients
 calib_scale %>% 
-  iso_plot_calibration_parameters(
-    calibration = "scale",
-    x = "value", color = signif,
-    date_breaks = "3 hours"
-  ) + labs(x = "") + 
-  theme(axis.text.x = element_blank())
+  iso_plot_calibration_parameters() + 
+  theme_bw() # reset theme for horizontal x axis labels
 ```
 
-```{r "scale_residuals", fig.width = 8, fig.height=4}
-# show residuals
-calib_scale %>% 
-  # fetch peak table with the added residuals from the calibration
-  iso_unnest_data(select = everything()) %>% 
-  filter(scale_in_calib) %>% 
-  iso_make_units_explicit() %>% 
-  # visualize
-  ggplot() +
-  aes(`true_d13C [permil]`, scale_resid, color = id1, size = `area44 [Vs]`) +
-  geom_smooth(method = "loess") +
-  geom_hline(yintercept = 0, size = 1) +
-  geom_point() + 
-  labs(y = "d13C residuals [permil]") +
-  theme_bw() + 
-  theme(legend.position = "bottom", legend.direction = "vertical") +
-  facet_wrap(~scale_calib)
-```
 
-### Apply scale correction (*)
+## Apply scale correction (*)
 
 ```{r}
-# show scale correction range
-calib_scale %>%
-  iso_evaluate_calibration_range(true_d13C, calibration = "scale") %>% 
-  iso_unnest_calibration_range(calibration = "scale") %>% 
-  iso_remove_list_columns() %>% 
-  knitr::kable(d = 2)
-
 # apply calibration
-peak_table_calibrated <- 
+calib_scale_applied <- 
   calib_scale %>% 
   # decide which calibration to apply
   filter(scale_calib == "lm(d13C_lin_corr ~ true_d13C)") %>% 
-  # apply calibration indication what should be calcculated
-  iso_apply_calibration(true_d13C, calibration = "scale") %>% 
+  # apply calibration indication what should be calculated
+  iso_apply_calibration(true_d13C) %>% 
   # evaluate calibration range
-  iso_evaluate_calibration_range(true_d13C, calibration = "scale") %>% 
-  # resulting corrected value
-  iso_unnest_data(select = everything())
+  iso_evaluate_calibration_range(true_d13C_pred)
+
+# show scale range
+calib_scale_applied %>%
+  iso_get_calibration_range() %>% 
+  knitr::kable(d = 2)
+
+# get calibrated data
+peak_table_calibrated <- 
+  calib_scale_applied %>% 
+  iso_get_calibration_data()
+```
+
+## Check overall calibration
+
+```{r "scale_check", fig.width=7, fig.height=6}
+# visualize overall calibration
+peak_table_calibrated %>% 
+  filter(!is.na(true_d13C)) %>% 
+  # visualize
+  iso_plot_data(
+    x = c(`known d13C` = true_d13C), 
+    y = c(`measured d13C` = true_d13C_pred), 
+    color = id1, size = area44,
+    points = TRUE, shape = is_outlier,
+    # add 1:1 slope
+    geom_abline(slope = 1, intercept = 0) 
+  )
 ```
 
 # Evaluate data
 
-## Standards
+## Accuracy & Precision
 
-```{r "standards", fig.width=7, fig.height=6}
-# visualize how much standards deviate from the known values after calibration
+For this run, use the linearity standard for a very conservative accuracy and precision standard.
+
+```{r}
 peak_table_calibrated %>% 
-  filter(!is.na(true_d13C)) %>% 
-  # plot with explicit units
-  iso_make_units_explicit() %>%
-  # visualize
-  ggplot() +
-  aes(x = `true_d13C [permil]`, 
-      y = `true_d13C_pred [permil]` - `true_d13C [permil]`,
-      color = id1, size = `area44 [Vs]`) +
-  geom_hline(yintercept = 0) +
-  geom_point() +
-  theme_bw()
+  filter(type == "linearity") %>% 
+  group_by(id1, true_d13C) %>% 
+  iso_summarize_data_table(true_d13C_pred) %>% 
+  mutate(
+    accuracy = abs(`true_d13C_pred mean` - true_d13C),
+    precision = `true_d13C_pred sd`
+  ) %>% 
+  select(id1, n, accuracy, precision) %>% 
+  iso_make_units_explicit() %>% 
+  knitr::kable(d = 3)
 ```
 
-## Data
+
+## Sample Data
 
 ```{r "samples", fig.width = 10, fig.height = 7}
 peak_table_calibrated %>% 
-  # focus on samples
   filter(type == "sample") %>% 
-  # plot with explicit units
-  iso_make_units_explicit() %>% 
-  # visualize
-  ggplot() +
-  aes(x = id1, y = `true_d13C_pred [permil]`, color = str_extract(id1, "^\\w+")) +
-  geom_point(size = 4) +
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
-  labs(color = "group")
+  iso_plot_data(
+    x = id1, y = true_d13C_pred, shape = str_extract(id1, "^\\w+"), 
+    color = iso_format(area = lin_in_range, d13C = scale_in_range),
+    points = TRUE
+  ) %>% 
+  iso_mark_calibration_range(calibration = "scale") +
+  labs(shape = "data groups", color = "in calibration ranges")
 ```
 
 # Final
@@ -509,5 +553,17 @@ Final data processing and visualization usually depends on the type of data and 
 
 ```{r "final_data", fig.width = 7, fig.height = 6}
 # @user: add final data processing and plot(s)
+data_summary <- tibble()
 ```
 
+# Export
+
+```{r}
+# export the calibrations with all information and data to Excel
+peak_table_calibrated %>% 
+  iso_export_calibration_to_excel(
+    filepath = format(Sys.Date(), "%Y%m%d_ea_irms_example_carbon_export.xlsx"),
+    # include data summary as an additional useful tab
+    `data summary` = data_summary
+  )
+```

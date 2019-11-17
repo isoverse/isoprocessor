@@ -4,8 +4,8 @@
 \alias{iso_evaluate_calibration_range}
 \title{Evaluate calibration range}
 \usage{
-iso_evaluate_calibration_range(dt, ..., calibration = "",
-  quiet = default(quiet))
+iso_evaluate_calibration_range(dt, ...,
+  calibration = last_calibration(dt), quiet = default(quiet))
 }
 \arguments{
 \item{dt}{data table}

@@ -3,7 +3,7 @@
 #'
 #' This function exports the passed in calibration(s) data frame to Excel. The different kinds of information (all data, model coefficients, summary, evaluation range) are exported to separate tabs within the excel file. If there are multiple different calibrations in the data frame (i.e. multiple \code{*calib_params} columns), ALL will be exported with different tabs for each.
 #'
-#' @param calibs_df calibration(s) data frame (i.e. the output of functions like \link{iso_generate_calibration}, \link{iso_apply_calibration}, \link{iso_evaluate_calibration_range}). Must still be nested (i.e. before running any of the \code{iso_unnest...} functions) to make sure it contains alll information.
+#' @param calibs_df data frame that includes calibration columns (i.e. the output of functions like \link{iso_generate_calibration}, \link{iso_apply_calibration}, \link{iso_evaluate_calibration_range}). Can be the output from \link{iso_get_calibration_data} if called after a calibration has been generated.
 #' @param filepath the path where to store the Excel file.
 #' @param ... named list of additional data frames to include in the summary (each will get their own tab)
 #' @param include_all_data whether to include a tab for all the peak data - if this function is called after \link{iso_apply_calibration} this will include
@@ -22,9 +22,12 @@ iso_export_calibration_to_excel <- function(
 
   # safety checks
   if(missing(calibs_df) || !is.data.frame(calibs_df)) stop("calibs_df must be a data frame", call. = FALSE)
-  if(!"all_data" %in% names(calibs_df)) stop("no all_data column, make sure this is still a nested calibration data frame (i.e. the direct output of iso_generate_calibration, iso_apply_calibration, or iso_evaluate_calibration_range", call. = FALSE)
-  if(!is(calibs_df$all_data, "list")) stop("all_data column is not a list, make sure this is still a nested calibration data frame (i.e. the direct output of iso_generate_calibration, iso_apply_calibration, or iso_evaluate_calibration_range", call. = FALSE)
-  calibs <- find_calibrations(calibs_df)
+  if(!"all_data" %in% names(calibs_df)) {
+    # requires nesting
+    calibs_df <- iso_prepare_for_calibration(calibs_df, quiet = TRUE)
+  }
+  if(!is.list(calibs_df$all_data)) stop("all_data column is not a list, make sure this is still a nested calibration data frame (i.e. the direct output of iso_generate_calibration, iso_apply_calibration, or iso_evaluate_calibration_range", call. = FALSE)
+  calibs <- all_calibrations(calibs_df)
   if (length(calibs) == 0) stop("there do not seem to be any calibrations in this data frame, make sure to generate calibrations using iso_generate_calibration", call. = FALSE)
 
   # explicit units
@@ -66,7 +69,7 @@ iso_export_calibration_to_excel <- function(
   if (include_all_data) {
     ws_names <- c(ws_names, "all data")
     openxlsx::addWorksheet(wb, tail(ws_names, 1))
-    all_data <- calibs_df %>% iso_unnest_data(keep_other_list_data = FALSE)
+    all_data <- calibs_df %>% iso_get_calibration_data(keep_other_list_data = FALSE)
     openxlsx::writeData(wb, tail(ws_names, 1), with_units(all_data), headerStyle = hs)
   }
 
@@ -79,7 +82,7 @@ iso_export_calibration_to_excel <- function(
     if (include_calib_coefs) {
       ws_names <- c(ws_names, if (calib == "") "calib coefs" else paste(calib, "coefs"))
       openxlsx::addWorksheet(wb, tail(ws_names, 1))
-      calib_coefs <- calibs_df %>% iso_unnest_calibration_coefs(
+      calib_coefs <- calibs_df %>% iso_get_calibration_coefs(
         calibration = calib, keep_other_list_data = FALSE)
       openxlsx::writeData(wb, tail(ws_names, 1), calib_coefs, headerStyle = hs)
     }
@@ -88,7 +91,7 @@ iso_export_calibration_to_excel <- function(
     if (include_calib_summary) {
       ws_names <- c(ws_names, if (calib == "") "calib summary" else paste(calib, "summary"))
       openxlsx::addWorksheet(wb, tail(ws_names, 1))
-      calib_summary <- calibs_df %>% iso_unnest_calibration_summary(
+      calib_summary <- calibs_df %>% iso_get_calibration_summary(
         calibration = calib, keep_other_list_data = FALSE)
       openxlsx::writeData(wb, tail(ws_names, 1), calib_summary, headerStyle = hs)
     }
@@ -98,7 +101,7 @@ iso_export_calibration_to_excel <- function(
       ws_names <- c(ws_names, if (calib == "") "calib range" else paste(calib, "range"))
       openxlsx::addWorksheet(wb, tail(ws_names, 1))
       tryCatch({
-        calib_range <- calibs_df %>% iso_unnest_calibration_range(
+        calib_range <- calibs_df %>% iso_get_calibration_range(
           calibration = calib, keep_other_list_data = FALSE)
         openxlsx::writeData(wb, tail(ws_names, 1), calib_range, headerStyle = hs)
       }, error = function(e) {
