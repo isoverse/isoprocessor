@@ -819,7 +819,7 @@ iso_plot_calibration_range <- function(...) {
 #' @param shape variable to use for shape aesthetic for the plot
 #' @param size variable to use for size aesthetic for the plot or constant value for the points size
 #' @param linetype variable to use for linetype aesthetic for the plot
-#' @param alpha variable to use for the opacity aesthetic for the plot (1 = 100%% opaque, 0 = completely transparent)
+#' @param alpha variable to use for the opacity aesthetic for the plot (1 = 100\% opaque, 0 = completely transparent)
 #' @param y_error an error column for drawing y error bars - if multiple \code{y} are provided, error needs to point to the same number of columns
 #' @param lines whether to plot lines (FALSE by default)
 #' @param points whether to plot points (FALSE by default)
