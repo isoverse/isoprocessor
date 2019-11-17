@@ -50,14 +50,15 @@ iso_add_standards <- function(dt, stds, match_by = default(std_match_by), is_std
 
 #' Prepare data set for calibration
 #'
-#' Nests data set in preparation for calibration calculations. Use the \code{group_by} parameter to group analyses as appropriate for calibration. Use \link{iso_unnest_data} to easily pull out additional columns from the nested data frame in \code{all_data} at any point before, during or after calibration.
+#' Nests data set in preparation for calibration calculations. Use the \code{group_by} parameter to group analyses as appropriate for calibration. Use \link{iso_get_calibration_data} to easily pull out columns from the nested data frame in \code{all_data} at any point before, during or after calibration.
 #'
 #' @param dt data table
 #' @param group_by what to group by for indidual calibration calculations (use c(...) to select multiple) - set \code{group_by = NULL} to avoid grouping
+#' @param nest_existing_calibrations whether to nest existing calibrations. This is usually not necessary and only leads to larger data objects. By default, existing calibrations are therefore never included in the nested data set.
 #' @inheritParams iso_show_default_processor_parameters
 #' @return a nested data set with the \code{group_by} columns out front and the remaining data in a new nested column named \code{all_data}
 #' @export
-iso_prepare_for_calibration <- function(dt, group_by = NULL, quiet = default(quiet)) {
+iso_prepare_for_calibration <- function(dt, group_by = NULL, nest_existing_calibrations = FALSE, quiet = default(quiet)) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
@@ -78,7 +79,22 @@ iso_prepare_for_calibration <- function(dt, group_by = NULL, quiet = default(qui
       message()
   }
 
-  return(nest_data(dt, group_by = !!group_quo, nested_data = !!nested_data_quo))
+  # existing calibrations
+  calib_columns <- c()
+  if (!nest_existing_calibrations) {
+    calib_columns <- get_existing_calibration_columns(dt, all_calibrations(dt))
+  }
+
+  # nested data
+  nested_data <-
+    nest_data(
+      dt,
+      group_by = c(!!!map(c(dt_cols$group_by, calib_columns), rlang::sym)),
+      nested_data = !!nested_data_quo
+    ) %>%
+    select(dt_cols$group_by, !!nested_data_quo, everything())
+
+  return(nested_data)
 }
 
 # CALIBRATIONS -----
@@ -125,7 +141,7 @@ check_calibration_cols <- function(df, cols) {
     glue("parameter {df_name} is not a data frame") %>% stop(call. = FALSE)
 
   if (length(missing <- setdiff(unlist(cols), names(df))) > 0) {
-    glue("'{collapse(missing, sep = \"', '\", last = \"' and '\")}' refer(s) to unknown column(s) in data frame '{df_name}' - make sure to run iso_generate_calibration() first and to use the same 'calibration' parameter") %>%
+    glue("'{collapse(missing, sep = \"', '\", last = \"' and '\")}' refer(s) to unknown column(s) in data frame '{df_name}' - make sure to run iso_generate_calibration() first and to use the same 'calibration' parameter value") %>%
       stop(call. = FALSE)
   }
 }
@@ -447,6 +463,24 @@ iso_apply_calibration <- function(dt, predict, calibration = last_calibration(dt
 
 # UNNESTING --------
 
+# convenience function to remove other calibration columns from the data frame
+remove_other_calibrations <- function(dt, calibration) {
+  all_calibs <- all_calibrations(dt)
+  columns <- get_existing_calibration_columns(dt, all_calibs[all_calibs != calibration])
+  if (length(columns) > 0)
+    return(select(dt, !!!map(columns, ~quo(-!!.x))))
+  else
+    return(dt)
+}
+
+# get existing calibration columns
+get_existing_calibration_columns <- function(dt, calibrations) {
+  calibrations %>%
+    map(~get_calibration_vars(.x)[c("model_name", "model_enough_data", "model_data_points", "model_params")]) %>%
+    unlist() %>% unique() %>%
+    intersect(names(dt))
+}
+
 #' Unnest data
 #'
 #' Pull out columns from the \code{all_data} column. Typically used at various points after a dataset is prepared for calibration with \link{iso_prepare_for_calibration}, calibrations are generated with \link{iso_generate_calibration} and/or calibrations are applied with \link{iso_apply_calibration}. Note that unnesting of data columns that have multiple values per data set leads to row replication.
@@ -465,42 +499,57 @@ iso_unnest_data <- function(...) {
   iso_get_calibration_data(...)
 }
 
-#' Unnest calibration parameters
+#' Get calibration parameters
 #'
-#' Convenience function to unnest both calibration coefficients (\link{iso_unnest_calibration_coefs}) and calibration summary (\link{iso_unnest_calibration_summary}) columns in a single step.
-#' @inheritParams iso_unnest_calibration_coefs
-#' @inheritParams iso_unnest_calibration_summary
+#' Retrieve both calibration coefficients (\link{iso_get_calibration_coefs}) and calibration summary (\link{iso_get_calibration_summary}) columns in a single step. Typically this requires specifying \code{select_from_coefs} and \code{select_from_summary} as several columns in the coefficients and summary have the same names.
+#'
+#' @inheritParams iso_get_calibration_range
 #' @param select_from_coefs which columns from the fit coeffiencts to include, supports full dplyr syntax including renaming
 #' @param select_from_summary which columns from the fit summary to include, supports full dplyr syntax including renaming
 #' @export
-iso_unnest_calibration_parameters <-
+iso_get_calibration_parameters <-
   function(dt, calibration = last_calibration(dt),
            select_from_coefs = everything(), select_from_summary = everything(),
-           keep_remaining_nested_data = FALSE, keep_other_list_data = TRUE) {
+           keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE, keep_other_calibrations = FALSE) {
+
+    if (!keep_other_calibrations)
+      dt <- remove_other_calibrations(dt, calibration = calibration)
 
     dt %>%
       # unnest calibration coefs
-      iso_unnest_calibration_coefs(
+      iso_get_calibration_coefs(
         calibration = calibration,
-        select = !!enquo(select_from_coefs)) %>%
+        select = !!enquo(select_from_coefs),
+        keep_remaining_nested_data = keep_remaining_nested_data,
+        keep_other_list_data = TRUE) %>%
       # unnest calibration summary
-      iso_unnest_calibration_summary(
+      iso_get_calibration_summary(
         calibration = calibration,
         select = !!enquo(select_from_summary),
         keep_remaining_nested_data = keep_remaining_nested_data,
         keep_other_list_data = keep_other_list_data)
 }
 
-#' Unnest calibration coefficients
-#'
-#' Retrieve calibration coefficients for a calibration. Problematic calibrations are silently omitted (use \link{iso_get_problematic_calibrations} and \link{iso_remove_problematic_calibrations} to deal with them more explicitly).
-#'
-#' @inheritParams iso_generate_calibration
-#' @inheritParams unnest_model_column
+#' @rdname iso_get_calibration_parameters
+#' @details \code{iso_unnest_calibration_parameters} is deprecated in favor of the equivalent \code{iso_get_calibration_parameters} to standardize function call names. Please start using \code{iso_get_calibration_parameters} as \code{iso_unnest_calibration_parameters} will be deprecated in a future version of isoprocessor.
 #' @export
-iso_unnest_calibration_coefs <- function(dt, calibration = last_calibration(dt), select = everything(), keep_remaining_nested_data = FALSE, keep_other_list_data = TRUE) {
+iso_unnest_calibration_parameters <- function(...) {
+  warning("'iso_unnest_calibration_parameters' is deprecated in favor of 'iso_get_calibration_parameters' and will be removed in future versions of isoprocessor. Please use 'iso_get_calibration_parameters' instead", immediate. = TRUE, call. = FALSE)
+  iso_get_calibration_parameters(...)
+}
+
+#' Get calibration coefficients
+#'
+#' Retrieve calibration coefficients for a calibration generated by \link{iso_generate_calibration}.
+#'
+#' @inheritParams iso_get_calibration_range
+#' @export
+iso_get_calibration_coefs <- function(dt, calibration = last_calibration(dt), select = everything(), keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE, keep_other_calibrations = FALSE) {
   calib_vars <- get_calibration_vars(calibration)
   check_calibration_cols(!!enquo(dt), calib_vars$model_params)
+
+  if (!keep_other_calibrations)
+    dt <- remove_other_calibrations(dt, calibration = calibration)
 
   unnest_model_column(
     dt, model_column = model_coefs, nested_model = TRUE, model_params = !!sym(calib_vars$model_params),
@@ -509,16 +558,26 @@ iso_unnest_calibration_coefs <- function(dt, calibration = last_calibration(dt),
   )
 }
 
-#' Unnest calibration summary
-#'
-#' Retrieve summary entries for a calibration. Problematic calibrations are silently omitted (use \link{iso_get_problematic_calibrations} and \link{iso_remove_problematic_calibrations} to deal with them more explicitly).
-#'
-#' @inheritParams iso_generate_calibration
-#' @inheritParams unnest_model_column
+#' @rdname iso_get_calibration_coefs
+#' @details \code{iso_unnest_calibration_coefs} is deprecated in favor of the equivalent \code{iso_get_calibration_coefs} to standardize function call names. Please start using \code{iso_get_calibration_coefs} as \code{iso_unnest_calibration_coefs} will be deprecated in a future version of isoprocessor.
 #' @export
-iso_unnest_calibration_summary <- function(dt, calibration = last_calibration(dt), select = everything(), keep_remaining_nested_data = FALSE, keep_other_list_data = TRUE) {
+iso_unnest_calibration_coefs <- function(...) {
+  warning("'iso_unnest_calibration_coefs' is deprecated in favor of 'iso_get_calibration_coefs' and will be removed in future versions of isoprocessor. Please use 'iso_get_calibration_coefs' instead", immediate. = TRUE, call. = FALSE)
+  iso_get_calibration_coefs(...)
+}
+
+#' Get calibration summary
+#'
+#' Retrieve summary information for a calibration generated by \link{iso_generate_calibration}.
+#'
+#' @inheritParams iso_get_calibration_range
+#' @export
+iso_get_calibration_summary <- function(dt, calibration = last_calibration(dt), select = everything(), keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE, keep_other_calibrations = FALSE) {
   calib_vars <- get_calibration_vars(calibration)
   check_calibration_cols(!!enquo(dt), calib_vars$model_params)
+
+  if (!keep_other_calibrations)
+    dt <- remove_other_calibrations(dt, calibration = calibration)
 
   unnest_model_column(
     dt,
@@ -528,18 +587,29 @@ iso_unnest_calibration_summary <- function(dt, calibration = last_calibration(dt
   )
 }
 
+#' @rdname iso_get_calibration_summary
+#' @details \code{iso_unnest_calibration_summary} is deprecated in favor of the equivalent \code{iso_get_calibration_summary} to standardize function call names. Please start using \code{iso_get_calibration_summary} as \code{iso_unnest_calibration_summary} will be deprecated in a future version of isoprocessor.
+#' @export
+iso_unnest_calibration_summary <- function(...) {
+  warning("'iso_unnest_calibration_summary' is deprecated in favor of 'iso_get_calibration_summary' and will be removed in future versions of isoprocessor. Please use 'iso_get_calibration_summay' instead", immediate. = TRUE, call. = FALSE)
+  iso_get_calibration_summary(...)
+}
+
 #' Get calibration range
 #'
-#' Retrieve range information created by \link{iso_evaluate_calibration_range}. Problematic calibrations are silently omitted (use \link{iso_get_problematic_calibrations} and \link{iso_remove_problematic_calibrations} to deal with them more explicitly).
-#'
-#' @details \code{iso_unnest_calibration_range} is deprecated in favor of the equivalent \code{iso_get_calibration_range} to standardize function call names. Please start using \code{iso_get_calibration_range} as \code{iso_unnest_calibration_range} will be deprecated in a future version of isoprocessor.
+#' Retrieve range information created by \link{iso_evaluate_calibration_range}.
 #'
 #' @inheritParams iso_generate_calibration
 #' @inheritParams unnest_model_column
+#' @param calibration the name of the calibration to get information for, by default the last calibration that was generated
+#' @param keep_other_calibrations whether other calibrations (besides the one specified by \code{calibration}) should be kept in the data table
 #' @export
-iso_get_calibration_range <- function(dt, calibration = last_calibration(dt), select = everything(), keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE) {
+iso_get_calibration_range <- function(dt, calibration = last_calibration(dt), select = everything(), keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE, keep_other_calibrations = FALSE) {
   calib_vars <- get_calibration_vars(calibration)
   check_calibration_cols(dt, calib_vars$model_params)
+
+  if (!keep_other_calibrations)
+    dt <- remove_other_calibrations(dt, calibration = calibration)
 
   unnest_model_column(
     dt,
@@ -550,6 +620,7 @@ iso_get_calibration_range <- function(dt, calibration = last_calibration(dt), se
 }
 
 #' @rdname iso_get_calibration_range
+#' @details \code{iso_unnest_calibration_range} is deprecated in favor of the equivalent \code{iso_get_calibration_range} to standardize function call names. Please start using \code{iso_get_calibration_range} as \code{iso_unnest_calibration_range} will be deprecated in a future version of isoprocessor.
 #' @export
 iso_unnest_calibration_range <- function(...) {
   warning("'iso_unnest_calibration_range' is deprecated in favor of 'iso_get_calibration_data' and will be removed in future versions of isoprocessor. Please use 'iso_get_calibration_data' instead", immediate. = TRUE, call. = FALSE)

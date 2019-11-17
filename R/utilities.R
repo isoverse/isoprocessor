@@ -194,20 +194,41 @@ unnest_select_data <- function(dt, select = everything(), nested_data = nested_d
   regular_cols <- setdiff(names(dt), c(list_cols, dt_cols$nested))
 
   # only unnest the main list column
-  unnested_dt <- unnest(dt[c(regular_cols, dt_cols$nested_data)], !!sym(dt_cols$nested_data))
+  unnested_dt <- unnest(dt[c("..row..", dt_cols$nested_data)], !!sym(dt_cols$nested_data))
 
   # safety check on whether the select columns exist in the unnested df
-  select_cols <- get_column_names(unnested_dt, select = enquo(select), n_reqs = list(select = "*"))
+  select_cols <- get_column_names(unnested_dt, select = enquo(select), n_reqs = list(select = "*"))$select
+
+  # remove ..row.. from select cols
+  select_cols <- select_cols[select_cols != "..row.."]
+
+  # rename
+  unnested_dt <- dplyr::rename(unnested_dt, !!!select_cols)
+  select_cols <- names(select_cols)
+
+  # check if there are naming conflicts between the select_cols and existing columns
+  if (length(overlap <- intersect(regular_cols, select_cols)) > 0) {
+    glue::glue(
+      "some newly unnested columns have conflicting name(s) with existing ",
+      "columns in the data frame and will be omitted from the unnested ",
+      "data frame. Please rename these columns in the select statement to ",
+      "preserve them: '{paste(overlap, collapse = \"', '\")}'") %>%
+      warning(immediate. = TRUE, call. = FALSE)
+    select_cols <- setdiff(select_cols, regular_cols)
+  }
 
   # renest without the selected parameters
-  keep_cols <- c(regular_cols, select_cols$select) %>% unique()
+  keep_cols <- c("..row..", select_cols) %>% unique()
   if (length(setdiff(names(unnested_dt), keep_cols)) > 0 && keep_remaining_nested_data) {
     # renest if un-nesting is incomplete (i.e. data remains) and remaining data should be kept
     renested_dt <- unnested_dt %>% nest_data(group_by = !!keep_cols, nested = !!sym(dt_cols$nested_data))
   } else
     renested_dt <- unnested_dt[keep_cols]
 
-  # merge the extra columns back in (easier this way with the renest than using unnest for this)
+  # merge back with the original data frame
+  renested_dt <- dt[regular_cols] %>% right_join(renested_dt, by = "..row..")
+
+  # merge the extra list columns back in (easier this way with the renest than using unnest for this)
   if (keep_other_list_data && length(list_cols) > 0) {
     renested_dt <- left_join(renested_dt, dt[c("..row..", list_cols)], by = "..row..")
   }
@@ -225,8 +246,6 @@ unnest_select_data <- function(dt, select = everything(), nested_data = nested_d
     unique() %>%
     # reconstruct order
     dplyr::select(!!!c(before_nd_cols, new_cols), everything()) %>%
-    # rename the select columns
-    dplyr::rename(!!!select_cols$select) %>%
     # remove the ..row.. again (just used for ID purposes)
     dplyr::select(-..row..)
 }
