@@ -1188,7 +1188,7 @@ iso_plot_calibration_parameters <- function(
       rename(!!!map(cs_cols$select, sym)) %>%
       gather(term, estimate, !!!map(names(cs_cols$select), sym))
     visualization_data <-
-      bind_rows(calib_coefs, calib_summary)
+      vctrs::vec_rbind(calib_coefs, calib_summary)
 
     # make signif available for use
     if ("signif" %in% names(visualization_data))
