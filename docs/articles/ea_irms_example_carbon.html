@@ -43,7 +43,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.1</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.5</span>
       </span>
     </div>
 
@@ -97,7 +97,7 @@
       <h1>EA-IRMS data processing example</h1>
             <h3 class="subtitle">bulk carbon isotopes</h3>
             
-            <h4 class="date">2019-11-04</h4>
+            <h4 class="date">2019-11-17</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/isoverse/isoprocessor/blob/master/vignettes/ea_irms_example_carbon.Rmd"><code>vignettes/ea_irms_example_carbon.Rmd</code></a></small>
       <div class="hidden name"><code>ea_irms_example_carbon.Rmd</code></div>
@@ -122,7 +122,7 @@
 <a class="sourceLine" id="cb1-11" data-line-number="11">  <span class="co"># dev.args = list(pdf = list(encoding = "WinAnsi", useDingbats = FALSE)),</span></a>
 <a class="sourceLine" id="cb1-12" data-line-number="12">  <span class="co"># fig.path = file.path("fig_output", paste0(gsub("\\.[Rr]md", "", knitr::current_input()), "_"))</span></a>
 <a class="sourceLine" id="cb1-13" data-line-number="13">)</a></code></pre></div>
-<p>This analysis was run using <a href="http://isoreader.kopflab.org">isoreader</a> version 1.0.11 and <a href="http://isoprocessor.kopflab.org/">isoprocessor</a> version 0.5.1.</p>
+<p>This analysis was run using <a href="http://isoreader.kopflab.org">isoreader</a> version 1.0.11 and <a href="http://isoprocessor.kopflab.org/">isoprocessor</a> version 0.5.5.</p>
 <p>For use as a data processing template, please follow the <code>Source</code> link above, download the raw file and adapt as needed. Knitting for stand-alone data analysis works best to <code>HTML</code> rather than the in-package default <code>html_vignette</code>.</p>
 <p>All code chunks that contain a critical step towards the final data (i.e. do more than visualization or a data summary) are marked with <code>(*)</code> in the header to make it easier to follow all key steps during interactive use.</p>
 </div>
@@ -150,7 +150,7 @@
 <a class="sourceLine" id="cb2-16" data-line-number="16"><span class="co">#&gt; Info: preparing to read 1 data files (all will be cached)...</span></a>
 <a class="sourceLine" id="cb2-17" data-line-number="17"><span class="co">#&gt; Info: reading file 'ea_irms_example_carbon.cf.rds' with '.cf.rds' reader</span></a>
 <a class="sourceLine" id="cb2-18" data-line-number="18"><span class="co">#&gt; Info: loaded data for 121 data files from R Data Storage - checking lo...</span></a>
-<a class="sourceLine" id="cb2-19" data-line-number="19"><span class="co">#&gt; Info: finished reading 1 files in 1.17 secs</span></a>
+<a class="sourceLine" id="cb2-19" data-line-number="19"><span class="co">#&gt; Info: finished reading 1 files in 0.49 secs</span></a>
 <a class="sourceLine" id="cb2-20" data-line-number="20"><span class="co">#&gt; Info: removing 0/121 files that have any error (keeping 121)</span></a></code></pre></div>
 </div>
 <div id="process-file-info" class="section level2">
@@ -160,36 +160,40 @@
 <a class="sourceLine" id="cb3-2" data-line-number="2">iso_files &lt;-<span class="st"> </span>iso_files_raw <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb3-3" data-line-number="3"><span class="st">  </span><span class="co"># rename key file info columns</span></a>
 <a class="sourceLine" id="cb3-4" data-line-number="4"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_rename_file_info.html">iso_rename_file_info</a></span>(</a>
-<a class="sourceLine" id="cb3-5" data-line-number="5">    <span class="dt">id1 =</span> <span class="st">`</span><span class="dt">Identifier 1</span><span class="st">`</span>, <span class="dt">id2 =</span> <span class="st">`</span><span class="dt">Identifier 2</span><span class="st">`</span>, <span class="dt">prep =</span> Preparation) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb3-6" data-line-number="6"><span class="st">  </span><span class="co"># parse text info into numbers</span></a>
-<a class="sourceLine" id="cb3-7" data-line-number="7"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_parse_file_info.html">iso_parse_file_info</a></span>(<span class="dt">number =</span> Analysis) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb3-8" data-line-number="8"><span class="st">  </span><span class="co"># process specific sequence file information</span></a>
-<a class="sourceLine" id="cb3-9" data-line-number="9"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_mutate_file_info.html">iso_mutate_file_info</a></span>(</a>
-<a class="sourceLine" id="cb3-10" data-line-number="10">    <span class="co"># what is the type of each analysis?</span></a>
-<a class="sourceLine" id="cb3-11" data-line-number="11">    <span class="dt">type =</span> <span class="kw">case_when</span>(</a>
-<a class="sourceLine" id="cb3-12" data-line-number="12">      id1 <span class="op">==</span><span class="st"> "empty"</span>      <span class="op">~</span><span class="st"> "empty"</span>,</a>
-<a class="sourceLine" id="cb3-13" data-line-number="13">      id1 <span class="op">==</span><span class="st"> "blank"</span>      <span class="op">~</span><span class="st"> "blank"</span>,</a>
-<a class="sourceLine" id="cb3-14" data-line-number="14">      prep <span class="op">==</span><span class="st"> "lin.std"</span>   <span class="op">~</span><span class="st"> "linearity"</span>,</a>
-<a class="sourceLine" id="cb3-15" data-line-number="15">      prep <span class="op">==</span><span class="st"> "drift.std"</span> <span class="op">~</span><span class="st"> "drift"</span>,</a>
-<a class="sourceLine" id="cb3-16" data-line-number="16">      id1 <span class="op">==</span><span class="st"> "pugel"</span>      <span class="op">~</span><span class="st"> "scale1"</span>,</a>
-<a class="sourceLine" id="cb3-17" data-line-number="17">      id1 <span class="op">==</span><span class="st"> "EDTA2"</span>      <span class="op">~</span><span class="st"> "scale2"</span>,</a>
-<a class="sourceLine" id="cb3-18" data-line-number="18">      <span class="ot">TRUE</span>                <span class="op">~</span><span class="st"> "sample"</span></a>
-<a class="sourceLine" id="cb3-19" data-line-number="19">    ),</a>
-<a class="sourceLine" id="cb3-20" data-line-number="20">    <span class="co"># what is the weight of the sample?</span></a>
-<a class="sourceLine" id="cb3-21" data-line-number="21">    <span class="dt">weight =</span> <span class="kw"><a href="https://readr.tidyverse.org/reference/parse_number.html">parse_number</a></span>(id2) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_double_with_units.html">iso_double_with_units</a></span>(<span class="st">"ug"</span>)</a>
-<a class="sourceLine" id="cb3-22" data-line-number="22">  ) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb3-23" data-line-number="23"><span class="st">  </span><span class="co"># focus only on the relevant file info, discarding the rest</span></a>
-<a class="sourceLine" id="cb3-24" data-line-number="24"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_select_file_info.html">iso_select_file_info</a></span>(Analysis, file_datetime, id1, id2, type, weight) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb3-25" data-line-number="25"><span class="st">  </span><span class="co"># filter out emptys at the beginning of the run</span></a>
-<a class="sourceLine" id="cb3-26" data-line-number="26"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_filter_files.html">iso_filter_files</a></span>(type <span class="op">!=</span><span class="st"> "empty"</span>)</a>
-<a class="sourceLine" id="cb3-27" data-line-number="27"><span class="co">#&gt; Info: renaming 3 file info column(s) wherever they exist across 121 isofile(s):</span></a>
-<a class="sourceLine" id="cb3-28" data-line-number="28"><span class="co">#&gt;  - for 121 file(s): 'Identifier 1'-&gt;'id1', 'Identifier 2'-&gt;'id2', 'Preparation'-&gt;'prep'</span></a>
-<a class="sourceLine" id="cb3-29" data-line-number="29"><span class="co">#&gt; Info: parsing 1 file info columns for 121 data file(s):</span></a>
-<a class="sourceLine" id="cb3-30" data-line-number="30"><span class="co">#&gt;  - to number: 'Analysis'</span></a>
-<a class="sourceLine" id="cb3-31" data-line-number="31"><span class="co">#&gt; Info: mutating file info for 121 data file(s)</span></a>
-<a class="sourceLine" id="cb3-32" data-line-number="32"><span class="co">#&gt; Info: keeping 7 file info column(s) wherever they exist across 121 isofile(s):</span></a>
-<a class="sourceLine" id="cb3-33" data-line-number="33"><span class="co">#&gt;  - for 121 file(s): 'file_id', 'Analysis', 'file_datetime', 'id1', 'id2', 'type', 'weight'</span></a>
-<a class="sourceLine" id="cb3-34" data-line-number="34"><span class="co">#&gt; Info: applying file filter, keeping 118 of 121 files</span></a></code></pre></div>
+<a class="sourceLine" id="cb3-5" data-line-number="5">    <span class="dt">id1 =</span> <span class="st">`</span><span class="dt">Identifier 1</span><span class="st">`</span>, <span class="dt">id2 =</span> <span class="st">`</span><span class="dt">Identifier 2</span><span class="st">`</span>, <span class="dt">prep =</span> Preparation,</a>
+<a class="sourceLine" id="cb3-6" data-line-number="6">    <span class="dt">seq_nr =</span> Row, <span class="dt">analysis =</span> Analysis</a>
+<a class="sourceLine" id="cb3-7" data-line-number="7">  ) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb3-8" data-line-number="8"><span class="st">  </span><span class="co"># parse text info into numbers</span></a>
+<a class="sourceLine" id="cb3-9" data-line-number="9"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_parse_file_info.html">iso_parse_file_info</a></span>(<span class="dt">number =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(seq_nr, analysis)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb3-10" data-line-number="10"><span class="st">  </span><span class="co"># process specific sequence file information</span></a>
+<a class="sourceLine" id="cb3-11" data-line-number="11"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_mutate_file_info.html">iso_mutate_file_info</a></span>(</a>
+<a class="sourceLine" id="cb3-12" data-line-number="12">    <span class="co"># what is the type of each analysis?</span></a>
+<a class="sourceLine" id="cb3-13" data-line-number="13">    <span class="dt">type =</span> <span class="kw">case_when</span>(</a>
+<a class="sourceLine" id="cb3-14" data-line-number="14">      id1 <span class="op">==</span><span class="st"> "empty"</span>      <span class="op">~</span><span class="st"> "empty"</span>,</a>
+<a class="sourceLine" id="cb3-15" data-line-number="15">      id1 <span class="op">==</span><span class="st"> "blank"</span>      <span class="op">~</span><span class="st"> "blank"</span>,</a>
+<a class="sourceLine" id="cb3-16" data-line-number="16">      prep <span class="op">==</span><span class="st"> "lin.std"</span>   <span class="op">~</span><span class="st"> "linearity"</span>,</a>
+<a class="sourceLine" id="cb3-17" data-line-number="17">      prep <span class="op">==</span><span class="st"> "drift.std"</span> <span class="op">~</span><span class="st"> "drift"</span>,</a>
+<a class="sourceLine" id="cb3-18" data-line-number="18">      id1 <span class="op">==</span><span class="st"> "pugel"</span>      <span class="op">~</span><span class="st"> "scale1"</span>,</a>
+<a class="sourceLine" id="cb3-19" data-line-number="19">      id1 <span class="op">==</span><span class="st"> "EDTA2"</span>      <span class="op">~</span><span class="st"> "scale2"</span>,</a>
+<a class="sourceLine" id="cb3-20" data-line-number="20">      <span class="ot">TRUE</span>                <span class="op">~</span><span class="st"> "sample"</span></a>
+<a class="sourceLine" id="cb3-21" data-line-number="21">    ),</a>
+<a class="sourceLine" id="cb3-22" data-line-number="22">    <span class="co"># what is the mass of the sample?</span></a>
+<a class="sourceLine" id="cb3-23" data-line-number="23">    <span class="dt">mass =</span> <span class="kw"><a href="https://readr.tidyverse.org/reference/parse_number.html">parse_number</a></span>(id2) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_double_with_units.html">iso_double_with_units</a></span>(<span class="st">"ug"</span>),</a>
+<a class="sourceLine" id="cb3-24" data-line-number="24">    <span class="co"># what folder are the data files in? (usually folder = sequence)</span></a>
+<a class="sourceLine" id="cb3-25" data-line-number="25">    <span class="dt">folder =</span> <span class="kw"><a href="https://rdrr.io/r/base/basename.html">basename</a></span>(<span class="kw"><a href="https://rdrr.io/r/base/basename.html">dirname</a></span>(file_path))</a>
+<a class="sourceLine" id="cb3-26" data-line-number="26">  ) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb3-27" data-line-number="27"><span class="st">  </span><span class="co"># focus only on the relevant file info, discarding the rest</span></a>
+<a class="sourceLine" id="cb3-28" data-line-number="28"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_select_file_info.html">iso_select_file_info</a></span>(folder, analysis, seq_nr, file_datetime, id1, id2, type, mass) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb3-29" data-line-number="29"><span class="st">  </span><span class="co"># filter out emptys at the beginning of the run</span></a>
+<a class="sourceLine" id="cb3-30" data-line-number="30"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_filter_files.html">iso_filter_files</a></span>(type <span class="op">!=</span><span class="st"> "empty"</span>)</a>
+<a class="sourceLine" id="cb3-31" data-line-number="31"><span class="co">#&gt; Info: renaming 5 file info column(s) wherever they exist across 121 isofile(s):</span></a>
+<a class="sourceLine" id="cb3-32" data-line-number="32"><span class="co">#&gt;  - for 121 file(s): 'Row'-&gt;'seq_nr', 'Identifier 1'-&gt;'id1', 'Identifier 2'-&gt;'id2', 'Analysis'-&gt;'analysis', 'Preparation'-&gt;'prep'</span></a>
+<a class="sourceLine" id="cb3-33" data-line-number="33"><span class="co">#&gt; Info: parsing 2 file info columns for 121 data file(s):</span></a>
+<a class="sourceLine" id="cb3-34" data-line-number="34"><span class="co">#&gt;  - to number: 'seq_nr', 'analysis'</span></a>
+<a class="sourceLine" id="cb3-35" data-line-number="35"><span class="co">#&gt; Info: mutating file info for 121 data file(s)</span></a>
+<a class="sourceLine" id="cb3-36" data-line-number="36"><span class="co">#&gt; Info: keeping 9 file info column(s) wherever they exist across 121 isofile(s):</span></a>
+<a class="sourceLine" id="cb3-37" data-line-number="37"><span class="co">#&gt;  - for 121 file(s): 'file_id', 'folder', 'analysis', 'seq_nr', 'file_datetime', 'id1', 'id2', 'type', 'mass'</span></a>
+<a class="sourceLine" id="cb3-38" data-line-number="38"><span class="co">#&gt; Info: applying file filter, keeping 118 of 121 files</span></a></code></pre></div>
 </div>
 <div id="process-peak-table" class="section level2">
 <h2 class="hasAnchor">
@@ -238,7 +242,94 @@
 <a class="sourceLine" id="cb5-8" data-line-number="8"><span class="co">#&gt; Info: setting peak table from vendor data table with the following renames:</span></a>
 <a class="sourceLine" id="cb5-9" data-line-number="9"><span class="co">#&gt; - for 118 file(s): 'Nr.'-&gt;'peak_nr', 'Is Ref.?'-&gt;'is_ref', 'Start'-&gt;'rt_start', 'Rt'-&gt;'rt', 'End'-&gt;'rt_end', 'Ampl 28'-&gt;'amp28', 'Ampl 29'-&gt;'amp29', 'Ampl 30'-&gt;'amp30', 'Ampl 44'-&gt;'amp44', 'Ampl 45'-&gt;'amp45', 'Ampl 46'-&gt;'amp46', 'BGD 28'-&gt;'bgrd28_start', 'BGD 29'-&gt;'bgrd29_start', 'BGD 30'-&gt;'bgrd30_start', 'BGD 44'-&gt;'bgrd44_start', 'BGD 45'-&gt;'bgrd45_start', 'BGD 46'-&gt;'bgrd46_start', 'BGD 28'-&gt;'bgrd28_end', 'BGD 29'-&gt;'bgrd29_end', 'BGD 30'-&gt;'bgrd30_end', 'BGD 44'-&gt;'bgrd44_end', 'BGD 45'-&gt;'bgrd45_end', 'BGD 46'-&gt;'bgrd46_end', 'rIntensity 28'-&gt;'area28', 'rIntensity 29'-&gt;'area29', 'rIntensity 30'-&gt;'area30', 'rIntensity 44'-&gt;'area44', 'rIntensity 45'-&gt;'area45', 'rIntensity 46'-&gt;'area46', 'rR 29N2/28N2'-&gt;'r29/28', 'rR 45CO2/44CO2'-&gt;'r45/44', 'rR 46CO2/44CO2'-&gt;'r46/44', 'rd 29N2/28N2'-&gt;'rd29/28', 'rd 45CO2/44CO2'-&gt;'rd45/44', 'rd 46CO2/44CO2'-&gt;'rd46/44', 'd 29N2/28N2'-&gt;'d29/28', 'd 45CO2/44CO2'-&gt;'d45/44', 'd 46CO2/44CO2'-&gt;'d46/44', 'd 15N/14N'-&gt;'d15N', 'd 13C/12C'-&gt;'d13C', 'd 18O/16O'-&gt;'d18O', 'd 17O/16O'-&gt;'d17O', 'AT% 15N/14N'-&gt;'at15N', 'AT% 13C/12C'-&gt;'at13C', 'AT% 18O/16O'-&gt;'at18O'</span></a>
 <a class="sourceLine" id="cb5-10" data-line-number="10"><span class="co">#&gt; Info: converting peak table column units where applicable from 'mV'-&gt;'V' and 'mVs'-&gt;'Vs' for columns matching 'everything()'</span></a>
-<a class="sourceLine" id="cb5-11" data-line-number="11"><span class="co">#&gt; Info: 354 of 707 peaks in 118 files were successfully mapped using a single peak map. 353 peak(s) could not be mapped.</span></a></code></pre></div>
+<a class="sourceLine" id="cb5-11" data-line-number="11"><span class="co">#&gt; Info: 354 of 707 peaks in 118 files were successfully mapped using a single peak map. 353 peak(s) could not be mapped.</span></a>
+<a class="sourceLine" id="cb5-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb5-13" data-line-number="13"><span class="co"># show first few rows of the peak mappings summary (unmapped peaks = N2)</span></a>
+<a class="sourceLine" id="cb5-14" data-line-number="14">iso_files <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb5-15" data-line-number="15"><span class="st">  </span><span class="kw"><a href="../reference/iso_summarize_peak_mappings.html">iso_summarize_peak_mappings</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb5-16" data-line-number="16"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="dv">10</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb5-17" data-line-number="17"><span class="st">  </span>knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/kable.html">kable</a></span>()</a></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="left">file_id</th>
+<th align="left">mapped</th>
+<th align="left">ambiguous</th>
+<th align="left">missing</th>
+<th align="left">peak_info</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">19602__blank_0.dxf</td>
+<td align="left">3/6</td>
+<td align="left">0/3</td>
+<td align="left">0/3</td>
+<td align="left">?? (58.94), ?? (108.7), ?? (186.2), CO2 analyte (304.7), CO2 ref (427.2), CO2 ref (477.1)</td>
+</tr>
+<tr class="even">
+<td align="left">19603__acn1_44.dxf</td>
+<td align="left">3/6</td>
+<td align="left">0/3</td>
+<td align="left">0/3</td>
+<td align="left">?? (58.94), ?? (108.7), ?? (156.8), CO2 analyte (304.1), CO2 ref (427.4), CO2 ref (477.1)</td>
+</tr>
+<tr class="odd">
+<td align="left">19604__EDTA2_70.dxf</td>
+<td align="left">3/6</td>
+<td align="left">0/3</td>
+<td align="left">0/3</td>
+<td align="left">?? (58.94), ?? (108.7), ?? (156.5), CO2 analyte (303.9), CO2 ref (427.4), CO2 ref (477.1)</td>
+</tr>
+<tr class="even">
+<td align="left">19605__pugel_73.dxf</td>
+<td align="left">3/6</td>
+<td align="left">0/3</td>
+<td align="left">0/3</td>
+<td align="left">?? (58.94), ?? (108.7), ?? (156.5), CO2 analyte (304.1), CO2 ref (427.4), CO2 ref (477.1)</td>
+</tr>
+<tr class="odd">
+<td align="left">19606__acn1_9.dxf</td>
+<td align="left">3/6</td>
+<td align="left">0/3</td>
+<td align="left">0/3</td>
+<td align="left">?? (58.94), ?? (108.7), ?? (157.4), CO2 analyte (304.7), CO2 ref (427.4), CO2 ref (477.1)</td>
+</tr>
+<tr class="even">
+<td align="left">19607__acn1_22.dxf</td>
+<td align="left">3/6</td>
+<td align="left">0/3</td>
+<td align="left">0/3</td>
+<td align="left">?? (58.94), ?? (108.7), ?? (156.3), CO2 analyte (303.9), CO2 ref (427.4), CO2 ref (477.1)</td>
+</tr>
+<tr class="odd">
+<td align="left">19608__acn1_30.dxf</td>
+<td align="left">3/6</td>
+<td align="left">0/3</td>
+<td align="left">0/3</td>
+<td align="left">?? (58.94), ?? (108.7), ?? (156.8), CO2 analyte (304.1), CO2 ref (427.4), CO2 ref (477.1)</td>
+</tr>
+<tr class="even">
+<td align="left">19609__acn1_39.dxf</td>
+<td align="left">3/6</td>
+<td align="left">0/3</td>
+<td align="left">0/3</td>
+<td align="left">?? (58.94), ?? (108.7), ?? (156.3), CO2 analyte (303.5), CO2 ref (427.4), CO2 ref (477.1)</td>
+</tr>
+<tr class="odd">
+<td align="left">19610__acn1_47.dxf</td>
+<td align="left">3/6</td>
+<td align="left">0/3</td>
+<td align="left">0/3</td>
+<td align="left">?? (58.94), ?? (108.7), ?? (156.8), CO2 analyte (303.7), CO2 ref (427.4), CO2 ref (477.1)</td>
+</tr>
+<tr class="even">
+<td align="left">19611__acn1_62.dxf</td>
+<td align="left">3/6</td>
+<td align="left">0/3</td>
+<td align="left">0/3</td>
+<td align="left">?? (58.94), ?? (108.7), ?? (156.1), CO2 analyte (303), CO2 ref (427.4), CO2 ref (477.1)</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="show-file-information" class="section level2">
 <h2 class="hasAnchor">
@@ -252,17 +343,21 @@
 <table class="table">
 <thead><tr class="header">
 <th align="left">file_id</th>
-<th align="right">Analysis</th>
+<th align="left">folder</th>
+<th align="right">analysis</th>
+<th align="right">seq_nr</th>
 <th align="left">file_datetime</th>
 <th align="left">id1</th>
 <th align="left">id2</th>
 <th align="left">type</th>
-<th align="right">weight [ug]</th>
+<th align="right">mass [ug]</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td align="left">19602__blank_0.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19602</td>
+<td align="right">4</td>
 <td align="left">2019-06-25 09:51:45</td>
 <td align="left">blank</td>
 <td align="left">0</td>
@@ -271,7 +366,9 @@
 </tr>
 <tr class="even">
 <td align="left">19603__acn1_44.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19603</td>
+<td align="right">5</td>
 <td align="left">2019-06-25 10:01:29</td>
 <td align="left">acn1</td>
 <td align="left">44</td>
@@ -280,7 +377,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19604__EDTA2_70.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19604</td>
+<td align="right">6</td>
 <td align="left">2019-06-25 10:11:14</td>
 <td align="left">EDTA2</td>
 <td align="left">70</td>
@@ -289,7 +388,9 @@
 </tr>
 <tr class="even">
 <td align="left">19605__pugel_73.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19605</td>
+<td align="right">7</td>
 <td align="left">2019-06-25 10:20:59</td>
 <td align="left">pugel</td>
 <td align="left">73</td>
@@ -298,7 +399,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19606__acn1_9.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19606</td>
+<td align="right">8</td>
 <td align="left">2019-06-25 10:30:44</td>
 <td align="left">acn1</td>
 <td align="left">9</td>
@@ -307,7 +410,9 @@
 </tr>
 <tr class="even">
 <td align="left">19607__acn1_22.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19607</td>
+<td align="right">9</td>
 <td align="left">2019-06-25 10:40:28</td>
 <td align="left">acn1</td>
 <td align="left">22</td>
@@ -316,7 +421,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19608__acn1_30.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19608</td>
+<td align="right">10</td>
 <td align="left">2019-06-25 10:50:13</td>
 <td align="left">acn1</td>
 <td align="left">30</td>
@@ -325,7 +432,9 @@
 </tr>
 <tr class="even">
 <td align="left">19609__acn1_39.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19609</td>
+<td align="right">11</td>
 <td align="left">2019-06-25 10:59:57</td>
 <td align="left">acn1</td>
 <td align="left">39</td>
@@ -334,7 +443,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19610__acn1_47.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19610</td>
+<td align="right">12</td>
 <td align="left">2019-06-25 11:09:45</td>
 <td align="left">acn1</td>
 <td align="left">47</td>
@@ -343,7 +454,9 @@
 </tr>
 <tr class="even">
 <td align="left">19611__acn1_62.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19611</td>
+<td align="right">13</td>
 <td align="left">2019-06-25 11:19:34</td>
 <td align="left">acn1</td>
 <td align="left">62</td>
@@ -352,7 +465,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19612__acn1_70.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19612</td>
+<td align="right">14</td>
 <td align="left">2019-06-25 11:29:19</td>
 <td align="left">acn1</td>
 <td align="left">70</td>
@@ -361,7 +476,9 @@
 </tr>
 <tr class="even">
 <td align="left">19613__acn1_79.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19613</td>
+<td align="right">15</td>
 <td align="left">2019-06-25 11:39:23</td>
 <td align="left">acn1</td>
 <td align="left">79</td>
@@ -370,7 +487,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19614__acn1_93.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19614</td>
+<td align="right">16</td>
 <td align="left">2019-06-25 11:49:07</td>
 <td align="left">acn1</td>
 <td align="left">93</td>
@@ -379,7 +498,9 @@
 </tr>
 <tr class="even">
 <td align="left">19615__acn1_114.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19615</td>
+<td align="right">17</td>
 <td align="left">2019-06-25 11:58:52</td>
 <td align="left">acn1</td>
 <td align="left">114</td>
@@ -388,7 +509,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19616__EDTA2_74.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19616</td>
+<td align="right">18</td>
 <td align="left">2019-06-25 12:08:36</td>
 <td align="left">EDTA2</td>
 <td align="left">74</td>
@@ -397,7 +520,9 @@
 </tr>
 <tr class="even">
 <td align="left">19617__acn1_45.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19617</td>
+<td align="right">19</td>
 <td align="left">2019-06-25 12:18:20</td>
 <td align="left">acn1</td>
 <td align="left">45</td>
@@ -406,7 +531,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19618__3-1_81.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19618</td>
+<td align="right">20</td>
 <td align="left">2019-06-25 12:28:05</td>
 <td align="left">3-1</td>
 <td align="left">81</td>
@@ -415,7 +542,9 @@
 </tr>
 <tr class="even">
 <td align="left">19619__3-2_65.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19619</td>
+<td align="right">21</td>
 <td align="left">2019-06-25 12:39:47</td>
 <td align="left">3-2</td>
 <td align="left">65</td>
@@ -424,7 +553,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19620__3-3_79.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19620</td>
+<td align="right">22</td>
 <td align="left">2019-06-25 12:49:32</td>
 <td align="left">3-3</td>
 <td align="left">79</td>
@@ -433,7 +564,9 @@
 </tr>
 <tr class="even">
 <td align="left">19621__3-4_91.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19621</td>
+<td align="right">23</td>
 <td align="left">2019-06-25 12:59:16</td>
 <td align="left">3-4</td>
 <td align="left">91</td>
@@ -442,7 +575,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19622__3-5_92.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19622</td>
+<td align="right">24</td>
 <td align="left">2019-06-25 13:09:01</td>
 <td align="left">3-5</td>
 <td align="left">92</td>
@@ -451,7 +586,9 @@
 </tr>
 <tr class="even">
 <td align="left">19623__3-6_111.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19623</td>
+<td align="right">25</td>
 <td align="left">2019-06-25 13:18:45</td>
 <td align="left">3-6</td>
 <td align="left">111</td>
@@ -460,7 +597,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19624__acn1_44.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19624</td>
+<td align="right">26</td>
 <td align="left">2019-06-25 13:28:29</td>
 <td align="left">acn1</td>
 <td align="left">44</td>
@@ -469,7 +608,9 @@
 </tr>
 <tr class="even">
 <td align="left">19625__EDTA2_71.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19625</td>
+<td align="right">27</td>
 <td align="left">2019-06-25 13:38:14</td>
 <td align="left">EDTA2</td>
 <td align="left">71</td>
@@ -478,7 +619,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19626__3-7_89.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19626</td>
+<td align="right">28</td>
 <td align="left">2019-06-25 13:47:59</td>
 <td align="left">3-7</td>
 <td align="left">89</td>
@@ -487,7 +630,9 @@
 </tr>
 <tr class="even">
 <td align="left">19627__3-8_90.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19627</td>
+<td align="right">29</td>
 <td align="left">2019-06-25 13:57:43</td>
 <td align="left">3-8</td>
 <td align="left">90</td>
@@ -496,7 +641,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19628__3-9_90.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19628</td>
+<td align="right">30</td>
 <td align="left">2019-06-25 14:07:27</td>
 <td align="left">3-9</td>
 <td align="left">90</td>
@@ -505,7 +652,9 @@
 </tr>
 <tr class="even">
 <td align="left">19629__3-10_100.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19629</td>
+<td align="right">31</td>
 <td align="left">2019-06-25 14:17:12</td>
 <td align="left">3-10</td>
 <td align="left">100</td>
@@ -514,7 +663,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19630__3-11_68.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19630</td>
+<td align="right">32</td>
 <td align="left">2019-06-25 14:26:56</td>
 <td align="left">3-11</td>
 <td align="left">68</td>
@@ -523,7 +674,9 @@
 </tr>
 <tr class="even">
 <td align="left">19631__3-12_81.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19631</td>
+<td align="right">33</td>
 <td align="left">2019-06-25 14:36:45</td>
 <td align="left">3-12</td>
 <td align="left">81</td>
@@ -532,7 +685,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19632__acn1_44.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19632</td>
+<td align="right">34</td>
 <td align="left">2019-06-25 14:46:29</td>
 <td align="left">acn1</td>
 <td align="left">44</td>
@@ -541,7 +696,9 @@
 </tr>
 <tr class="even">
 <td align="left">19633__pugel_69.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19633</td>
+<td align="right">35</td>
 <td align="left">2019-06-25 14:56:13</td>
 <td align="left">pugel</td>
 <td align="left">69</td>
@@ -550,7 +707,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19634__EDTA2_73.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19634</td>
+<td align="right">36</td>
 <td align="left">2019-06-25 15:05:58</td>
 <td align="left">EDTA2</td>
 <td align="left">73</td>
@@ -559,7 +718,9 @@
 </tr>
 <tr class="even">
 <td align="left">19635__3-13_85.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19635</td>
+<td align="right">37</td>
 <td align="left">2019-06-25 15:15:42</td>
 <td align="left">3-13</td>
 <td align="left">85</td>
@@ -568,7 +729,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19636__3-14_52.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19636</td>
+<td align="right">38</td>
 <td align="left">2019-06-25 15:25:27</td>
 <td align="left">3-14</td>
 <td align="left">52</td>
@@ -577,7 +740,9 @@
 </tr>
 <tr class="even">
 <td align="left">19637__3-15_42.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19637</td>
+<td align="right">39</td>
 <td align="left">2019-06-25 15:35:11</td>
 <td align="left">3-15</td>
 <td align="left">42</td>
@@ -586,7 +751,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19638__3-16_85.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19638</td>
+<td align="right">40</td>
 <td align="left">2019-06-25 15:44:55</td>
 <td align="left">3-16</td>
 <td align="left">85</td>
@@ -595,7 +762,9 @@
 </tr>
 <tr class="even">
 <td align="left">19639__3-17_109.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19639</td>
+<td align="right">41</td>
 <td align="left">2019-06-25 15:55:21</td>
 <td align="left">3-17</td>
 <td align="left">109</td>
@@ -604,7 +773,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19640__3-18_102.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19640</td>
+<td align="right">42</td>
 <td align="left">2019-06-25 16:05:05</td>
 <td align="left">3-18</td>
 <td align="left">102</td>
@@ -613,7 +784,9 @@
 </tr>
 <tr class="even">
 <td align="left">19641__acn1_45.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19641</td>
+<td align="right">43</td>
 <td align="left">2019-06-25 16:14:49</td>
 <td align="left">acn1</td>
 <td align="left">45</td>
@@ -622,7 +795,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19642__EDTA_74.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19642</td>
+<td align="right">44</td>
 <td align="left">2019-06-25 16:24:34</td>
 <td align="left">EDTA</td>
 <td align="left">74</td>
@@ -631,7 +806,9 @@
 </tr>
 <tr class="even">
 <td align="left">19643__3-19_92.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19643</td>
+<td align="right">45</td>
 <td align="left">2019-06-25 16:34:18</td>
 <td align="left">3-19</td>
 <td align="left">92</td>
@@ -640,7 +817,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19644__blank_0.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19644</td>
+<td align="right">46</td>
 <td align="left">2019-06-25 16:44:03</td>
 <td align="left">blank</td>
 <td align="left">0</td>
@@ -649,7 +828,9 @@
 </tr>
 <tr class="even">
 <td align="left">19645__3-20_82.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19645</td>
+<td align="right">47</td>
 <td align="left">2019-06-25 16:53:47</td>
 <td align="left">3-20</td>
 <td align="left">82</td>
@@ -658,7 +839,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19646__3-21_98.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19646</td>
+<td align="right">48</td>
 <td align="left">2019-06-25 17:03:32</td>
 <td align="left">3-21</td>
 <td align="left">98</td>
@@ -667,7 +850,9 @@
 </tr>
 <tr class="even">
 <td align="left">19647__3-22_71.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19647</td>
+<td align="right">49</td>
 <td align="left">2019-06-25 17:13:16</td>
 <td align="left">3-22</td>
 <td align="left">71</td>
@@ -676,7 +861,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19648__3-23_74.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19648</td>
+<td align="right">50</td>
 <td align="left">2019-06-25 17:23:00</td>
 <td align="left">3-23</td>
 <td align="left">74</td>
@@ -685,7 +872,9 @@
 </tr>
 <tr class="even">
 <td align="left">19649__acn1_44.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19649</td>
+<td align="right">51</td>
 <td align="left">2019-06-25 17:32:45</td>
 <td align="left">acn1</td>
 <td align="left">44</td>
@@ -694,7 +883,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19650__EDTA2_70.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19650</td>
+<td align="right">52</td>
 <td align="left">2019-06-25 17:42:29</td>
 <td align="left">EDTA2</td>
 <td align="left">70</td>
@@ -703,7 +894,9 @@
 </tr>
 <tr class="even">
 <td align="left">19651__3-24_59.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19651</td>
+<td align="right">53</td>
 <td align="left">2019-06-25 17:52:13</td>
 <td align="left">3-24</td>
 <td align="left">59</td>
@@ -712,7 +905,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19652__3-25_81.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19652</td>
+<td align="right">54</td>
 <td align="left">2019-06-25 18:01:59</td>
 <td align="left">3-25</td>
 <td align="left">81</td>
@@ -721,7 +916,9 @@
 </tr>
 <tr class="even">
 <td align="left">19653__3-26_81.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19653</td>
+<td align="right">55</td>
 <td align="left">2019-06-25 18:11:43</td>
 <td align="left">3-26</td>
 <td align="left">81</td>
@@ -730,7 +927,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19654__3-27_69.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19654</td>
+<td align="right">56</td>
 <td align="left">2019-06-25 18:21:27</td>
 <td align="left">3-27</td>
 <td align="left">69</td>
@@ -739,7 +938,9 @@
 </tr>
 <tr class="even">
 <td align="left">19655__3-28_97.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19655</td>
+<td align="right">57</td>
 <td align="left">2019-06-25 18:31:12</td>
 <td align="left">3-28</td>
 <td align="left">97</td>
@@ -748,7 +949,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19656__3-29_90.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19656</td>
+<td align="right">58</td>
 <td align="left">2019-06-25 18:40:56</td>
 <td align="left">3-29</td>
 <td align="left">90</td>
@@ -757,7 +960,9 @@
 </tr>
 <tr class="even">
 <td align="left">19657__act1_43.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19657</td>
+<td align="right">59</td>
 <td align="left">2019-06-25 18:56:06</td>
 <td align="left">act1</td>
 <td align="left">43</td>
@@ -766,7 +971,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19658__EDTA2_72.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19658</td>
+<td align="right">60</td>
 <td align="left">2019-06-25 19:05:50</td>
 <td align="left">EDTA2</td>
 <td align="left">72</td>
@@ -775,7 +982,9 @@
 </tr>
 <tr class="even">
 <td align="left">19659__3-30_88.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19659</td>
+<td align="right">61</td>
 <td align="left">2019-06-25 19:15:35</td>
 <td align="left">3-30</td>
 <td align="left">88</td>
@@ -784,7 +993,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19660__3-31_88.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19660</td>
+<td align="right">62</td>
 <td align="left">2019-06-25 19:25:19</td>
 <td align="left">3-31</td>
 <td align="left">88</td>
@@ -793,7 +1004,9 @@
 </tr>
 <tr class="even">
 <td align="left">19661__3-32_61.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19661</td>
+<td align="right">63</td>
 <td align="left">2019-06-25 19:35:03</td>
 <td align="left">3-32</td>
 <td align="left">61</td>
@@ -802,7 +1015,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19662__3-33_76.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19662</td>
+<td align="right">64</td>
 <td align="left">2019-06-25 19:44:48</td>
 <td align="left">3-33</td>
 <td align="left">76</td>
@@ -811,7 +1026,9 @@
 </tr>
 <tr class="even">
 <td align="left">19663__3-34_78.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19663</td>
+<td align="right">65</td>
 <td align="left">2019-06-25 19:54:32</td>
 <td align="left">3-34</td>
 <td align="left">78</td>
@@ -820,7 +1037,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19664__3-35_99.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19664</td>
+<td align="right">66</td>
 <td align="left">2019-06-25 20:04:17</td>
 <td align="left">3-35</td>
 <td align="left">99</td>
@@ -829,7 +1048,9 @@
 </tr>
 <tr class="even">
 <td align="left">19665__act1_45.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19665</td>
+<td align="right">67</td>
 <td align="left">2019-06-25 20:14:01</td>
 <td align="left">act1</td>
 <td align="left">45</td>
@@ -838,7 +1059,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19666__EDTA2_70.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19666</td>
+<td align="right">68</td>
 <td align="left">2019-06-25 20:23:45</td>
 <td align="left">EDTA2</td>
 <td align="left">70</td>
@@ -847,7 +1070,9 @@
 </tr>
 <tr class="even">
 <td align="left">19667__3-36_53.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19667</td>
+<td align="right">69</td>
 <td align="left">2019-06-25 20:33:30</td>
 <td align="left">3-36</td>
 <td align="left">53</td>
@@ -856,7 +1081,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19668__3-40_96.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19668</td>
+<td align="right">70</td>
 <td align="left">2019-06-25 20:43:15</td>
 <td align="left">3-40</td>
 <td align="left">96</td>
@@ -865,7 +1092,9 @@
 </tr>
 <tr class="even">
 <td align="left">19669__3-41_80.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19669</td>
+<td align="right">71</td>
 <td align="left">2019-06-25 20:53:00</td>
 <td align="left">3-41</td>
 <td align="left">80</td>
@@ -874,7 +1103,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19670__3-42_95.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19670</td>
+<td align="right">72</td>
 <td align="left">2019-06-25 21:02:44</td>
 <td align="left">3-42</td>
 <td align="left">95</td>
@@ -883,7 +1114,9 @@
 </tr>
 <tr class="even">
 <td align="left">19671__3-43_106.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19671</td>
+<td align="right">73</td>
 <td align="left">2019-06-25 21:12:29</td>
 <td align="left">3-43</td>
 <td align="left">106</td>
@@ -892,7 +1125,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19672__3-44_114.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19672</td>
+<td align="right">74</td>
 <td align="left">2019-06-25 21:22:13</td>
 <td align="left">3-44</td>
 <td align="left">114</td>
@@ -901,7 +1136,9 @@
 </tr>
 <tr class="even">
 <td align="left">19673__act1_48.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19673</td>
+<td align="right">75</td>
 <td align="left">2019-06-25 21:31:58</td>
 <td align="left">act1</td>
 <td align="left">48</td>
@@ -910,7 +1147,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19674__EDTA2_70.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19674</td>
+<td align="right">76</td>
 <td align="left">2019-06-25 21:41:42</td>
 <td align="left">EDTA2</td>
 <td align="left">70</td>
@@ -919,7 +1158,9 @@
 </tr>
 <tr class="even">
 <td align="left">19675__3-45_81.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19675</td>
+<td align="right">77</td>
 <td align="left">2019-06-25 21:51:27</td>
 <td align="left">3-45</td>
 <td align="left">81</td>
@@ -928,7 +1169,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19676__3-46_77.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19676</td>
+<td align="right">78</td>
 <td align="left">2019-06-25 22:01:11</td>
 <td align="left">3-46</td>
 <td align="left">77</td>
@@ -937,7 +1180,9 @@
 </tr>
 <tr class="even">
 <td align="left">19677__3-47_67.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19677</td>
+<td align="right">79</td>
 <td align="left">2019-06-25 22:10:55</td>
 <td align="left">3-47</td>
 <td align="left">67</td>
@@ -946,7 +1191,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19678__blank_0.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19678</td>
+<td align="right">80</td>
 <td align="left">2019-06-25 22:20:40</td>
 <td align="left">blank</td>
 <td align="left">0</td>
@@ -955,7 +1202,9 @@
 </tr>
 <tr class="even">
 <td align="left">19679__3-53_87.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19679</td>
+<td align="right">81</td>
 <td align="left">2019-06-25 22:30:24</td>
 <td align="left">3-53</td>
 <td align="left">87</td>
@@ -964,7 +1213,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19680__3-56_81.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19680</td>
+<td align="right">82</td>
 <td align="left">2019-06-25 22:40:09</td>
 <td align="left">3-56</td>
 <td align="left">81</td>
@@ -973,7 +1224,9 @@
 </tr>
 <tr class="even">
 <td align="left">19681__act1_47.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19681</td>
+<td align="right">83</td>
 <td align="left">2019-06-25 22:49:53</td>
 <td align="left">act1</td>
 <td align="left">47</td>
@@ -982,7 +1235,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19682__EDTA2_73.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19682</td>
+<td align="right">84</td>
 <td align="left">2019-06-25 22:59:37</td>
 <td align="left">EDTA2</td>
 <td align="left">73</td>
@@ -991,7 +1246,9 @@
 </tr>
 <tr class="even">
 <td align="left">19683__3-59_72.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19683</td>
+<td align="right">85</td>
 <td align="left">2019-06-25 23:09:22</td>
 <td align="left">3-59</td>
 <td align="left">72</td>
@@ -1000,7 +1257,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19684__4-4_89.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19684</td>
+<td align="right">86</td>
 <td align="left">2019-06-25 23:19:07</td>
 <td align="left">4-4</td>
 <td align="left">89</td>
@@ -1009,7 +1268,9 @@
 </tr>
 <tr class="even">
 <td align="left">19685__4-5_97.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19685</td>
+<td align="right">87</td>
 <td align="left">2019-06-25 23:28:52</td>
 <td align="left">4-5</td>
 <td align="left">97</td>
@@ -1018,7 +1279,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19686__4-6_84.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19686</td>
+<td align="right">88</td>
 <td align="left">2019-06-25 23:38:36</td>
 <td align="left">4-6</td>
 <td align="left">84</td>
@@ -1027,7 +1290,9 @@
 </tr>
 <tr class="even">
 <td align="left">19687__4-7_104.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19687</td>
+<td align="right">89</td>
 <td align="left">2019-06-25 23:48:20</td>
 <td align="left">4-7</td>
 <td align="left">104</td>
@@ -1036,7 +1301,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19688__4-8_74.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19688</td>
+<td align="right">90</td>
 <td align="left">2019-06-25 23:58:05</td>
 <td align="left">4-8</td>
 <td align="left">74</td>
@@ -1045,7 +1312,9 @@
 </tr>
 <tr class="even">
 <td align="left">19689__act1_44.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19689</td>
+<td align="right">91</td>
 <td align="left">2019-06-26 00:07:49</td>
 <td align="left">act1</td>
 <td align="left">44</td>
@@ -1054,7 +1323,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19690__pugel_70.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19690</td>
+<td align="right">92</td>
 <td align="left">2019-06-26 00:17:34</td>
 <td align="left">pugel</td>
 <td align="left">70</td>
@@ -1063,7 +1334,9 @@
 </tr>
 <tr class="even">
 <td align="left">19691__EDTA2_71.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19691</td>
+<td align="right">93</td>
 <td align="left">2019-06-26 00:27:18</td>
 <td align="left">EDTA2</td>
 <td align="left">71</td>
@@ -1072,7 +1345,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19692__4-9_87.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19692</td>
+<td align="right">94</td>
 <td align="left">2019-06-26 00:37:03</td>
 <td align="left">4-9</td>
 <td align="left">87</td>
@@ -1081,7 +1356,9 @@
 </tr>
 <tr class="even">
 <td align="left">19693__4-10_70.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19693</td>
+<td align="right">95</td>
 <td align="left">2019-06-26 00:46:47</td>
 <td align="left">4-10</td>
 <td align="left">70</td>
@@ -1090,7 +1367,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19694__4-11_63.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19694</td>
+<td align="right">96</td>
 <td align="left">2019-06-26 00:56:31</td>
 <td align="left">4-11</td>
 <td align="left">63</td>
@@ -1099,7 +1378,9 @@
 </tr>
 <tr class="even">
 <td align="left">19695__4-12_56.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19695</td>
+<td align="right">97</td>
 <td align="left">2019-06-26 01:06:16</td>
 <td align="left">4-12</td>
 <td align="left">56</td>
@@ -1108,7 +1389,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19696__4-16_76.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19696</td>
+<td align="right">98</td>
 <td align="left">2019-06-26 01:16:00</td>
 <td align="left">4-16</td>
 <td align="left">76</td>
@@ -1117,7 +1400,9 @@
 </tr>
 <tr class="even">
 <td align="left">19697__4-17_92.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19697</td>
+<td align="right">99</td>
 <td align="left">2019-06-26 01:25:45</td>
 <td align="left">4-17</td>
 <td align="left">92</td>
@@ -1126,7 +1411,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19698__act1_48.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19698</td>
+<td align="right">100</td>
 <td align="left">2019-06-26 01:35:29</td>
 <td align="left">act1</td>
 <td align="left">48</td>
@@ -1135,7 +1422,9 @@
 </tr>
 <tr class="even">
 <td align="left">19699__EDTA2_71.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19699</td>
+<td align="right">101</td>
 <td align="left">2019-06-26 01:45:14</td>
 <td align="left">EDTA2</td>
 <td align="left">71</td>
@@ -1144,7 +1433,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19700__4-18_63.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19700</td>
+<td align="right">102</td>
 <td align="left">2019-06-26 01:54:58</td>
 <td align="left">4-18</td>
 <td align="left">63</td>
@@ -1153,7 +1444,9 @@
 </tr>
 <tr class="even">
 <td align="left">19701__4-19_89.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19701</td>
+<td align="right">103</td>
 <td align="left">2019-06-26 02:04:43</td>
 <td align="left">4-19</td>
 <td align="left">89</td>
@@ -1162,7 +1455,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19702__4-20_83.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19702</td>
+<td align="right">104</td>
 <td align="left">2019-06-26 02:14:27</td>
 <td align="left">4-20</td>
 <td align="left">83</td>
@@ -1171,7 +1466,9 @@
 </tr>
 <tr class="even">
 <td align="left">19703__4-21_106.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19703</td>
+<td align="right">105</td>
 <td align="left">2019-06-26 02:24:12</td>
 <td align="left">4-21</td>
 <td align="left">106</td>
@@ -1180,7 +1477,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19704__4-22_59.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19704</td>
+<td align="right">106</td>
 <td align="left">2019-06-26 02:33:56</td>
 <td align="left">4-22</td>
 <td align="left">59</td>
@@ -1189,7 +1488,9 @@
 </tr>
 <tr class="even">
 <td align="left">19705__4-23_58.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19705</td>
+<td align="right">107</td>
 <td align="left">2019-06-26 02:43:41</td>
 <td align="left">4-23</td>
 <td align="left">58</td>
@@ -1198,7 +1499,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19706__act1_48.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19706</td>
+<td align="right">108</td>
 <td align="left">2019-06-26 02:53:26</td>
 <td align="left">act1</td>
 <td align="left">48</td>
@@ -1207,7 +1510,9 @@
 </tr>
 <tr class="even">
 <td align="left">19707__EDTA2_70.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19707</td>
+<td align="right">109</td>
 <td align="left">2019-06-26 03:03:10</td>
 <td align="left">EDTA2</td>
 <td align="left">70</td>
@@ -1216,7 +1521,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19708__4-24_69.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19708</td>
+<td align="right">110</td>
 <td align="left">2019-06-26 03:12:55</td>
 <td align="left">4-24</td>
 <td align="left">69</td>
@@ -1225,7 +1532,9 @@
 </tr>
 <tr class="even">
 <td align="left">19709__4-29_79.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19709</td>
+<td align="right">111</td>
 <td align="left">2019-06-26 03:22:40</td>
 <td align="left">4-29</td>
 <td align="left">79</td>
@@ -1234,7 +1543,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19710__4-30_62.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19710</td>
+<td align="right">112</td>
 <td align="left">2019-06-26 03:32:57</td>
 <td align="left">4-30</td>
 <td align="left">62</td>
@@ -1243,7 +1554,9 @@
 </tr>
 <tr class="even">
 <td align="left">19711__4-32_81.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19711</td>
+<td align="right">113</td>
 <td align="left">2019-06-26 03:42:42</td>
 <td align="left">4-32</td>
 <td align="left">81</td>
@@ -1252,7 +1565,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19712__4-33_78.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19712</td>
+<td align="right">114</td>
 <td align="left">2019-06-26 03:52:26</td>
 <td align="left">4-33</td>
 <td align="left">78</td>
@@ -1261,7 +1576,9 @@
 </tr>
 <tr class="even">
 <td align="left">19713__4-35_55.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19713</td>
+<td align="right">115</td>
 <td align="left">2019-06-26 04:02:11</td>
 <td align="left">4-35</td>
 <td align="left">55</td>
@@ -1270,7 +1587,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19714__act1_48.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19714</td>
+<td align="right">116</td>
 <td align="left">2019-06-26 04:11:55</td>
 <td align="left">act1</td>
 <td align="left">48</td>
@@ -1279,7 +1598,9 @@
 </tr>
 <tr class="even">
 <td align="left">19715__EDTA2_73.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19715</td>
+<td align="right">117</td>
 <td align="left">2019-06-26 04:21:39</td>
 <td align="left">EDTA2</td>
 <td align="left">73</td>
@@ -1288,7 +1609,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19716__4-36_59.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19716</td>
+<td align="right">118</td>
 <td align="left">2019-06-26 04:31:24</td>
 <td align="left">4-36</td>
 <td align="left">59</td>
@@ -1297,7 +1620,9 @@
 </tr>
 <tr class="even">
 <td align="left">19717__4-41_55.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19717</td>
+<td align="right">119</td>
 <td align="left">2019-06-26 04:41:08</td>
 <td align="left">4-41</td>
 <td align="left">55</td>
@@ -1306,7 +1631,9 @@
 </tr>
 <tr class="odd">
 <td align="left">19718__4-42_80.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19718</td>
+<td align="right">120</td>
 <td align="left">2019-06-26 04:50:53</td>
 <td align="left">4-42</td>
 <td align="left">80</td>
@@ -1315,7 +1642,9 @@
 </tr>
 <tr class="even">
 <td align="left">19719__4-47_57.dxf</td>
+<td align="left">190625_EA_data</td>
 <td align="right">19719</td>
+<td align="right">121</td>
 <td align="left">2019-06-26 05:00:37</td>
 <td align="left">4-47</td>
 <td align="left">57</td>
@@ -1331,9 +1660,9 @@
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="co"># plot the chromatograms</span></a>
 <a class="sourceLine" id="cb7-2" data-line-number="2">iso_files <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb7-3" data-line-number="3"><span class="st">  </span><span class="co"># select a few analyses to show</span></a>
-<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_filter_files.html">iso_filter_files</a></span>(Analysis <span class="op">%in%</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">19642</span>, <span class="dv">19656</span>, <span class="dv">19681</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_filter_files.html">iso_filter_files</a></span>(analysis <span class="op">%in%</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">19642</span>, <span class="dv">19656</span>, <span class="dv">19681</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb7-5" data-line-number="5"><span class="st">  </span><span class="co"># introduce a label column for coloring the lines</span></a>
-<a class="sourceLine" id="cb7-6" data-line-number="6"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_mutate_file_info.html">iso_mutate_file_info</a></span>(<span class="dt">label =</span> <span class="kw"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span>(<span class="st">"#%d: %s (%s)"</span>, Analysis, id1, type)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb7-6" data-line-number="6"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_mutate_file_info.html">iso_mutate_file_info</a></span>(<span class="dt">label =</span> <span class="kw"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span>(<span class="st">"#%d: %s (%s)"</span>, analysis, id1, type)) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb7-7" data-line-number="7"><span class="st">  </span><span class="co"># generate plot</span></a>
 <a class="sourceLine" id="cb7-8" data-line-number="8"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_continuous_flow_data.html">iso_plot_continuous_flow_data</a></span>(</a>
 <a class="sourceLine" id="cb7-9" data-line-number="9">    <span class="co"># select data and aesthetics</span></a>
@@ -1352,7 +1681,7 @@
 <a href="#reference-peaks" class="anchor"></a>Reference peaks</h2>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="co"># examine variation in the reference peaks</span></a>
 <a class="sourceLine" id="cb8-2" data-line-number="2">iso_files <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb8-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_get_peak_table.html">iso_get_peak_table</a></span>(<span class="dt">include_file_info =</span> Analysis) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb8-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_get_peak_table.html">iso_get_peak_table</a></span>(<span class="dt">include_file_info =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(seq_nr, analysis)) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb8-4" data-line-number="4"><span class="st">  </span><span class="co"># focus on reference peaks only</span></a>
 <a class="sourceLine" id="cb8-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span>(ref_nr)) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb8-6" data-line-number="6"><span class="st">  </span><span class="co"># mark ref peak used in isodat to calculate delta values</span></a>
@@ -1362,15 +1691,15 @@
 <a class="sourceLine" id="cb8-10" data-line-number="10"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">delta_vs_avg =</span> (<span class="st">`</span><span class="dt">r45/44</span><span class="st">`</span> <span class="op">/</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="st">`</span><span class="dt">r45/44</span><span class="st">`</span>) <span class="op">-</span><span class="st"> </span><span class="dv">1</span>) <span class="op">*</span><span class="st"> </span><span class="dv">1000</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb8-11" data-line-number="11"><span class="st">  </span><span class="kw">ungroup</span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb8-12" data-line-number="12"><span class="st">  </span><span class="co"># visualize</span></a>
-<a class="sourceLine" id="cb8-13" data-line-number="13"><span class="st">  </span><span class="kw">ggplot</span>() <span class="op">+</span></a>
-<a class="sourceLine" id="cb8-14" data-line-number="14"><span class="st">  </span><span class="kw">aes</span>(Analysis, delta_vs_avg, <span class="dt">fill =</span> ref_info) <span class="op">+</span></a>
-<a class="sourceLine" id="cb8-15" data-line-number="15"><span class="st">  </span><span class="kw">geom_bar</span>(<span class="dt">stat =</span> <span class="st">"identity"</span>, <span class="dt">position =</span> <span class="st">"dodge"</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb8-16" data-line-number="16"><span class="st">  </span><span class="kw">theme_bw</span>() <span class="op">+</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb8-17" data-line-number="17"><span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">90</span>, <span class="dt">vjust =</span> <span class="fl">0.5</span>),</a>
-<a class="sourceLine" id="cb8-18" data-line-number="18">        <span class="dt">strip.text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">6</span>, <span class="dt">hjust =</span> <span class="dv">0</span>)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb8-19" data-line-number="19"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="st">"Analysis"</span>, <span class="dt">y =</span> <span class="st">"Deviation from run average (permil)"</span>, </a>
-<a class="sourceLine" id="cb8-20" data-line-number="20">       <span class="dt">color =</span> <span class="st">"Reference</span><span class="ch">\n</span><span class="st">peak"</span>, <span class="dt">fill =</span> <span class="st">"Reference</span><span class="ch">\n</span><span class="st">peak"</span>) </a>
-<a class="sourceLine" id="cb8-21" data-line-number="21"><span class="co">#&gt; Info: aggregating peak table from 118 data file(s), including file info 'Analysis'</span></a></code></pre></div>
+<a class="sourceLine" id="cb8-13" data-line-number="13"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_data.html">iso_plot_data</a></span>(</a>
+<a class="sourceLine" id="cb8-14" data-line-number="14">    <span class="dt">x =</span> seq_nr, <span class="dt">y =</span> delta_vs_avg, <span class="dt">fill =</span> ref_info,</a>
+<a class="sourceLine" id="cb8-15" data-line-number="15">    <span class="kw">geom_bar</span>(<span class="dt">stat =</span> <span class="st">"identity"</span>, <span class="dt">position =</span> <span class="st">"dodge"</span>)</a>
+<a class="sourceLine" id="cb8-16" data-line-number="16">  ) <span class="op">+</span></a>
+<a class="sourceLine" id="cb8-17" data-line-number="17"><span class="st">  </span><span class="kw">labs</span>(</a>
+<a class="sourceLine" id="cb8-18" data-line-number="18">    <span class="dt">x =</span> <span class="st">"Sequence #"</span>,</a>
+<a class="sourceLine" id="cb8-19" data-line-number="19">    <span class="dt">y =</span> <span class="st">"Deviation from average (permil) within each analysis"</span>, </a>
+<a class="sourceLine" id="cb8-20" data-line-number="20">    <span class="dt">fill =</span> <span class="st">"Reference</span><span class="ch">\n</span><span class="st">peak"</span>) </a>
+<a class="sourceLine" id="cb8-21" data-line-number="21"><span class="co">#&gt; Info: aggregating peak table from 118 data file(s), including file info 'c(seq_nr, analysis)'</span></a></code></pre></div>
 <p><img src="ea_irms_example_carbon_files/figure-html/ref_peak_variation-1.png" width="960"></p>
 </div>
 </div>
@@ -1383,27 +1712,33 @@
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1">peak_table &lt;-<span class="st"> </span>iso_files <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb9-2" data-line-number="2"><span class="st">  </span><span class="co"># whole peak table</span></a>
 <a class="sourceLine" id="cb9-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_get_peak_table.html">iso_get_peak_table</a></span>(<span class="dt">include_file_info =</span> <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/reexports.html">everything</a></span>()) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb9-4" data-line-number="4"><span class="st">  </span><span class="co"># analyte peak</span></a>
-<a class="sourceLine" id="cb9-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(compound <span class="op">==</span><span class="st"> "CO2 analyte"</span>)</a>
-<a class="sourceLine" id="cb9-6" data-line-number="6"><span class="co">#&gt; Info: aggregating peak table from 118 data file(s), including file info 'everything()'</span></a></code></pre></div>
+<a class="sourceLine" id="cb9-4" data-line-number="4"><span class="st">  </span><span class="co"># focus on analyte peak only</span></a>
+<a class="sourceLine" id="cb9-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(compound <span class="op">==</span><span class="st"> "CO2 analyte"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb9-6" data-line-number="6"><span class="st">  </span><span class="co"># calculate 13C mean, sd and deviation from mean within each type</span></a>
+<a class="sourceLine" id="cb9-7" data-line-number="7"><span class="st">  </span><span class="kw"><a href="../reference/iso_mutate_peak_table.html">iso_mutate_peak_table</a></span>(</a>
+<a class="sourceLine" id="cb9-8" data-line-number="8">    <span class="dt">group_by =</span> type,</a>
+<a class="sourceLine" id="cb9-9" data-line-number="9">    <span class="dt">d13C_mean =</span> <span class="kw"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(d13C),</a>
+<a class="sourceLine" id="cb9-10" data-line-number="10">    <span class="dt">d13C_sd =</span> <span class="kw"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span>(d13C),</a>
+<a class="sourceLine" id="cb9-11" data-line-number="11">    <span class="dt">d13C_dev =</span> d13C <span class="op">-</span><span class="st"> </span>d13C_mean</a>
+<a class="sourceLine" id="cb9-12" data-line-number="12">  )</a>
+<a class="sourceLine" id="cb9-13" data-line-number="13"><span class="co">#&gt; Info: aggregating peak table from 118 data file(s), including file info 'everything()'</span></a>
+<a class="sourceLine" id="cb9-14" data-line-number="14"><span class="co">#&gt; Info: mutating peak table grouped by 'type', column(s) 'd13C_mean', 'd13C_sd', 'd13C_dev' added.</span></a></code></pre></div>
 </div>
 <div id="first-look" class="section level2">
 <h2 class="hasAnchor">
 <a href="#first-look" class="anchor"></a>First look</h2>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">peak_table <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb10-2" data-line-number="2"><span class="st">  </span><span class="co"># use explicit units for plotting</span></a>
-<a class="sourceLine" id="cb10-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_make_units_explicit.html">iso_make_units_explicit</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb10-4" data-line-number="4"><span class="st">  </span><span class="co"># add info column</span></a>
-<a class="sourceLine" id="cb10-5" data-line-number="5"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">info =</span> <span class="kw"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span>(<span class="st">"%s (%d)"</span>, id1, Analysis)) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb10-6" data-line-number="6"><span class="st">  </span><span class="co"># visualize with convenience function iso_plot_data</span></a>
-<a class="sourceLine" id="cb10-7" data-line-number="7"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_data.html">iso_plot_data</a></span>(</a>
-<a class="sourceLine" id="cb10-8" data-line-number="8">    <span class="co"># choose x and y (multiple y possible)</span></a>
-<a class="sourceLine" id="cb10-9" data-line-number="9">    <span class="dt">x =</span> <span class="st">`</span><span class="dt">weight [ug]</span><span class="st">`</span>, <span class="dt">y =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">`</span><span class="dt">area44 [Vs]</span><span class="st">`</span>, <span class="st">`</span><span class="dt">d13C [permil]</span><span class="st">`</span>),</a>
-<a class="sourceLine" id="cb10-10" data-line-number="10">    <span class="co"># choose aesthetics</span></a>
-<a class="sourceLine" id="cb10-11" data-line-number="11">    <span class="dt">color =</span> type, <span class="dt">size =</span> <span class="dv">3</span>, <span class="dt">label =</span> info,</a>
-<a class="sourceLine" id="cb10-12" data-line-number="12">    <span class="co"># decide what geoms to include</span></a>
-<a class="sourceLine" id="cb10-13" data-line-number="13">    <span class="dt">points =</span> <span class="ot">TRUE</span></a>
-<a class="sourceLine" id="cb10-14" data-line-number="14">  ) </a></code></pre></div>
+<a class="sourceLine" id="cb10-2" data-line-number="2"><span class="st">  </span><span class="co"># add info column</span></a>
+<a class="sourceLine" id="cb10-3" data-line-number="3"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">info =</span> <span class="kw"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span>(<span class="st">"%s (%d)"</span>, id1, analysis)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb10-4" data-line-number="4"><span class="st">  </span><span class="co"># visualize with convenience function iso_plot_data</span></a>
+<a class="sourceLine" id="cb10-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_data.html">iso_plot_data</a></span>(</a>
+<a class="sourceLine" id="cb10-6" data-line-number="6">    <span class="co"># choose x and y (multiple y possible)</span></a>
+<a class="sourceLine" id="cb10-7" data-line-number="7">    <span class="dt">x =</span> mass, <span class="dt">y =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(area44, d13C),</a>
+<a class="sourceLine" id="cb10-8" data-line-number="8">    <span class="co"># choose aesthetics</span></a>
+<a class="sourceLine" id="cb10-9" data-line-number="9">    <span class="dt">color =</span> type, <span class="dt">size =</span> <span class="dv">3</span>, <span class="dt">label =</span> info,</a>
+<a class="sourceLine" id="cb10-10" data-line-number="10">    <span class="co"># decide what geoms to include</span></a>
+<a class="sourceLine" id="cb10-11" data-line-number="11">    <span class="dt">points =</span> <span class="ot">TRUE</span></a>
+<a class="sourceLine" id="cb10-12" data-line-number="12">  ) </a></code></pre></div>
 <p><img src="ea_irms_example_carbon_files/figure-html/all_data_first_look-1.png" width="672"></p>
 </div>
 <div id="optionally---use-interactive-plot" class="section level2">
@@ -1419,34 +1754,26 @@
 <div id="standards-variation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#standards-variation" class="anchor"></a>Standards variation</h2>
-<p>Examine the variation in each of the standards. Could discuss whether the scale2 outlier is an erroneous measurement.</p>
+<p>Examine the variation in each of the standards.</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1">peak_table <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb12-2" data-line-number="2"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(type <span class="op">!=</span><span class="st"> "sample"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb12-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_make_units_explicit.html">iso_make_units_explicit</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb12-2" data-line-number="2"><span class="st">  </span><span class="co"># everything but the sample</span></a>
+<a class="sourceLine" id="cb12-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(type <span class="op">!=</span><span class="st"> "sample"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb12-4" data-line-number="4"><span class="st">  </span><span class="co"># generate plot</span></a>
-<a class="sourceLine" id="cb12-5" data-line-number="5"><span class="st">  </span><span class="kw">ggplot</span>() <span class="op">+</span></a>
-<a class="sourceLine" id="cb12-6" data-line-number="6"><span class="st">  </span><span class="co"># define aesthetics</span></a>
-<a class="sourceLine" id="cb12-7" data-line-number="7"><span class="st">  </span><span class="kw">aes</span>(<span class="dt">x =</span> <span class="st">`</span><span class="dt">weight [ug]</span><span class="st">`</span>, <span class="dt">y =</span> <span class="st">`</span><span class="dt">d13C [permil]</span><span class="st">`</span>, <span class="dt">color =</span> type) <span class="op">+</span></a>
-<a class="sourceLine" id="cb12-8" data-line-number="8"><span class="st">  </span><span class="co"># add data points</span></a>
-<a class="sourceLine" id="cb12-9" data-line-number="9"><span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">size =</span> <span class="dv">3</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb12-10" data-line-number="10"><span class="st">  </span><span class="co"># add mean and sigma lines</span></a>
-<a class="sourceLine" id="cb12-11" data-line-number="11"><span class="st">  </span><span class="kw">geom_hline</span>(<span class="dt">data =</span> <span class="cf">function</span>(x) </a>
-<a class="sourceLine" id="cb12-12" data-line-number="12">    <span class="kw"><a href="https://rdrr.io/pkg/plotly/man/reexports.html">group_by</a></span>(x, type) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb12-13" data-line-number="13"><span class="st">      </span><span class="kw">summarize</span>(</a>
-<a class="sourceLine" id="cb12-14" data-line-number="14">        <span class="dt">mean =</span> <span class="kw"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(<span class="st">`</span><span class="dt">d13C [permil]</span><span class="st">`</span>),</a>
-<a class="sourceLine" id="cb12-15" data-line-number="15">        <span class="dt">sd =</span> <span class="kw"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span>(<span class="st">`</span><span class="dt">d13C [permil]</span><span class="st">`</span>),</a>
-<a class="sourceLine" id="cb12-16" data-line-number="16">        <span class="st">`</span><span class="dt">mean + 1 sigma</span><span class="st">`</span> =<span class="st"> </span>mean <span class="op">+</span><span class="st"> </span>sd,</a>
-<a class="sourceLine" id="cb12-17" data-line-number="17">        <span class="st">`</span><span class="dt">mean - 1 sigma</span><span class="st">`</span> =<span class="st"> </span>mean <span class="op">-</span><span class="st"> </span>sd,</a>
-<a class="sourceLine" id="cb12-18" data-line-number="18">        <span class="st">`</span><span class="dt">mean + 2 sigma</span><span class="st">`</span> =<span class="st"> </span>mean <span class="op">+</span><span class="st"> </span><span class="dv">2</span><span class="op">*</span>sd,</a>
-<a class="sourceLine" id="cb12-19" data-line-number="19">        <span class="st">`</span><span class="dt">mean - 2 sigma</span><span class="st">`</span> =<span class="st"> </span>mean <span class="op">-</span><span class="st"> </span><span class="dv">2</span><span class="op">*</span>sd,</a>
-<a class="sourceLine" id="cb12-20" data-line-number="20">      ) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb12-21" data-line-number="21"><span class="st">      </span><span class="kw">gather</span>(<span class="st">"line"</span>, <span class="st">"y"</span>, <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/reexports.html">starts_with</a></span>(<span class="st">"mean"</span>)),</a>
-<a class="sourceLine" id="cb12-22" data-line-number="22">    <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">yintercept =</span> y, <span class="dt">color =</span> type, <span class="dt">linetype =</span> line)</a>
-<a class="sourceLine" id="cb12-23" data-line-number="23">  ) <span class="op">+</span></a>
-<a class="sourceLine" id="cb12-24" data-line-number="24"><span class="st">  </span><span class="co"># panel by type</span></a>
-<a class="sourceLine" id="cb12-25" data-line-number="25"><span class="st">  </span><span class="kw">facet_grid</span>(type <span class="op">~</span><span class="st"> </span>., <span class="dt">scales =</span> <span class="st">"free_y"</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb12-26" data-line-number="26"><span class="st">  </span><span class="kw">theme_bw</span>()</a></code></pre></div>
+<a class="sourceLine" id="cb12-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_data.html">iso_plot_data</a></span>(<span class="dt">x =</span> mass, <span class="dt">y =</span> d13C, <span class="dt">color =</span> type, <span class="dt">size =</span> <span class="dv">3</span>, <span class="dt">points =</span> <span class="ot">TRUE</span>, <span class="dt">panel =</span> type <span class="op">~</span><span class="st"> </span>.) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb12-6" data-line-number="6"><span class="st">  </span><span class="co"># mark +/- 1, 2, 3 std. deviation value ranges</span></a>
+<a class="sourceLine" id="cb12-7" data-line-number="7"><span class="st">  </span><span class="kw"><a href="../reference/iso_mark_value_range.html">iso_mark_value_range</a></span>(<span class="dt">sd =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb12-8" data-line-number="8"><span class="st">  </span><span class="co"># mark outliers (those outside the 3 sigma range)</span></a>
+<a class="sourceLine" id="cb12-9" data-line-number="9"><span class="st">  </span><span class="kw"><a href="../reference/iso_mark_outliers.html">iso_mark_outliers</a></span>(<span class="dt">condition =</span> <span class="kw"><a href="https://rdrr.io/r/base/MathFun.html">abs</a></span>(d13C <span class="op">-</span><span class="st"> </span>d13C_mean) <span class="op">&gt;</span><span class="st"> </span><span class="dv">3</span> <span class="op">*</span><span class="st"> </span>d13C_sd, <span class="dt">label =</span> analysis)</a></code></pre></div>
 <p><img src="ea_irms_example_carbon_files/figure-html/standards_variation-1.png" width="672"></p>
+</div>
+<div id="identify-outliers" class="section level2">
+<h2 class="hasAnchor">
+<a href="#identify-outliers" class="anchor"></a>Identify outliers (*)</h2>
+<p>Analys #19691 is more than 3 standard deviations outside the scale2 standard mean and therefore explicitly flagged as an is_outlier.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="co"># mark outlier</span></a>
+<a class="sourceLine" id="cb13-2" data-line-number="2">peak_table &lt;-<span class="st"> </span>peak_table <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb13-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_mutate_peak_table.html">iso_mutate_peak_table</a></span>(<span class="dt">is_outlier =</span> analysis <span class="op">%in%</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">19691</span>))</a>
+<a class="sourceLine" id="cb13-4" data-line-number="4"><span class="co">#&gt; Info: mutating peak table, column(s) 'is_outlier' added.</span></a></code></pre></div>
 </div>
 </div>
 <div id="calibrate-data" class="section level1">
@@ -1455,22 +1782,24 @@
 <div id="add-calibration-information" class="section level2">
 <h2 class="hasAnchor">
 <a href="#add-calibration-information" class="anchor"></a>Add calibration information (*)</h2>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="co"># this information is often maintained in a csv or Excel file instead</span></a>
-<a class="sourceLine" id="cb13-2" data-line-number="2"><span class="co"># but generated here from scratch for demonstration purposes</span></a>
-<a class="sourceLine" id="cb13-3" data-line-number="3">standards &lt;-<span class="st"> </span></a>
-<a class="sourceLine" id="cb13-4" data-line-number="4"><span class="st">  </span>tibble<span class="op">::</span><span class="kw"><a href="https://tibble.tidyverse.org/reference/tribble.html">tribble</a></span>(</a>
-<a class="sourceLine" id="cb13-5" data-line-number="5">    <span class="op">~</span>id1,    <span class="op">~</span>true_d13C, <span class="op">~</span>percent_C,</a>
-<a class="sourceLine" id="cb13-6" data-line-number="6">    <span class="st">"acn1"</span>,  <span class="fl">-29.53</span>,     <span class="fl">71.09</span>,</a>
-<a class="sourceLine" id="cb13-7" data-line-number="7">    <span class="st">"act1"</span>,  <span class="fl">-29.53</span>,     <span class="fl">71.09</span>,</a>
-<a class="sourceLine" id="cb13-8" data-line-number="8">    <span class="st">"pugel"</span>, <span class="fl">-12.6</span>,      <span class="fl">44.02</span>,</a>
-<a class="sourceLine" id="cb13-9" data-line-number="9">    <span class="st">"EDTA2"</span>, <span class="fl">-40.38</span>,     <span class="fl">41.09</span></a>
-<a class="sourceLine" id="cb13-10" data-line-number="10">  ) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb13-11" data-line-number="11"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/plotly/man/reexports.html">mutate</a></span>(</a>
-<a class="sourceLine" id="cb13-12" data-line-number="12">    <span class="co"># add units</span></a>
-<a class="sourceLine" id="cb13-13" data-line-number="13">    <span class="dt">true_d13C =</span> <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_double_with_units.html">iso_double_with_units</a></span>(true_d13C, <span class="st">"permil"</span>),</a>
-<a class="sourceLine" id="cb13-14" data-line-number="14">    <span class="dt">percent_C =</span> <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_double_with_units.html">iso_double_with_units</a></span>(percent_C, <span class="st">"%"</span>)</a>
-<a class="sourceLine" id="cb13-15" data-line-number="15">  )</a>
-<a class="sourceLine" id="cb13-16" data-line-number="16">standards <span class="op">%&gt;%</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_make_units_explicit.html">iso_make_units_explicit</a></span>() <span class="op">%&gt;%</span><span class="st"> </span>knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/kable.html">kable</a></span>(<span class="dt">digits =</span> <span class="dv">2</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="co"># this information is often maintained in a csv or Excel file instead</span></a>
+<a class="sourceLine" id="cb14-2" data-line-number="2"><span class="co"># but generated here from scratch for demonstration purposes</span></a>
+<a class="sourceLine" id="cb14-3" data-line-number="3">standards &lt;-<span class="st"> </span></a>
+<a class="sourceLine" id="cb14-4" data-line-number="4"><span class="st">  </span>tibble<span class="op">::</span><span class="kw"><a href="https://tibble.tidyverse.org/reference/tribble.html">tribble</a></span>(</a>
+<a class="sourceLine" id="cb14-5" data-line-number="5">    <span class="op">~</span>id1,    <span class="op">~</span>true_d13C, <span class="op">~</span>percent_C,</a>
+<a class="sourceLine" id="cb14-6" data-line-number="6">    <span class="st">"acn1"</span>,  <span class="fl">-29.53</span>,     <span class="fl">71.09</span>,</a>
+<a class="sourceLine" id="cb14-7" data-line-number="7">    <span class="st">"act1"</span>,  <span class="fl">-29.53</span>,     <span class="fl">71.09</span>,</a>
+<a class="sourceLine" id="cb14-8" data-line-number="8">    <span class="st">"pugel"</span>, <span class="fl">-12.6</span>,      <span class="fl">44.02</span>,</a>
+<a class="sourceLine" id="cb14-9" data-line-number="9">    <span class="st">"EDTA2"</span>, <span class="fl">-40.38</span>,     <span class="fl">41.09</span></a>
+<a class="sourceLine" id="cb14-10" data-line-number="10">  ) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb14-11" data-line-number="11"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/plotly/man/reexports.html">mutate</a></span>(</a>
+<a class="sourceLine" id="cb14-12" data-line-number="12">    <span class="co"># add units</span></a>
+<a class="sourceLine" id="cb14-13" data-line-number="13">    <span class="dt">true_d13C =</span> <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_double_with_units.html">iso_double_with_units</a></span>(true_d13C, <span class="st">"permil"</span>),</a>
+<a class="sourceLine" id="cb14-14" data-line-number="14">    <span class="dt">percent_C =</span> <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_double_with_units.html">iso_double_with_units</a></span>(percent_C, <span class="st">"%"</span>)</a>
+<a class="sourceLine" id="cb14-15" data-line-number="15">  )</a>
+<a class="sourceLine" id="cb14-16" data-line-number="16"></a>
+<a class="sourceLine" id="cb14-17" data-line-number="17"><span class="co"># printout standards table</span></a>
+<a class="sourceLine" id="cb14-18" data-line-number="18">standards <span class="op">%&gt;%</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_make_units_explicit.html">iso_make_units_explicit</a></span>() <span class="op">%&gt;%</span><span class="st"> </span>knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/kable.html">kable</a></span>(<span class="dt">digits =</span> <span class="dv">2</span>)</a></code></pre></div>
 <table class="table">
 <thead><tr class="header">
 <th align="left">id1</th>
@@ -1500,309 +1829,305 @@
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1"></a>
-<a class="sourceLine" id="cb14-2" data-line-number="2"><span class="co"># add standards</span></a>
-<a class="sourceLine" id="cb14-3" data-line-number="3">peak_table_w_standards &lt;-<span class="st"> </span></a>
-<a class="sourceLine" id="cb14-4" data-line-number="4"><span class="st">  </span>peak_table <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb14-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/iso_add_standards.html">iso_add_standards</a></span>(<span class="dt">stds =</span> standards, <span class="dt">match_by =</span> <span class="st">"id1"</span>) </a>
-<a class="sourceLine" id="cb14-6" data-line-number="6"><span class="co">#&gt; Info: matching standards by 'id1' - added 4 standard entries to 40 out of 118 rows, added new column 'is_std_peak' to identify standard peaks</span></a></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1"></a>
+<a class="sourceLine" id="cb15-2" data-line-number="2"><span class="co"># add standards</span></a>
+<a class="sourceLine" id="cb15-3" data-line-number="3">peak_table_w_standards &lt;-<span class="st"> </span></a>
+<a class="sourceLine" id="cb15-4" data-line-number="4"><span class="st">  </span>peak_table <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb15-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/iso_add_standards.html">iso_add_standards</a></span>(<span class="dt">stds =</span> standards, <span class="dt">match_by =</span> <span class="st">"id1"</span>) </a>
+<a class="sourceLine" id="cb15-6" data-line-number="6"><span class="co">#&gt; Info: matching standards by 'id1' - added 4 standard entries to 40 out of 118 rows, added new column 'is_std_peak' to identify standard peaks</span></a></code></pre></div>
 </div>
 <div id="evaluate-temporal-drift" class="section level2">
 <h2 class="hasAnchor">
 <a href="#evaluate-temporal-drift" class="anchor"></a>Evaluate temporal drift</h2>
-<p>There is no temporal drift so no correction is applied.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1"><span class="co"># run a set of regressions to evaluate drift</span></a>
-<a class="sourceLine" id="cb15-2" data-line-number="2">calib_drift &lt;-<span class="st"> </span></a>
-<a class="sourceLine" id="cb15-3" data-line-number="3"><span class="st">  </span>peak_table_w_standards <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb15-4" data-line-number="4"><span class="st">  </span><span class="co"># prepare for calibration</span></a>
-<a class="sourceLine" id="cb15-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/iso_prepare_for_calibration.html">iso_prepare_for_calibration</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb15-6" data-line-number="6"><span class="st">  </span><span class="co"># run different calibrations</span></a>
-<a class="sourceLine" id="cb15-7" data-line-number="7"><span class="st">  </span><span class="kw"><a href="../reference/iso_generate_calibration.html">iso_generate_calibration</a></span>(</a>
-<a class="sourceLine" id="cb15-8" data-line-number="8">    <span class="dt">calibration =</span> <span class="st">"drift"</span>,</a>
-<a class="sourceLine" id="cb15-9" data-line-number="9">    <span class="dt">model =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="kw"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(d13C <span class="op">~</span><span class="st"> </span><span class="dv">1</span>), <span class="kw"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(d13C <span class="op">~</span><span class="st"> </span>file_datetime)),</a>
-<a class="sourceLine" id="cb15-10" data-line-number="10">    <span class="dt">is_std_peak =</span> is_std_peak <span class="op">&amp;</span><span class="st"> </span>type <span class="op">==</span><span class="st"> "drift"</span></a>
-<a class="sourceLine" id="cb15-11" data-line-number="11">  )</a>
-<a class="sourceLine" id="cb15-12" data-line-number="12"><span class="co">#&gt; Info: preparing data for calibration by nesting the entire dataset</span></a>
-<a class="sourceLine" id="cb15-13" data-line-number="13"><span class="co">#&gt; Info: generating 'drift' calibration based on 2 models ('lm(d13C ~ 1)', 'lm(d13C ~ file_datetime)') for 1 data group(s) with standards filter 'is_std_peak &amp; type == "drift"'. Storing residuals in new column 'drift_resid'. Storing calibration info in new column 'drift_in_calib'.</span></a></code></pre></div>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" data-line-number="1"><span class="co"># show calibration coefficients</span></a>
-<a class="sourceLine" id="cb16-2" data-line-number="2">calib_drift <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb16-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_calibration_parameters.html">iso_plot_calibration_parameters</a></span>(</a>
-<a class="sourceLine" id="cb16-4" data-line-number="4">    <span class="dt">calibration =</span> <span class="st">"drift"</span>,</a>
-<a class="sourceLine" id="cb16-5" data-line-number="5">    <span class="dt">x =</span> <span class="st">"value"</span>, <span class="dt">color =</span> signif,</a>
-<a class="sourceLine" id="cb16-6" data-line-number="6">    <span class="dt">date_breaks =</span> <span class="st">"3 hours"</span>,</a>
-<a class="sourceLine" id="cb16-7" data-line-number="7">    <span class="dt">select_from_summary =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>()</a>
-<a class="sourceLine" id="cb16-8" data-line-number="8">  ) <span class="op">+</span><span class="st"> </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="st">""</span>) <span class="op">+</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb16-9" data-line-number="9"><span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_blank</span>())</a></code></pre></div>
-<p><img src="ea_irms_example_carbon_files/figure-html/drift_coefs-1.png" width="576"></p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" data-line-number="1"><span class="co"># show residuals</span></a>
-<a class="sourceLine" id="cb17-2" data-line-number="2">calib_drift <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb17-3" data-line-number="3"><span class="st">  </span><span class="co"># fetch peak table with the added residuals from the calibration</span></a>
-<a class="sourceLine" id="cb17-4" data-line-number="4"><span class="st">  </span><span class="kw"><a href="../reference/iso_unnest_data.html">iso_unnest_data</a></span>(<span class="dt">select =</span> <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/reexports.html">everything</a></span>()) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb17-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(drift_in_calib) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb17-6" data-line-number="6"><span class="st">  </span><span class="co"># visualize</span></a>
-<a class="sourceLine" id="cb17-7" data-line-number="7"><span class="st">  </span><span class="kw">ggplot</span>() <span class="op">+</span></a>
-<a class="sourceLine" id="cb17-8" data-line-number="8"><span class="st">  </span><span class="kw">aes</span>(file_datetime, drift_resid, <span class="dt">color =</span> drift_calib) <span class="op">+</span></a>
-<a class="sourceLine" id="cb17-9" data-line-number="9"><span class="st">  </span><span class="kw">geom_smooth</span>(<span class="dt">method =</span> <span class="st">"loess"</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb17-10" data-line-number="10"><span class="st">  </span><span class="kw">geom_hline</span>(<span class="dt">yintercept =</span> <span class="dv">0</span>, <span class="dt">size =</span> <span class="dv">1</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb17-11" data-line-number="11"><span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">size =</span> <span class="dv">4</span>) <span class="op">+</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb17-12" data-line-number="12"><span class="st">  </span><span class="kw">scale_x_datetime</span>(<span class="dt">date_labels =</span> <span class="st">"%H:%M"</span>, <span class="dt">breaks =</span> <span class="st">"3 hours"</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb17-13" data-line-number="13"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="st">"time"</span>, <span class="dt">y =</span> <span class="st">"d13C residuals [permil]"</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb17-14" data-line-number="14"><span class="st">  </span><span class="kw">theme_bw</span>() <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">"bottom"</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb17-15" data-line-number="15"><span class="st">  </span><span class="kw">facet_wrap</span>(<span class="op">~</span>drift_calib)</a></code></pre></div>
+<p>Look at changes in the drift standard over the course of the run:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" data-line-number="1">peak_table_w_standards <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb16-2" data-line-number="2"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(type <span class="op">==</span><span class="st"> "drift"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb16-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_data.html">iso_plot_data</a></span>(</a>
+<a class="sourceLine" id="cb16-4" data-line-number="4">    <span class="co"># alternatively could use x = seq_nr, or x = analysis</span></a>
+<a class="sourceLine" id="cb16-5" data-line-number="5">    <span class="dt">x =</span> file_datetime, <span class="dt">y =</span> d13C, <span class="dt">size =</span> area44,</a>
+<a class="sourceLine" id="cb16-6" data-line-number="6">    <span class="dt">points =</span> <span class="ot">TRUE</span>, <span class="dt">date_breaks =</span> <span class="st">"2 hours"</span>,</a>
+<a class="sourceLine" id="cb16-7" data-line-number="7">    <span class="co"># add some potential calibration model lines</span></a>
+<a class="sourceLine" id="cb16-8" data-line-number="8">    <span class="kw">geom_smooth</span>(<span class="dt">method =</span> <span class="st">"lm"</span>, <span class="dt">color =</span> <span class="st">"red"</span>, <span class="dt">se =</span> <span class="ot">FALSE</span>),</a>
+<a class="sourceLine" id="cb16-9" data-line-number="9">    <span class="kw">geom_smooth</span>(<span class="dt">method =</span> <span class="st">"loess"</span>, <span class="dt">color =</span> <span class="st">"blue"</span>, <span class="dt">se =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb16-10" data-line-number="10">  ) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb16-11" data-line-number="11"><span class="st">  </span><span class="co"># mark the total value range</span></a>
+<a class="sourceLine" id="cb16-12" data-line-number="12"><span class="st">  </span><span class="kw"><a href="../reference/iso_mark_value_range.html">iso_mark_value_range</a></span>()</a></code></pre></div>
+<p><img src="ea_irms_example_carbon_files/figure-html/drift_vs_time-1.png" width="576"></p>
+<p>This looks like random scatter rather than any systematic drift but let’s check with a linear regression to confirm:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" data-line-number="1">calib_drift &lt;-<span class="st"> </span></a>
+<a class="sourceLine" id="cb17-2" data-line-number="2"><span class="st">  </span>peak_table_w_standards <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb17-3" data-line-number="3"><span class="st">  </span><span class="co"># prepare for calibration</span></a>
+<a class="sourceLine" id="cb17-4" data-line-number="4"><span class="st">  </span><span class="kw"><a href="../reference/iso_prepare_for_calibration.html">iso_prepare_for_calibration</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb17-5" data-line-number="5"><span class="st">  </span><span class="co"># run different calibrations</span></a>
+<a class="sourceLine" id="cb17-6" data-line-number="6"><span class="st">  </span><span class="kw"><a href="../reference/iso_generate_calibration.html">iso_generate_calibration</a></span>(</a>
+<a class="sourceLine" id="cb17-7" data-line-number="7">    <span class="co"># provide a calibration name</span></a>
+<a class="sourceLine" id="cb17-8" data-line-number="8">    <span class="dt">calibration =</span> <span class="st">"drift"</span>, </a>
+<a class="sourceLine" id="cb17-9" data-line-number="9">    <span class="co"># provide different regression models to test if there is any</span></a>
+<a class="sourceLine" id="cb17-10" data-line-number="10">    <span class="co"># systematic pattern in d13C_dev (deviation from the mean)</span></a>
+<a class="sourceLine" id="cb17-11" data-line-number="11">    <span class="dt">model =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(</a>
+<a class="sourceLine" id="cb17-12" data-line-number="12">      <span class="kw"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(d13C_dev <span class="op">~</span><span class="st"> </span><span class="dv">1</span>), </a>
+<a class="sourceLine" id="cb17-13" data-line-number="13">      <span class="kw"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(d13C_dev <span class="op">~</span><span class="st"> </span>file_datetime),</a>
+<a class="sourceLine" id="cb17-14" data-line-number="14">      <span class="kw"><a href="https://rdrr.io/r/stats/loess.html">loess</a></span>(d13C_dev <span class="op">~</span><span class="st"> </span>file_datetime, <span class="dt">span =</span> <span class="fl">0.5</span>)</a>
+<a class="sourceLine" id="cb17-15" data-line-number="15">    ),</a>
+<a class="sourceLine" id="cb17-16" data-line-number="16">    <span class="co"># specify which data points to use in the calibration</span></a>
+<a class="sourceLine" id="cb17-17" data-line-number="17">    <span class="dt">use_in_calib =</span> is_std_peak <span class="op">&amp;</span><span class="st"> </span>type <span class="op">==</span><span class="st"> "drift"</span> <span class="op">&amp;</span><span class="st"> </span><span class="op">!</span>is_outlier</a>
+<a class="sourceLine" id="cb17-18" data-line-number="18">  ) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb17-19" data-line-number="19"><span class="st">  </span><span class="co"># remove problematic calibrations if there are any</span></a>
+<a class="sourceLine" id="cb17-20" data-line-number="20"><span class="st">  </span><span class="kw"><a href="../reference/iso_remove_problematic_calibrations.html">iso_remove_problematic_calibrations</a></span>()</a>
+<a class="sourceLine" id="cb17-21" data-line-number="21"><span class="co">#&gt; Info: preparing data for calibration by nesting the entire dataset</span></a>
+<a class="sourceLine" id="cb17-22" data-line-number="22"><span class="co">#&gt; Info: generating 'drift' calibration based on 3 models ('lm(d13C_dev ~ 1)', 'lm(d13C_dev ~ file_datetime)', 'loess(d13C_dev ~ file_datetime, span = 0.5)') for 1 data group(s) with standards filter 'is_std_peak &amp; type == "drift" &amp; !is_outlier'. Storing residuals in new column 'drift_resid'. Storing calibration info in new column 'drift_in_calib'.</span></a>
+<a class="sourceLine" id="cb17-23" data-line-number="23"></a>
+<a class="sourceLine" id="cb17-24" data-line-number="24"><span class="co"># visualize residuals</span></a>
+<a class="sourceLine" id="cb17-25" data-line-number="25">calib_drift <span class="op">%&gt;%</span><span class="st"> </span><span class="kw"><a href="../reference/iso_plot_residuals.html">iso_plot_residuals</a></span>(<span class="dt">x =</span> file_datetime, <span class="dt">date_breaks =</span> <span class="st">"3 hours"</span>) </a></code></pre></div>
 <p><img src="ea_irms_example_carbon_files/figure-html/drift_residuals-1.png" width="768"></p>
+<p>Although a local polynomial (<code>loess</code>) correction would improve the overall variation in the residuals, this improvement is minor (&lt;0.01 permil) and it is not clear that this correction addresses any systemic trend. Therefore, no drift correction is applied.</p>
 </div>
 <div id="evaluate-linearity" class="section level2">
 <h2 class="hasAnchor">
 <a href="#evaluate-linearity" class="anchor"></a>Evaluate linearity (*)</h2>
-<p>Small but significant linearity effect. Using the <code>~ area44</code> correction because it explains most of the variation in the signal range that the samples fall (~ 100-250 Vs).</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb18-1" data-line-number="1"><span class="co"># run a set of regressions to evaluate linearity</span></a>
-<a class="sourceLine" id="cb18-2" data-line-number="2">calib_linearity &lt;-<span class="st"> </span></a>
-<a class="sourceLine" id="cb18-3" data-line-number="3"><span class="st">  </span>peak_table_w_standards <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb18-4" data-line-number="4"><span class="st">  </span><span class="co"># prepare for calibration</span></a>
-<a class="sourceLine" id="cb18-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/iso_prepare_for_calibration.html">iso_prepare_for_calibration</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb18-6" data-line-number="6"><span class="st">  </span><span class="co"># run different calibrations</span></a>
-<a class="sourceLine" id="cb18-7" data-line-number="7"><span class="st">  </span><span class="kw"><a href="../reference/iso_generate_calibration.html">iso_generate_calibration</a></span>(</a>
-<a class="sourceLine" id="cb18-8" data-line-number="8">    <span class="dt">calibration =</span> <span class="st">"lin"</span>,</a>
-<a class="sourceLine" id="cb18-9" data-line-number="9">    <span class="dt">model =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="kw"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(d13C <span class="op">~</span><span class="st"> </span><span class="dv">1</span>), </a>
-<a class="sourceLine" id="cb18-10" data-line-number="10">              <span class="kw"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(d13C <span class="op">~</span><span class="st"> </span>area44), </a>
-<a class="sourceLine" id="cb18-11" data-line-number="11">              <span class="kw"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(d13C <span class="op">~</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/AsIs.html">I</a></span>(area44<span class="op">^</span>(<span class="dv">1</span><span class="op">/</span><span class="dv">2</span>))), </a>
-<a class="sourceLine" id="cb18-12" data-line-number="12">              <span class="kw"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(d13C <span class="op">~</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/AsIs.html">I</a></span>(area44<span class="op">^-</span><span class="dv">1</span>))),</a>
-<a class="sourceLine" id="cb18-13" data-line-number="13">    <span class="dt">is_std_peak =</span> is_std_peak <span class="op">&amp;</span><span class="st"> </span>type <span class="op">==</span><span class="st"> "linearity"</span></a>
-<a class="sourceLine" id="cb18-14" data-line-number="14">  )</a>
-<a class="sourceLine" id="cb18-15" data-line-number="15"><span class="co">#&gt; Info: preparing data for calibration by nesting the entire dataset</span></a>
-<a class="sourceLine" id="cb18-16" data-line-number="16"><span class="co">#&gt; Info: generating 'lin' calibration based on 4 models ('lm(d13C ~ 1)', 'lm(d13C ~ area44)', 'lm(d13C ~ I(area44^(1/2)))', 'lm(d13C ~ I(area44^-1))') for 1 data group(s) with standards filter 'is_std_peak &amp; type == "linearity"'. Storing residuals in new column 'lin_resid'. Storing calibration info in new column 'lin_in_calib'.</span></a></code></pre></div>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" data-line-number="1"><span class="co"># show calibration coefficients</span></a>
-<a class="sourceLine" id="cb19-2" data-line-number="2">calib_linearity <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb19-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_calibration_parameters.html">iso_plot_calibration_parameters</a></span>(</a>
-<a class="sourceLine" id="cb19-4" data-line-number="4">    <span class="dt">calibration =</span> <span class="st">"lin"</span>,</a>
-<a class="sourceLine" id="cb19-5" data-line-number="5">    <span class="dt">x =</span> <span class="st">"value"</span>, <span class="dt">color =</span> signif,</a>
-<a class="sourceLine" id="cb19-6" data-line-number="6">    <span class="dt">date_breaks =</span> <span class="st">"3 hours"</span></a>
-<a class="sourceLine" id="cb19-7" data-line-number="7">  ) <span class="op">+</span><span class="st"> </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="st">""</span>) <span class="op">+</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb19-8" data-line-number="8"><span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_blank</span>())</a></code></pre></div>
-<p><img src="ea_irms_example_carbon_files/figure-html/linearity_coefs-1.png" width="768"></p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb20-1" data-line-number="1"><span class="co"># show residuals</span></a>
-<a class="sourceLine" id="cb20-2" data-line-number="2">calib_linearity <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb20-3" data-line-number="3"><span class="st">  </span><span class="co"># fetch peak table with the added residuals from the calibration</span></a>
-<a class="sourceLine" id="cb20-4" data-line-number="4"><span class="st">  </span><span class="kw"><a href="../reference/iso_unnest_data.html">iso_unnest_data</a></span>(<span class="dt">select =</span> <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/reexports.html">everything</a></span>()) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb20-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(lin_in_calib) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb20-6" data-line-number="6"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_make_units_explicit.html">iso_make_units_explicit</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb20-7" data-line-number="7"><span class="st">  </span><span class="co"># visualize</span></a>
-<a class="sourceLine" id="cb20-8" data-line-number="8"><span class="st">  </span><span class="kw">ggplot</span>() <span class="op">+</span></a>
-<a class="sourceLine" id="cb20-9" data-line-number="9"><span class="st">  </span><span class="kw">aes</span>(<span class="st">`</span><span class="dt">area44 [Vs]</span><span class="st">`</span>, lin_resid, <span class="dt">color =</span> lin_calib) <span class="op">+</span></a>
-<a class="sourceLine" id="cb20-10" data-line-number="10"><span class="st">  </span><span class="kw">geom_smooth</span>(<span class="dt">method =</span> <span class="st">"loess"</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb20-11" data-line-number="11"><span class="st">  </span><span class="kw">geom_hline</span>(<span class="dt">yintercept =</span> <span class="dv">0</span>, <span class="dt">size =</span> <span class="dv">1</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb20-12" data-line-number="12"><span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">size =</span> <span class="dv">4</span>) <span class="op">+</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb20-13" data-line-number="13"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">y =</span> <span class="st">"d13C residuals [permil]"</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb20-14" data-line-number="14"><span class="st">  </span><span class="kw">theme_bw</span>() <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">"bottom"</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb20-15" data-line-number="15"><span class="st">  </span><span class="kw">facet_wrap</span>(<span class="op">~</span>lin_calib)</a></code></pre></div>
+<p>Look at the response of the linearity standard and the range the samples are in:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb18-1" data-line-number="1">peak_table_w_standards <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb18-2" data-line-number="2"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(type <span class="op">%in%</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"linearity"</span>, <span class="st">"sample"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb18-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_data.html">iso_plot_data</a></span>(</a>
+<a class="sourceLine" id="cb18-4" data-line-number="4">    <span class="dt">x =</span> area44, <span class="dt">y =</span> d13C, <span class="dt">panel =</span> type <span class="op">~</span><span class="st"> </span>., <span class="dt">color =</span> type, <span class="dt">points =</span> <span class="ot">TRUE</span>,</a>
+<a class="sourceLine" id="cb18-5" data-line-number="5">    <span class="co"># add a trendline to the linearity panel highlighting the variation</span></a>
+<a class="sourceLine" id="cb18-6" data-line-number="6">    <span class="kw">geom_smooth</span>(<span class="dt">data =</span> <span class="cf">function</span>(df) <span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(df, type <span class="op">==</span><span class="st"> "linearity"</span>), <span class="dt">method =</span> <span class="st">"lm"</span>)</a>
+<a class="sourceLine" id="cb18-7" data-line-number="7">  ) </a></code></pre></div>
+<p><img src="ea_irms_example_carbon_files/figure-html/linearity_vs_area-1.png" width="576"></p>
+<p>The linearity standard shows a systematic area-dependent effect on the measured isotopic composition that is likely to have a small effect on the sample isotopic compositions. In runs that include two isotopically different standards (2 point scale calibration) both across the entire linearity range, isotopic offset, discrimination, and linearity can all be evaluated in one joint multi-variate regression. However, this run included only one linearity standard which can be used to correct for linearity prior to offset and discrimination corrections.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" data-line-number="1"><span class="co"># run a set of regressions to evaluate linearity</span></a>
+<a class="sourceLine" id="cb19-2" data-line-number="2">calib_linearity &lt;-<span class="st"> </span></a>
+<a class="sourceLine" id="cb19-3" data-line-number="3"><span class="st">  </span>peak_table_w_standards <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb19-4" data-line-number="4"><span class="st">  </span><span class="co"># prepare for calibration</span></a>
+<a class="sourceLine" id="cb19-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/iso_prepare_for_calibration.html">iso_prepare_for_calibration</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb19-6" data-line-number="6"><span class="st">  </span><span class="co"># run different calibrations</span></a>
+<a class="sourceLine" id="cb19-7" data-line-number="7"><span class="st">  </span><span class="kw"><a href="../reference/iso_generate_calibration.html">iso_generate_calibration</a></span>(</a>
+<a class="sourceLine" id="cb19-8" data-line-number="8">    <span class="dt">calibration =</span> <span class="st">"lin"</span>,</a>
+<a class="sourceLine" id="cb19-9" data-line-number="9">    <span class="co"># again evaluating different regression models of the deviation from the mean</span></a>
+<a class="sourceLine" id="cb19-10" data-line-number="10">    <span class="dt">model =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(</a>
+<a class="sourceLine" id="cb19-11" data-line-number="11">      <span class="kw"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(d13C_dev <span class="op">~</span><span class="st"> </span><span class="dv">1</span>),</a>
+<a class="sourceLine" id="cb19-12" data-line-number="12">      <span class="kw"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(d13C_dev <span class="op">~</span><span class="st"> </span>area44), </a>
+<a class="sourceLine" id="cb19-13" data-line-number="13">      <span class="kw"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(d13C_dev <span class="op">~</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span>(area44)), </a>
+<a class="sourceLine" id="cb19-14" data-line-number="14">      <span class="kw"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(d13C_dev <span class="op">~</span><span class="st"> </span><span class="dv">1</span><span class="op">/</span>area44)</a>
+<a class="sourceLine" id="cb19-15" data-line-number="15">    ),</a>
+<a class="sourceLine" id="cb19-16" data-line-number="16">    <span class="dt">use_in_calib =</span> is_std_peak <span class="op">&amp;</span><span class="st"> </span>type <span class="op">==</span><span class="st"> "linearity"</span> <span class="op">&amp;</span><span class="st"> </span><span class="op">!</span>is_outlier</a>
+<a class="sourceLine" id="cb19-17" data-line-number="17">  ) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb19-18" data-line-number="18"><span class="st">  </span><span class="co"># remove problematic calibrations if there are any</span></a>
+<a class="sourceLine" id="cb19-19" data-line-number="19"><span class="st">  </span><span class="kw"><a href="../reference/iso_remove_problematic_calibrations.html">iso_remove_problematic_calibrations</a></span>()</a>
+<a class="sourceLine" id="cb19-20" data-line-number="20"><span class="co">#&gt; Info: preparing data for calibration by nesting the entire dataset</span></a>
+<a class="sourceLine" id="cb19-21" data-line-number="21"><span class="co">#&gt; Info: generating 'lin' calibration based on 4 models ('lm(d13C_dev ~ 1)', 'lm(d13C_dev ~ area44)', 'lm(d13C_dev ~ sqrt(area44))', 'lm(d13C_dev ~ 1/area44)') for 1 data group(s) with standards filter 'is_std_peak &amp; type == "linearity" &amp; !is_outlier'. Storing residuals in new column 'lin_resid'. Storing calibration info in new column 'lin_in_calib'.</span></a></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb20-1" data-line-number="1"><span class="co"># visualizing residuals</span></a>
+<a class="sourceLine" id="cb20-2" data-line-number="2">calib_linearity <span class="op">%&gt;%</span><span class="st"> </span><span class="kw"><a href="../reference/iso_plot_residuals.html">iso_plot_residuals</a></span>(<span class="dt">x =</span> area44)</a></code></pre></div>
 <p><img src="ea_irms_example_carbon_files/figure-html/linearity_residuals-1.png" width="768"></p>
-<div id="apply-linearity-correction" class="section level3">
-<h3 class="hasAnchor">
-<a href="#apply-linearity-correction" class="anchor"></a>Apply linearity correction (*)</h3>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb21-1" data-line-number="1"><span class="co"># show linearity correction range</span></a>
-<a class="sourceLine" id="cb21-2" data-line-number="2">calib_linearity <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb21-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_evaluate_calibration_range.html">iso_evaluate_calibration_range</a></span>(area44, <span class="dt">calibration =</span> <span class="st">"lin"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb21-4" data-line-number="4"><span class="st">  </span><span class="kw"><a href="../reference/iso_unnest_calibration_range.html">iso_unnest_calibration_range</a></span>(<span class="dt">calibration =</span> <span class="st">"lin"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb21-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/iso_remove_list_columns.html">iso_remove_list_columns</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb21-6" data-line-number="6"><span class="st">  </span>knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/kable.html">kable</a></span>(<span class="dt">d =</span> <span class="dv">2</span>)</a>
-<a class="sourceLine" id="cb21-7" data-line-number="7"><span class="co">#&gt; Info: evaluating range for terms 'area44' in 'lin' calibration for 4 data group(s); storing resulting summary for each data entry in new column 'lin_in_range'.</span></a></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb21-1" data-line-number="1"><span class="co"># show calibration coefficients</span></a>
+<a class="sourceLine" id="cb21-2" data-line-number="2">calib_linearity <span class="op">%&gt;%</span><span class="st"> </span><span class="kw"><a href="../reference/iso_plot_calibration_parameters.html">iso_plot_calibration_parameters</a></span>()</a></code></pre></div>
+<p><img src="ea_irms_example_carbon_files/figure-html/linearity_coefs-1.png" width="672"></p>
+<p>It is clear that there is a small (~0.02 permil improvement in the residual) but significant (p &lt; 0.05) linearity effect that could be reasonably corrected with any of the assessed area dependences. However, we will use the <code>~ area44</code> correction because it explains more of the variation in the signal range that the samples fall into (~ 100-250 Vs) as can be seen in the residuals plot.</p>
+</div>
+<div id="apply-linearity-correction" class="section level2">
+<h2 class="hasAnchor">
+<a href="#apply-linearity-correction" class="anchor"></a>Apply linearity correction (*)</h2>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" data-line-number="1"><span class="co"># apply calibration</span></a>
+<a class="sourceLine" id="cb22-2" data-line-number="2">calib_linearity_applied &lt;-<span class="st"> </span></a>
+<a class="sourceLine" id="cb22-3" data-line-number="3"><span class="st">  </span>calib_linearity <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb22-4" data-line-number="4"><span class="st">  </span><span class="co"># decide which calibration to apply</span></a>
+<a class="sourceLine" id="cb22-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(lin_calib <span class="op">==</span><span class="st"> "lm(d13C_dev ~ area44)"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb22-6" data-line-number="6"><span class="st">  </span><span class="co"># apply calibration indication what should be calcculated</span></a>
+<a class="sourceLine" id="cb22-7" data-line-number="7"><span class="st">  </span><span class="kw"><a href="../reference/iso_apply_calibration.html">iso_apply_calibration</a></span>(<span class="dt">predict =</span> d13C_dev) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb22-8" data-line-number="8"><span class="st">  </span><span class="co"># evaluate calibration range across area44</span></a>
+<a class="sourceLine" id="cb22-9" data-line-number="9"><span class="st">  </span><span class="kw"><a href="../reference/iso_evaluate_calibration_range.html">iso_evaluate_calibration_range</a></span>(area44)</a>
+<a class="sourceLine" id="cb22-10" data-line-number="10"><span class="co">#&gt; Info: applying 'lin' calibration to infer 'd13C_dev' for 1 data group(s); storing resulting value in new column 'd13C_dev_pred'. This may take a moment... finished.</span></a>
+<a class="sourceLine" id="cb22-11" data-line-number="11"><span class="co">#&gt; Info: evaluating range for terms 'area44' in 'lin' calibration for 1 data group(s); storing resulting summary for each data entry in new column 'lin_in_range'.</span></a>
+<a class="sourceLine" id="cb22-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb22-13" data-line-number="13"><span class="co"># show linearity correction range</span></a>
+<a class="sourceLine" id="cb22-14" data-line-number="14">calib_linearity_applied <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb22-15" data-line-number="15"><span class="st">  </span><span class="kw"><a href="../reference/iso_get_calibration_range.html">iso_get_calibration_range</a></span>() <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb22-16" data-line-number="16"><span class="st">  </span>knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/kable.html">kable</a></span>(<span class="dt">d =</span> <span class="dv">2</span>)</a></code></pre></div>
 <table class="table">
 <thead><tr class="header">
 <th align="left">lin_calib</th>
-<th align="left">lin_calib_ok</th>
+<th align="right">lin_calib_points</th>
 <th align="left">term</th>
 <th align="left">units</th>
 <th align="right">min</th>
 <th align="right">max</th>
 </tr></thead>
-<tbody>
-<tr class="odd">
-<td align="left">lm(d13C ~ 1)</td>
-<td align="left">TRUE</td>
+<tbody><tr class="odd">
+<td align="left">lm(d13C_dev ~ area44)</td>
+<td align="right">10</td>
 <td align="left">area44</td>
 <td align="left">Vs</td>
 <td align="right">33.74</td>
 <td align="right">381.76</td>
-</tr>
-<tr class="even">
-<td align="left">lm(d13C ~ area44)</td>
-<td align="left">TRUE</td>
-<td align="left">area44</td>
-<td align="left">Vs</td>
-<td align="right">33.74</td>
-<td align="right">381.76</td>
-</tr>
-<tr class="odd">
-<td align="left">lm(d13C ~ I(area44^-1))</td>
-<td align="left">TRUE</td>
-<td align="left">area44</td>
-<td align="left">Vs</td>
-<td align="right">33.74</td>
-<td align="right">381.76</td>
-</tr>
-<tr class="even">
-<td align="left">lm(d13C ~ I(area44^(1/2)))</td>
-<td align="left">TRUE</td>
-<td align="left">area44</td>
-<td align="left">Vs</td>
-<td align="right">33.74</td>
-<td align="right">381.76</td>
-</tr>
-</tbody>
+</tr></tbody>
 </table>
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" data-line-number="1"></a>
-<a class="sourceLine" id="cb22-2" data-line-number="2"><span class="co"># apply calibration</span></a>
-<a class="sourceLine" id="cb22-3" data-line-number="3">peak_table_lin_corr &lt;-<span class="st"> </span></a>
-<a class="sourceLine" id="cb22-4" data-line-number="4"><span class="st">  </span>calib_linearity <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb22-5" data-line-number="5"><span class="st">  </span><span class="co"># decide which calibration to apply</span></a>
-<a class="sourceLine" id="cb22-6" data-line-number="6"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(lin_calib <span class="op">==</span><span class="st"> "lm(d13C ~ area44)"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb22-7" data-line-number="7"><span class="st">  </span><span class="co"># apply calibration indication what should be calcculated</span></a>
-<a class="sourceLine" id="cb22-8" data-line-number="8"><span class="st">  </span><span class="kw"><a href="../reference/iso_apply_calibration.html">iso_apply_calibration</a></span>(d13C, <span class="dt">calibration =</span> <span class="st">"lin"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb22-9" data-line-number="9"><span class="st">  </span><span class="co"># resulting corrected value</span></a>
-<a class="sourceLine" id="cb22-10" data-line-number="10"><span class="st">  </span><span class="kw"><a href="../reference/iso_unnest_data.html">iso_unnest_data</a></span>(<span class="dt">select =</span> <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/reexports.html">everything</a></span>()) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb22-11" data-line-number="11"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/plotly/man/reexports.html">mutate</a></span>(<span class="dt">d13C_lin_corr =</span> d13C <span class="op">-</span><span class="st"> </span>d13C_pred)</a>
-<a class="sourceLine" id="cb22-12" data-line-number="12"><span class="co">#&gt; Info: applying 'lin' calibration to infer 'd13C' for 1 data group(s);</span></a>
-<a class="sourceLine" id="cb22-13" data-line-number="13"><span class="co">#&gt; storing resulting value in new column 'd13C_pred'</span></a>
-<a class="sourceLine" id="cb22-14" data-line-number="14"><span class="co">#&gt; . This may take a moment... finished.</span></a></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb23-1" data-line-number="1"></a>
+<a class="sourceLine" id="cb23-2" data-line-number="2"><span class="co"># fetch peak table from applied calibration</span></a>
+<a class="sourceLine" id="cb23-3" data-line-number="3">peak_table_lin_corr &lt;-<span class="st"> </span></a>
+<a class="sourceLine" id="cb23-4" data-line-number="4"><span class="st">  </span>calib_linearity_applied <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb23-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/iso_get_calibration_data.html">iso_get_calibration_data</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb23-6" data-line-number="6"><span class="st">  </span><span class="co"># calculate the corrected d13C value</span></a>
+<a class="sourceLine" id="cb23-7" data-line-number="7"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/plotly/man/reexports.html">mutate</a></span>(<span class="dt">d13C_lin_corr =</span> d13C <span class="op">-</span><span class="st"> </span>d13C_dev_pred)</a></code></pre></div>
 </div>
+<div id="check-linearity-correction" class="section level2">
+<h2 class="hasAnchor">
+<a href="#check-linearity-correction" class="anchor"></a>Check linearity correction</h2>
+<p>Check the improvement in standard deviation of the linearity standard:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb24-1" data-line-number="1">peak_table_lin_corr <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb24-2" data-line-number="2"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(type <span class="op">==</span><span class="st"> "linearity"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb24-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_data.html">iso_plot_data</a></span>(</a>
+<a class="sourceLine" id="cb24-4" data-line-number="4">    area44, <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(d13C, d13C_lin_corr), <span class="dt">color =</span> variable, <span class="dt">panel =</span> <span class="ot">NULL</span>, <span class="dt">points =</span> <span class="ot">TRUE</span></a>
+<a class="sourceLine" id="cb24-5" data-line-number="5">  ) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb24-6" data-line-number="6"><span class="st">  </span><span class="co"># show standard deviation range</span></a>
+<a class="sourceLine" id="cb24-7" data-line-number="7"><span class="st">  </span><span class="kw"><a href="../reference/iso_mark_value_range.html">iso_mark_value_range</a></span>(<span class="dt">mean =</span> <span class="ot">FALSE</span>, <span class="dt">sd =</span> <span class="dv">1</span>)</a></code></pre></div>
+<p><img src="ea_irms_example_carbon_files/figure-html/linearity_check-1.png" width="672"></p>
 </div>
 <div id="evaluate-isotopic-scaling" class="section level2">
 <h2 class="hasAnchor">
 <a href="#evaluate-isotopic-scaling" class="anchor"></a>Evaluate isotopic scaling (*)</h2>
-<p>Correct for isotopic scale contraction (discrimination). Note that this can be done all in one with the linearity evaluation <em>if</em> at least two isotopic standards were tested at a range of intensities (which was not the case in this analysis).</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb23-1" data-line-number="1"><span class="co"># run a set of regressions to evaluate linearity</span></a>
-<a class="sourceLine" id="cb23-2" data-line-number="2">calib_scale &lt;-<span class="st"> </span></a>
-<a class="sourceLine" id="cb23-3" data-line-number="3"><span class="st">  </span>peak_table_lin_corr <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb23-4" data-line-number="4"><span class="st">  </span><span class="co"># prepare for calibration</span></a>
-<a class="sourceLine" id="cb23-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/iso_prepare_for_calibration.html">iso_prepare_for_calibration</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb23-6" data-line-number="6"><span class="st">  </span><span class="co"># run different calibrations</span></a>
-<a class="sourceLine" id="cb23-7" data-line-number="7"><span class="st">  </span><span class="kw"><a href="../reference/iso_generate_calibration.html">iso_generate_calibration</a></span>(</a>
-<a class="sourceLine" id="cb23-8" data-line-number="8">    <span class="dt">calibration =</span> <span class="st">"scale"</span>,</a>
-<a class="sourceLine" id="cb23-9" data-line-number="9">    <span class="co"># compare scale correction with and without the prior linearity correction</span></a>
-<a class="sourceLine" id="cb23-10" data-line-number="10">    <span class="dt">model =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="kw"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(d13C <span class="op">~</span><span class="st"> </span>true_d13C), <span class="kw"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(d13C_lin_corr <span class="op">~</span><span class="st"> </span>true_d13C)),</a>
-<a class="sourceLine" id="cb23-11" data-line-number="11">    <span class="dt">is_std_peak =</span> is_std_peak <span class="op">&amp;</span><span class="st"> </span>type <span class="op">%in%</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"scale1"</span>, <span class="st">"scale2"</span>, <span class="st">"linearity"</span>)</a>
-<a class="sourceLine" id="cb23-12" data-line-number="12">  )</a>
-<a class="sourceLine" id="cb23-13" data-line-number="13"><span class="co">#&gt; Info: preparing data for calibration by nesting the entire dataset</span></a>
-<a class="sourceLine" id="cb23-14" data-line-number="14"><span class="co">#&gt; Info: generating 'scale' calibration based on 2 models ('lm(d13C ~ true_d13C)', 'lm(d13C_lin_corr ~ true_d13C)') for 1 data group(s) with standards filter 'is_std_peak &amp; type %in% c("scale1", "scale2", "linearity")'. Storing residuals in new column 'scale_resid'. Storing calibration info in new column 'scale_in_calib'.</span></a></code></pre></div>
-<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb24-1" data-line-number="1"><span class="co"># show calibration coefficients</span></a>
-<a class="sourceLine" id="cb24-2" data-line-number="2">calib_scale <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb24-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_calibration_parameters.html">iso_plot_calibration_parameters</a></span>(</a>
-<a class="sourceLine" id="cb24-4" data-line-number="4">    <span class="dt">calibration =</span> <span class="st">"scale"</span>,</a>
-<a class="sourceLine" id="cb24-5" data-line-number="5">    <span class="dt">x =</span> <span class="st">"value"</span>, <span class="dt">color =</span> signif,</a>
-<a class="sourceLine" id="cb24-6" data-line-number="6">    <span class="dt">date_breaks =</span> <span class="st">"3 hours"</span></a>
-<a class="sourceLine" id="cb24-7" data-line-number="7">  ) <span class="op">+</span><span class="st"> </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="st">""</span>) <span class="op">+</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb24-8" data-line-number="8"><span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_blank</span>())</a></code></pre></div>
-<p><img src="ea_irms_example_carbon_files/figure-html/scale_coefs-1.png" width="576"></p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" data-line-number="1"><span class="co"># show residuals</span></a>
-<a class="sourceLine" id="cb25-2" data-line-number="2">calib_scale <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb25-3" data-line-number="3"><span class="st">  </span><span class="co"># fetch peak table with the added residuals from the calibration</span></a>
-<a class="sourceLine" id="cb25-4" data-line-number="4"><span class="st">  </span><span class="kw"><a href="../reference/iso_unnest_data.html">iso_unnest_data</a></span>(<span class="dt">select =</span> <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/reexports.html">everything</a></span>()) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb25-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(scale_in_calib) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb25-6" data-line-number="6"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_make_units_explicit.html">iso_make_units_explicit</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb25-7" data-line-number="7"><span class="st">  </span><span class="co"># visualize</span></a>
-<a class="sourceLine" id="cb25-8" data-line-number="8"><span class="st">  </span><span class="kw">ggplot</span>() <span class="op">+</span></a>
-<a class="sourceLine" id="cb25-9" data-line-number="9"><span class="st">  </span><span class="kw">aes</span>(<span class="st">`</span><span class="dt">true_d13C [permil]</span><span class="st">`</span>, scale_resid, <span class="dt">color =</span> id1, <span class="dt">size =</span> <span class="st">`</span><span class="dt">area44 [Vs]</span><span class="st">`</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb25-10" data-line-number="10"><span class="st">  </span><span class="kw">geom_smooth</span>(<span class="dt">method =</span> <span class="st">"loess"</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb25-11" data-line-number="11"><span class="st">  </span><span class="kw">geom_hline</span>(<span class="dt">yintercept =</span> <span class="dv">0</span>, <span class="dt">size =</span> <span class="dv">1</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb25-12" data-line-number="12"><span class="st">  </span><span class="kw">geom_point</span>() <span class="op">+</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb25-13" data-line-number="13"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">y =</span> <span class="st">"d13C residuals [permil]"</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb25-14" data-line-number="14"><span class="st">  </span><span class="kw">theme_bw</span>() <span class="op">+</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb25-15" data-line-number="15"><span class="st">  </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">"bottom"</span>, <span class="dt">legend.direction =</span> <span class="st">"vertical"</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb25-16" data-line-number="16"><span class="st">  </span><span class="kw">facet_wrap</span>(<span class="op">~</span>scale_calib)</a></code></pre></div>
+<p>Look at the linearity corrected isotopic measurement of the two discrimnation standardds relative to their known isotopic value:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" data-line-number="1">peak_table_lin_corr <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb25-2" data-line-number="2"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(type <span class="op">%in%</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"scale1"</span>, <span class="st">"scale2"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb25-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_data.html">iso_plot_data</a></span>(</a>
+<a class="sourceLine" id="cb25-4" data-line-number="4">    <span class="dt">x =</span> true_d13C, <span class="dt">y =</span> d13C_lin_corr, <span class="dt">color =</span> id1, </a>
+<a class="sourceLine" id="cb25-5" data-line-number="5">    <span class="dt">points =</span> <span class="ot">TRUE</span>,</a>
+<a class="sourceLine" id="cb25-6" data-line-number="6">    <span class="co"># add 1:1 slope for a visual check on scaling and offset</span></a>
+<a class="sourceLine" id="cb25-7" data-line-number="7">    <span class="kw">geom_abline</span>(<span class="dt">slope =</span> <span class="dv">1</span>, <span class="dt">intercept =</span> <span class="dv">0</span>) </a>
+<a class="sourceLine" id="cb25-8" data-line-number="8">  ) </a></code></pre></div>
+<p><img src="ea_irms_example_carbon_files/figure-html/measured_vs_true-1.png" width="576"></p>
+<p>Correct for isotopic scale contraction (discrimination) and offset:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb26-1" data-line-number="1"><span class="co"># run a set of regressions to evaluate linearity</span></a>
+<a class="sourceLine" id="cb26-2" data-line-number="2">calib_scale &lt;-<span class="st"> </span></a>
+<a class="sourceLine" id="cb26-3" data-line-number="3"><span class="st">  </span>peak_table_lin_corr <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb26-4" data-line-number="4"><span class="st">  </span><span class="co"># prepare for calibration</span></a>
+<a class="sourceLine" id="cb26-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/iso_prepare_for_calibration.html">iso_prepare_for_calibration</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb26-6" data-line-number="6"><span class="st">  </span><span class="co"># run different calibrations</span></a>
+<a class="sourceLine" id="cb26-7" data-line-number="7"><span class="st">  </span><span class="kw"><a href="../reference/iso_generate_calibration.html">iso_generate_calibration</a></span>(</a>
+<a class="sourceLine" id="cb26-8" data-line-number="8">    <span class="dt">calibration =</span> <span class="st">"scale"</span>,</a>
+<a class="sourceLine" id="cb26-9" data-line-number="9">    <span class="co"># compare scale correction with and without the prior linearity correction</span></a>
+<a class="sourceLine" id="cb26-10" data-line-number="10">    <span class="dt">model =</span> <span class="kw"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span>(d13C_lin_corr <span class="op">~</span><span class="st"> </span>true_d13C),</a>
+<a class="sourceLine" id="cb26-11" data-line-number="11">    <span class="dt">use_in_calib =</span> is_std_peak <span class="op">&amp;</span><span class="st"> </span>type <span class="op">%in%</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"scale1"</span>, <span class="st">"scale2"</span>) <span class="op">&amp;</span><span class="st"> </span><span class="op">!</span>is_outlier</a>
+<a class="sourceLine" id="cb26-12" data-line-number="12">  ) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb26-13" data-line-number="13"><span class="st">  </span><span class="co"># remove problematic calibrations if there are any</span></a>
+<a class="sourceLine" id="cb26-14" data-line-number="14"><span class="st">  </span><span class="kw"><a href="../reference/iso_remove_problematic_calibrations.html">iso_remove_problematic_calibrations</a></span>()</a>
+<a class="sourceLine" id="cb26-15" data-line-number="15"><span class="co">#&gt; Info: preparing data for calibration by nesting the entire dataset</span></a>
+<a class="sourceLine" id="cb26-16" data-line-number="16"><span class="co">#&gt; Info: generating 'scale' calibration based on 1 model ('lm(d13C_lin_corr ~ true_d13C)') for 1 data group(s) with standards filter 'is_std_peak &amp; type %in% c("scale1", "scale2") &amp; !is_outlier'. Storing residuals in new column 'scale_resid'. Storing calibration info in new column 'scale_in_calib'.</span></a></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" data-line-number="1"><span class="co"># visualizing residuals</span></a>
+<a class="sourceLine" id="cb27-2" data-line-number="2">calib_scale <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb27-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_residuals.html">iso_plot_residuals</a></span>(<span class="dt">x =</span> d13C, <span class="dt">shape =</span> id1, <span class="dt">size =</span> area44, <span class="dt">trendlines =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
 <p><img src="ea_irms_example_carbon_files/figure-html/scale_residuals-1.png" width="768"></p>
-<div id="apply-scale-correction" class="section level3">
-<h3 class="hasAnchor">
-<a href="#apply-scale-correction" class="anchor"></a>Apply scale correction (*)</h3>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb26-1" data-line-number="1"><span class="co"># show scale correction range</span></a>
-<a class="sourceLine" id="cb26-2" data-line-number="2">calib_scale <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb26-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_evaluate_calibration_range.html">iso_evaluate_calibration_range</a></span>(true_d13C, <span class="dt">calibration =</span> <span class="st">"scale"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb26-4" data-line-number="4"><span class="st">  </span><span class="kw"><a href="../reference/iso_unnest_calibration_range.html">iso_unnest_calibration_range</a></span>(<span class="dt">calibration =</span> <span class="st">"scale"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb26-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/iso_remove_list_columns.html">iso_remove_list_columns</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb26-6" data-line-number="6"><span class="st">  </span>knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/kable.html">kable</a></span>(<span class="dt">d =</span> <span class="dv">2</span>)</a>
-<a class="sourceLine" id="cb26-7" data-line-number="7"><span class="co">#&gt; Info: evaluating range for terms 'true_d13C' in 'scale' calibration for 2 data group(s); storing resulting summary for each data entry in new column 'scale_in_range'.</span></a></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb28-1" data-line-number="1"><span class="co"># show calibration coefficients</span></a>
+<a class="sourceLine" id="cb28-2" data-line-number="2">calib_scale <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb28-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_calibration_parameters.html">iso_plot_calibration_parameters</a></span>() <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb28-4" data-line-number="4"><span class="st">  </span><span class="kw">theme_bw</span>() <span class="co"># reset theme for horizontal x axis labels</span></a></code></pre></div>
+<p><img src="ea_irms_example_carbon_files/figure-html/scale_coefs-1.png" width="576"></p>
+</div>
+<div id="apply-scale-correction" class="section level2">
+<h2 class="hasAnchor">
+<a href="#apply-scale-correction" class="anchor"></a>Apply scale correction (*)</h2>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" data-line-number="1"><span class="co"># apply calibration</span></a>
+<a class="sourceLine" id="cb29-2" data-line-number="2">calib_scale_applied &lt;-<span class="st"> </span></a>
+<a class="sourceLine" id="cb29-3" data-line-number="3"><span class="st">  </span>calib_scale <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb29-4" data-line-number="4"><span class="st">  </span><span class="co"># decide which calibration to apply</span></a>
+<a class="sourceLine" id="cb29-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(scale_calib <span class="op">==</span><span class="st"> "lm(d13C_lin_corr ~ true_d13C)"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb29-6" data-line-number="6"><span class="st">  </span><span class="co"># apply calibration indication what should be calculated</span></a>
+<a class="sourceLine" id="cb29-7" data-line-number="7"><span class="st">  </span><span class="kw"><a href="../reference/iso_apply_calibration.html">iso_apply_calibration</a></span>(true_d13C) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb29-8" data-line-number="8"><span class="st">  </span><span class="co"># evaluate calibration range</span></a>
+<a class="sourceLine" id="cb29-9" data-line-number="9"><span class="st">  </span><span class="kw"><a href="../reference/iso_evaluate_calibration_range.html">iso_evaluate_calibration_range</a></span>(true_d13C_pred)</a>
+<a class="sourceLine" id="cb29-10" data-line-number="10"><span class="co">#&gt; Info: applying 'scale' calibration to infer 'true_d13C' for 1 data group(s); storing resulting value in new column 'true_d13C_pred'. This may take a moment... finished.</span></a>
+<a class="sourceLine" id="cb29-11" data-line-number="11"><span class="co">#&gt; Info: evaluating range for terms 'true_d13C_pred' in 'scale' calibration for 1 data group(s); storing resulting summary for each data entry in new column 'scale_in_range'.</span></a>
+<a class="sourceLine" id="cb29-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb29-13" data-line-number="13"><span class="co"># show scale range</span></a>
+<a class="sourceLine" id="cb29-14" data-line-number="14">calib_scale_applied <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb29-15" data-line-number="15"><span class="st">  </span><span class="kw"><a href="../reference/iso_get_calibration_range.html">iso_get_calibration_range</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb29-16" data-line-number="16"><span class="st">  </span>knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/kable.html">kable</a></span>(<span class="dt">d =</span> <span class="dv">2</span>)</a></code></pre></div>
 <table class="table">
 <thead><tr class="header">
 <th align="left">scale_calib</th>
-<th align="left">scale_calib_ok</th>
+<th align="right">scale_calib_points</th>
 <th align="left">term</th>
 <th align="left">units</th>
 <th align="right">min</th>
 <th align="right">max</th>
 </tr></thead>
-<tbody>
-<tr class="odd">
-<td align="left">lm(d13C ~ true_d13C)</td>
-<td align="left">TRUE</td>
-<td align="left">true_d13C</td>
-<td align="left">permil</td>
-<td align="right">-40.38</td>
-<td align="right">-12.6</td>
-</tr>
-<tr class="even">
+<tbody><tr class="odd">
 <td align="left">lm(d13C_lin_corr ~ true_d13C)</td>
-<td align="left">TRUE</td>
-<td align="left">true_d13C</td>
+<td align="right">15</td>
+<td align="left">true_d13C_pred</td>
 <td align="left">permil</td>
-<td align="right">-40.38</td>
-<td align="right">-12.6</td>
-</tr>
-</tbody>
+<td align="right">-40.45</td>
+<td align="right">-12.56</td>
+</tr></tbody>
 </table>
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" data-line-number="1"></a>
-<a class="sourceLine" id="cb27-2" data-line-number="2"><span class="co"># apply calibration</span></a>
-<a class="sourceLine" id="cb27-3" data-line-number="3">peak_table_calibrated &lt;-<span class="st"> </span></a>
-<a class="sourceLine" id="cb27-4" data-line-number="4"><span class="st">  </span>calib_scale <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb27-5" data-line-number="5"><span class="st">  </span><span class="co"># decide which calibration to apply</span></a>
-<a class="sourceLine" id="cb27-6" data-line-number="6"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(scale_calib <span class="op">==</span><span class="st"> "lm(d13C_lin_corr ~ true_d13C)"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb27-7" data-line-number="7"><span class="st">  </span><span class="co"># apply calibration indication what should be calcculated</span></a>
-<a class="sourceLine" id="cb27-8" data-line-number="8"><span class="st">  </span><span class="kw"><a href="../reference/iso_apply_calibration.html">iso_apply_calibration</a></span>(true_d13C, <span class="dt">calibration =</span> <span class="st">"scale"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb27-9" data-line-number="9"><span class="st">  </span><span class="co"># evaluate calibration range</span></a>
-<a class="sourceLine" id="cb27-10" data-line-number="10"><span class="st">  </span><span class="kw"><a href="../reference/iso_evaluate_calibration_range.html">iso_evaluate_calibration_range</a></span>(true_d13C, <span class="dt">calibration =</span> <span class="st">"scale"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb27-11" data-line-number="11"><span class="st">  </span><span class="co"># resulting corrected value</span></a>
-<a class="sourceLine" id="cb27-12" data-line-number="12"><span class="st">  </span><span class="kw"><a href="../reference/iso_unnest_data.html">iso_unnest_data</a></span>(<span class="dt">select =</span> <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/reexports.html">everything</a></span>())</a>
-<a class="sourceLine" id="cb27-13" data-line-number="13"><span class="co">#&gt; Info: applying 'scale' calibration to infer 'true_d13C' for 1 data</span></a>
-<a class="sourceLine" id="cb27-14" data-line-number="14"><span class="co">#&gt; group(s); storing resulting value in new column 'true_d13C_pred'</span></a>
-<a class="sourceLine" id="cb27-15" data-line-number="15"><span class="co">#&gt; . This may take a moment... finished.</span></a>
-<a class="sourceLine" id="cb27-16" data-line-number="16"><span class="co">#&gt; Info: evaluating range for terms 'true_d13C' in 'scale' calibration for 1 data group(s); storing resulting summary for each data entry in new column 'scale_in_range'.</span></a></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb30-1" data-line-number="1"></a>
+<a class="sourceLine" id="cb30-2" data-line-number="2"><span class="co"># get calibrated data</span></a>
+<a class="sourceLine" id="cb30-3" data-line-number="3">peak_table_calibrated &lt;-<span class="st"> </span></a>
+<a class="sourceLine" id="cb30-4" data-line-number="4"><span class="st">  </span>calib_scale_applied <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb30-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/iso_get_calibration_data.html">iso_get_calibration_data</a></span>()</a></code></pre></div>
 </div>
+<div id="check-overall-calibration" class="section level2">
+<h2 class="hasAnchor">
+<a href="#check-overall-calibration" class="anchor"></a>Check overall calibration</h2>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb31-1" data-line-number="1"><span class="co"># visualize overall calibration</span></a>
+<a class="sourceLine" id="cb31-2" data-line-number="2">peak_table_calibrated <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb31-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span>(true_d13C)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb31-4" data-line-number="4"><span class="st">  </span><span class="co"># visualize</span></a>
+<a class="sourceLine" id="cb31-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_data.html">iso_plot_data</a></span>(</a>
+<a class="sourceLine" id="cb31-6" data-line-number="6">    <span class="dt">x =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">`</span><span class="dt">known d13C</span><span class="st">`</span> =<span class="st"> </span>true_d13C), </a>
+<a class="sourceLine" id="cb31-7" data-line-number="7">    <span class="dt">y =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">`</span><span class="dt">measured d13C</span><span class="st">`</span> =<span class="st"> </span>true_d13C_pred), </a>
+<a class="sourceLine" id="cb31-8" data-line-number="8">    <span class="dt">color =</span> id1, <span class="dt">size =</span> area44,</a>
+<a class="sourceLine" id="cb31-9" data-line-number="9">    <span class="dt">points =</span> <span class="ot">TRUE</span>, <span class="dt">shape =</span> is_outlier,</a>
+<a class="sourceLine" id="cb31-10" data-line-number="10">    <span class="co"># add 1:1 slope</span></a>
+<a class="sourceLine" id="cb31-11" data-line-number="11">    <span class="kw">geom_abline</span>(<span class="dt">slope =</span> <span class="dv">1</span>, <span class="dt">intercept =</span> <span class="dv">0</span>) </a>
+<a class="sourceLine" id="cb31-12" data-line-number="12">  )</a></code></pre></div>
+<p><img src="ea_irms_example_carbon_files/figure-html/scale_check-1.png" width="672"></p>
 </div>
 </div>
 <div id="evaluate-data" class="section level1">
 <h1 class="hasAnchor">
 <a href="#evaluate-data" class="anchor"></a>Evaluate data</h1>
-<div id="standards" class="section level2">
+<div id="accuracy-precision" class="section level2">
 <h2 class="hasAnchor">
-<a href="#standards" class="anchor"></a>Standards</h2>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb28-1" data-line-number="1"><span class="co"># visualize how much standards deviate from the known values after calibration</span></a>
-<a class="sourceLine" id="cb28-2" data-line-number="2">peak_table_calibrated <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb28-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span>(true_d13C)) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb28-4" data-line-number="4"><span class="st">  </span><span class="co"># plot with explicit units</span></a>
-<a class="sourceLine" id="cb28-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_make_units_explicit.html">iso_make_units_explicit</a></span>() <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb28-6" data-line-number="6"><span class="st">  </span><span class="co"># visualize</span></a>
-<a class="sourceLine" id="cb28-7" data-line-number="7"><span class="st">  </span><span class="kw">ggplot</span>() <span class="op">+</span></a>
-<a class="sourceLine" id="cb28-8" data-line-number="8"><span class="st">  </span><span class="kw">aes</span>(<span class="dt">x =</span> <span class="st">`</span><span class="dt">true_d13C [permil]</span><span class="st">`</span>, </a>
-<a class="sourceLine" id="cb28-9" data-line-number="9">      <span class="dt">y =</span> <span class="st">`</span><span class="dt">true_d13C_pred [permil]</span><span class="st">`</span> <span class="op">-</span><span class="st"> `</span><span class="dt">true_d13C [permil]</span><span class="st">`</span>,</a>
-<a class="sourceLine" id="cb28-10" data-line-number="10">      <span class="dt">color =</span> id1, <span class="dt">size =</span> <span class="st">`</span><span class="dt">area44 [Vs]</span><span class="st">`</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb28-11" data-line-number="11"><span class="st">  </span><span class="kw">geom_hline</span>(<span class="dt">yintercept =</span> <span class="dv">0</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb28-12" data-line-number="12"><span class="st">  </span><span class="kw">geom_point</span>() <span class="op">+</span></a>
-<a class="sourceLine" id="cb28-13" data-line-number="13"><span class="st">  </span><span class="kw">theme_bw</span>()</a></code></pre></div>
-<p><img src="ea_irms_example_carbon_files/figure-html/standards-1.png" width="672"></p>
+<a href="#accuracy-precision" class="anchor"></a>Accuracy &amp; Precision</h2>
+<p>For this run, use the linearity standard for a very conservative accuracy and precision standard.</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb32-1" data-line-number="1">peak_table_calibrated <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb32-2" data-line-number="2"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(type <span class="op">==</span><span class="st"> "linearity"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb32-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/plotly/man/reexports.html">group_by</a></span>(id1, true_d13C) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb32-4" data-line-number="4"><span class="st">  </span><span class="kw"><a href="../reference/iso_summarize_data_table.html">iso_summarize_data_table</a></span>(true_d13C_pred) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb32-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/plotly/man/reexports.html">mutate</a></span>(</a>
+<a class="sourceLine" id="cb32-6" data-line-number="6">    <span class="dt">accuracy =</span> <span class="kw"><a href="https://rdrr.io/r/base/MathFun.html">abs</a></span>(<span class="st">`</span><span class="dt">true_d13C_pred mean</span><span class="st">`</span> <span class="op">-</span><span class="st"> </span>true_d13C),</a>
+<a class="sourceLine" id="cb32-7" data-line-number="7">    <span class="dt">precision =</span> <span class="st">`</span><span class="dt">true_d13C_pred sd</span><span class="st">`</span></a>
+<a class="sourceLine" id="cb32-8" data-line-number="8">  ) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb32-9" data-line-number="9"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/plotly/man/reexports.html">select</a></span>(id1, n, accuracy, precision) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb32-10" data-line-number="10"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_make_units_explicit.html">iso_make_units_explicit</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb32-11" data-line-number="11"><span class="st">  </span>knitr<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/knitr/man/kable.html">kable</a></span>(<span class="dt">d =</span> <span class="dv">3</span>)</a></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="left">id1</th>
+<th align="right">n</th>
+<th align="right">accuracy [permil]</th>
+<th align="right">precision</th>
+</tr></thead>
+<tbody><tr class="odd">
+<td align="left">acn1</td>
+<td align="right">10</td>
+<td align="right">0.008</td>
+<td align="right">0.036</td>
+</tr></tbody>
+</table>
 </div>
-<div id="data" class="section level2">
+<div id="sample-data" class="section level2">
 <h2 class="hasAnchor">
-<a href="#data" class="anchor"></a>Data</h2>
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" data-line-number="1">peak_table_calibrated <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb29-2" data-line-number="2"><span class="st">  </span><span class="co"># focus on samples</span></a>
-<a class="sourceLine" id="cb29-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(type <span class="op">==</span><span class="st"> "sample"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb29-4" data-line-number="4"><span class="st">  </span><span class="co"># plot with explicit units</span></a>
-<a class="sourceLine" id="cb29-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_make_units_explicit.html">iso_make_units_explicit</a></span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb29-6" data-line-number="6"><span class="st">  </span><span class="co"># visualize</span></a>
-<a class="sourceLine" id="cb29-7" data-line-number="7"><span class="st">  </span><span class="kw">ggplot</span>() <span class="op">+</span></a>
-<a class="sourceLine" id="cb29-8" data-line-number="8"><span class="st">  </span><span class="kw">aes</span>(<span class="dt">x =</span> id1, <span class="dt">y =</span> <span class="st">`</span><span class="dt">true_d13C_pred [permil]</span><span class="st">`</span>, <span class="dt">color =</span> <span class="kw">str_extract</span>(id1, <span class="st">"^</span><span class="ch">\\</span><span class="st">w+"</span>)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb29-9" data-line-number="9"><span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">size =</span> <span class="dv">4</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb29-10" data-line-number="10"><span class="st">  </span><span class="kw">theme_bw</span>() <span class="op">+</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb29-11" data-line-number="11"><span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">90</span>, <span class="dt">hjust =</span> <span class="dv">1</span>, <span class="dt">vjust =</span> <span class="fl">0.5</span>)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb29-12" data-line-number="12"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">color =</span> <span class="st">"group"</span>)</a></code></pre></div>
+<a href="#sample-data" class="anchor"></a>Sample Data</h2>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb33-1" data-line-number="1">peak_table_calibrated <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb33-2" data-line-number="2"><span class="st">  </span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(type <span class="op">==</span><span class="st"> "sample"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb33-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_data.html">iso_plot_data</a></span>(</a>
+<a class="sourceLine" id="cb33-4" data-line-number="4">    <span class="dt">x =</span> id1, <span class="dt">y =</span> true_d13C_pred, <span class="dt">shape =</span> <span class="kw">str_extract</span>(id1, <span class="st">"^</span><span class="ch">\\</span><span class="st">w+"</span>), </a>
+<a class="sourceLine" id="cb33-5" data-line-number="5">    <span class="dt">color =</span> <span class="kw"><a href="../reference/iso_format.html">iso_format</a></span>(<span class="dt">area =</span> lin_in_range, <span class="dt">d13C =</span> scale_in_range),</a>
+<a class="sourceLine" id="cb33-6" data-line-number="6">    <span class="dt">points =</span> <span class="ot">TRUE</span></a>
+<a class="sourceLine" id="cb33-7" data-line-number="7">  ) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb33-8" data-line-number="8"><span class="st">  </span><span class="kw"><a href="../reference/iso_mark_calibration_range.html">iso_mark_calibration_range</a></span>(<span class="dt">calibration =</span> <span class="st">"scale"</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb33-9" data-line-number="9"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">shape =</span> <span class="st">"data groups"</span>, <span class="dt">color =</span> <span class="st">"in calibration ranges"</span>)</a></code></pre></div>
 <p><img src="ea_irms_example_carbon_files/figure-html/samples-1.png" width="960"></p>
 </div>
 </div>
@@ -1810,7 +2135,21 @@
 <h1 class="hasAnchor">
 <a href="#final" class="anchor"></a>Final</h1>
 <p>Final data processing and visualization usually depends on the type of data and the metadata available for contextualization (e.g. core depth, source organism, age, etc.). The relevant metadata can be added easily with <code><a href="https://rdrr.io/pkg/isoreader/man/iso_add_file_info.html">iso_add_file_info()</a></code> during the initial data load / file info procesing. Alternatively, just call <code><a href="https://rdrr.io/pkg/isoreader/man/iso_add_file_info.html">iso_add_file_info()</a></code> again at this later point or use dplyr’s <code>left_join</code> directly.</p>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb30-1" data-line-number="1"><span class="co"># @user: add final data processing and plot(s)</span></a></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb34-1" data-line-number="1"><span class="co"># @user: add final data processing and plot(s)</span></a>
+<a class="sourceLine" id="cb34-2" data-line-number="2">data_summary &lt;-<span class="st"> </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/reexports.html">tibble</a></span>()</a></code></pre></div>
+</div>
+<div id="export" class="section level1">
+<h1 class="hasAnchor">
+<a href="#export" class="anchor"></a>Export</h1>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb35-1" data-line-number="1"><span class="co"># export the calibrations with all information and data to Excel</span></a>
+<a class="sourceLine" id="cb35-2" data-line-number="2">peak_table_calibrated <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb35-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_export_calibration_to_excel.html">iso_export_calibration_to_excel</a></span>(</a>
+<a class="sourceLine" id="cb35-4" data-line-number="4">    <span class="dt">filepath =</span> <span class="kw"><a href="https://rdrr.io/r/base/format.html">format</a></span>(<span class="kw"><a href="https://rdrr.io/r/base/Sys.time.html">Sys.Date</a></span>(), <span class="st">"%Y%m%d_ea_irms_example_carbon_export.xlsx"</span>),</a>
+<a class="sourceLine" id="cb35-5" data-line-number="5">    <span class="co"># include data summary as an additional useful tab</span></a>
+<a class="sourceLine" id="cb35-6" data-line-number="6">    <span class="st">`</span><span class="dt">data summary</span><span class="st">`</span> =<span class="st"> </span>data_summary</a>
+<a class="sourceLine" id="cb35-7" data-line-number="7">  )</a>
+<a class="sourceLine" id="cb35-8" data-line-number="8"><span class="co">#&gt; Info: exporting calibrations into Excel '20191117_ea_irms_example_carbon_export.xlsx'... Note: zip::zip() is deprecated, please use zip::zipr() instead</span></a>
+<a class="sourceLine" id="cb35-9" data-line-number="9"><span class="co">#&gt; complete. Created tabs 'data summary', 'all data', 'lin coefs', 'lin summary', 'lin range', 'scale coefs', 'scale summary' and 'scale range'.</span></a></code></pre></div>
 </div>
   </div>
 
@@ -1836,6 +2175,7 @@
       <li><a href="#first-look">First look</a></li>
       <li><a href="#optionally---use-interactive-plot">Optionally - use interactive plot</a></li>
       <li><a href="#standards-variation">Standards variation</a></li>
+      <li><a href="#identify-outliers">Identify outliers (*)</a></li>
       </ul>
 </li>
       <li>
@@ -1843,16 +2183,21 @@
 <li><a href="#add-calibration-information">Add calibration information (*)</a></li>
       <li><a href="#evaluate-temporal-drift">Evaluate temporal drift</a></li>
       <li><a href="#evaluate-linearity">Evaluate linearity (*)</a></li>
+      <li><a href="#apply-linearity-correction">Apply linearity correction (*)</a></li>
+      <li><a href="#check-linearity-correction">Check linearity correction</a></li>
       <li><a href="#evaluate-isotopic-scaling">Evaluate isotopic scaling (*)</a></li>
+      <li><a href="#apply-scale-correction">Apply scale correction (*)</a></li>
+      <li><a href="#check-overall-calibration">Check overall calibration</a></li>
       </ul>
 </li>
       <li>
 <a href="#evaluate-data">Evaluate data</a><ul class="nav nav-pills nav-stacked">
-<li><a href="#standards">Standards</a></li>
-      <li><a href="#data">Data</a></li>
+<li><a href="#accuracy-precision">Accuracy &amp; Precision</a></li>
+      <li><a href="#sample-data">Sample Data</a></li>
       </ul>
 </li>
       <li><a href="#final">Final</a></li>
+      <li><a href="#export">Export</a></li>
       </ul>
 </div>
       </div>

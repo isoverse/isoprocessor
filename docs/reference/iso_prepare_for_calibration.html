@@ -41,7 +41,7 @@
 
 <meta property="og:title" content="Prepare data set for calibration — iso_prepare_for_calibration" />
 
-<meta property="og:description" content="Nests data set in preparation for calibration calculations. Use the group_by parameter to group analyses as appropriate for calibration. Use iso_unnest_data to easily pull out additional columns from the nested data frame in all_data at any point before, during or after calibration." />
+<meta property="og:description" content="Nests data set in preparation for calibration calculations. Use the group_by parameter to group analyses as appropriate for calibration. Use iso_get_calibration_data to easily pull out columns from the nested data frame in all_data at any point before, during or after calibration." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -83,7 +83,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.1</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.5</span>
       </span>
     </div>
 
@@ -142,12 +142,12 @@
 
     <div class="ref-description">
     
-    <p>Nests data set in preparation for calibration calculations. Use the <code>group_by</code> parameter to group analyses as appropriate for calibration. Use <a href='iso_unnest_data.html'>iso_unnest_data</a> to easily pull out additional columns from the nested data frame in <code>all_data</code> at any point before, during or after calibration.</p>
+    <p>Nests data set in preparation for calibration calculations. Use the <code>group_by</code> parameter to group analyses as appropriate for calibration. Use <a href='iso_get_calibration_data.html'>iso_get_calibration_data</a> to easily pull out columns from the nested data frame in <code>all_data</code> at any point before, during or after calibration.</p>
     
     </div>
 
     <pre class="usage"><span class='fu'>iso_prepare_for_calibration</span>(<span class='no'>dt</span>, <span class='kw'>group_by</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))</pre>
+  <span class='kw'>nest_existing_calibrations</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -159,6 +159,10 @@
     <tr>
       <th>group_by</th>
       <td><p>what to group by for indidual calibration calculations (use c(...) to select multiple) - set <code>group_by = NULL</code> to avoid grouping</p></td>
+    </tr>
+    <tr>
+      <th>nest_existing_calibrations</th>
+      <td><p>whether to nest existing calibrations. This is usually not necessary and only leads to larger data objects. By default, existing calibrations are therefore never included in the nested data set.</p></td>
     </tr>
     <tr>
       <th>quiet</th>
