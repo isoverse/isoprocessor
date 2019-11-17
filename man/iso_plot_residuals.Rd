@@ -6,7 +6,7 @@
 \usage{
 iso_plot_residuals(dt, x, calibration = last_calibration(dt),
   color = calibration_model_name(), panel = calibration_model_name(),
-  points = TRUE, smooth_method = "loess", ...)
+  points = TRUE, trendlines = TRUE, value_ranges = TRUE, ...)
 }
 \arguments{
 \item{dt}{data frame to plot data from}
@@ -19,7 +19,9 @@ iso_plot_residuals(dt, x, calibration = last_calibration(dt),
 
 \item{points}{whether to plot points (FALSE by default)}
 
-\item{smooth_method}{whether to add a smoothing ribbon to the residuals plot, by default using the \code{loess} method. Use \code{smooth_method = NULL} to omit smoothing curve.}
+\item{trendlines}{whether to add trendlines to the residuals plot to highlight patterns more easily. To customize more, set \code{trendlines=FALSE} and provide a manual \code{geom_smooth()} in the \code{...} of this function.}
+
+\item{value_ranges}{whether to add value ranges (via \link{iso_mark_value_range}) to the plot to highlight residuals variation. To customize more, set \code{value_ranges=FALSE} and add ranges back in using \link{iso_mark_value_range} directly.}
 
 \item{...}{additional parameters passed to \link{iso_plot_data}}
 }
