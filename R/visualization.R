@@ -1026,7 +1026,7 @@ iso_plot_data <- function(
       scale_x_datetime(date_breaks = date_breaks, date_labels = date_labels) +
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
       labs(x = "")
-  } else if (is.character(x)) {
+  } else if (is.character(x) || is.factor(x)) {
     # just rotate x axis labels
     p <- p + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
   }
