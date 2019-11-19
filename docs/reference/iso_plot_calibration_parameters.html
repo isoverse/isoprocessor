@@ -83,7 +83,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.5</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.6</span>
       </span>
     </div>
 
@@ -146,10 +146,10 @@
     
     </div>
 
-    <pre class="usage"><span class='fu'>iso_plot_calibration_parameters</span>(<span class='no'>dt</span>, <span class='kw'>x</span> <span class='kw'>=</span> <span class='fu'>calibration_model_name</span>(),
+    <pre class="usage"><span class='fu'>iso_plot_calibration_parameters</span>(<span class='no'>dt</span>, <span class='no'>...</span>, <span class='kw'>x</span> <span class='kw'>=</span> <span class='fu'>calibration_model_name</span>(),
   <span class='kw'>calibration</span> <span class='kw'>=</span> <span class='fu'>last_calibration</span>(<span class='no'>dt</span>), <span class='kw'>select_from_summary</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='kw'>R2</span> <span class='kw'>=</span>
-  <span class='no'>adj.r.squared</span>, <span class='kw'>RMSD</span> <span class='kw'>=</span> <span class='no'>sigma</span>), <span class='kw'>color</span> <span class='kw'>=</span> <span class='no'>signif</span>, <span class='kw'>panel</span> <span class='kw'>=</span> <span class='no'>term</span> ~ <span class='no'>.</span>,
-  <span class='kw'>panel_scales</span> <span class='kw'>=</span> <span class='st'>"free"</span>, <span class='kw'>points</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='no'>...</span>)</pre>
+  <span class='no'>adj.r.squared</span>, <span class='kw'>RSD</span> <span class='kw'>=</span> <span class='no'>sigma</span>), <span class='kw'>color</span> <span class='kw'>=</span> <span class='no'>signif</span>, <span class='kw'>panel</span> <span class='kw'>=</span> <span class='no'>term</span> ~ <span class='no'>.</span>,
+  <span class='kw'>panel_scales</span> <span class='kw'>=</span> <span class='st'>"free"</span>, <span class='kw'>points</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -159,12 +159,16 @@
       <td><p>data frame to plot data from</p></td>
     </tr>
     <tr>
+      <th>...</th>
+      <td><p>additional ggplot objects (e.g. <code>geom_smooth()</code>) that should be added to the plot PRIOR to the automatically generated layers for error bars, points and lines. Notet that to add geoms on top, please use regular <code>iso_plot_data() + geom_smooth() + ...</code> syntax instead.</p></td>
+    </tr>
+    <tr>
       <th>x</th>
       <td><p>the column for the x-axis aesthetic. Can be a numeric, text or datetime column (text and datetime column labels will be automatically rotated by 90 degrees). For clarity of the plot, only single variables are allowed. Use named vector with <code><a href='https://rdrr.io/r/base/c.html'>c(new_x = x)</a></code> to rename the x variable on the fly. By default will show units in the axis names if there are any. If a datetime column is provided for <code>x</code>, parameters <code>date_breaks</code> (example: <code>date_breaks = "2 hours"</code>) and <code>date_labels</code> can be set to fine-tune the x-axis appearance. See scale_date for additional details. Note that <code>x</code> can also be <code>x = NULL</code> for single data point plots - in this case the x axis is completely omitted.</p></td>
     </tr>
     <tr>
       <th>select_from_summary</th>
-      <td><p>which parameters from the fit summary to include, by default includes the adjusted R2 (renamed just <code>R2</code>) and the root mean square deviation (<code>RMSD</code>), which R often calls <a href='https://rdrr.io/r/stats/sigma.html'>sigma</a> or residual standard deviation (often also called residual standard error and root mean square error instead of deviation, or standard error of the regression).</p></td>
+      <td><p>which parameters from the fit summary to include, by default includes the adjusted R2 (renamed just <code>R2</code>) and the residual standard deviation (<code>RSD</code>), which R often calls <a href='https://rdrr.io/r/stats/sigma.html'>sigma</a> (sometimes also called residual mean standard deviation, residual standard error, root mean square error, or standard error of the regression).</p></td>
     </tr>
     <tr>
       <th>color</th>
@@ -181,10 +185,6 @@
     <tr>
       <th>points</th>
       <td><p>whether to plot points (FALSE by default)</p></td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td><p>additional ggplot objects (e.g. <code>geom_smooth()</code>) that should be added to the plot PRIOR to the automatically generated layers for error bars, points and lines. Notet that to add geoms on top, please use regular <code>iso_plot_data() + geom_smooth() + ...</code> syntax instead.</p></td>
     </tr>
     </table>
     
