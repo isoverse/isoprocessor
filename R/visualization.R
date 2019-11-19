@@ -1167,19 +1167,12 @@ iso_plot_calibration_parameters <- function(
 
   # pull out all coefficients (all for now, should always show all?)
   calib_coefs <- dt %>%
-    iso_get_calibration_coefs(
-      calibration = calibration,
-      keep_other_list_data = FALSE
-    )
+    iso_get_calibration_coefficients(calibration = calibration)
 
   # pull out requested summary
   select_quo <- enquo(select_from_summary)
   calib_summary <- dt %>%
-    iso_get_calibration_summary(
-      calibration = calibration,
-      select = everything(),
-      keep_other_list_data = FALSE
-    )
+    iso_get_calibration_summary(calibration = calibration)
   cs_cols <- get_column_names(calib_summary, select = select_quo, n_reqs = list(select = "*"))
 
   # check if any summary should be included
@@ -1393,7 +1386,7 @@ iso_mark_calibration_range <- function(p, calibration = last_calibration(p$data)
       mutate(panel = as.character(panel)) %>%
       select(panel, !!sym(calib_vars$model_name), !!sym(calib_vars$model_params)) %>%
       unique() %>%
-      iso_get_calibration_range(calibration = calibration, keep_other_list_data = FALSE)
+      iso_get_calibration_range(calibration = calibration)
 
     # with and without units
     range_data <-
