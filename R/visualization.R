@@ -749,20 +749,21 @@ iso_plot_ref_peaks <- function(dt, x, ratio, ..., group_id = file_id, is_ref_con
     stop(call. = FALSE)
 
   # ratios
-  dt_cols <- get_column_names(dt, ratio = param_quos$ratio, group_id = param_quos$group_id, n_reqs = list(group_id = "*", ratio = "+"))
+  dt_cols <- get_column_names(dt, x = param_quos$x, ratio = param_quos$ratio, group_id = param_quos$group_id, n_reqs = list(group_id = "*", ratio = "+"))
 
   # calculate ratio deltas
   mutate_quos <-
     map(dt_cols$ratio, ~quo( (!!sym(.x) / mean(!!sym(.x), na.rm = TRUE) - 1) * 1000)) %>%
     setNames(names(dt_cols$ratio))
   refs <- refs %>%
+    mutate(!!dt_cols$x := factor(!!sym(dt_cols$x)) %>% forcats::as_factor()) %>%
     group_by(!!!map(dt_cols$group_id, sym)) %>%
     mutate(!!!mutate_quos) %>%
     ungroup()
 
   # visualize
   iso_plot_data(
-    refs, x = !!enquo(x), y = c(!!!names(mutate_quos)),
+    refs, x = !!sym(dt_cols$x), y = c(!!!names(mutate_quos)),
     ...,
     geom_bar(stat = "identity", position = "dodge")
   ) + labs(y = "Deviation from average (permil)")
@@ -1124,13 +1125,12 @@ iso_plot_residuals <- function(
 #' @param select_from_summary which parameters from the fit summary to include, by default includes the adjusted R2 (renamed just \code{R2}) and the residual standard deviation (\code{RSD}), which R often calls \link[stats]{sigma} (sometimes also called residual mean standard deviation, residual standard error, root mean square error, or standard error of the regression).
 #' @export
 iso_plot_calibration_parameters <- function(
-  dt, x = calibration_model_name(), calibration = last_calibration(dt),
+  dt, ..., x = calibration_model_name(), calibration = last_calibration(dt),
   select_from_summary = c(R2 = adj.r.squared, RSD = sigma),
   color = signif,
   panel = term ~ .,
   panel_scales = "free",
-  points = TRUE,
-  ...) {
+  points = TRUE) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)

@@ -229,7 +229,6 @@ test_that("test default behavior of calibrations", {
   )
 
   # get parameters
-  expect_warning(calib_range %>% iso_unnest_calibration_parameters(), "deprecated")
   expect_warning(calib_range %>% iso_unnest_calibration_parameters(), "conflicting name")
   expect_equal(
     suppressWarnings(calib_range %>% iso_unnest_calibration_parameters(select_from_coefs = c(term, estimate), select_from_summary = c(sigma))) %>% names(),

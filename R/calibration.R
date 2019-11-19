@@ -393,7 +393,7 @@ iso_remove_problematic_calibrations <- function(dt, calibration = last_calibrati
   # fetch
   dt_out <- filter(dt, !!sym(calib_vars$model_enough_data))
 
-  if(!quiet && nrow(dt_out) != nrow(dt)) {
+  if(!quiet) {
     glue("Info: removing problematic calibrations ({nrow(dt) - nrow(dt_out)} of {nrow(dt)})") %>%
       message()
   }
@@ -685,7 +685,44 @@ iso_get_calibration_summary <- function(
   )
 }
 
+#' Get calibration parameters
+#'
+#' This function is deprecated for clarity. Please use \code{\link{iso_get_calibration_coefficients}} and \code{\link{iso_get_calibration_summary}} directly.
+#'
+#' @inheritParams iso_get_calibration_coefficients
+#' @param select_from_coefs which columns from the fit coeffiencts to include, supports full dplyr syntax including renaming
+#' @param select_from_summary which columns from the fit summary to include, supports full dplyr syntax including renaming
+#' @export
+iso_get_calibration_parameters <-
+  function(dt, calibration = last_calibration(dt),
+           select_from_coefs = everything(), select_from_summary = everything(),
+           keep_calibration_parameters = keep_other_list_data,
+           keep_calibration_regressions = FALSE,
+           keep_other_calibrations = FALSE,
+           quiet = default(quiet),
+           keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE) {
 
+    if (!missing(keep_remaining_nested_data))
+      warning("'keep_remaining_nested_data' was removed for clarity.", immediate. = TRUE, call. = FALSE)
+    if (!missing(keep_other_list_data))
+      warning("'keep_other_list_data' was renamed to 'keep_calibration_parameters' for consistency. Please start using 'keep_calibration_parameters' as 'keep_other_list_data' will be removed in a future version of isoprocessor.", immediate. = TRUE, call. = FALSE)
+
+    dt %>%
+      # unnest calibration coefs
+      iso_get_calibration_coefficients(
+        calibration = calibration,
+        select = !!enquo(select_from_coefs),
+        keep_calibration_parameters = TRUE,
+        keep_calibration_regressions = TRUE,
+        keep_other_calibrations = TRUE) %>%
+      # unnest calibration summary
+      iso_get_calibration_summary(
+        calibration = calibration,
+        select = !!enquo(select_from_summary),
+        keep_calibration_parameters = keep_calibration_parameters,
+        keep_calibration_regressions = keep_calibration_regressions,
+        keep_other_calibrations = keep_other_calibrations)
+  }
 
 #' Get calibration range
 #'
@@ -773,6 +810,14 @@ iso_unnest_calibration_summary <- function(...) {
   iso_get_calibration_summary(...)
 }
 
+#' @rdname iso_get_calibration_parameters
+#' @details \code{iso_unnest_calibration_parameters} is deprecated in favor of the equivalent \code{iso_get_calibration_parameters} to standardize function call names. Please start using \code{iso_get_calibration_parameters} as \code{iso_unnest_calibration_parameters} will be deprecated in a future version of isoprocessor.
+#' @export
+iso_unnest_calibration_parameters <- function(...) {
+  warning("'iso_unnest_calibration_parameters' is deprecated in favor of 'iso_get_calibration_parameters' and will be removed in future versions of isoprocessor. Please use 'iso_get_calibration_summay' instead", immediate. = TRUE, call. = FALSE)
+  iso_get_calibration_parameters(...)
+}
+
 #' @rdname iso_get_calibration_range
 #' @details \code{iso_unnest_calibration_range} is deprecated in favor of the equivalent \code{iso_get_calibration_range} to standardize function call names. Please start using \code{iso_get_calibration_range} as \code{iso_unnest_calibration_range} will be deprecated in a future version of isoprocessor.
 #' @export
@@ -781,45 +826,4 @@ iso_unnest_calibration_range <- function(...) {
   iso_get_calibration_range(...)
 }
 
-#' Get calibration parameters
-#'
-#' This function is deprecated for clarity. Please use \code{\link{iso_get_calibration_coefficients}} and \code{\link{iso_get_calibration_summary}} directly.
-#'
-#' @inheritParams iso_get_calibration_coefficients
-#' @param select_from_coefs which columns from the fit coeffiencts to include, supports full dplyr syntax including renaming
-#' @param select_from_summary which columns from the fit summary to include, supports full dplyr syntax including renaming
-#' @export
-iso_unnest_calibration_parameters <-
-  function(dt, calibration = last_calibration(dt),
-           select_from_coefs = everything(), select_from_summary = everything(),
-           keep_calibration_parameters = keep_other_list_data,
-           keep_calibration_regressions = FALSE,
-           keep_other_calibrations = FALSE,
-           quiet = default(quiet),
-           keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE) {
-
-    # warnings
-    warning("This function is deprecated for clarity and will be removed in future versions of isoprocessor. Please use ?iso_get_calibration_coefficients and ?iso_get_calibration_summary to retrieve calibration coefficients and summary information, respectively.", immediate. = TRUE, call. = FALSE)
-
-    if (!missing(keep_remaining_nested_data))
-      warning("'keep_remaining_nested_data' was removed for clarity.", immediate. = TRUE, call. = FALSE)
-    if (!missing(keep_other_list_data))
-      warning("'keep_other_list_data' was renamed to 'keep_calibration_parameters' for consistency. Please start using 'keep_calibration_parameters' as 'keep_other_list_data' will be removed in a future version of isoprocessor.", immediate. = TRUE, call. = FALSE)
-
-    dt %>%
-      # unnest calibration coefs
-      iso_get_calibration_coefficients(
-        calibration = calibration,
-        select = !!enquo(select_from_coefs),
-        keep_calibration_parameters = TRUE,
-        keep_calibration_regressions = TRUE,
-        keep_other_calibrations = TRUE) %>%
-      # unnest calibration summary
-      iso_get_calibration_summary(
-        calibration = calibration,
-        select = !!enquo(select_from_summary),
-        keep_calibration_parameters = keep_calibration_parameters,
-        keep_calibration_regressions = keep_calibration_regressions,
-        keep_other_calibrations = keep_other_calibrations)
-  }
 
