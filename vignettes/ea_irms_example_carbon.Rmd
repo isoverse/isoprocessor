@@ -155,30 +155,32 @@ iso_files %>%
   ) 
 ```
 
-## Reference peaks
+## Reference peaks (*)
 
-```{r "ref_peak_variation", fig.width=10, fig.height=4}
-# examine variation in the reference peaks
-iso_files %>%
-  iso_get_peak_table(include_file_info = c(seq_nr, analysis)) %>% 
-  # focus on reference peaks only
+Visualize the reference peaks. It looks like the sample at `seq_nr=66` has an abnormously high `r46/44` difference between the two reference peaks (>0.5 permil). However, it is stable for `r45/44` so will likely be okay for d13C. Nevertheless, we'll flag it as potentially problematic to keep an eye on the sample in the final data.
+
+```{r "ref_peak_variation", fig.width=9, fig.height=7}
+iso_files %>% 
+  # get all peaks
+  iso_get_peak_table(include_file_info = c(seq_nr, analysis), quiet = TRUE) %>% 
+  # focus on reference peaks only and add reference info
   filter(!is.na(ref_nr)) %>% 
-  # mark ref peak used in isodat to calculate delta values
-  mutate(ref_info = paste0(ref_nr, ifelse(is_ref == 1, "*", ""))) %>%
-  # calculate deviations from average measured ratio in each file
-  group_by(file_id) %>% 
-  mutate(delta_vs_avg = (`r45/44` / mean(`r45/44`) - 1) * 1000) %>% 
-  ungroup() %>% 
+  mutate(ref_info = paste0(ref_nr, ifelse(is_ref == 1, "*", ""))) %>% 
   # visualize
-  iso_plot_data(
-    x = seq_nr, y = delta_vs_avg, fill = ref_info,
-    geom_bar(stat = "identity", position = "dodge")
-  ) +
-  labs(
-    x = "Sequence #",
-    y = "Deviation from average (permil) within each analysis", 
-    fill = "Reference\npeak") 
+  iso_plot_ref_peaks(
+    # specify the ratios to visualize
+    x = seq_nr, ratio = c(`r45/44`, `r46/44`), fill = ref_info,
+    panel_scales = "fixed"
+  ) %>% 
+  # mark outlier
+  iso_mark_outliers(y_value > 0.25, label = iso_format(seq_nr)) +
+  # add labels
+  labs(x = "Sequence #", fill = "Reference\npeak")
+
+iso_files <- iso_files %>% 
+  iso_mutate_file_info(note = ifelse(seq_nr == 66, "ref peaks deviate > 0.5 permil in r46/44", ""))
 ```
+
 
 # Inspect data
 
