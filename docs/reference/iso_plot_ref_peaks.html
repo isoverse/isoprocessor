@@ -83,7 +83,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.5</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.6</span>
       </span>
     </div>
 
@@ -146,8 +146,8 @@
     
     </div>
 
-    <pre class="usage"><span class='fu'>iso_plot_ref_peaks</span>(<span class='no'>dt</span>, <span class='no'>ratio</span>, <span class='no'>group_id</span>, <span class='no'>is_ref_condition</span>,
-  <span class='kw'>is_ref_used</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>within_group</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+    <pre class="usage"><span class='fu'>iso_plot_ref_peaks</span>(<span class='no'>dt</span>, <span class='no'>x</span>, <span class='no'>ratio</span>, <span class='no'>...</span>, <span class='kw'>group_id</span> <span class='kw'>=</span> <span class='no'>file_id</span>,
+  <span class='kw'>is_ref_condition</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>within_group</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>is_ref_used</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -157,26 +157,47 @@
       <td><p>data table</p></td>
     </tr>
     <tr>
+      <th>x</th>
+      <td><p>which column to use for the x-axis</p></td>
+    </tr>
+    <tr>
       <th>ratio</th>
       <td><p>which ratio column(s) to compare for the reference peaks (can be multiple)</p></td>
     </tr>
     <tr>
+      <th>...</th>
+      <td><p>additional parameters passed to <a href='iso_plot_data.html'>iso_plot_data</a></p></td>
+    </tr>
+    <tr>
       <th>group_id</th>
-      <td><p>group identifier column(s) to clarify which peaks belongs to a single analysis - first column in group id is used for x axis labels</p></td>
+      <td><p>group identifier column(s) to clarify across which data groups the reference peak deviation should be calcualted. By default calculates reference peak variations within each analysis.</p></td>
     </tr>
     <tr>
       <th>is_ref_condition</th>
-      <td><p>condition to identify which of the peaks are reference peaks. Must be a column or expression that evaluates to a logical (TRUE/FALSE).</p></td>
-    </tr>
-    <tr>
-      <th>is_ref_used</th>
-      <td><p>[optional] parameter to identify which of the reference peaks (<code>is_ref_condition</code>) are actually used for ratio/ratio calculations. Must be a column or expresion that evaluates to a logical (TRUE/FALSE). If this parameter is provided, the used reference peaks are higlight in solid while the other peaks are slightly opaque.</p></td>
+      <td><p>condition to identify which of the peaks are reference peaks (unless the peaks are prefilterd already). Must be a column or expression that evaluates to a logical (TRUE/FALSE).</p></td>
     </tr>
     <tr>
       <th>within_group</th>
-      <td><p>whether to visualize the deviation within the specified group or across all groups</p></td>
+      <td><p>deprectated, use <code>group_id</code> to group accordingly</p></td>
+    </tr>
+    <tr>
+      <th>is_ref_used</th>
+      <td><p>deprecated, set an aesthetics directly via ... paramter to <a href='iso_plot_data.html'>iso_plot_data</a></p></td>
     </tr>
     </table>
+    
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p>Other plot functions: <code><a href='iso_format.html'>iso_format</a></code>,
+  <code><a href='iso_mark_calibration_range.html'>iso_mark_calibration_range</a></code>,
+  <code><a href='iso_mark_outliers.html'>iso_mark_outliers</a></code>,
+  <code><a href='iso_mark_value_range.html'>iso_mark_value_range</a></code>,
+  <code><a href='iso_plot_continuous_flow_data.html'>iso_plot_continuous_flow_data</a></code>,
+  <code><a href='iso_plot_data.html'>iso_plot_data</a></code>,
+  <code><a href='iso_plot_dual_inlet_data.html'>iso_plot_dual_inlet_data</a></code>,
+  <code><a href='iso_plot_raw_data.html'>iso_plot_raw_data</a></code>,
+  <code><a href='iso_plot_residuals.html'>iso_plot_residuals</a></code>,
+  <code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a></code></p></div>
     
 
   </div>
@@ -184,7 +205,9 @@
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-                </ul>
+      
+      <li><a href="#see-also">See also</a></li>
+          </ul>
 
   </div>
 </div>

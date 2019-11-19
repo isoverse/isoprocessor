@@ -40,3 +40,16 @@ the data table with the following columns added (prefixed by the \code{calibrati
 \description{
 Generate a calibration for a specific variable based on one or multiple calibration models. Requires properly nested and grouped data, see \link{iso_prepare_for_calibration} for details. Note that to calibrate different variables, separate calls to this function should be issued each with different \code{calibration} names.
 }
+\seealso{
+Other calibration functions: \code{\link{iso_add_standards}},
+  \code{\link{iso_apply_calibration}},
+  \code{\link{iso_evaluate_calibration_range}},
+  \code{\link{iso_get_calibration_coefficients}},
+  \code{\link{iso_get_calibration_data}},
+  \code{\link{iso_get_calibration_range}},
+  \code{\link{iso_get_calibration_summary}},
+  \code{\link{iso_get_problematic_calibrations}},
+  \code{\link{iso_prepare_for_calibration}},
+  \code{\link{iso_remove_problematic_calibrations}}
+}
+\concept{calibration functions}

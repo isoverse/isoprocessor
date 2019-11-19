@@ -47,7 +47,7 @@ iso_export_calibration_to_excel <- function(
   # info
   if (!quiet) {
     glue::glue("Info: exporting calibrations into Excel '{basename(filepath)}'... ") %>%
-      message(appendLF = FALSE)
+      message()
   }
 
   # make excel workbook
@@ -69,7 +69,7 @@ iso_export_calibration_to_excel <- function(
   if (include_all_data) {
     ws_names <- c(ws_names, "all data")
     openxlsx::addWorksheet(wb, tail(ws_names, 1))
-    all_data <- calibs_df %>% iso_get_calibration_data(keep_other_list_data = FALSE)
+    all_data <- calibs_df %>% iso_get_calibration_data(keep_calibration_parameters = FALSE, quiet = quiet)
     openxlsx::writeData(wb, tail(ws_names, 1), with_units(all_data), headerStyle = hs)
   }
 
@@ -82,8 +82,7 @@ iso_export_calibration_to_excel <- function(
     if (include_calib_coefs) {
       ws_names <- c(ws_names, if (calib == "") "calib coefs" else paste(calib, "coefs"))
       openxlsx::addWorksheet(wb, tail(ws_names, 1))
-      calib_coefs <- calibs_df %>% iso_get_calibration_coefs(
-        calibration = calib, keep_other_list_data = FALSE)
+      calib_coefs <- calibs_df %>% iso_get_calibration_coefficients(calibration = calib, quiet = quiet)
       openxlsx::writeData(wb, tail(ws_names, 1), calib_coefs, headerStyle = hs)
     }
 
@@ -91,30 +90,16 @@ iso_export_calibration_to_excel <- function(
     if (include_calib_summary) {
       ws_names <- c(ws_names, if (calib == "") "calib summary" else paste(calib, "summary"))
       openxlsx::addWorksheet(wb, tail(ws_names, 1))
-      calib_summary <- calibs_df %>% iso_get_calibration_summary(
-        calibration = calib, keep_other_list_data = FALSE)
+      calib_summary <- calibs_df %>% iso_get_calibration_summary(calibration = calib)
       openxlsx::writeData(wb, tail(ws_names, 1), calib_summary, headerStyle = hs)
     }
 
     # model range
-    if (include_calib_range) {
+    if (include_calib_range && has_model_range(calibs_df, calibration = calib)) {
       ws_names <- c(ws_names, if (calib == "") "calib range" else paste(calib, "range"))
       openxlsx::addWorksheet(wb, tail(ws_names, 1))
-      tryCatch({
-        calib_range <- calibs_df %>% iso_get_calibration_range(
-          calibration = calib, keep_other_list_data = FALSE)
-        openxlsx::writeData(wb, tail(ws_names, 1), calib_range, headerStyle = hs)
-      }, error = function(e) {
-        if (stringr::str_detect(e$message, fixed("'calib_range' not found"))) {
-          glue::glue(
-            "calibration {if(calib == '') '' else paste0(calib, ' ')} does not ",
-            "have a model range defined, tab will be empty. ",
-            "Make sure to run iso_evaluate_calibration_range ",
-            "first if these should be exported.") %>%
-            warning(immediate. = TRUE, call. = FALSE)
-        } else
-          stop(e$message, call. = FALSE)
-      })
+      calib_range <- calibs_df %>% iso_get_calibration_range(calibration = calib, quiet = quiet)
+      openxlsx::writeData(wb, tail(ws_names, 1), calib_range, headerStyle = hs)
     }
   }
 
@@ -122,7 +107,7 @@ iso_export_calibration_to_excel <- function(
 
   # info
   if (!quiet) {
-    glue::glue("complete. Created tabs '{glue::glue_collapse(ws_names, sep = \"', '\", last = \"' and '\")}'.") %>%
+    glue::glue("Info: export complete, created tabs '{glue::glue_collapse(ws_names, sep = \"', '\", last = \"' and '\")}'.") %>%
       message()
   }
 

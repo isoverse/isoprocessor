@@ -258,6 +258,7 @@ test_that("applying regressions work properly", {
 
   # direct and nested regressions
   expect_silent(out_direct_y1 <- df_w_models %>% apply_regression(y))
+  expect_silent(out_direct_y1_w_error <- df_w_models %>% filter(model_name != "m3") %>% apply_regression(y, calculate_error = TRUE))
   expect_silent(out_nested_y1 <- df_w_nested_models %>% apply_regression(y, nested_model = TRUE))
   expect_silent(out_direct_x1 <- df_w_models %>% filter(name == "b", model_name == "m1") %>% apply_regression(x1))
   expect_silent(out_nested_x1 <- df_w_nested_models %>% filter(name == "b", model_name == "m1") %>%

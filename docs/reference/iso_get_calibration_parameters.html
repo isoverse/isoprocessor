@@ -41,7 +41,7 @@
 
 <meta property="og:title" content="Get calibration parameters — iso_get_calibration_parameters" />
 
-<meta property="og:description" content="Retrieve both calibration coefficients (iso_get_calibration_coefs) and calibration summary (iso_get_calibration_summary) columns in a single step. Typically this requires specifying select_from_coefs and select_from_summary as several columns in the coefficients and summary have the same names." />
+<meta property="og:description" content="This function is deprecated for clarity. Please use iso_get_calibration_coefficients and iso_get_calibration_summary directly." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -83,7 +83,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.5</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.6</span>
       </span>
     </div>
 
@@ -142,14 +142,16 @@
 
     <div class="ref-description">
     
-    <p>Retrieve both calibration coefficients (<a href='iso_get_calibration_coefs.html'>iso_get_calibration_coefs</a>) and calibration summary (<a href='iso_get_calibration_summary.html'>iso_get_calibration_summary</a>) columns in a single step. Typically this requires specifying <code>select_from_coefs</code> and <code>select_from_summary</code> as several columns in the coefficients and summary have the same names.</p>
+    <p>This function is deprecated for clarity. Please use <code><a href='iso_get_calibration_coefficients.html'>iso_get_calibration_coefficients</a></code> and <code><a href='iso_get_calibration_summary.html'>iso_get_calibration_summary</a></code> directly.</p>
     
     </div>
 
     <pre class="usage"><span class='fu'>iso_get_calibration_parameters</span>(<span class='no'>dt</span>, <span class='kw'>calibration</span> <span class='kw'>=</span> <span class='fu'>last_calibration</span>(<span class='no'>dt</span>),
   <span class='kw'>select_from_coefs</span> <span class='kw'>=</span> <span class='fu'>everything</span>(), <span class='kw'>select_from_summary</span> <span class='kw'>=</span> <span class='fu'>everything</span>(),
-  <span class='kw'>keep_remaining_nested_data</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>keep_other_list_data</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>keep_other_calibrations</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
+  <span class='kw'>keep_calibration_parameters</span> <span class='kw'>=</span> <span class='no'>keep_other_list_data</span>,
+  <span class='kw'>keep_calibration_regressions</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>keep_other_calibrations</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>),
+  <span class='kw'>keep_remaining_nested_data</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>keep_other_list_data</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
 
 <span class='fu'>iso_unnest_calibration_parameters</span>(<span class='no'>...</span>)</pre>
     
@@ -158,11 +160,7 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>dt</th>
-      <td><p>nested data table with column <code>all_data</code> (see <a href='iso_prepare_for_calibration.html'>iso_prepare_for_calibration</a>)</p></td>
-    </tr>
-    <tr>
-      <th>calibration</th>
-      <td><p>the name of the calibration to get information for, by default the last calibration that was generated</p></td>
+      <td><p>nested data frame with column <code>all_data</code> (see <a href='iso_prepare_for_calibration.html'>iso_prepare_for_calibration</a>) and any number of calibrations (see <a href='iso_generate_calibration.html'>iso_generate_calibration</a>)</p></td>
     </tr>
     <tr>
       <th>select_from_coefs</th>
@@ -173,16 +171,32 @@
       <td><p>which columns from the fit summary to include, supports full dplyr syntax including renaming</p></td>
     </tr>
     <tr>
-      <th>keep_remaining_nested_data</th>
-      <td><p>whether to keep any remaining parts of the partially unnested data (irrelevant if <code>select = everything()</code>)</p></td>
+      <th>keep_calibration_parameters</th>
+      <td><p>whether to keep the calibration parameter columns (coefficients, summary, range) in the resulting data frame. By default, calibration parameters are kept to facilitate downstream operations that may need these calibration information (such as <a href='iso_mark_calibration_range.html'>iso_mark_calibration_range</a>).</p></td>
     </tr>
     <tr>
-      <th>keep_other_list_data</th>
-      <td><p>keep other list data columns (e.g. other data or model columns)</p></td>
+      <th>keep_calibration_regressions</th>
+      <td><p>whether to keep the actual calibration regression objects in the resulting data frame. By default, regression objects are NOT kept because they lead to large data objects and do not usually have additional use after <a href='iso_apply_calibration.html'>iso_apply_calibration</a> has been called. There is rarely a reason to change this parameter to <code>TRUE</code>.</p></td>
     </tr>
     <tr>
       <th>keep_other_calibrations</th>
-      <td><p>whether other calibrations (besides the one specified by <code>calibration</code>) should be kept in the data table</p></td>
+      <td><p>whether columns that belong to other calibrations (besides the one specified by <code>calibration</code>) should be kept in the data table. By default, they are removed for clarity.</p></td>
+    </tr>
+    <tr>
+      <th>quiet</th>
+      <td><p>whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.</p></td>
+    </tr>
+    <tr>
+      <th>keep_remaining_nested_data</th>
+      <td><p>DEPRECATED - this parameter was removed for clarity and does no longer have any effect</p></td>
+    </tr>
+    <tr>
+      <th>keep_other_list_data</th>
+      <td><p>DEPRECATED - renamed to <code>keep_calibrations</code></p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>additional parameters to forward to the <code>func</code> function</p></td>
     </tr>
     </table>
     

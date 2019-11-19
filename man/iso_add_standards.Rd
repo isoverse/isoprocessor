@@ -30,4 +30,16 @@ data frame with standards data frame merged in and the following information col
 \description{
 Add calibration standards
 }
+\seealso{
+Other calibration functions: \code{\link{iso_apply_calibration}},
+  \code{\link{iso_evaluate_calibration_range}},
+  \code{\link{iso_generate_calibration}},
+  \code{\link{iso_get_calibration_coefficients}},
+  \code{\link{iso_get_calibration_data}},
+  \code{\link{iso_get_calibration_range}},
+  \code{\link{iso_get_calibration_summary}},
+  \code{\link{iso_get_problematic_calibrations}},
+  \code{\link{iso_prepare_for_calibration}},
+  \code{\link{iso_remove_problematic_calibrations}}
+}
 \concept{calibration functions}

@@ -83,7 +83,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.5</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.6</span>
       </span>
     </div>
 
@@ -195,10 +195,23 @@
 <li><p><code>calib</code>: the name of the calibration if provided in the <code>model</code> parameter, otherwise the formula</p></li>
 <li><p><code>calib_ok</code>: a TRUE/FALSE column indicating whether there was enough data for calibration to be generated</p></li>
 <li><p><code>calib_points</code>: an integer column indicating the total number of data points used in the calibration. Note that this field counts replicate data points: multiple data points that fall at the exact same x or y-value still count as individual data points for this metric.</p></li>
-<li><p><code>calib_params</code>: a nested dataframe that holds the actual regression model fit, coefficients, summary and data range. These parameters are most easily accessed using the functions <code><a href='iso_get_calibration_coefs.html'>iso_unnest_calibration_coefs</a></code>, <code><a href='iso_get_calibration_summary.html'>iso_unnest_calibration_summary</a></code>, <code><a href='iso_get_calibration_parameters.html'>iso_unnest_calibration_parameters</a></code>, <code><a href='iso_get_calibration_range.html'>iso_unnest_calibration_range</a></code>, or directly via <code><a href='https://tidyr.tidyverse.org/reference/nest.html'>unnest</a></code></p></li>
+<li><p><code>calib_params</code>: a nested dataframe that holds the actual regression model fit, coefficients, summary and data range. These parameters are most easily accessed using the functions <code><a href='iso_get_calibration_coefficients.html'>iso_unnest_calibration_coefs</a></code>, <code><a href='iso_get_calibration_summary.html'>iso_unnest_calibration_summary</a></code>, <code><a href='iso_get_calibration_parameters.html'>iso_unnest_calibration_parameters</a></code>, <code><a href='iso_get_calibration_range.html'>iso_unnest_calibration_range</a></code>, or directly via <code><a href='https://tidyr.tidyverse.org/reference/nest.html'>unnest</a></code></p></li>
 <li><p><code>resid</code> within <code>all_data</code>: a new column within the nested <code>all_data</code> that holds the residuals for all standards used in the regression model</p></li>
 </ul>
 
+    
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p>Other calibration functions: <code><a href='iso_add_standards.html'>iso_add_standards</a></code>,
+  <code><a href='iso_apply_calibration.html'>iso_apply_calibration</a></code>,
+  <code><a href='iso_evaluate_calibration_range.html'>iso_evaluate_calibration_range</a></code>,
+  <code><a href='iso_get_calibration_coefficients.html'>iso_get_calibration_coefficients</a></code>,
+  <code><a href='iso_get_calibration_data.html'>iso_get_calibration_data</a></code>,
+  <code><a href='iso_get_calibration_range.html'>iso_get_calibration_range</a></code>,
+  <code><a href='iso_get_calibration_summary.html'>iso_get_calibration_summary</a></code>,
+  <code><a href='iso_get_problematic_calibrations.html'>iso_get_problematic_calibrations</a></code>,
+  <code><a href='iso_prepare_for_calibration.html'>iso_prepare_for_calibration</a></code>,
+  <code><a href='iso_remove_problematic_calibrations.html'>iso_remove_problematic_calibrations</a></code></p></div>
     
 
   </div>
@@ -208,6 +221,8 @@
       <li><a href="#arguments">Arguments</a></li>
       
       <li><a href="#value">Value</a></li>
+
+      <li><a href="#see-also">See also</a></li>
           </ul>
 
   </div>
