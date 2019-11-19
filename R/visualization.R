@@ -703,25 +703,26 @@ iso_plot_dual_inlet_data <- function(
 #' Visualize how consistent the reference peaks are across a serious of samples.
 #'
 #' @inheritParams iso_prepare_for_calibration
+#' @param x which column to use for the x-axis
 #' @param ratio which ratio column(s) to compare for the reference peaks (can be multiple)
-#' @param group_id group identifier column(s) to clarify which peaks belongs to a single analysis - first column in group id is used for x axis labels
-#' @param is_ref_condition condition to identify which of the peaks are reference peaks. Must be a column or expression that evaluates to a logical (TRUE/FALSE).
-#' @param is_ref_used [optional] parameter to identify which of the reference peaks (\code{is_ref_condition}) are actually used for ratio/ratio calculations. Must be a column or expresion that evaluates to a logical (TRUE/FALSE). If this parameter is provided, the used reference peaks are higlight in solid while the other peaks are slightly opaque.
-#' @param within_group whether to visualize the deviation within the specified group or across all groups
+#' @param group_id group identifier column(s) to clarify across which data groups the reference peak deviation should be calcualted. By default calculates reference peak variations within each analysis.
+#' @param is_ref_condition condition to identify which of the peaks are reference peaks (unless the peaks are prefilterd already). Must be a column or expression that evaluates to a logical (TRUE/FALSE).
+#' @param within_group deprectated, use \code{group_id} to group accordingly
+#' @param is_ref_used deprecated, set an aesthetics directly via ... paramter to \link{iso_plot_data}
+#' @param ... additional parameters passed to \link{iso_plot_data}
+#' @family plot functions
 #' @export
-iso_plot_ref_peaks <- function(dt, ratio, group_id, is_ref_condition, is_ref_used = NULL, within_group = FALSE) {
+iso_plot_ref_peaks <- function(dt, x, ratio, ..., group_id = file_id, is_ref_condition = TRUE, within_group = TRUE, is_ref_used = NULL) {
 
   # safety checks
   param_quos <-
-    list(dt = enquo(dt), ratio = enquo(ratio), group_id = enquo(group_id),
-         is_ref_condition = enquo(is_ref_condition), is_ref_used = enquo(is_ref_used))
-
+    list(dt = enquo(dt), x = enquo(x), ratio = enquo(ratio), group_id = enquo(group_id),
+         is_ref_condition = enquo(is_ref_condition))
   check_params <-
     c(
       dt = "no data table supplied",
-      ratio = "no ratio column to compare reference peaks provided",
-      group_id = "no grouping column(s) provided to identify individual analyses",
-      is_ref_condition = "no condition as to what constitutes a reference peak provided"
+      x = "no x axis value supplied",
+      ratio = "no ratio column to compare reference peaks provided"
     )
   missing <- param_quos[names(check_params)] %>% map_lgl(quo_is_missing)
 
@@ -731,67 +732,40 @@ iso_plot_ref_peaks <- function(dt, ratio, group_id, is_ref_condition, is_ref_use
       stop(call. = FALSE)
   }
 
-  # columns
-  dt_cols <- get_column_names(!!enquo(dt), ratio = param_quos$ratio, group_id = param_quos$group_id,
-                              n_reqs = list(group_id = "+", ratio = "+"))
+  # evaluate dt
+  dt <- rlang::eval_tidy(param_quos$dt)
 
-  refs <- dt %>%
-    filter(!!param_quos$is_ref_condition)
+  # warnings
+  if(!missing(within_group))
+    warning("'within_gorup' parameter is deprecated, use 'group_id' to group accordingly", immediate. = TRUE, call. = FALSE)
+  if(!missing(is_ref_used))
+    warning("'is_ref_used' parameter is deprecated, please set an aesthetic directly by using the ... passed on to iso_plot_data", immediate. = TRUE, call. = FALSE)
+
+  # filter condition
+  refs <- filter(dt, !!param_quos$is_ref_condition)
 
   if (nrow(refs) == 0)
-    stop("no data to visualize, check your data table and is_ref_condition filter", call. = FALSE)
+    glue::glue("no data to visualize, check your data table and is_ref_condition filter ('{rlang::as_label(param_quos$is_ref_condition)}')") %>%
+    stop(call. = FALSE)
 
+  # ratios
+  dt_cols <- get_column_names(dt, ratio = param_quos$ratio, group_id = param_quos$group_id, n_reqs = list(group_id = "*", ratio = "+"))
+
+  # calculate ratio deltas
+  mutate_quos <-
+    map(dt_cols$ratio, ~quo( (!!sym(.x) / mean(!!sym(.x), na.rm = TRUE) - 1) * 1000)) %>%
+    setNames(names(dt_cols$ratio))
   refs <- refs %>%
-    # ref is used
-    {
-      if (!quo_is_null(param_quos$is_ref_used))
-        refs %>%
-          mutate(is_ref_used = !!param_quos$is_ref_used %>%
-                   as.logical() %>%
-                   ifelse("yes", "no") %>%
-                   factor(levels = c("yes", "no")))
-      else
-        .
-    } %>%
-    # gather
-    gather(ratio, value, !!!dt_cols$ratio) %>%
-    # calculate deviation across all runs
-    group_by(ratio) %>%
-    mutate(total_delta_deviation = (value/mean(value) - 1) * 1000) %>%
-    ungroup() %>%
-    # calculate deviation within each analysis
-    group_by(ratio, !!!map(dt_cols$group_id, sym)) %>%
-    mutate(
-      delta_deviation = (value/mean(value) - 1) * 1000,
-      ref_peak_nr = 1:dplyr::n()) %>%
-    ungroup() %>%
-    mutate(ref_peak_nr = factor(ref_peak_nr))
+    group_by(!!!map(dt_cols$group_id, sym)) %>%
+    mutate(!!!mutate_quos) %>%
+    ungroup()
 
-  # plot reference peaks relative to total average
-  p <- refs %>%
-    ggplot() +
-    aes_string(x = dt_cols$group_id[1], y = "total_delta_deviation", fill = "ref_peak_nr") +
-    geom_bar(stat = "identity", position = "dodge") +
-    geom_hline(yintercept = 0) +
-    theme_bw() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-    labs(x = "Analysis", fill = "Ref. peak #", y = "Deviation from total average [permil]") +
-    facet_wrap(~ratio, ncol = 1, scales = "free_y")
-
-  # ref is used
-  if (!quo_is_null(param_quos$is_ref_used)) {
-    p <- p %+% aes(alpha = is_ref_used) +
-      scale_alpha_discrete(range = c(1, 0.5)) +
-      labs(alpha = "Ref. peak used")
-  }
-
-  # within group
-  if (within_group) {
-    # vs. average within group
-    p <- p %+%
-      aes(y = delta_deviation) +
-      labs(y = "Deviation within group [permil]")
-  }
-  return(p)
+  # visualize
+  iso_plot_data(
+    refs, x = !!enquo(x), y = c(!!!names(mutate_quos)),
+    ...,
+    geom_bar(stat = "identity", position = "dodge")
+  ) + labs(y = "Deviation from average (permil)")
 }
 
 # data and calibration plots =========
@@ -962,7 +936,7 @@ iso_plot_data <- function(
     { if(length(dt_cols$y) > 1) labs(y = NULL) else labs(y = dt_units[[names(dt_cols$y)[1]]]) } +
     labs(x = dt_units[[names(dt_cols$x)[1]]]) +
     theme_bw() +
-    theme(plot.margin = margin(10, 5, 15, 20))
+    theme(plot.margin = ggplot2::margin(10, 5, 15, 20))
 
   # alpha aesthetic
   alpha_manual <- FALSE
@@ -1117,7 +1091,7 @@ iso_plot_residuals <- function(
 
   p <- dt %>%
     # fetch peak table with the added residuals from the calibration
-    iso_get_calibration_data() %>%
+    iso_get_calibration_data(quiet = TRUE) %>%
     filter(!!sym(calib_vars$in_reg)) %>%
     mutate(!!sym(calib_vars$model_name) :=
              if (is.factor(!!sym(calib_vars$model_name))) !!sym(calib_vars$model_name)
@@ -1167,12 +1141,12 @@ iso_plot_calibration_parameters <- function(
 
   # pull out all coefficients (all for now, should always show all?)
   calib_coefs <- dt %>%
-    iso_get_calibration_coefficients(calibration = calibration)
+    iso_get_calibration_coefficients(calibration = calibration, quiet = TRUE)
 
   # pull out requested summary
   select_quo <- enquo(select_from_summary)
   calib_summary <- dt %>%
-    iso_get_calibration_summary(calibration = calibration)
+    iso_get_calibration_summary(calibration = calibration, quiet = TRUE)
   cs_cols <- get_column_names(calib_summary, select = select_quo, n_reqs = list(select = "*"))
 
   # check if any summary should be included
@@ -1386,7 +1360,7 @@ iso_mark_calibration_range <- function(p, calibration = last_calibration(p$data)
       mutate(panel = as.character(panel)) %>%
       select(panel, !!sym(calib_vars$model_name), !!sym(calib_vars$model_params)) %>%
       unique() %>%
-      iso_get_calibration_range(calibration = calibration)
+      iso_get_calibration_range(calibration = calibration, quiet = TRUE)
 
     # with and without units
     range_data <-
