@@ -22,3 +22,16 @@ a nested data set with the \code{group_by} columns out front and the remaining d
 \description{
 Nests data set in preparation for calibration calculations. Use the \code{group_by} parameter to group analyses as appropriate for calibration. Use \link{iso_get_calibration_data} to easily pull out columns from the nested data frame in \code{all_data} at any point before, during or after calibration.
 }
+\seealso{
+Other calibration functions: \code{\link{iso_add_standards}},
+  \code{\link{iso_apply_calibration}},
+  \code{\link{iso_evaluate_calibration_range}},
+  \code{\link{iso_generate_calibration}},
+  \code{\link{iso_get_calibration_coefficients}},
+  \code{\link{iso_get_calibration_data}},
+  \code{\link{iso_get_calibration_range}},
+  \code{\link{iso_get_calibration_summary}},
+  \code{\link{iso_get_problematic_calibrations}},
+  \code{\link{iso_remove_problematic_calibrations}}
+}
+\concept{calibration functions}

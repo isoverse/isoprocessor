@@ -51,6 +51,7 @@ Other plot functions: \code{\link{iso_format}},
   \code{\link{iso_plot_data}},
   \code{\link{iso_plot_dual_inlet_data}},
   \code{\link{iso_plot_raw_data}},
+  \code{\link{iso_plot_ref_peaks}},
   \code{\link{iso_plot_residuals}}
 }
 \concept{plot functions}
