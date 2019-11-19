@@ -79,13 +79,19 @@ test_that("test default behavior of calibrations", {
   )
   expect_equal(df_calib %>% all_calibrations(), "")
   expect_equal(df_calib %>% last_calibration(), "")
+  expect_true(has_regression_fit(df_calib))
+  expect_false(has_regression_fit(strip_regression_fits(df_calib)))
   expect_error(df_calib %>% iso_generate_calibration(model = lm(cty ~ hwy)), "already has an unnamed calibration")
   expect_message(
-    df_calib2 <- df_calib %>% iso_generate_calibration(model = lm(cty ~ hwy), calibration = "x", use_in_calib = TRUE),
+    df_calib2 <- df_calib %>% strip_regression_fits() %>% iso_generate_calibration(model = lm(cty ~ hwy), calibration = "x", use_in_calib = TRUE),
     "generating \'x\' calibration.*1 model.*2 data group.*filter \'TRUE\'.*new column \'x_resid\'.*new column \'x_in_calib\'"
   )
   expect_equal(df_calib2 %>% all_calibrations(), c("", "x"))
   expect_equal(df_calib2 %>% last_calibration(), "x")
+  expect_true(has_regression_fit(df_calib2))
+  expect_false(has_regression_fit(df_calib2, calibration = ""))
+  expect_true(has_regression_fit(df_calib2, calibration = "x"))
+  expect_false(has_regression_fit(strip_regression_fits(df_calib2), calibration = "x"))
   expect_error(df_calib2 %>% iso_generate_calibration(model = lm(cty ~ hwy), calibration = "x"), "already has a calibration name.*x")
 
   # loess
@@ -99,8 +105,138 @@ test_that("test default behavior of calibrations", {
   expect_warning(df %>% iso_generate_calibration(model = loess(cty ~ hwy), use_in_calib = TRUE, quiet = TRUE), "discouraged")
   expect_silent(df %>% iso_generate_calibration(model = loess(cty ~ hwy), calibration = "drift", use_in_calib = TRUE, quiet = TRUE))
 
+  # applying model
+  expect_error(iso_apply_calibration(df_calib), "no variable.*specified")
+  expect_message(iso_apply_calibration(df_calib, hwy), "applying calibration to infer.*hwy.*2 data group.*resulting value.*hwy_pred")
+  expect_message(iso_apply_calibration(df_calib, hwy, calculate_error = TRUE), "applying calibration to infer.*hwy.*2 data group.*resulting value.*hwy_pred.*estimated error.*hwy_pred_se")
+  expect_message(iso_apply_calibration(df_calib, cty), "applying calibration to infer.*cty.*2 data group.*resulting value.*cty_pred")
+  expect_message(calib_applied <- iso_apply_calibration(df_calib2, cty, calculate_error = TRUE), "applying.*x.*calibration to infer.*cty.*2 data group.*resulting value.*cty_pred.*estimated error.*cty_pred_se")
+  expect_error(df_calib %>% strip_regression_fits() %>% iso_apply_calibration(hwy), "regression fits.*no longer available")
 
-  # FIXME: continue testin these!
+  # range
+  expect_error(calib_applied %>% iso_evaluate_calibration_range(DNE), "not.*valid")
+  expect_message(calib_range <- calib_applied %>% iso_evaluate_calibration_range(cty, hwy, cty*hwy),
+                 "evaluating range for terms.*cty.*hwy.*cty \\* hwy.*x.*calibration for 2 data group.*new column.*in_range")
+
+  # get data
+  expect_warning(calib_range %>% iso_get_calibration_data(keep_remaining_nested_data = TRUE), "renamed")
+  expect_warning(calib_range %>% iso_get_calibration_data(keep_other_list_data = TRUE), "renamed")
+  expect_message(out <- calib_range %>% iso_get_calibration_data(), "retrieving all data")
+  calib_cols <- c("calib", "calib_ok", "calib_points", "x_calib", "x_calib_ok", "x_calib_points", "calib_params", "x_calib_params")
+  new_cols <- c("in_calib", "resid", "x_in_calib", "x_resid", "cty_pred", "cty_pred_se", "x_in_range")
+  expect_equal(names(out), an <- c("year", names(ggplot2::mpg)[names(ggplot2::mpg)!="year"], "datetime", "Date & Time", new_cols, calib_cols))
+  expect_equal(iso_remove_problematic_calibrations(out) %>% names(), an[an!="x_calib_ok"])
+  expect_equal(iso_remove_problematic_calibrations(out, calibration="") %>% names(), an[an!="calib_ok"])
+  expect_message(out <- calib_range %>% iso_get_calibration_data(select = c(model, z = displ)), "retrieving data colum.*model.*z = displ.*keeping remaining data")
+  expect_equal(names(out), c("year", "model", "z", "all_data", calib_cols))
+  expect_message(out <- calib_range %>% iso_get_calibration_data(select = c(model, displ), keep_remaining_data = FALSE),
+                 "retrieving data colum.*model, displ")
+  expect_equal(
+    calib_range %>% iso_get_calibration_data(keep_remaining_data = FALSE, keep_calibration_parameters = FALSE) %>% names(),
+    an[an != "calib_params" & an != "x_calib_params"]
+  )
+  expect_equal(names(out), c("year", "model", "displ", calib_cols))
+  expect_silent(calib_range %>% iso_get_calibration_data(quiet = TRUE))
+  expect_equal(
+    select(calib_range, x_calib_params) %>% tidyr::unnest(x_calib_params) %>% names(),
+    c("model_fit", "model_coefs", "model_summary", "model_range")
+  )
+  expect_equal(
+    calib_range %>% iso_get_calibration_data() %>%
+      select(x_calib_params) %>% tidyr::unnest(x_calib_params) %>% names(),
+    c("model_coefs", "model_summary", "model_range")
+  )
+  expect_equal(
+    calib_range %>% iso_get_calibration_data(keep_calibration_regressions = TRUE) %>%
+      select(x_calib_params) %>% tidyr::unnest(x_calib_params) %>% names(),
+    c("model_fit", "model_coefs", "model_summary", "model_range")
+  )
+
+  # get coefficients
+  expect_warning(calib_range %>% iso_get_calibration_coefficients(keep_remaining_nested_data = TRUE), "removed")
+  expect_warning(calib_range %>% iso_get_calibration_coefficients(keep_other_list_data = TRUE), "renamed")
+  expect_warning(calib_range %>% iso_get_calibration_coefficients(keep_calibration_regressions = TRUE), "cannot.*without.*parameters")
+  expect_message(
+    out <- calib_range %>% iso_get_calibration_coefficients(),
+    "retrieving all coefficient.*x.*calibration"
+  )
+  expect_equal(names(out), c("year", "x_calib", "x_calib_ok", "x_calib_points", "term", "estimate", "std.error", "statistic", "p.value", "signif"))
+  expect_message(
+    out <- calib_range %>% iso_get_calibration_coefficients(select = c(term, z = estimate)),
+    "retrieving.*coefficient column.*term.*z = estimate.*x.*calibration"
+  )
+  expect_equal(names(out), c("year", "x_calib", "x_calib_ok", "x_calib_points", "term", "z"))
+  expect_equal(
+    calib_range %>% iso_get_calibration_coefficients(select = c(term, estimate), keep_calibration_parameters = FALSE) %>% names(),
+    c("year", "x_calib", "x_calib_ok", "x_calib_points", "term", "estimate")
+  )
+  expect_equal(
+    calib_range %>% iso_get_calibration_coefficients(select = c(term, estimate), keep_other_calibrations = TRUE) %>% names(),
+    c("year", "calib", "calib_ok", "calib_points", "x_calib", "x_calib_ok", "x_calib_points", "term", "estimate")
+  )
+
+  # get summary
+  expect_warning(calib_range %>% iso_get_calibration_summary(keep_remaining_nested_data = TRUE), "removed")
+  expect_warning(calib_range %>% iso_get_calibration_summary(keep_other_list_data = TRUE), "renamed")
+  expect_warning(calib_range %>% iso_get_calibration_summary(keep_calibration_regressions = TRUE), "cannot.*without.*parameters")
+  expect_message(
+    out <- calib_range %>% iso_get_calibration_summary(),
+    "retrieving all summary.*x.*calibration"
+  )
+  expect_equal(
+    names(out),
+    c("year", "x_calib", "x_calib_ok", "x_calib_points", "r.squared", "adj.r.squared", "sigma", "statistic", "p.value", "df", "logLik", "AIC", "BIC", "deviance", "df.residual"))
+  expect_message(
+    out <- calib_range %>% iso_get_calibration_summary(select = c(r.squared, RSD = sigma)),
+    "retrieving.*summary column.*r.squared.*RSD = sigma.*x.*calibration"
+  )
+  expect_equal(names(out), c("year", "x_calib", "x_calib_ok", "x_calib_points", "r.squared", "RSD"))
+  expect_equal(
+    calib_range %>% iso_get_calibration_summary(select = c(r.squared, sigma), keep_calibration_parameters = FALSE) %>% names(),
+    c("year", "x_calib", "x_calib_ok", "x_calib_points", "r.squared", "sigma")
+  )
+  expect_equal(
+    calib_range %>% iso_get_calibration_summary(select = c(r.squared, sigma), keep_other_calibrations = TRUE) %>% names(),
+    c("year", "calib", "calib_ok", "calib_points", "x_calib", "x_calib_ok", "x_calib_points", "r.squared", "sigma")
+  )
+
+  # get range
+  expect_true(calib_range %>% has_model_range())
+  expect_false(calib_range %>% has_model_range(calibration = ""))
+  expect_warning(calib_range %>% iso_get_calibration_range(keep_remaining_nested_data = TRUE), "removed")
+  expect_warning(calib_range %>% iso_get_calibration_range(keep_other_list_data = TRUE), "renamed")
+  expect_warning(calib_range %>% iso_get_calibration_range(keep_calibration_regressions = TRUE), "cannot.*without.*parameters")
+  expect_error(calib_range %>% iso_get_calibration_range(calibration = ""), "not yet.*evaluated")
+  expect_message(
+    out <- calib_range %>% iso_get_calibration_range(),
+    "retrieving all calibration range.*x.*calibration"
+  )
+  expect_equal(
+    names(out),
+    c("year", "x_calib", "x_calib_ok", "x_calib_points", "term", "units", "min", "max"))
+  expect_message(
+    out <- calib_range %>% iso_get_calibration_range(select = c(term, u = units)),
+    "retrieving.*range column.*term.*u = units.*x.*calibration"
+  )
+  expect_equal(names(out), c("year", "x_calib", "x_calib_ok", "x_calib_points", "term", "u"))
+  expect_equal(
+    calib_range %>% iso_get_calibration_range(select = c(term, units), keep_calibration_parameters = FALSE) %>% names(),
+    c("year", "x_calib", "x_calib_ok", "x_calib_points", "term", "units")
+  )
+  expect_equal(
+    calib_range %>% iso_get_calibration_range(select = c(term, units), keep_other_calibrations = TRUE) %>% names(),
+    c("year", "calib", "calib_ok", "calib_points", "x_calib", "x_calib_ok", "x_calib_points", "term", "units")
+  )
+
+  # get parameters
+  expect_warning(calib_range %>% iso_unnest_calibration_parameters(), "deprecated")
+  expect_warning(calib_range %>% iso_unnest_calibration_parameters(), "conflicting name")
+  expect_equal(
+    suppressWarnings(calib_range %>% iso_unnest_calibration_parameters(select_from_coefs = c(term, estimate), select_from_summary = c(sigma))) %>% names(),
+    c("year", "x_calib", "x_calib_ok", "x_calib_points", "term", "estimate", "sigma")
+  )
+
+
 })
 
 # problematic calibrations ====

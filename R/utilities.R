@@ -222,8 +222,11 @@ unnest_select_data <- function(dt, select = everything(), nested_data = nested_d
   if (length(setdiff(names(unnested_dt), keep_cols)) > 0 && keep_remaining_nested_data) {
     # renest if un-nesting is incomplete (i.e. data remains) and remaining data should be kept
     renested_dt <- unnested_dt %>% nest_data(group_by = !!keep_cols, nested = !!sym(dt_cols$nested_data))
-  } else
+    renested <- TRUE
+  } else {
     renested_dt <- unnested_dt[keep_cols]
+    renested <- FALSE
+  }
 
   # merge back with the original data frame
   renested_dt <- dt[regular_cols] %>% right_join(renested_dt, by = "..row..")
@@ -237,7 +240,7 @@ unnest_select_data <- function(dt, select = everything(), nested_data = nested_d
   before_nd_cols <- intersect(before_nd_cols, names(renested_dt))
   new_cols <- setdiff(names(renested_dt), original_cols) %>% setdiff(before_nd_cols)
   if (dt_cols$nested_data %in% before_nd_cols) before_nd_cols <- head(before_nd_cols, -1)
-
+  if (renested) new_cols <- c(new_cols, dt_cols$nested_data)
 
   # return
   renested_dt %>%
@@ -758,7 +761,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
               # normal predict =====
               # predict dependent variable (y) by normal regression predict
               new_data <- d %>% select(xs) %>% iso_strip_units()
-              pred <- stats::predict(fit, newdata = new_data)
+              pred <- stats::predict(fit, newdata = new_data, se = calculate_error)
               d_prediction <-
                 tibble(
                   ..rn.. = d$..rn..,

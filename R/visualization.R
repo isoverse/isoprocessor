@@ -1147,11 +1147,11 @@ iso_plot_residuals <- function(
 #'
 #' @inheritParams iso_plot_data
 #' @inheritParams iso_prepare_for_calibration
-#' @param select_from_summary which parameters from the fit summary to include, by default includes the adjusted R2 (renamed just \code{R2}) and the root mean square deviation (\code{RMSD}), which R often calls \link[stats]{sigma} or residual standard deviation (often also called residual standard error and root mean square error instead of deviation, or standard error of the regression).
+#' @param select_from_summary which parameters from the fit summary to include, by default includes the adjusted R2 (renamed just \code{R2}) and the residual standard deviation (\code{RSD}), which R often calls \link[stats]{sigma} (sometimes also called residual mean standard deviation, residual standard error, root mean square error, or standard error of the regression).
 #' @export
 iso_plot_calibration_parameters <- function(
   dt, x = calibration_model_name(), calibration = last_calibration(dt),
-  select_from_summary = c(R2 = adj.r.squared, RMSD = sigma),
+  select_from_summary = c(R2 = adj.r.squared, RSD = sigma),
   color = signif,
   panel = term ~ .,
   panel_scales = "free",
