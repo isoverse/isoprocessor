@@ -19,13 +19,7 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
 ---
 
-# Load packages
-
-```{r setup, message=FALSE, warning=FALSE}
-library(tidyverse) # general data wrangling and plotting
-library(isoreader) # reading the raw data files
-library(isoprocessor) # processing the data
-
+```{r setup, include = FALSE}
 # global knitting options for code rendering
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
@@ -37,11 +31,30 @@ knitr::opts_chunk$set(
 )
 ```
 
-This analysis was run using [isoreader](http://isoreader.kopflab.org) version `r packageVersion("isoreader")` and [isoprocessor](http://isoprocessor.kopflab.org/) version `r packageVersion("isoprocessor")`. 
+# Introduction
 
-For use as a data processing template, please follow the `Source` link above, download the raw file and adapt as needed. Knitting for stand-alone data analysis works best to `HTML` rather than the in-package default `html_vignette`. 
+This is an example of a data processing pipeline for bulk Elemental Analyser Isotope Ratio Mass Spectrometry (EA-IRMS) carbon isotope measurements. It can be downloaded as a template (or just to see the plain-text code) by following the `Source` link above. Knitting for stand-alone data analysis works best to `HTML` rather than the website rendering you see here. To make this formatting change simply delete line #6 in the template file (the line that says `rmarkdown::html_vignette:`).
 
-All code chunks that contain a critical step towards the final data (i.e. do more than visualization or a data summary) are marked with `(*)` in the header to make it easier to follow all key steps during interactive use. 
+Note that all code chunks that contain a critical step towards the final data (i.e. do more than visualization or a data summary) are marked with `(*)` in the header to make it easier to follow all key steps during interactive use. 
+
+This example was run using **[isoreader](http://isoreader.kopflab.org) version `r packageVersion("isoreader")`** and **[isoprocessor](http://isoprocessor.kopflab.org/) version `r packageVersion("isoprocessor")`**. If you want to reproduce the example, please make sure that you have these or newer versions of both packages installed:
+
+```{r gh-installation, eval = FALSE}
+# installs the development tools package if not yet installed
+if(!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools") 
+
+# installs the newest version of isoreader and isoprocessor
+devtools::install_github("isoverse/isoreader")
+devtools::install_github("isoverse/isoprocessor")
+```
+
+# Load packages
+
+```{r packages, message=FALSE, warning=FALSE}
+library(tidyverse) # general data wrangling and plotting
+library(isoreader) # reading the raw data files
+library(isoprocessor) # processing the data
+```
 
 # Load data
 
@@ -256,7 +269,7 @@ peak_table <- peak_table %>%
 ```
 
 
-# Calibrate data
+# Calibrate isotopic data
 
 ## Add calibration information (*)
 
@@ -307,7 +320,7 @@ peak_table_w_standards %>%
 
 This looks like random scatter rather than any systematic drift but let's check with a linear regression to confirm:
 
-```{r "drift_residuals", fig.width = 8, fig.height=4}
+```{r "drift_residuals", fig.width = 8, fig.height=6}
 calib_drift <- 
   peak_table_w_standards %>%
   # prepare for calibration

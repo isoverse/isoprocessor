@@ -35,9 +35,26 @@ knitr::opts_chunk$set(
 )
 ```
 
+# Introduction
+
+This is an example of a data processing pipeline for compound-specific Gas Chromatography Isotope Ratio Mass Spectrometry (GC-IRMS) carbon isotope measurements. It can be downloaded as a template (or just to see the plain-text code) by following the `Source` link above. Knitting for stand-alone data analysis works best to `HTML` rather than the website rendering you see here. To make this formatting change simply delete line #6 in the template file (the line that says `rmarkdown::html_vignette:`).
+
+Note that all code chunks that contain a critical step towards the final data (i.e. do more than visualization or a data summary) are marked with `(*)` in the header to make it easier to follow all key steps during interactive use. 
+
+This example was run using **[isoreader](http://isoreader.kopflab.org) version `r packageVersion("isoreader")`** and **[isoprocessor](http://isoprocessor.kopflab.org/) version `r packageVersion("isoprocessor")`**. If you want to reproduce the example, please make sure that you have these or newer versions of both packages installed:
+
+```{r gh-installation, eval = FALSE}
+# installs the development tools package if not yet installed
+if(!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools") 
+
+# installs the newest version of isoreader and isoprocessor
+devtools::install_github("isoverse/isoreader")
+devtools::install_github("isoverse/isoprocessor")
+```
+
 # Load packages
 
-```{r, message=FALSE, warning=FALSE}
+```{r packages, message=FALSE, warning=FALSE}
 library(tidyverse) # general data wrangling and plotting
 library(isoreader) # reading the raw data files
 library(isoprocessor) # processing the data
