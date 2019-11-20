@@ -35,7 +35,10 @@ Existing functionality includes signal conversion (voltage to current and back),
 You can install the dependency [isoreader](http://isoreader.isoverse.org/) and [isoprocessor](http://isoprocessor.isoverse.org/) itself both from GitHub using the `devtools` package. Note that while [isoprocessor](http://isoprocessor.isoverse.org/) uses some functions from [isoreader](http://isoreader.isoverse.org/), it does NOT require IRMS data to be read with [isoreader](http://isoreader.isoverse.org/), it can be used standalone with raw data obtained differently.
 
 ```{r gh-installation, eval = FALSE}
-install.packages("devtools") # only if you don't have this installed yet
+# installs the development tools package if not yet installed
+if(!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools") 
+
+# installs the newest version of isoreader and isoprocessor
 devtools::install_github("isoverse/isoreader")
 devtools::install_github("isoverse/isoprocessor")
 ```

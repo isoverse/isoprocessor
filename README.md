@@ -4,7 +4,7 @@
 # isoprocessor <a href='http://isoprocessor.isoverse.org'><img src='man/figures/isoprocessor_logo_thumb.png' align="right" height="138.5"/></a>
 
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/isoprocessor)](https://cran.r-project.org/package=isoprocessor)
-[![Git\_Hub\_Version](https://img.shields.io/badge/GitHub-0.5.1-orange.svg?style=flat-square)](https://github.com/isoverse/isoprocessor/commits)
+[![Git\_Hub\_Version](https://img.shields.io/badge/GitHub-0.5.6-orange.svg?style=flat-square)](https://github.com/isoverse/isoprocessor/commits)
 [![Documentation](https://img.shields.io/badge/docs-online-green.svg)](http://isoprocessor.isoverse.org/)
 [![Build
 Status](https://travis-ci.org/isoverse/isoprocessor.svg?branch=master)](https://travis-ci.org/isoverse/isoprocessor)
@@ -40,7 +40,10 @@ IRMS data to be read with [isoreader](http://isoreader.isoverse.org/),
 it can be used standalone with raw data obtained differently.
 
 ``` r
-install.packages("devtools") # only if you don't have this installed yet
+# installs the development tools package if not yet installed
+if(!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools") 
+
+# installs the newest version of isoreader and isoprocessor
 devtools::install_github("isoverse/isoreader")
 devtools::install_github("isoverse/isoprocessor")
 ```
