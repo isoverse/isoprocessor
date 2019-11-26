@@ -44,6 +44,9 @@ Note that all code chunks that contain a critical step towards the final data (i
 This example was run using **[isoreader](http://isoreader.kopflab.org) version `r packageVersion("isoreader")`** and **[isoprocessor](http://isoprocessor.kopflab.org/) version `r packageVersion("isoprocessor")`**. If you want to reproduce the example, please make sure that you have these or newer versions of both packages installed:
 
 ```{r gh-installation, eval = FALSE}
+# restart your R session (this command only works in RStudio)
+.rs.restartR()
+
 # installs the development tools package if not yet installed
 if(!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools") 
 
@@ -571,17 +574,15 @@ stds_w_calibs %>%
   iso_get_calibration_data() %>% 
   # focus on standard peaks
   filter(is_std_peak) %>% 
-  # calculate parameters to visualize
+  # calculate area deviation from mean
   iso_mutate_peak_table(
     group_by = Analysis,
-     `Var: residual` = resid,
-    `Var: area diff from mean` = 
-      iso_double_with_units((area44/mean(area44) - 1) * 100, "%")
+    area_dev = iso_double_with_units((area44/mean(area44) - 1) * 100, "%")
   ) %>% 
   # visualize
   iso_plot_data(
     # x and y 
-    x = compound, y = starts_with("Var"),
+    x = compound, y = c(residual = resid, `area dev. from mean` = area_dev),
     # grouping and aesthetics
     group = paste(Analysis, calib), color = seed_oxidation, linetype = calib,
     # geoms

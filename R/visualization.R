@@ -787,7 +787,7 @@ iso_plot_calibration_range <- function(...) {
 #'
 #' @param dt data frame to plot data from
 #' @param x the column or expression for the x-axis aesthetic. Can be a numeric, text or datetime column (text and datetime column labels will be automatically rotated by 90 degrees). For clarity of the plot, only one x variable or expression is allowed. Use named vector with \code{c(new_x = x)} to rename the x variable or expression on the fly. By default will show units in the axis names if there are any. If a datetime column is provided for \code{x}, parameters \code{date_breaks} (example: \code{date_breaks = "2 hours"}) and \code{date_labels} can be set to fine-tune the x-axis appearance. See \link[ggplot2]{scale_date} for additional details. Note that \code{x} can also be \code{x = NULL} for single data point plots - in this case the x axis is completely omitted.
-#' @param y which columns/expressions to visualize. Combine with \code{c(y1, y2)} to show multiple variables in a \link[ggplot2]{facet_wrap}. Use named vector with \code{c(new_y1 = y1)} to rename variables/expressions on the fly. By default will show units in the axis names if there are any.
+#' @param y which columns/expressions to visualize. Combine with \code{c(y1, y2)} or use \link[dplyr]{select} syntax (e.g. \code{starts_with(...)}) to show multiple variables in a \link[ggplot2]{facet_wrap}. Use named vector with \code{c(new_y1 = y1)} to rename variables/expressions on the fly. By default will show units in the axis names if there are any.
 #' @param group what to group by, multiple columns allowed (combine with \code{paste(...)}), usually not necessary if groupings are fully defined through other aesthetics
 #' @param color variable to use for color aesthetic for the plot or constant value for the point and line color
 #' @param fill variable to use for the fill aesthetic of the plot or constant value for the point fill
@@ -844,6 +844,22 @@ iso_plot_data <- function(
          linetype = enquo(linetype), alpha = enquo(alpha), size = enquo(size),
          label = enquo(label))
   mutate_quos <- map(all_quos, aesthetics_quo_to_mutate_quos)
+
+  # evaluate x and y quos in context of column selections
+  # if they are valid vars_select expressions, use the result
+  # exception: assumes that the - operator is intended for its numerical
+  # purpose, not as a column position operator (which tends to lead to
+  # outcomes not expected by the user)
+  if (!"-" %in% get_call_operations(all_quos$x)) {
+    x_quo <- purrr::safely(tidyselect::vars_select)(names(dt), !!all_quos$x)
+    if (is.null(x_quo$error)) mutate_quos$x <- quos(!!!map(x_quo$result, sym))
+  }
+  if (!"-" %in% get_call_operations(all_quos$y)) {
+    y_quo <- purrr::safely(tidyselect::vars_select)(names(dt), !!all_quos$y)
+    if (is.null(y_quo$error)) mutate_quos$y <- quos(!!!map(y_quo$result, sym))
+  }
+
+  # parse quos
   quos_lengths <- map(mutate_quos, length)
   quos_cols <- map(mutate_quos, names)
   quos_manual <- map2(mutate_quos, quos_lengths, ~all(quos_are_unnamed_values(.x)) && .y == 1L)
@@ -1374,69 +1390,22 @@ iso_mark_calibration_range <- function(p, calibration = last_calibration(p$data)
   # safety checks
   if (missing(p)) stop("no base plot provided", call. = FALSE)
 
-  # check for model parameters
-  calib_vars <- get_calibration_vars(calibration)
 
   # x (only one that needs to come from plot)
   x <- rlang::as_label(p$mapping$x)
 
-  # range marker calucations
-  prepare_range_marker_data <- function(plot_data) {
-
-    # make sure calibration cols are present
-    check_calibration_cols(plot_data, c(calib_vars$model_name, calib_vars$model_params))
-
-    # check existence of panel column (introduced by iso_plot_data)
-    dt_cols <- get_column_names(plot_data, panel = quo(panel))
-
-    # ys
-    ys <- plot_data$panel %>% unique() %>% as.character()
-
-    # needed ranges
-    range_req <- tibble(x = x, y = ys, panel = ys) %>%
-      crossing(select(plot_data, !!sym(calib_vars$model_name)) %>% unique())
-
-    # model ranges
-    range_data <- plot_data %>%
-      mutate(panel = as.character(panel)) %>%
-      select(panel, !!sym(calib_vars$model_name), !!sym(calib_vars$model_params)) %>%
-      unique() %>%
-      iso_get_calibration_range(calibration = calibration, quiet = TRUE)
-
-    # with and without units
-    range_data <-
-      vctrs::vec_rbind(
-        range_data,
-        mutate(range_data, term = ifelse(!is.na(units), sprintf("%s [%s]", term, units), term))
-      )
-
-    # resulting data frame
-    ranges <-
-      full_join(
-        # x-range
-        left_join(range_req, range_data, by = c(calib_vars$model_name, "panel", "x" = "term")) %>%
-          select(!!sym(calib_vars$model_name), panel, x, xmin = min, xmax = max),
-        # y-range
-        left_join(range_req, range_data, by = c(calib_vars$model_name, "panel", "y" = "term")) %>%
-          select(!!sym(calib_vars$model_name), panel, y, ymin = min, ymax = max),
-        by = c(calib_vars$model_name, "panel")
-      ) %>%
-      filter(!(is.na(xmin) & is.na(xmax) & is.na(ymin) & is.na(ymax))) %>%
-      mutate(
-        xmin = ifelse(is.na(xmin), -Inf, xmin),
-        xmax = ifelse(is.na(xmax), Inf, xmax),
-        ymin = ifelse(is.na(ymin), -Inf, ymin),
-        ymax = ifelse(is.na(ymax), Inf, ymax)
-      )
-
-    return(ranges)
+  # panel aesthetics
+  paneling_cols <- c()
+  if (!is.null(p$facet$params)) {
+    paneling_cols <- c(p$facet$params$facets, p$facet$params$cols, p$facet$params$rows) %>%
+      map(rlang::as_label) %>% unlist()
   }
 
   # add geom rect for calibration range
   p$layers <-
     c(
       geom_rect(
-        data = prepare_range_marker_data,
+        data = function(df) prepare_range_marker_data(df, xcol = rlang::as_label(p$mapping$x), paneling_cols = paneling_cols, calibration = calibration),
         mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
                       x = NULL, y = NULL, color = NULL, fill = NULL,
                       linetype = NULL, label = NULL, shape = NULL),
@@ -1446,4 +1415,91 @@ iso_mark_calibration_range <- function(p, calibration = last_calibration(p$data)
     )
 
   return(p)
+}
+
+# helper function to prepare range marker data frame
+# @param p the plot
+prepare_range_marker_data <- function(plot_data, xcol, paneling_cols = c(), calibration = all_calibrations(plot_data)) {
+
+  # y cols
+  ycols <- unique(plot_data$variable)
+
+  # available ranges
+  calib_ranges <-
+    tibble(
+      ..calibration = calibration,
+      range = map(..calibration, ~{
+        calib_vars <- get_calibration_vars(.x)
+        check_calibration_cols(
+          plot_data, c(calib_vars$model_name, calib_vars$model_params))
+        plot_data[unique(c(paneling_cols, calib_vars$model_params))] %>%
+          iso_get_calibration_range(quiet = TRUE) %>% unique()
+        })
+    ) %>%
+    unnest(range) %>%
+    unique() %>%
+    group_by(!!!map(c(paneling_cols, "term"), sym)) %>%
+    mutate(..n_calibs = n(), ..calibs = paste(..calibration, collapse = ", ")) %>%
+    ungroup() %>%
+    select(-..calibration) %>%
+    unique()
+
+  # needed ranges
+  req_ranges <- tibble(x = xcol, y = ycols)
+
+  # ranges with and without units
+  calib_ranges <-
+    vctrs::vec_rbind(
+      calib_ranges,
+      mutate(calib_ranges, term = ifelse(!is.na(units), sprintf("%s [%s]", term, units), term))
+    )
+
+  # x-range
+  x_range <-
+    calib_ranges %>%
+    filter(term %in% xcol)
+
+  # y-range
+  y_range <-
+    calib_ranges %>%
+    filter(term %in% ycols)
+
+  # warning if any are defined multiple ways
+  if (any(x_range$..n_calibs > 1) || any(y_range$..n_calibs > 1)) {
+    ranges <- vctrs::vec_rbind(x_range, y_range) %>% filter(..n_calibs > 1) %>%
+      select(term, ..calibs) %>% unique()
+    glue::glue(
+      "multiple range constraints from different calibrations exist for:\n - ",
+      with(ranges, sprintf("'%s' from calibrations: %s", term, ..calibs)) %>%
+        paste(collapse = "\n - "),
+      "\nPlease specify which calibration range constraints to use via the 'calibration' parameter."
+    ) %>% warning(immediate. = TRUE, call. = FALSE)
+  }
+
+  # resulting data frame
+  x_range <- select(x_range, !!!paneling_cols, x = term, xmin = min, xmax = max)
+  y_range <- select(y_range, !!!paneling_cols, y = term, ymin = min, ymax = max)
+  if (length(paneling_cols) > 0) {
+    ranges <- full_join(x_range, y_range, by = paneling_cols)
+  } else {
+    ranges <- crossing(x_range, y_range)
+  }
+
+  ranges <- ranges %>%
+    filter(!(is.na(xmin) & is.na(xmax) & is.na(ymin) & is.na(ymax))) %>%
+    mutate(
+      xmin = ifelse(is.na(xmin), -Inf, xmin),
+      xmax = ifelse(is.na(xmax), Inf, xmax),
+      ymin = ifelse(is.na(ymin), -Inf, ymin),
+      ymax = ifelse(is.na(ymax), Inf, ymax)
+    )
+
+  # if 'panel' part of the faceting, make sure to filter by it to
+  # have the ranges highlighted only in the relevant panels
+  if ("panel" %in% paneling_cols) {
+    ranges <- ranges %>%
+      filter(!is.na(x) & panel == x | !is.na(y) & panel == y)
+  }
+
+  return(ranges)
 }
