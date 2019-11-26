@@ -222,7 +222,6 @@ get_existing_calibration_columns <- function(dt, calibrations) {
 iso_generate_calibration <- function(dt, model, calibration = "",
                                      use_in_calib = default(is_std_peak),
                                      min_n_datapoints = 2,
-                                     auto_correct_loess_date_time = TRUE,
                                      is_std_peak = default(is_std_peak),
                                      is_standard = default(is_std_peak),
                                      quiet = default(quiet)) {
@@ -394,7 +393,11 @@ iso_remove_problematic_calibrations <- function(dt, calibration = last_calibrati
   dt_out <- filter(dt, !!sym(calib_vars$model_enough_data))
 
   if(!quiet) {
-    glue("Info: removing problematic calibrations ({nrow(dt) - nrow(dt_out)} of {nrow(dt)})") %>%
+    if (nrow(dt_out) == nrow(dt))
+      glue("Info: there are no problematic calibrations") %>%
+      message()
+    else
+      glue("Info: removing problematic calibrations ({nrow(dt) - nrow(dt_out)} of {nrow(dt)})") %>%
       message()
   }
 

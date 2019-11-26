@@ -43,7 +43,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.6</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.8</span>
       </span>
     </div>
 
@@ -106,9 +106,25 @@
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
 <p>You can install the dependency <a href="http://isoreader.isoverse.org/">isoreader</a> and <a href="http://isoprocessor.isoverse.org/">isoprocessor</a> itself both from GitHub using the <code>devtools</code> package. Note that while <a href="http://isoprocessor.isoverse.org/">isoprocessor</a> uses some functions from <a href="http://isoreader.isoverse.org/">isoreader</a>, it does NOT require IRMS data to be read with <a href="http://isoreader.isoverse.org/">isoreader</a>, it can be used standalone with raw data obtained differently.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span>(<span class="st">"devtools"</span>) <span class="co"># only if you don't have this installed yet</span></a>
-<a class="sourceLine" id="cb1-2" data-line-number="2">devtools<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/devtools/man/reexports.html">install_github</a></span>(<span class="st">"isoverse/isoreader"</span>)</a>
-<a class="sourceLine" id="cb1-3" data-line-number="3">devtools<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/devtools/man/reexports.html">install_github</a></span>(<span class="st">"isoverse/isoprocessor"</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co"># restart your R session (this command only works in RStudio)</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">.rs.restartR</span>()</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="co"># installs the development tools package if not yet installed</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5"><span class="cf">if</span>(<span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span>(<span class="st">"devtools"</span>, <span class="dt">quietly =</span> <span class="ot">TRUE</span>)) <span class="kw"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span>(<span class="st">"devtools"</span>) </a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="co"># installs the newest version of isoreader and isoprocessor</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8">devtools<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/devtools/man/reexports.html">install_github</a></span>(<span class="st">"isoverse/isoreader"</span>)</a>
+<a class="sourceLine" id="cb1-9" data-line-number="9">devtools<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/devtools/man/reexports.html">install_github</a></span>(<span class="st">"isoverse/isoprocessor"</span>)</a></code></pre></div>
+</div>
+<div id="update" class="section level2">
+<h2 class="hasAnchor">
+<a href="#update" class="anchor"></a>Update</h2>
+<p>To update to a newer version of isoprocessor:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co"># restart your R session (this command only works in RStudio)</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="kw">.rs.restartR</span>()</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="co"># installs the newest version of isoprocessor</span></a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">devtools<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/devtools/man/reexports.html">install_github</a></span>(<span class="st">"isoverse/isoprocessor"</span>)</a></code></pre></div>
 </div>
 <div id="functionality" class="section level2">
 <h2 class="hasAnchor">
@@ -174,7 +190,7 @@
 <h2>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://cran.r-project.org/package=isoprocessor"><img src="http://www.r-pkg.org/badges/version/isoprocessor" alt="CRAN_Status_Badge"></a></li>
-<li><a href="https://github.com/isoverse/isoprocessor/commits"><img src="https://img.shields.io/badge/GitHub-0.5.1-orange.svg?style=flat-square" alt="Git_Hub_Version"></a></li>
+<li><a href="https://github.com/isoverse/isoprocessor/commits"><img src="https://img.shields.io/badge/GitHub-0.5.7-orange.svg?style=flat-square" alt="Git_Hub_Version"></a></li>
 <li><a href="http://isoprocessor.isoverse.org/"><img src="https://img.shields.io/badge/docs-online-green.svg" alt="Documentation"></a></li>
 <li><a href="https://travis-ci.org/isoverse/isoprocessor"><img src="https://travis-ci.org/isoverse/isoprocessor.svg?branch=master" alt="Build Status"></a></li>
 <li><a href="https://ci.appveyor.com/project/KopfLab/isoprocessor"><img src="https://ci.appveyor.com/api/projects/status/github/isoverse/isoprocessor?branch=master&amp;svg=true" alt="AppVeyor Build Status"></a></li>

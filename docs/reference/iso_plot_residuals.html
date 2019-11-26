@@ -83,7 +83,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.6</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.8</span>
       </span>
     </div>
 
@@ -146,9 +146,10 @@
     
     </div>
 
-    <pre class="usage"><span class='fu'>iso_plot_residuals</span>(<span class='no'>dt</span>, <span class='no'>x</span>, <span class='kw'>calibration</span> <span class='kw'>=</span> <span class='fu'>last_calibration</span>(<span class='no'>dt</span>),
-  <span class='kw'>color</span> <span class='kw'>=</span> <span class='fu'>calibration_model_name</span>(), <span class='kw'>panel</span> <span class='kw'>=</span> <span class='fu'>calibration_model_name</span>(),
-  <span class='kw'>points</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>trendlines</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>value_ranges</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='no'>...</span>)</pre>
+    <pre class="usage"><span class='fu'>iso_plot_residuals</span>(<span class='no'>dt</span>, <span class='no'>x</span>, <span class='kw'>y</span> <span class='kw'>=</span> <span class='fu'>calibration_residual</span>(),
+  <span class='kw'>calibration</span> <span class='kw'>=</span> <span class='fu'>last_calibration</span>(<span class='no'>dt</span>), <span class='kw'>color</span> <span class='kw'>=</span> <span class='fu'>calibration_model_name</span>(),
+  <span class='kw'>panel</span> <span class='kw'>=</span> <span class='fu'>calibration_model_name</span>(), <span class='kw'>points</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>trendlines</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>value_ranges</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -159,11 +160,15 @@
     </tr>
     <tr>
       <th>x</th>
-      <td><p>the column for the x-axis aesthetic. Can be a numeric, text or datetime column (text and datetime column labels will be automatically rotated by 90 degrees). For clarity of the plot, only single variables are allowed. Use named vector with <code><a href='https://rdrr.io/r/base/c.html'>c(new_x = x)</a></code> to rename the x variable on the fly. By default will show units in the axis names if there are any. If a datetime column is provided for <code>x</code>, parameters <code>date_breaks</code> (example: <code>date_breaks = "2 hours"</code>) and <code>date_labels</code> can be set to fine-tune the x-axis appearance. See scale_date for additional details. Note that <code>x</code> can also be <code>x = NULL</code> for single data point plots - in this case the x axis is completely omitted.</p></td>
+      <td><p>the column or expression for the x-axis aesthetic. Can be a numeric, text or datetime column (text and datetime column labels will be automatically rotated by 90 degrees). For clarity of the plot, only one x variable or expression is allowed. Use named vector with <code><a href='https://rdrr.io/r/base/c.html'>c(new_x = x)</a></code> to rename the x variable or expression on the fly. By default will show units in the axis names if there are any. If a datetime column is provided for <code>x</code>, parameters <code>date_breaks</code> (example: <code>date_breaks = "2 hours"</code>) and <code>date_labels</code> can be set to fine-tune the x-axis appearance. See scale_date for additional details. Note that <code>x</code> can also be <code>x = NULL</code> for single data point plots - in this case the x axis is completely omitted.</p></td>
+    </tr>
+    <tr>
+      <th>y</th>
+      <td><p>which columns/expressions to visualize. Combine with <code><a href='https://rdrr.io/r/base/c.html'>c(y1, y2)</a></code> or use <a href='https://dplyr.tidyverse.org/reference/select.html'>select</a> syntax (e.g. <code>starts_with(...)</code>) to show multiple variables in a <a href='https://ggplot2.tidyverse.org/reference/facet_wrap.html'>facet_wrap</a>. Use named vector with <code><a href='https://rdrr.io/r/base/c.html'>c(new_y1 = y1)</a></code> to rename variables/expressions on the fly. By default will show units in the axis names if there are any.</p></td>
     </tr>
     <tr>
       <th>color</th>
-      <td><p>variable to use for color aesthetic for the plot</p></td>
+      <td><p>variable to use for color aesthetic for the plot or constant value for the point and line color</p></td>
     </tr>
     <tr>
       <th>panel</th>

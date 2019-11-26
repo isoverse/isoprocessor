@@ -763,7 +763,7 @@ iso_plot_ref_peaks <- function(dt, x, ratio, ..., group_id = file_id, is_ref_con
 
   # visualize
   iso_plot_data(
-    refs, x = !!sym(dt_cols$x), y = c(!!!names(mutate_quos)),
+    refs, x = !!sym(dt_cols$x), y = c(!!!map(names(mutate_quos), sym)),
     ...,
     geom_bar(stat = "identity", position = "dodge")
   ) + labs(y = "Deviation from average (permil)")
@@ -783,18 +783,18 @@ iso_plot_calibration_range <- function(...) {
 
 #' Visualize the data
 #'
-#' General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with \link[ggplot2]{facet_wrap} or \link[ggplot2]{theme} calls). Make sure to specify \code{lines = TRUE} and/or \code{points = TRUE} to add the lines/points respectively. Accepts multiple y variables in which case they are plotted in a \link[ggplot2]{facet_wrap} with new variables \code{panel} holding the name of the y variable panels, \code{y_value} holding the values and \code{y_error} holding the error values (if \code{y_error} is supplied). Also always generates a new column called \code{variable} that holds the variable names (\code{y}) supplied to this function.
+#' General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with \link[ggplot2]{facet_wrap} or \link[ggplot2]{theme} calls). Make sure to specify \code{lines = TRUE} and/or \code{points = TRUE} to add the lines/points respectively. Accepts multiple y variables in which case they are plotted in a \link[ggplot2]{facet_wrap} with new variables \code{panel} holding the name of the y variable panels, \code{y_value} holding the values and \code{y_error} holding the error values (if \code{y_error} is supplied). Also always generates a new column called \code{variable} that holds the variable names (\code{y}) supplied to this function. All aesthetics parameters expect variables or expressions that are valid in the context of the \code{dt}. For convenience, all aesthetics can also be (re)-named on the fly with \code{c(new_name = expr)} and will include column units in the legend captions by default.
 #'
 #' @param dt data frame to plot data from
-#' @param x the column for the x-axis aesthetic. Can be a numeric, text or datetime column (text and datetime column labels will be automatically rotated by 90 degrees). For clarity of the plot, only single variables are allowed. Use named vector with \code{c(new_x = x)} to rename the x variable on the fly. By default will show units in the axis names if there are any. If a datetime column is provided for \code{x}, parameters \code{date_breaks} (example: \code{date_breaks = "2 hours"}) and \code{date_labels} can be set to fine-tune the x-axis appearance. See \link[ggplot2]{scale_date} for additional details. Note that \code{x} can also be \code{x = NULL} for single data point plots - in this case the x axis is completely omitted.
-#' @param y which columns to visualize. Combine with \code{c(y1, y2)} to show multiple variables in a \link[ggplot2]{facet_wrap}. Use named vector with \code{c(new_y1 = y1)} to rename variables on the fly. By default will show units in the axis names if there are any.
+#' @param x the column or expression for the x-axis aesthetic. Can be a numeric, text or datetime column (text and datetime column labels will be automatically rotated by 90 degrees). For clarity of the plot, only one x variable or expression is allowed. Use named vector with \code{c(new_x = x)} to rename the x variable or expression on the fly. By default will show units in the axis names if there are any. If a datetime column is provided for \code{x}, parameters \code{date_breaks} (example: \code{date_breaks = "2 hours"}) and \code{date_labels} can be set to fine-tune the x-axis appearance. See \link[ggplot2]{scale_date} for additional details. Note that \code{x} can also be \code{x = NULL} for single data point plots - in this case the x axis is completely omitted.
+#' @param y which columns/expressions to visualize. Combine with \code{c(y1, y2)} or use \link[dplyr]{select} syntax (e.g. \code{starts_with(...)}) to show multiple variables in a \link[ggplot2]{facet_wrap}. Use named vector with \code{c(new_y1 = y1)} to rename variables/expressions on the fly. By default will show units in the axis names if there are any.
 #' @param group what to group by, multiple columns allowed (combine with \code{paste(...)}), usually not necessary if groupings are fully defined through other aesthetics
-#' @param color variable to use for color aesthetic for the plot
-#' @param fill variable to use for the fill aesthetic of the plot
-#' @param shape variable to use for shape aesthetic for the plot
+#' @param color variable to use for color aesthetic for the plot or constant value for the point and line color
+#' @param fill variable to use for the fill aesthetic of the plot or constant value for the point fill
+#' @param shape variable to use for shape aesthetic for the plot or constant vlaue for the point shape
 #' @param size variable to use for size aesthetic for the plot or constant value for the points size
-#' @param linetype variable to use for linetype aesthetic for the plot
-#' @param alpha variable to use for the opacity aesthetic for the plot (1 = 100\% opaque, 0 = completely transparent)
+#' @param linetype variable to use for linetype aesthetic for the plot or constant value for the line type
+#' @param alpha variable to use for the opacity aesthetic for the plot or constant value for the point and line opacity (1 = 100\% opaque, 0 = completely transparent)
 #' @param y_error an error column for drawing y error bars - if multiple \code{y} are provided, error needs to point to the same number of columns
 #' @param lines whether to plot lines (FALSE by default)
 #' @param points whether to plot points (FALSE by default)
@@ -824,8 +824,8 @@ iso_plot_data <- function(
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  if (missing(x)) stop("have to provide an x to plot", call. = FALSE)
-  if (missing(y)) stop("have to provide at least one column to plot", call. = FALSE)
+  if (missing(x)) stop("have to provide an x variable or expression to plot", call. = FALSE)
+  if (missing(y)) stop("have to provide at least one y variable or expression to plot", call. = FALSE)
 
   # warnings
   add_geoms <- list(...)
@@ -833,51 +833,81 @@ iso_plot_data <- function(
     warning("no automatic geoms (points or lines) included, plot will be blank", immediate. = TRUE, call. = FALSE)
   }
 
-  # quos
+  # info
   panel_missing <- missing(panel)
-  vis_quos <-
+
+  # all quos
+  all_quos <-
     list(x = enquo(x), y = enquo(y), y_error = enquo(y_error),
          group = enquo(group), panel = enquo(panel),
          color = enquo(color), fill = enquo(fill), shape = enquo(shape),
          linetype = enquo(linetype), alpha = enquo(alpha), size = enquo(size),
          label = enquo(label))
+  mutate_quos <- map(all_quos, aesthetics_quo_to_mutate_quos)
+
+  # evaluate x and y quos in context of column selections
+  # if they are valid vars_select expressions, use the result
+  # exception: assumes that the - operator is intended for its numerical
+  # purpose, not as a column position operator (which tends to lead to
+  # outcomes not expected by the user)
+  if (!"-" %in% get_call_operations(all_quos$x)) {
+    x_quo <- purrr::safely(tidyselect::vars_select)(names(dt), !!all_quos$x)
+    if (is.null(x_quo$error)) mutate_quos$x <- quos(!!!map(x_quo$result, sym))
+  }
+  if (!"-" %in% get_call_operations(all_quos$y)) {
+    y_quo <- purrr::safely(tidyselect::vars_select)(names(dt), !!all_quos$y)
+    if (is.null(y_quo$error)) mutate_quos$y <- quos(!!!map(y_quo$result, sym))
+  }
+
+  # parse quos
+  quos_lengths <- map(mutate_quos, length)
+  quos_cols <- map(mutate_quos, names)
+  quos_manual <- map2(mutate_quos, quos_lengths, ~all(quos_are_unnamed_values(.x)) && .y == 1L)
+  quos_values <- map2(mutate_quos, quos_manual, ~if(.y) { rlang::eval_tidy(.x[[1]]) } else { NULL })
+  x_y_mutate_quos <- unlist(unname(mutate_quos[c("x", "y", "y_error")]))
+  other_mutate_quos <- unlist(unname(mutate_quos[!names(mutate_quos) %in% c("x", "y", "y_error", "panel") & !map_lgl(quos_manual, identity)]))
+
+  # check lengths
+  multi <- quos_lengths[map_int(quos_lengths, identity) > 1]
+  multi <- multi[!names(multi) %in% c("y", "y_error")]
+  if (length(multi) > 0) {
+    glue::glue(
+      "encountered multiple variables or expressions for aesthetic(s) that only ",
+      "support a single variable/expression:\n - ",
+      sprintf("%s = '%s'", names(multi), map_chr(all_quos[names(multi)], rlang::as_label)) %>%
+        paste(collapse = "\n - ")
+    ) %>% stop(call. = FALSE)
+  }
+
+  # double check same number of ys and errors
+  if (quos_lengths$y_error > 0 && quos_lengths$y != quos_lengths$y_error )
+    glue(
+      "not the same number of y ",
+      "('{paste(rlang::as_label(all_quos$y), collapse = \", \")}') ",
+      "and y_error columns ",
+      "('{paste(rlang::as_label(all_quos$y_error), collapse = \", \")}'}) ",
+      "provided") %>%
+    stop(call. = FALSE)
 
   # null x
   no_x <- FALSE
-  if (rlang::quo_is_null(vis_quos$x)) {
+  if (quos_lengths$x == 0) {
     no_x <- TRUE
-    dt <- dplyr::mutate(dt, no_x = NA_character_)
-    vis_quos$x <- quo(no_x)
+    mutate_quos$x <- quos(no_x = NA_character_)
   }
-
-  # check existence of ys and errors
-  dt_cols <- get_column_names(
-    dt, x = vis_quos$x, y = vis_quos$y, y_error = vis_quos$y_error,
-    n_reqs = list(x = 1, y = "+", y_error = "*"))
-
-  # double check same number of ys and errors
-  if (length(dt_cols$y_error) > 0 && length(dt_cols$y) != length(dt_cols$y_error))
-    glue("not the same number of y ({collapse(dt_cols$y, sep = ', ')}) and ",
-         "y_error columns ({collapse(dt_cols$y_error, sep = ', ')}) provided") %>%
-    stop(call. = FALSE)
 
   # unique row ids for easier joins
   dt$..row_id.. <- 1:nrow(dt)
 
-  # run mutate to allow on the fly renaming of x and y values
-  mutate_quos <- purrr::map(c(dt_cols$x, dt_cols$y), ~quo(!!sym(.x))) %>%
-    setNames(c(names(dt_cols$x), names(dt_cols$y)))
-  dt <- dplyr::mutate(dplyr::ungroup(dt), !!!mutate_quos)
-
-  # store & strip units if there are any to avoid ggplot warnings
+  # run mutates for x, y, y_error
+  dt <- mutate(dplyr::ungroup(dt), !!!x_y_mutate_quos)
   dt_units <- iso_get_units(dt) %>% {ifelse(is.na(.), names(.), sprintf("%s [%s]", names(.), .))}
-  dt <- iso_strip_units(dt)
 
   # gather data if multiple ys
-  if (length(dt_cols$y) == 1) {
-    # add variable column
-    dt <- mutate(dt, panel = dt_units[[names(dt_cols$y)[1]]])
-  } else if (length(dt_cols$y) > 1) {
+  if (quos_lengths$y == 1) {
+    # add panel
+    dt <- mutate(dt, panel = dt_units[[quos_cols$y]])
+  } else if (quos_lengths$y > 1) {
 
     # safety check
     if ("panel" %in% names(dt)) {
@@ -889,18 +919,18 @@ iso_plot_data <- function(
       dt$y_value <- NULL
     }
 
-    # add multiple y values
-    y_value_data <- gather(dt, panel, y_value, !!!map(names(dt_cols$y), sym)) %>%
+    # add y values as panels
+    y_value_data <- gather(iso_strip_units(dt), panel, y_value, !!!map(quos_cols$y, sym)) %>%
       select(..row_id.., panel, y_value)
     dt <- left_join(dt, y_value_data, by = "..row_id..")
 
     # y errors
-    if (length(dt_cols$y_error) > 0) {
-      y_error_data <- gather(dt, panel_y_error, y_error, !!!map(dt_cols$y_error, sym))
+    if (quos_lengths$y_error > 0) {
+      y_error_data <- gather(iso_strip_units(dt), panel_y_error, y_error, !!!map(quos_cols$y_error, sym))
       dt <-
         dt %>%
         left_join(
-          tibble(panel = dt_cols$y, panel_y_error = dt_cols$y_error),
+          tibble(panel = quos_cols$y, panel_y_error = quos_cols$y_error),
           by = "panel"
         ) %>%
         left_join(
@@ -914,68 +944,79 @@ iso_plot_data <- function(
     dt <- filter(dt, !is.na(y_value))
 
     # factor panel in the order the variables were provided
-    dt <- mutate(dt, panel = factor(panel, levels = names(dt_cols$y)))
+    dt <- mutate(dt, panel = factor(panel, levels = quos_cols$y))
 
     # recode levels to include units (if the columns had them)
-    units_recode <- setNames(names(dt_units[names(dt_cols$y)]), as.character(dt_units[names(dt_cols$y)]))
+    units_recode <- setNames(names(dt_units[quos_cols$y]), as.character(dt_units[quos_cols$y]))
     dt <- mutate(dt, panel = forcats::fct_recode(panel, !!!units_recode))
   }
 
-  # also add variable as a synonym for panel
+  # add variable as a synonym for panel
   dt <- mutate(dt, variable = panel)
 
+  # run all other mutates except for panel and update units
+  dt <- mutate(dplyr::ungroup(dt), !!!other_mutate_quos)
+  dt_units <- iso_get_units(dt) %>% {ifelse(is.na(.), names(.), sprintf("%s [%s]", names(.), .))}
+
+  # strip units if there are any to avoid ggplot warnings
+  dt <- iso_strip_units(dt)
+
   # generate plot
-  p <- ggplot(dt) +
-    aes_q(x = sym(names(dt_cols$x)[1])) +
-    { if(length(dt_cols$y) > 1) aes_q(y = sym("y_value")) else aes_q(y = sym(names(dt_cols$y)[1])) } +
-    { if(!quo_is_null(vis_quos$group)) aes_q(group = vis_quos$group) } +
-    { if(!quo_is_null(vis_quos$color)) aes_q(color = vis_quos$color) } +
-    { if(!quo_is_null(vis_quos$fill)) aes_q(fill = vis_quos$fill) } +
-    { if(!quo_is_null(vis_quos$shape)) aes_q(shape = vis_quos$shape) } +
-    { if(!quo_is_null(vis_quos$linetype)) aes_q(linetype = vis_quos$linetype) } +
-    { if(!quo_is_null(vis_quos$label)) aes_q(label = vis_quos$label) } +
-    { if(length(dt_cols$y) > 1) labs(y = NULL) else labs(y = dt_units[[names(dt_cols$y)[1]]]) } +
-    labs(x = dt_units[[names(dt_cols$x)[1]]]) +
+  p <- ggplot(dt) + aes_q(x = sym(quos_cols$x)) +
+    labs(x = dt_units[[quos_cols$x]]) +
     theme_bw() +
     theme(plot.margin = ggplot2::margin(10, 5, 15, 20))
 
-  # alpha aesthetic
-  alpha_manual <- FALSE
-  if (!quo_is_null(vis_quos$alpha)) {
-    if (quo_is_symbol(vis_quos$alpha) || quo_is_call(vis_quos$alpha)) {
-      # expression --> apply for plot globally (points and lines)
-      p <- p + aes_q(alpha = vis_quos$alpha)
-    } else {
-      # manual value
-      alpha_manual <- TRUE
-      alpha_value <- eval_tidy(vis_quos$alpha)
-    }
-  }
+  # y aesthetic
+  if(quos_lengths$y > 1)
+    p <- p + aes_q(y = sym("y_value")) + labs(y = NULL)
+  else
+    p <- p + aes_q(y = sym(quos_cols$y)) + labs(y = dt_units[[quos_cols$y]])
 
-  # size aesthetic
-  size_manual <- FALSE
-  if (!quo_is_null(vis_quos$size)) {
-    if (quo_is_symbol(vis_quos$size) || quo_is_call(vis_quos$size)) {
-      # expression --> don't apply globally, only in point geom
-    } else {
-      # manual value
-      size_manual <- TRUE
-      size_value <- eval_tidy(vis_quos$size)
-    }
-  }
+  # group aesthetic
+  if(quos_lengths$group == 1)
+    p <- p + aes_q(group = sym(quos_cols$group))
+
+  # color aesthetic
+  if(quos_lengths$color == 1 && !quos_manual$color)
+    p <- p + aes_q(color = sym(quos_cols$color)) + labs(color = dt_units[[quos_cols$color]])
+
+  # fill aesthetic
+  if(quos_lengths$fill == 1 && !quos_manual$fill)
+    p <- p + aes_q(fill = sym(quos_cols$fill)) + labs(fill = dt_units[[quos_cols$fill]])
+
+  # shape aesthetic
+  if(quos_lengths$shape == 1 && !quos_manual$shape)
+    p <- p + aes_q(shape = sym(quos_cols$shape)) + labs(shape = dt_units[[quos_cols$shape]])
+
+  # linetype aesthetic
+  if(quos_lengths$linetype == 1 && !quos_manual$linetype)
+    p <- p + aes_q(linetype = sym(quos_cols$linetype)) + labs(linetype = dt_units[[quos_cols$linetype]])
+
+  # label aesthetic (for ggplotly)
+  if(quos_lengths$label == 1 && !quos_manual$label)
+    p <- p + aes_q(label = sym(quos_cols$label))
+
+  # alpha aesthetic
+  if(quos_lengths$alpha == 1 && !quos_manual$alpha)
+    p <- p + aes_q(alpha = sym(quos_cols$alpha)) + labs(alpha = dt_units[[quos_cols$alpha]])
+
+  # size aesthetic (not universally applied, only to points below)
+  if (quos_lengths$size == 1 && !quos_manual$size)
+    p <- p + labs(size = dt_units[[quos_cols$size]])
 
   # paneling
-  if ( (panel_missing && length(dt_cols$y) == 1) || rlang::quo_is_null(vis_quos$panel)) {
+  if ( (panel_missing && quos_lengths$y == 1) || rlang::quo_is_null(all_quos$panel)) {
     # no panel
     aes_cols <- list()
-  } else if (rlang::quo_is_symbol(vis_quos$panel)) {
+  } else if (rlang::quo_is_symbol(all_quos$panel)) {
     # single symbol --> facet_wrap
-    aes_cols <- list(panel = vis_quos$panel %>% rlang::quo_squash())
+    aes_cols <- list(panel = all_quos$panel %>% rlang::quo_squash())
   } else {
     # formula --> facet_grid
     aes_cols <- list(
-      panel_rows = vis_quos$panel %>% rlang::quo_squash() %>% rlang::f_lhs(),
-      panel_cols = vis_quos$panel %>% rlang::quo_squash() %>% rlang::f_rhs()
+      panel_rows = all_quos$panel %>% rlang::quo_squash() %>% rlang::f_lhs(),
+      panel_cols = all_quos$panel %>% rlang::quo_squash() %>% rlang::f_rhs()
     )
   }
   if (length(aes_cols) > 0) {
@@ -988,7 +1029,7 @@ iso_plot_data <- function(
   }
 
   # x axis
-  x <- mutate(dt, .x = !!vis_quos$x)$.x
+  x <- dt[[quos_cols$x]]
   if (no_x) {
     p <- p + theme(panel.grid.major.x = element_blank(),
                    axis.ticks.x = element_blank(),
@@ -1010,15 +1051,15 @@ iso_plot_data <- function(
   p <- p + add_geoms
 
   # y error bars
-  if (length(dt_cols$y_error) == 1) {
+  if (quos_lengths$y_error == 1) {
     # single y value
     p <- p + geom_errorbar(
-      data = function(df) filter(df, !is.na(!!(sym(dt_cols$y_error[1])))),
+      data = function(df) filter(df, !is.na(!!sym(quos_cols$y_error))),
       mapping = aes(
-        ymin = !!(sym(names(dt_cols$y)[1])) - !!(sym(dt_cols$y_error[1])),
-        ymax = !!(sym(names(dt_cols$y)[1])) + !!(sym(dt_cols$y_error[1]))),
+        ymin = !!sym(quos_cols$y) - !!sym(quos_cols$y_error),
+        ymax = !!sym(quos_cols$y) + !!sym(quos_cols$y_error)),
       width = 0)
-  } else if (length(dt_cols$y_error) > 1) {
+  } else if (quos_lengths$y_error > 1) {
     # multiple y values in panel
     p <- p + geom_errorbar(
       data = function(df) filter(df, !is.na(y_error)),
@@ -1029,22 +1070,34 @@ iso_plot_data <- function(
   # lines and points
   if (lines) {
     p <- p +
-      if (alpha_manual) geom_line(alpha = alpha_value) else geom_line()
+      if (quos_manual$alpha) geom_line(alpha = quos_values$alpha) else geom_line()
   }
   if (points) {
-    p <- p +
-      if (!quo_is_null(vis_quos$size) && !size_manual && alpha_manual)
-        geom_point(mapping = aes_q(size = vis_quos$size), alpha = alpha_value)
-      else if (!quo_is_null(vis_quos$size) && !size_manual && !alpha_manual)
-        geom_point(mapping = aes_q(size = vis_quos$size))
-      else if (size_manual && alpha_manual)
-        geom_point(size = size_value, alpha = alpha_value)
-      else if (size_manual)
-        geom_point(size = size_value)
-      else if (alpha_manual)
-        geom_point(alpha = alpha_value)
+    # figure out all the aesthetics
+    manual_quos <- c()
+    aes_quos <- c()
+    if (quos_lengths$size == 1L) {
+      if (quos_manual$size)
+        manual_quos <- c(manual_quos, quos(size = !!quos_values$size))
       else
-        geom_point()
+        aes_quos <- c(aes_quos, quos(size = !!sym(quos_cols$size)))
+    }
+    if (quos_manual$alpha)
+      manual_quos <- c(manual_quos, quos(alpha = !!quos_values$alpha))
+    if (quos_manual$color)
+      manual_quos <- c(manual_quos, quos(color = !!quos_values$color))
+    if (quos_manual$fill)
+      manual_quos <- c(manual_quos, quos(fill = !!quos_values$fill))
+    # create geom_point
+    if (length(manual_quos) > 0 && length(aes_quos) > 0) {
+      point_quo <- quo(geom_point(mapping = aes(!!!aes_quos), !!!manual_quos))
+    } else if (length(aes_quos) > 0)
+      point_quo <- quo(geom_point(mapping = aes(!!!aes_quos)))
+    else if (length(manual_quos) > 0)
+      point_quo <- quo(geom_point(!!!manual_quos))
+    else
+      point_quo <- quo(geom_point())
+    p <- p + rlang::eval_tidy(point_quo)
   }
 
   return(p)
@@ -1063,7 +1116,8 @@ iso_plot_data <- function(
 #' @family plot functions
 #' @export
 iso_plot_residuals <- function(
-  dt, x, calibration = last_calibration(dt),
+  dt, x, y = calibration_residual(),
+  calibration = last_calibration(dt),
   color = calibration_model_name(),
   panel = calibration_model_name(),
   points = TRUE,
@@ -1081,12 +1135,15 @@ iso_plot_residuals <- function(
 
   # get calibration vars symbols
   calibration_model_name <- function() calib_vars$model_name
+  calibration_residual <- function() calib_vars$residual
   eval_calibration_var <- function(pquo) {
     if (rlang::quo_is_call(pquo) && rlang::call_name(pquo) == "calibration_model_name")
       sym(calibration_model_name())
+    else if (rlang::quo_is_call(pquo) && rlang::call_name(pquo) == "calibration_residual")
+      sym(calibration_residual())
     else pquo
   }
-  y_quo <- sym(calib_vars$residual)
+  y_quo <- enquo(y) %>% eval_calibration_var()
   color_quo <- enquo(color) %>% eval_calibration_var()
   panel_quo <- enquo(panel) %>% eval_calibration_var()
 
@@ -1333,69 +1390,22 @@ iso_mark_calibration_range <- function(p, calibration = last_calibration(p$data)
   # safety checks
   if (missing(p)) stop("no base plot provided", call. = FALSE)
 
-  # check for model parameters
-  calib_vars <- get_calibration_vars(calibration)
 
   # x (only one that needs to come from plot)
   x <- rlang::as_label(p$mapping$x)
 
-  # range marker calucations
-  prepare_range_marker_data <- function(plot_data) {
-
-    # make sure calibration cols are present
-    check_calibration_cols(plot_data, c(calib_vars$model_name, calib_vars$model_params))
-
-    # check existence of panel column (introduced by iso_plot_data)
-    dt_cols <- get_column_names(plot_data, panel = quo(panel))
-
-    # ys
-    ys <- plot_data$panel %>% unique() %>% as.character()
-
-    # needed ranges
-    range_req <- tibble(x = x, y = ys, panel = ys) %>%
-      crossing(select(plot_data, !!sym(calib_vars$model_name)) %>% unique())
-
-    # model ranges
-    range_data <- plot_data %>%
-      mutate(panel = as.character(panel)) %>%
-      select(panel, !!sym(calib_vars$model_name), !!sym(calib_vars$model_params)) %>%
-      unique() %>%
-      iso_get_calibration_range(calibration = calibration, quiet = TRUE)
-
-    # with and without units
-    range_data <-
-      vctrs::vec_rbind(
-        range_data,
-        mutate(range_data, term = ifelse(!is.na(units), sprintf("%s [%s]", term, units), term))
-      )
-
-    # resulting data frame
-    ranges <-
-      full_join(
-        # x-range
-        left_join(range_req, range_data, by = c(calib_vars$model_name, "panel", "x" = "term")) %>%
-          select(!!sym(calib_vars$model_name), panel, x, xmin = min, xmax = max),
-        # y-range
-        left_join(range_req, range_data, by = c(calib_vars$model_name, "panel", "y" = "term")) %>%
-          select(!!sym(calib_vars$model_name), panel, y, ymin = min, ymax = max),
-        by = c(calib_vars$model_name, "panel")
-      ) %>%
-      filter(!(is.na(xmin) & is.na(xmax) & is.na(ymin) & is.na(ymax))) %>%
-      mutate(
-        xmin = ifelse(is.na(xmin), -Inf, xmin),
-        xmax = ifelse(is.na(xmax), Inf, xmax),
-        ymin = ifelse(is.na(ymin), -Inf, ymin),
-        ymax = ifelse(is.na(ymax), Inf, ymax)
-      )
-
-    return(ranges)
+  # panel aesthetics
+  paneling_cols <- c()
+  if (!is.null(p$facet$params)) {
+    paneling_cols <- c(p$facet$params$facets, p$facet$params$cols, p$facet$params$rows) %>%
+      map(rlang::as_label) %>% unlist()
   }
 
   # add geom rect for calibration range
   p$layers <-
     c(
       geom_rect(
-        data = prepare_range_marker_data,
+        data = function(df) prepare_range_marker_data(df, xcol = rlang::as_label(p$mapping$x), paneling_cols = paneling_cols, calibration = calibration),
         mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
                       x = NULL, y = NULL, color = NULL, fill = NULL,
                       linetype = NULL, label = NULL, shape = NULL),
@@ -1405,4 +1415,91 @@ iso_mark_calibration_range <- function(p, calibration = last_calibration(p$data)
     )
 
   return(p)
+}
+
+# helper function to prepare range marker data frame
+# @param p the plot
+prepare_range_marker_data <- function(plot_data, xcol, paneling_cols = c(), calibration = all_calibrations(plot_data)) {
+
+  # y cols
+  ycols <- unique(plot_data$variable)
+
+  # available ranges
+  calib_ranges <-
+    tibble(
+      ..calibration = calibration,
+      range = map(..calibration, ~{
+        calib_vars <- get_calibration_vars(.x)
+        check_calibration_cols(
+          plot_data, c(calib_vars$model_name, calib_vars$model_params))
+        plot_data[unique(c(paneling_cols, calib_vars$model_params))] %>%
+          iso_get_calibration_range(quiet = TRUE) %>% unique()
+        })
+    ) %>%
+    unnest(range) %>%
+    unique() %>%
+    group_by(!!!map(c(paneling_cols, "term"), sym)) %>%
+    mutate(..n_calibs = n(), ..calibs = paste(..calibration, collapse = ", ")) %>%
+    ungroup() %>%
+    select(-..calibration) %>%
+    unique()
+
+  # needed ranges
+  req_ranges <- tibble(x = xcol, y = ycols)
+
+  # ranges with and without units
+  calib_ranges <-
+    vctrs::vec_rbind(
+      calib_ranges,
+      mutate(calib_ranges, term = ifelse(!is.na(units), sprintf("%s [%s]", term, units), term))
+    )
+
+  # x-range
+  x_range <-
+    calib_ranges %>%
+    filter(term %in% xcol)
+
+  # y-range
+  y_range <-
+    calib_ranges %>%
+    filter(term %in% ycols)
+
+  # warning if any are defined multiple ways
+  if (any(x_range$..n_calibs > 1) || any(y_range$..n_calibs > 1)) {
+    ranges <- vctrs::vec_rbind(x_range, y_range) %>% filter(..n_calibs > 1) %>%
+      select(term, ..calibs) %>% unique()
+    glue::glue(
+      "multiple range constraints from different calibrations exist for:\n - ",
+      with(ranges, sprintf("'%s' from calibrations: %s", term, ..calibs)) %>%
+        paste(collapse = "\n - "),
+      "\nPlease specify which calibration range constraints to use via the 'calibration' parameter."
+    ) %>% warning(immediate. = TRUE, call. = FALSE)
+  }
+
+  # resulting data frame
+  x_range <- select(x_range, !!!paneling_cols, x = term, xmin = min, xmax = max)
+  y_range <- select(y_range, !!!paneling_cols, y = term, ymin = min, ymax = max)
+  if (length(paneling_cols) > 0) {
+    ranges <- full_join(x_range, y_range, by = paneling_cols)
+  } else {
+    ranges <- crossing(x_range, y_range)
+  }
+
+  ranges <- ranges %>%
+    filter(!(is.na(xmin) & is.na(xmax) & is.na(ymin) & is.na(ymax))) %>%
+    mutate(
+      xmin = ifelse(is.na(xmin), -Inf, xmin),
+      xmax = ifelse(is.na(xmax), Inf, xmax),
+      ymin = ifelse(is.na(ymin), -Inf, ymin),
+      ymax = ifelse(is.na(ymax), Inf, ymax)
+    )
+
+  # if 'panel' part of the faceting, make sure to filter by it to
+  # have the ranges highlighted only in the relevant panels
+  if ("panel" %in% paneling_cols) {
+    ranges <- ranges %>%
+      filter(!is.na(x) & panel == x | !is.na(y) & panel == y)
+  }
+
+  return(ranges)
 }

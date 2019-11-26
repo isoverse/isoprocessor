@@ -316,6 +316,38 @@ get_supported_models <- function() {
   )
 }
 
+# get all operations in an expression (in order of appearance)
+# this goes through the quo recursively
+# @param q quo
+# @return text vector
+get_call_operations <- function(q) {
+  q_ops <- c()
+  if (
+    (rlang::is_quosure(q) && rlang::quo_is_call(q)) ||
+    (!rlang::is_quosure(q) && rlang::is_call(q))) {
+    q_ops <- c(rlang::call_name(q), map(rlang::call_args(q), get_call_operations))
+  }
+  return(unname(unlist(q_ops)))
+}
+
+# get all variables in an expression (in order of appearance)
+# this goes through the quo recursively
+# @param q quo
+# @return text vector
+get_call_variables <- function(q) {
+  q_syms <- list()
+  if (
+    (rlang::is_quosure(q) && rlang::quo_is_symbol(q)) ||
+    (!rlang::is_quosure(q) && rlang::is_symbol(q))) {
+    q_syms <- rlang::as_label(q)
+  } else if (
+    (rlang::is_quosure(q) && rlang::quo_is_call(q)) ||
+    (!rlang::is_quosure(q) && rlang::is_call(q))) {
+    q_syms <- map(rlang::call_args(q), get_call_variables)
+  }
+  return(unique(unlist(q_syms)))
+}
+
 # get all variables used in a formula (in order of appearance)
 # @param formula_q quoted formula expression of form y1 + y2 + ... ~ x1 + x2 + x3
 get_formula_variables <- function(formula_q, get_x = TRUE, get_y = TRUE) {
@@ -324,20 +356,12 @@ get_formula_variables <- function(formula_q, get_x = TRUE, get_y = TRUE) {
   if (!rlang::quo_is_call(formula_q) || !rlang::call_name(formula_q) == "~")
     stop("not a valid formula of form 'y ~ ...': ", rlang::as_label(formula_q), call. = FALSE)
 
-  # deconstruct a call
-  get_vars <- function(arg) {
-    q_syms <- list()
-    if (rlang::is_symbol(arg)) q_syms <- rlang::as_label(arg)
-    else if (rlang::is_call(arg)) q_syms <- map(rlang::call_args(arg), get_vars)
-    return(unique(unlist(q_syms)))
-  }
-
   # take apart the formula
   left_q <- rlang::call_args(formula_q)[[1]]
   right_q <- rlang::call_args(formula_q)[[2]]
   vars <- c()
-  if (get_y) vars <- c(vars, get_vars(left_q))
-  if (get_x) vars <- c(vars, get_vars(right_q))
+  if (get_y) vars <- c(vars, get_call_variables(left_q))
+  if (get_x) vars <- c(vars, get_call_variables(right_q))
   return(vars)
 }
 
@@ -963,7 +987,6 @@ evaluate_range <- function(
         ~{
           # consider only data that is part of the regression
           d_in_calib <- .x[.x[[.y$in_reg]],]
-          my_d <<- d_in_calib
           if (nrow(d_in_calib) > 0) {
             # determine the ranges for all terms
             tryCatch(
@@ -1018,7 +1041,7 @@ evaluate_range <- function(
             mutate(
               in_range = case_when(
                 is.na(min) | is.na(max) ~ sprintf("'%s' range NA", term),
-                is.na(value) ~ sprintf("'%s' NA", term),
+                is.na(value) ~ sprintf("'%s' value NA", term),
                 value < min ~ sprintf("<'%s' range", term),
                 value > max ~ sprintf(">'%s' range", term),
                 TRUE ~ "OK"

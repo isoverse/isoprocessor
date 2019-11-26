@@ -65,3 +65,35 @@ cols_to_symbol_list <- function(cols, keep_names = FALSE) {
   if (!keep_names) cols <- unname(cols)
   return(map(cols, sym))
 }
+
+# aesthetics quos ========
+
+# convert an aesthetics quo into quos for generating mutate quos to make all the columns necessary for the aesthetics
+# can deal with multiple expressions encapsulated by c() and list()
+aesthetics_quo_to_mutate_quos <- function(q, drop_null = TRUE, drop_missing = TRUE) {
+  if (rlang::quo_is_call(q) && rlang::call_name(q) %in% c("c", "list")) {
+    qs <- quos(!!!rlang::call_args(q))
+  } else {
+    qs <- quos(!!q)
+  }
+  if (drop_null)
+    qs <- qs[!map_lgl(qs, rlang::quo_is_null)]
+  if (drop_missing)
+    qs <- qs[!map_lgl(qs, rlang::quo_is_missing)]
+  names(qs)[names(qs) == ""] <- purrr::map_chr(qs[names(qs) == ""], rlang::as_label)
+  return(qs)
+}
+
+# check if a quo is non-symbolic, non-call
+quo_is_value <- function(q) {
+  return(!rlang::quo_is_symbol(q) && !rlang::quo_is_call(q))
+}
+# check if quos are non-symbolic, non-call
+quos_are_values <- function(qs) {
+  return(map_lgl(qs, quo_is_value))
+}
+# check if quos are unnamed non-symbolic, non-call
+# here: unnamed = name != value
+quos_are_unnamed_values <- function(qs) {
+  return(quos_are_values(qs) & names(qs) == map_chr(qs, rlang::as_label))
+}

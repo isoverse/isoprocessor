@@ -35,9 +35,29 @@ knitr::opts_chunk$set(
 )
 ```
 
+# Introduction
+
+This is an example of a data processing pipeline for compound-specific Gas Chromatography Isotope Ratio Mass Spectrometry (GC-IRMS) carbon isotope measurements. It can be downloaded as a template (or just to see the plain-text code) by following the `Source` link above. Knitting for stand-alone data analysis works best to `HTML` rather than the website rendering you see here. To make this formatting change simply delete line #6 in the template file (the line that says `rmarkdown::html_vignette:`).
+
+Note that all code chunks that contain a critical step towards the final data (i.e. do more than visualization or a data summary) are marked with `(*)` in the header to make it easier to follow all key steps during interactive use. 
+
+This example was run using **[isoreader](http://isoreader.kopflab.org) version `r packageVersion("isoreader")`** and **[isoprocessor](http://isoprocessor.kopflab.org/) version `r packageVersion("isoprocessor")`**. If you want to reproduce the example, please make sure that you have these or newer versions of both packages installed:
+
+```{r gh-installation, eval = FALSE}
+# restart your R session (this command only works in RStudio)
+.rs.restartR()
+
+# installs the development tools package if not yet installed
+if(!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools") 
+
+# installs the newest version of isoreader and isoprocessor
+devtools::install_github("isoverse/isoreader")
+devtools::install_github("isoverse/isoprocessor")
+```
+
 # Load packages
 
-```{r, message=FALSE, warning=FALSE}
+```{r packages, message=FALSE, warning=FALSE}
 library(tidyverse) # general data wrangling and plotting
 library(isoreader) # reading the raw data files
 library(isoprocessor) # processing the data
@@ -554,17 +574,15 @@ stds_w_calibs %>%
   iso_get_calibration_data() %>% 
   # focus on standard peaks
   filter(is_std_peak) %>% 
-  # calculate parameters to visualize
+  # calculate area deviation from mean
   iso_mutate_peak_table(
     group_by = Analysis,
-     `Var: residual` = resid,
-    `Var: area diff from mean` = 
-      iso_double_with_units((area44/mean(area44) - 1) * 100, "%")
+    area_dev = iso_double_with_units((area44/mean(area44) - 1) * 100, "%")
   ) %>% 
   # visualize
   iso_plot_data(
     # x and y 
-    x = compound, y = starts_with("Var"),
+    x = compound, y = c(residual = resid, `area dev. from mean` = area_dev),
     # grouping and aesthetics
     group = paste(Analysis, calib), color = seed_oxidation, linetype = calib,
     # geoms

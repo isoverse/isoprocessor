@@ -189,7 +189,9 @@ test_that("test that referencd peak visualization works", {
 
 })
 
-test_that("visualization works", {
+# iso_plot_data works ======
+
+test_that("test that iso_plot_data visualization works", {
 
   # @FIXME implement visualization function test
 

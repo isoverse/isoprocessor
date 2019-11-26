@@ -6,7 +6,6 @@
 \usage{
 iso_generate_calibration(dt, model, calibration = "",
   use_in_calib = default(is_std_peak), min_n_datapoints = 2,
-  auto_correct_loess_date_time = TRUE,
   is_std_peak = default(is_std_peak),
   is_standard = default(is_std_peak), quiet = default(quiet))
 }
