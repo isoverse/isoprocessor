@@ -4,16 +4,19 @@
 \alias{iso_plot_residuals}
 \title{Visualize regression residuals}
 \usage{
-iso_plot_residuals(dt, x, calibration = last_calibration(dt),
-  color = calibration_model_name(), panel = calibration_model_name(),
-  points = TRUE, trendlines = TRUE, value_ranges = TRUE, ...)
+iso_plot_residuals(dt, x, y = calibration_residual(),
+  calibration = last_calibration(dt), color = calibration_model_name(),
+  panel = calibration_model_name(), points = TRUE, trendlines = TRUE,
+  value_ranges = TRUE, ...)
 }
 \arguments{
 \item{dt}{data frame to plot data from}
 
-\item{x}{the column for the x-axis aesthetic. Can be a numeric, text or datetime column (text and datetime column labels will be automatically rotated by 90 degrees). For clarity of the plot, only single variables are allowed. Use named vector with \code{c(new_x = x)} to rename the x variable on the fly. By default will show units in the axis names if there are any. If a datetime column is provided for \code{x}, parameters \code{date_breaks} (example: \code{date_breaks = "2 hours"}) and \code{date_labels} can be set to fine-tune the x-axis appearance. See \link[ggplot2]{scale_date} for additional details. Note that \code{x} can also be \code{x = NULL} for single data point plots - in this case the x axis is completely omitted.}
+\item{x}{the column or expression for the x-axis aesthetic. Can be a numeric, text or datetime column (text and datetime column labels will be automatically rotated by 90 degrees). For clarity of the plot, only one x variable or expression is allowed. Use named vector with \code{c(new_x = x)} to rename the x variable or expression on the fly. By default will show units in the axis names if there are any. If a datetime column is provided for \code{x}, parameters \code{date_breaks} (example: \code{date_breaks = "2 hours"}) and \code{date_labels} can be set to fine-tune the x-axis appearance. See \link[ggplot2]{scale_date} for additional details. Note that \code{x} can also be \code{x = NULL} for single data point plots - in this case the x axis is completely omitted.}
 
-\item{color}{variable to use for color aesthetic for the plot}
+\item{y}{which columns/expressions to visualize. Combine with \code{c(y1, y2)} or use \link[dplyr]{select} syntax (e.g. \code{starts_with(...)}) to show multiple variables in a \link[ggplot2]{facet_wrap}. Use named vector with \code{c(new_y1 = y1)} to rename variables/expressions on the fly. By default will show units in the axis names if there are any.}
+
+\item{color}{variable to use for color aesthetic for the plot or constant value for the point and line color}
 
 \item{panel}{whether to panel the data by anything. If using a single parameter (e.g. \code{panel = panel}), will generate a \link[ggplot2]{facet_wrap}. If using a formula (e.g. \code{panel = panel ~ .} or \code{panel = file_id ~ panel}), will generate a \link[ggplot2]{facet_grid}. The default for this parameter is to panel via facet grid by the y variable name but only if multiple \code{y} columns are provided. Otherwise will not generate any facets. If additional facet parameters are desired, please leave use \link[ggplot2]{facet_wrap} and \link[ggplot2]{facet_grid} diretly.}
 

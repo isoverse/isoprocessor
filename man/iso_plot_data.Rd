@@ -13,9 +13,9 @@ iso_plot_data(dt, x, y, ..., y_error = NULL, group = NULL,
 \arguments{
 \item{dt}{data frame to plot data from}
 
-\item{x}{the column for the x-axis aesthetic. Can be a numeric, text or datetime column (text and datetime column labels will be automatically rotated by 90 degrees). For clarity of the plot, only single variables are allowed. Use named vector with \code{c(new_x = x)} to rename the x variable on the fly. By default will show units in the axis names if there are any. If a datetime column is provided for \code{x}, parameters \code{date_breaks} (example: \code{date_breaks = "2 hours"}) and \code{date_labels} can be set to fine-tune the x-axis appearance. See \link[ggplot2]{scale_date} for additional details. Note that \code{x} can also be \code{x = NULL} for single data point plots - in this case the x axis is completely omitted.}
+\item{x}{the column or expression for the x-axis aesthetic. Can be a numeric, text or datetime column (text and datetime column labels will be automatically rotated by 90 degrees). For clarity of the plot, only one x variable or expression is allowed. Use named vector with \code{c(new_x = x)} to rename the x variable or expression on the fly. By default will show units in the axis names if there are any. If a datetime column is provided for \code{x}, parameters \code{date_breaks} (example: \code{date_breaks = "2 hours"}) and \code{date_labels} can be set to fine-tune the x-axis appearance. See \link[ggplot2]{scale_date} for additional details. Note that \code{x} can also be \code{x = NULL} for single data point plots - in this case the x axis is completely omitted.}
 
-\item{y}{which columns to visualize. Combine with \code{c(y1, y2)} to show multiple variables in a \link[ggplot2]{facet_wrap}. Use named vector with \code{c(new_y1 = y1)} to rename variables on the fly. By default will show units in the axis names if there are any.}
+\item{y}{which columns/expressions to visualize. Combine with \code{c(y1, y2)} or use \link[dplyr]{select} syntax (e.g. \code{starts_with(...)}) to show multiple variables in a \link[ggplot2]{facet_wrap}. Use named vector with \code{c(new_y1 = y1)} to rename variables/expressions on the fly. By default will show units in the axis names if there are any.}
 
 \item{...}{additional ggplot objects (e.g. \code{geom_smooth()}) that should be added to the plot PRIOR to the automatically generated layers for error bars, points and lines. Notet that to add geoms on top, please use regular \code{iso_plot_data() + geom_smooth() + ...} syntax instead.}
 
@@ -23,17 +23,17 @@ iso_plot_data(dt, x, y, ..., y_error = NULL, group = NULL,
 
 \item{group}{what to group by, multiple columns allowed (combine with \code{paste(...)}), usually not necessary if groupings are fully defined through other aesthetics}
 
-\item{color}{variable to use for color aesthetic for the plot}
+\item{color}{variable to use for color aesthetic for the plot or constant value for the point and line color}
 
-\item{fill}{variable to use for the fill aesthetic of the plot}
+\item{fill}{variable to use for the fill aesthetic of the plot or constant value for the point fill}
 
-\item{shape}{variable to use for shape aesthetic for the plot}
+\item{shape}{variable to use for shape aesthetic for the plot or constant vlaue for the point shape}
 
 \item{size}{variable to use for size aesthetic for the plot or constant value for the points size}
 
-\item{linetype}{variable to use for linetype aesthetic for the plot}
+\item{linetype}{variable to use for linetype aesthetic for the plot or constant value for the line type}
 
-\item{alpha}{variable to use for the opacity aesthetic for the plot (1 = 100\% opaque, 0 = completely transparent)}
+\item{alpha}{variable to use for the opacity aesthetic for the plot or constant value for the point and line opacity (1 = 100\% opaque, 0 = completely transparent)}
 
 \item{label}{this is primarily of use for turning the generated ggplots into interactive plots via \code{\link[plotly]{ggplotly}} as the \code{label} will be rendered as an additional mousover label.}
 
@@ -50,7 +50,7 @@ iso_plot_data(dt, x, y, ..., y_error = NULL, group = NULL,
 \item{date_labels}{datetime label pattern for x axis if it is a datetime}
 }
 \description{
-General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with \link[ggplot2]{facet_wrap} or \link[ggplot2]{theme} calls). Make sure to specify \code{lines = TRUE} and/or \code{points = TRUE} to add the lines/points respectively. Accepts multiple y variables in which case they are plotted in a \link[ggplot2]{facet_wrap} with new variables \code{panel} holding the name of the y variable panels, \code{y_value} holding the values and \code{y_error} holding the error values (if \code{y_error} is supplied). Also always generates a new column called \code{variable} that holds the variable names (\code{y}) supplied to this function.
+General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with \link[ggplot2]{facet_wrap} or \link[ggplot2]{theme} calls). Make sure to specify \code{lines = TRUE} and/or \code{points = TRUE} to add the lines/points respectively. Accepts multiple y variables in which case they are plotted in a \link[ggplot2]{facet_wrap} with new variables \code{panel} holding the name of the y variable panels, \code{y_value} holding the values and \code{y_error} holding the error values (if \code{y_error} is supplied). Also always generates a new column called \code{variable} that holds the variable names (\code{y}) supplied to this function. All aesthetics parameters expect variables or expressions that are valid in the context of the \code{dt}. For convenience, all aesthetics can also be (re)-named on the fly with \code{c(new_name = expr)} and will include column units in the legend captions by default.
 }
 \seealso{
 Other plot functions: \code{\link{iso_format}},
