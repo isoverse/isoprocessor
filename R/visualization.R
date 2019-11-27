@@ -238,7 +238,7 @@ iso_format <- function(..., signif = 3, format_names = "%s: ", format_units="%s"
   # full text
   return(
     do.call(paste, args = c(values, list(sep = "\n"))) %>%
-      stringr::str_replace(fixed("permil"), "\u2030")
+      stringr::str_replace_all(fixed("permil"), "\u2030")
   )
 }
 
