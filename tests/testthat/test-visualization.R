@@ -193,7 +193,14 @@ test_that("test that referencd peak visualization works", {
 
 test_that("test that iso_plot_data visualization works", {
 
-  # @FIXME implement visualization function test
+  expect_error(iso_plot_data(), "no data")
+  expect_error(iso_plot_data(tibble()), "no data")
+  expect_error(iso_plot_data(ggplot2::mpg), "provide.*x")
+  expect_error(iso_plot_data(ggplot2::mpg, cyl), "provide.*y")
+  expect_warning(iso_plot_data(ggplot2::mpg, cyl, hwy), "plot will be blank")
+  expect_silent(iso_plot_data(ggplot2::mpg, cyl, hwy, geom_point()))
+
+  # @FIXME implement full suite of visualization function test
 
 })
 

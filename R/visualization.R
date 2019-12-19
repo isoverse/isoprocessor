@@ -824,6 +824,7 @@ iso_plot_data <- function(
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
+  if (nrow(dt) == 0) stop("the provided data table has no data to plot (0 rows)", call. = FALSE)
   if (missing(x)) stop("have to provide an x variable or expression to plot", call. = FALSE)
   if (missing(y)) stop("have to provide at least one y variable or expression to plot", call. = FALSE)
 
