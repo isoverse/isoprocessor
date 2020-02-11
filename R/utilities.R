@@ -141,7 +141,7 @@ nest_data <- function(dt, group_by = NULL, nested_data = nested_data) {
 
   # safety checks and column matching
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  dt_cols <- get_column_names(!!enquo(dt), group_by = enquo(group_by), n_reqs = list(group_by = "*"))
+  dt_cols <- get_column_names(dt, group_by = enquo(group_by), n_reqs = list(group_by = "*"))
   nested_col <- resolve_defaults(enquo(nested_data))
 
   # perform the nest
@@ -176,7 +176,7 @@ iso_remove_list_columns <- function(dt) {
 unnest_select_data <- function(dt, select = everything(), nested_data = nested_data, keep_remaining_nested_data = TRUE, keep_other_list_data = TRUE, keep_only_unique = TRUE) {
   # safety checks and column matching
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  dt_cols <- get_column_names(!!enquo(dt), nested_data = enquo(nested_data), type_reqs = list(nested_data = "list"))
+  dt_cols <- get_column_names(dt, nested_data = enquo(nested_data), type_reqs = list(nested_data = "list"))
 
   # columns before the nested data
   original_cols <- names(dt)
@@ -268,11 +268,10 @@ unnest_model_column <- function(dt, model_column, model_params = model_params, n
 
   # safety checks
   if (missing(model_column)) stop("specify which model column to unnest", call. = FALSE)
-  dt_quo <- enquo(dt)
 
   # deal with nested senarios
   if (nested_model) {
-    dt_cols <- get_column_names(!!dt_quo, model_params = enquo(model_params), type_reqs = list(model_params = "list"))
+    dt_cols <- get_column_names(dt, model_params = enquo(model_params), type_reqs = list(model_params = "list"))
 
     # unnest model params
     original_cols <- names(dt)
@@ -438,9 +437,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  dt_quo <- enquo(dt)
-  dt_cols <- get_column_names(!!dt_quo, model_data = enquo(model_data), type_reqs = list(model_data = "list"))
-  dt <- eval_tidy(dt_quo)
+  dt_cols <- get_column_names(dt, model_data = enquo(model_data), type_reqs = list(model_data = "list"))
   dt_new_cols <- get_new_column_names(
     model_name = enquo(model_name),
     model_enough_data = enquo(model_enough_data), model_data_points = enquo(model_data_points),
@@ -685,19 +682,18 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  dt_quo <- enquo(dt)
 
   if (nested_model) {
     # nested model
     dt_cols <- get_column_names(
-      !!dt_quo, model_name = enquo(model_name), model_data = enquo(model_data),
+      dt, model_name = enquo(model_name), model_data = enquo(model_data),
       model_params = enquo(model_params),
       type_reqs = list(model_name = "character", model_data = "list", model_params = "list"))
 
     # check for columns inside nested data
     dt_cols <- c(
       dt_cols,
-      get_column_names(unnest(!!dt_quo, !!sym(dt_cols$model_params)),
+      get_column_names(unnest(dt, !!sym(dt_cols$model_params)),
                        model_fit = enquo(model_fit), type_reqs = list(model_fit = "list")))
 
     # pull out the model fit
@@ -709,7 +705,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
   } else {
     # not nested model
     dt_cols <- get_column_names(
-      !!dt_quo, model_data = enquo(model_data),
+      dt, model_data = enquo(model_data),
       model_name = enquo(model_name), model_fit = enquo(model_fit),
       type_reqs = list(model_name = "character", model_data = "list", model_fit = "list"))
   }
@@ -934,7 +930,6 @@ evaluate_range <- function(
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  dt_quo <- enquo(dt)
 
   # terms
   terms_quos <- rlang::enquos(...)
@@ -944,14 +939,14 @@ evaluate_range <- function(
 
   # dt columns
   dt_cols <- get_column_names(
-    !!dt_quo, model_data = enquo(model_data), type_reqs = list(model_data = "list"))
+    dt, model_data = enquo(model_data), type_reqs = list(model_data = "list"))
 
   # nested model
   if (nested_model) {
     dt_cols <- c(
       dt_cols,
       get_column_names(
-        !!dt_quo, model_params = enquo(model_params),type_reqs = list(model_params = "list"))
+        dt, model_params = enquo(model_params),type_reqs = list(model_params = "list"))
     )
   }
 

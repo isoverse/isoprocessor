@@ -177,7 +177,7 @@ test_that("test that referencd peak visualization works", {
   expect_error(iso_plot_ref_peaks(), "no data table")
   expect_error(iso_plot_ref_peaks(tibble()), "missing parameter.*x")
   expect_error(iso_plot_ref_peaks(tibble(x=1:5), x), "missing parameter.*ratio")
-  expect_error(iso_plot_ref_peaks(tibble(x=1:5, y=1:5), x, ratio = y), "file_id.*not found")
+  expect_error(iso_plot_ref_peaks(tibble(x=1:5, y=1:5), x, ratio = y), "file_id.*unknown column")
   expect_error(iso_plot_ref_peaks(tibble(x=1:5, y=1:5, file_id="a"), x, ratio = y, is_ref_condition = FALSE), "no data")
 
   # simple generation tests
