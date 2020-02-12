@@ -8,22 +8,22 @@ isoreader::iso_turn_info_messages_off
 
 # retrieve package settings, internal function, not exported
 # first checks if the setting exists in the isoreader space, then in the isoprocessor
-# @note: consider providing an option that indicates whether to return the quoted expression or a default value
-# e.g. default(x) that returns quo(x) if x is not set vs. default(x, NULL) that returns quo(NULL) if x is not set
-# @FIXME: alternatively set ALL available parameters in the initialize_options and force parameters to exist
+# @note: consider providing an option that indicates whether to return the expression or a default value
+# e.g. default(x) that returns expr(x) if x is not set vs. default(x, NULL) that returns expr(NULL) if x is not set
+# @CONSIDER: alternatively set ALL available parameters in the initialize_options and force parameters to exist
 default <- function(name) {
-  if (missing(name)) return(quo())
-  name_quo <- enquo(name)
-  name <- name_quo %>% quos_to_text(variable = "setting")
-  value <- isoreader:::default(!!sym(name), allow_null = TRUE)
-  if (is.null(value)) # not in isoreader settings
+  name_exp <- rlang::enexpr(name)
+  value <- isoreader:::default(!!name_exp, allow_null = TRUE)
+  if (is.null(value)) { # not in isoreader settings
+    name <- if (rlang::is_symbol(name_exp)) rlang::as_name(name_exp) else name_exp
     value <- getOption(str_c("isoprocessor.", name))
+  }
   if (is.null(value)) { # not in normal isoprocessor settings
     func_params <- get_process_parameters()
     if (name %in% names(func_params))
       value <- func_params[[name]]
     else
-      value <- name_quo
+      value <- name_exp
   }
   return(value)
 }

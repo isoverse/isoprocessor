@@ -106,7 +106,7 @@ iso_map_peaks.data.frame <- function(
   if (nrow(peak_table) == 0) stop("no data in the peak table", call. = FALSE)
 
   # find regular peak_table columns
-  peak_table_cols <- isoreader:::get_column_names(
+  peak_table_cols <- get_column_names(
     peak_table, file_id = enquo(file_id), rt = enquo(rt), rt_start = enquo(rt_start), rt_end = enquo(rt_end),
     n_reqs = list(file_id = "+"))
 
@@ -119,13 +119,14 @@ iso_map_peaks.data.frame <- function(
 
   # find peak_table compound column
   compound_quo <- resolve_defaults(enquo(compound))
-  peak_table_cols$compound <- tidyselect::vars_select(names(peak_table), compound = !!compound_quo, .strict = FALSE)
+  peak_table_cols$compound <-
+    get_column_names(peak_table, compound = compound_quo, n_reqs = list(compound = "?"), cols_must_exist = FALSE, warn = FALSE)$compound
 
   # find peak map columns
-  pm_cols <- isoreader:::get_column_names(!!enquo(peak_maps), compound = compound_quo)
+  pm_cols <- get_column_names(peak_maps, compound = compound_quo)
 
   # find new columns
-  new_cols <- isoprocessor:::get_new_column_names(peak_info = quo(peak_info), is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous), n_matches = quo(n_matches), n_overlapping = quo(n_overlapping))
+  new_cols <- get_new_column_names(peak_info = quo(peak_info), is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous), n_matches = quo(n_matches), n_overlapping = quo(n_overlapping))
 
   # deal with pre-existing compound column
   n_overwritten <- 0L
@@ -135,7 +136,7 @@ iso_map_peaks.data.frame <- function(
   }
 
   # read peak maps
-  if (peak_maps %>% select(starts_with(peak_table_cols$rt)) %>% ncol() == 0) {
+  if (peak_maps %>% select(starts_with(peak_table_cols$rt[[1]])) %>% ncol() == 0) {
     glue::glue("peak maps do not have any columns that match or start with the ",
                "provided retention time column name '{peak_table_cols$rt}'. ",
                "Available columns: {paste(names(peak_maps), collapse = ', ')}") %>%
@@ -148,7 +149,7 @@ iso_map_peaks.data.frame <- function(
     # add NA compound to map undefined peaks
     vctrs::vec_rbind(tibble(compound = NA_character_)) %>% unique() %>%
     # gather map retention times
-    gather(..map_id.., ..rt_target.., starts_with(peak_table_cols$rt)) %>%
+    gather(..map_id.., ..rt_target.., starts_with(peak_table_cols$rt[[1]])) %>%
     # replace the rt prefix to get to the actual map name
     mutate(..map_id.. := str_replace(..map_id.., fixed(str_c(peak_table_cols$rt, rt_prefix_divider)), "")) %>%
     # only keep the NA compound and everything that has a ..rt_target..
@@ -378,7 +379,7 @@ iso_get_problematic_peak_mappings.data.frame <- function(peak_table, select = ev
 
   # safety checks
   if (missing(peak_table)) stop("no data table supplied", call. = FALSE)
-  peak_table_cols <- get_column_names(!!enquo(peak_table), select = enquo(select),
+  peak_table_cols <- get_column_names(peak_table, select = enquo(select),
                               is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous),
                               n_reqs = list(select = "+"))
 
@@ -470,7 +471,7 @@ iso_summarize_peak_mappings.data.frame <- function(peak_table, file_id = default
 
   # safety checks
   peak_table_cols <-
-    isoreader:::get_column_names(
+    get_column_names(
       peak_table, file_id = enquo(file_id), peak_info = quo(peak_info),
       compound = enquo(compound), rt = enquo(rt),
       is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous),
@@ -583,7 +584,7 @@ iso_remove_problematic_peak_mappings.data.frame <- function(
 
   # safety checks
   if (missing(peak_table)) stop("no data table supplied", call. = FALSE)
-  peak_table_cols <- get_column_names(!!enquo(peak_table), is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous))
+  peak_table_cols <- get_column_names(peak_table, is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous))
 
   # filtering
   peak_table_out <- peak_table %>%

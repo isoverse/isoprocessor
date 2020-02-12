@@ -24,8 +24,8 @@ iso_add_standards <- function(dt, stds, match_by = default(std_match_by), is_std
   }
 
   # column names allowing standard and NSE
-  dt_cols <- get_column_names(!!enquo(dt), match_by = enquo(match_by), n_reqs = list(match_by = "+"))
-  stds_cols <- get_column_names(!!enquo(stds), match_by = enquo(match_by), n_reqs = list(match_by = "+"))
+  dt_cols <- get_column_names(dt, match_by = enquo(match_by), n_reqs = list(match_by = "+"))
+  stds_cols <- get_column_names(stds, match_by = enquo(match_by), n_reqs = list(match_by = "+"))
   new_cols <- get_new_column_names(is_std_peak = enquo(is_std_peak))
 
   # select standards
@@ -65,7 +65,7 @@ iso_prepare_for_calibration <- function(dt, group_by = NULL, nest_existing_calib
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   group_quo <- enquo(group_by)
   nested_data_quo <- quo(all_data)
-  dt_cols <- get_column_names(!!enquo(dt), group_by = group_quo, n_reqs = list(group_by = "*"))
+  dt_cols <- get_column_names(dt, group_by = group_quo, n_reqs = list(group_by = "*"))
   new_cols <- get_new_column_names(nested_data = nested_data_quo)
   if (new_cols$nested_data %in% names(dt))
     glue("'{new_cols$nested_data}' column already exists, cannot overwrite") %>% stop(call. = FALSE)
@@ -353,8 +353,8 @@ iso_get_problematic_calibrations <- function(dt, calibration = last_calibration(
   # safety checks
   if (missing(dt) || !is.data.frame(dt)) stop("no data frame supplied", call. = FALSE)
   calib_vars <- get_calibration_vars(calibration)
-  check_calibration_cols(!!enquo(dt), calib_vars$model_enough_data)
-  dt_cols <- get_column_names(!!enquo(dt), select = enquo(select), n_reqs = list(select = "+"))
+  check_calibration_cols(dt, calib_vars$model_enough_data)
+  dt_cols <- get_column_names(dt, select = enquo(select), n_reqs = list(select = "+"))
 
   # fetch
   dt_out <- dt %>%
@@ -429,9 +429,8 @@ iso_evaluate_calibration_range <- function(dt, ..., calibration = last_calibrati
     stop("no terms for calibration range evaluation are provided, please specify at least one term", call. = FALSE)
   }
 
-  dt_quo <- enquo(dt)
   calib_vars <- get_calibration_vars(calibration)
-  check_calibration_cols(!!dt_quo, calib_vars$model_params)
+  check_calibration_cols(dt, calib_vars$model_params)
 
   # information
   if (!quiet) {
@@ -478,13 +477,12 @@ iso_apply_calibration <- function(dt, predict, calibration = last_calibration(dt
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   if (missing(predict)) stop("no variable to predict specified", call. = FALSE)
-  dt_quo <- enquo(dt)
   pred_quo <- enquo(predict)
   pred_col_quo <- pred_quo %>% quo_text() %>% str_c("_pred") %>% sym()
   pred_se_col_quo <- pred_quo %>% quo_text() %>% str_c("_pred_se") %>% sym()
   pred_se_in_range_quo <- pred_quo %>% quo_text() %>% str_c("_pred_in_range") %>% sym()
   calib_vars <- get_calibration_vars(calibration)
-  check_calibration_cols(suppressMessages(!!dt_quo), calib_vars$model_params)
+  check_calibration_cols(dt, calib_vars$model_params)
   if (!has_regression_fit(dt, calibration = calibration))
     stop("calibration regression fits are no longer available in this data frame. Please make sure to run ?iso_apply_calibration after ?iso_generate_calibration, and not after ?iso_get_calibration_data (which removes the large calibration fit objects by default).", call. = FALSE)
 
