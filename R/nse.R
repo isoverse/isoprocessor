@@ -4,8 +4,54 @@
 
 # resolve default cols in a list of quos
 resolve_defaults <- isoreader:::resolve_defaults
-check_expressions <- isoreader:::check_expressions
 
+# Test quo expressions by confirming they can create a valid column in a mutate
+# @TODO: should this be locally evaluated or at least with tidy_eval just to insert the data frame rather than the whole call stack?
+# @note that global variables will be interpreted even in the context of the data frame
+# ideally this will be only within the data frame - is that correct?
+# see isoreader::local_select_eval for example
+check_expressions <- function(df, ...) {
+
+  # df name and data frame test
+  if (missing(df)) stop("no data frame supplied", call. = FALSE)
+  df_name <- enquo(df) %>% rlang::as_label()
+  df <- enquo(df) %>% eval_tidy()
+  if (!is.data.frame(df))
+    glue("parameter {df_name} is not a data frame") %>% stop(call. = FALSE)
+
+  # use a safe version of mutate to check all expressions
+  # (use mutate instead of eval_tidy to make sure it's absolutely valid)
+  safe_eval <- safely(mutate)
+  expr_quos <- quos(!!!list(...)) %>%
+    # make sure to evaluate calls to default
+    resolve_defaults() %>%
+    # make sure that the expressions are locally evaluated
+    map(~quo(!!get_expr(.x)))
+  expr_quos <- expr_quos[!map_lgl(expr_quos, quo_is_null)]
+  expr_errors <- map(expr_quos, ~safe_eval(df, !!.x)$error)
+
+  # check results
+  ok <- map_lgl(expr_errors, ~is.null(.x))
+
+  # summarize if there were any errors
+  if (!all(ok)) {
+    params <-
+      map2_chr(names(expr_quos)[!ok], expr_quos[!ok], function(var, val) {
+        if (nchar(var) > 0 && var != rlang::as_label(val)) str_c(var, " = ", rlang::as_label(val))
+        else rlang::as_label(val)
+      }) %>%
+      collapse("', '", last = "' and '")
+    errors <- map_chr(expr_errors[!ok], ~.x$message) %>% collapse("\n- ")
+    err_msg <-
+      if (sum(!ok) > 1)
+        glue("'{params}' are invalid expressions in data frame '{df_name}':\n- {errors}")
+    else
+      glue("'{params}' is not a valid expression in data frame '{df_name}':\n- {errors}")
+    stop(err_msg, call. = FALSE)
+  }
+
+  return(invisible(df))
+}
 # column name =====
 
 # Get the column names for a set of parameters referencing columns in a data frame. Compatible with all dplyr type column selection
