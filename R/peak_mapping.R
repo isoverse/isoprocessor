@@ -58,10 +58,11 @@ iso_map_peaks.iso_file_list <- function(
   if (nrow(peak_table) == 0) return(iso_files)
 
   # see if map id column comes from file info
-  file_info <- iso_get_file_info(iso_files, select = !!map_id_quo, quiet = TRUE)
-  file_info_cols <- names(file_info) %>% stringr::str_subset(fixed("file_id"), negate = TRUE)
-  if (length(file_info_cols) > 0) {
-    peak_table <- dplyr::left_join(file_info, peak_table, by = "file_id")
+  file_info <- iso_get_file_info(iso_files, quiet = TRUE)
+  map_id_cols <- get_column_names(file_info, map_id = map_id_quo, n_reqs = list(map_id = "*"), cols_must_exist = FALSE, warn = FALSE)$map_id
+  if (length(map_id_cols) > 0) {
+    map_id_cols <- stringr::str_subset(map_id_cols, fixed("file_id"), negate = TRUE)
+    peak_table <- dplyr::left_join(dplyr::select(file_info, file_id, !!!map_id_cols), peak_table, by = "file_id")
   }
 
   # map peaks
@@ -80,8 +81,8 @@ iso_map_peaks.iso_file_list <- function(
     )
 
   # remove extra file info columns again
-  if (length(file_info_cols) > 0) {
-    mapped_peak_table <- dplyr::select(mapped_peak_table, !!!map(file_info_cols, ~quo(-!!sym(.x))))
+  if (length(map_id_cols) > 0) {
+    mapped_peak_table <- dplyr::select(mapped_peak_table, !!!map(map_id_cols, ~quo(-!!sym(.x))))
   }
 
   # assign peak table (note: go for direct assigment even if it generates some
@@ -111,8 +112,10 @@ iso_map_peaks.data.frame <- function(
     n_reqs = list(file_id = "+"))
 
   # find peak_table map_id column
-  map_quo <- resolve_defaults(enquo(map_id))
-  peak_table_cols$map_id <- tidyselect::vars_select(names(peak_table), map_id = !!map_quo, .strict = FALSE)
+  map_exp <- resolve_defaults(enquo(map_id))
+  peak_table_cols$map_id <-
+    get_column_names(peak_table, map_id = map_exp, n_reqs = list(map_id = "*"), cols_must_exist = FALSE, warn = FALSE)$map_id
+
   if (length(peak_table_cols$map_id) > 1)
     glue::glue("map id must be stored in a single column, not: '{paste(peak_table_cols$map_id, collapse = \"', '\")}'") %>%
     stop(call. = FALSE)
@@ -122,11 +125,15 @@ iso_map_peaks.data.frame <- function(
   peak_table_cols$compound <-
     get_column_names(peak_table, compound = compound_quo, n_reqs = list(compound = "?"), cols_must_exist = FALSE, warn = FALSE)$compound
 
-  # find peak map columns
+  # find peak map compound columns
   pm_cols <- get_column_names(peak_maps, compound = compound_quo)
 
   # find new columns
   new_cols <- get_new_column_names(peak_info = quo(peak_info), is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous), n_matches = quo(n_matches), n_overlapping = quo(n_overlapping))
+
+  # FIXME: is it possible to revert peak mapping to make it safer if applied twice?
+  # i.e. can we remove all new_cols if they exist + compound col + peak_info + any
+  # information that comes from the peak_maps data frame? (e.g. ref nr)
 
   # deal with pre-existing compound column
   n_overwritten <- 0L
@@ -164,13 +171,13 @@ iso_map_peaks.data.frame <- function(
   } else if (length(map_ids) == 1 && length(peak_table_cols$map_id) == 0) {
     glue::glue(
       "map id defined ('{map_ids}') ",
-      "but the '{quo_text(map_quo)}' column does not exist in the data frame.") %>%
+      "but the '{as_label(map_exp)}' column does not exist in the data frame.") %>%
       stop(call. = FALSE)
   } else if (length(map_ids) >= 1 && length(peak_table_cols$map_id) == 0) {
     # multiple maps but no map id defined
     glue::glue(
       "more than one map defined ({paste(map_ids, collapse = ', ')}) ",
-      "but the '{quo_text(map_quo)}' column does not exist in the maps data frame.") %>%
+      "but the '{as_label(map_exp)}' column does not exist in the maps data frame.") %>%
       stop(call. = FALSE)
   } else {
     # all in order
@@ -297,9 +304,9 @@ iso_map_peaks.data.frame <- function(
 
   # clean up map id
   if (multiple_maps) {
-    all_data <- rename(all_data, !!peak_table_cols$map_id := ..map_id..)
+    all_data <- dplyr::rename(all_data, !!peak_table_cols$map_id := ..map_id..)
   } else {
-    all_data <- select(all_data, -..map_id..)
+    all_data <- dplyr::select(all_data, -..map_id..)
   }
 
   # return

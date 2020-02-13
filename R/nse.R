@@ -1,8 +1,10 @@
 # utility functions that make it easier to support both standard and non-standard evaluation
 
-# resolve defaults ====
-
 # resolve default cols in a list of quos
+# note: since these functions are within isoreader, they need to receive quos instead of expressions,
+# otherwise they will try to use the local default function leading to the wrong results!
+# @fixme: not sure how to, could consider having a copy of get_column_names and resolve_defaults
+# in isoprocessor but that seems redundant too
 resolve_defaults <- isoreader:::resolve_defaults
 
 # Test quo expressions by confirming they can create a valid column in a mutate

@@ -467,8 +467,8 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   lquos_info <-
     ifelse(
       nchar(names(lquos)) > 0,
-      sprintf("%s = '%s'", names(lquos), map_chr(lquos, quo_text)),
-      sprintf("'%s'", map_chr(lquos, quo_text))
+      sprintf("%s = '%s'", names(lquos), map_chr(lquos, as_label)),
+      sprintf("'%s'", map_chr(lquos, as_label))
     )
   if(!all(ok <- lquos_are_models)) {
     if (sum(!ok) > 1)
@@ -511,7 +511,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   models <-
     tibble(
       ..model_id.. = 1:length(lquos),
-      model_formula = map_chr(lquos, quo_text),
+      model_formula = map_chr(lquos, as_label),
       !!dt_new_cols$model_name := ifelse(nchar(names(lquos)) > 0, names(lquos), model_formula),
       ..model_quo.. = map(lquos, identity),
       ..model_ys.. = model_vars_y,
@@ -592,7 +592,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
          "\nPlease double check that all peaks are mapped correctly ",
          "(see ?iso_get_problematic_peak_mappings and ",
          "?iso_summarize_peak_mappings) and that the filter condition ",
-         "('{quo_text(filter_quo)}') is correct. ") %>%
+         "('{as_label(filter_quo)}') is correct. ") %>%
     warning(immediate. = TRUE, call. = FALSE)
   }
 

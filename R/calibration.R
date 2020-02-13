@@ -259,7 +259,7 @@ iso_generate_calibration <- function(dt, model, calibration = "",
 
   # information
   if (!quiet) {
-    model_info <- map_chr(model_quos, quo_text)
+    model_info <- map_chr(model_quos, as_label)
     models <-
       ifelse(
         nchar(names(model_quos)) > 0,
@@ -268,7 +268,7 @@ iso_generate_calibration <- function(dt, model, calibration = "",
       )
     plural <- if (length(models) > 1) "s" else ""
     glue("Info: generating {calib_vars$calib_name}calibration based on {length(models)} model{plural} ({collapse(models, ', ')}) ",
-         "for {nrow(dt)} data group(s) with standards filter '{quo_text(filter_quo)}'. ",
+         "for {nrow(dt)} data group(s) with standards filter '{as_label(filter_quo)}'. ",
          "Storing residuals in new column '{calib_vars$residual}'. ",
          "Storing calibration info in new column '{calib_vars$in_reg}'.") %>%
       message()
@@ -478,9 +478,9 @@ iso_apply_calibration <- function(dt, predict, calibration = last_calibration(dt
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   if (missing(predict)) stop("no variable to predict specified", call. = FALSE)
   pred_quo <- enquo(predict)
-  pred_col_quo <- pred_quo %>% quo_text() %>% str_c("_pred") %>% sym()
-  pred_se_col_quo <- pred_quo %>% quo_text() %>% str_c("_pred_se") %>% sym()
-  pred_se_in_range_quo <- pred_quo %>% quo_text() %>% str_c("_pred_in_range") %>% sym()
+  pred_col_quo <- pred_quo %>% as_label() %>% str_c("_pred") %>% sym()
+  pred_se_col_quo <- pred_quo %>% as_label() %>% str_c("_pred_se") %>% sym()
+  pred_se_in_range_quo <- pred_quo %>% as_label() %>% str_c("_pred_in_range") %>% sym()
   calib_vars <- get_calibration_vars(calibration)
   check_calibration_cols(dt, calib_vars$model_params)
   if (!has_regression_fit(dt, calibration = calibration))
@@ -490,9 +490,9 @@ iso_apply_calibration <- function(dt, predict, calibration = last_calibration(dt
   if (!quiet) {
     glue::glue(
       "Info: applying {calib_vars$calib_name}calibration ",
-      "to infer '{quo_text(pred_quo)}' for {nrow(dt)} data group(s); ",
-      "storing resulting value in new column '{quo_text(pred_col_quo)}'",
-      if (calculate_error) " and estimated error in new column '{quo_text(pred_se_col_quo)}'" else "",
+      "to infer '{as_label(pred_quo)}' for {nrow(dt)} data group(s); ",
+      "storing resulting value in new column '{as_label(pred_col_quo)}'",
+      if (calculate_error) " and estimated error in new column '{as_label(pred_se_col_quo)}'" else "",
       ". This may take a moment... ") %>%
       message(appendLF = FALSE)
   }
