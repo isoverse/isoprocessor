@@ -38,11 +38,22 @@ navbar:
 reference:
 - title: Calculation functions
   desc: >
-    These functions provide tools to easily calculate ratios, scale time and convert signal units.
+    These functions provide tools to easily calculate ratios, deltas, scale time and convert signal units.
   contents:
   - iso_calculate_ratios
+  - iso_calcualte_deltas
   - iso_convert_signals
   - iso_convert_time
+  - iso_scale_double_with_units
+- title: Peak table functions
+  desc: >
+    These functions provide tools to work with peak tables in continuous flow files.
+  contents:
+  - iso_set_peak_table
+  - iso_set_peak_table_from_vendor_data_table
+  - iso_get_peak_table
+  - iso_mutate_peak_table
+  - iso_convert_peak_table_units
 - title: Peak mapping
   desc: >
     Functions to easily map data table peaks by retention time.
@@ -78,8 +89,11 @@ reference:
   - iso_plot_continuous_flow_data
   - iso_plot_dual_inlet_data
   - iso_plot_calibration_parameters
+  - iso_plot_residuals
   - iso_plot_data
   - iso_mark_calibration_range
+  - iso_mark_value_range
+  - iso_mark_outliers
 
 - title: Reporting & Export
   desc: >

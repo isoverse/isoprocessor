@@ -4,11 +4,19 @@
 \alias{apply_regression}
 \title{apply a regression for calibration purposes}
 \usage{
-apply_regression(dt, predict, nested_model = FALSE,
-  calculate_error = FALSE, model_data = model_data,
-  model_name = model_name, model_fit = model_fit,
-  model_params = model_params, predict_value = pred,
-  predict_error = pred_se, predict_range = NULL)
+apply_regression(
+  dt,
+  predict,
+  nested_model = FALSE,
+  calculate_error = FALSE,
+  model_data = model_data,
+  model_name = model_name,
+  model_fit = model_fit,
+  model_params = model_params,
+  predict_value = pred,
+  predict_error = pred_se,
+  predict_range = NULL
+)
 }
 \arguments{
 \item{dt}{data table with calibrations}

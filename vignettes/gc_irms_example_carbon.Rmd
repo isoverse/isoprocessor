@@ -35,9 +35,29 @@ knitr::opts_chunk$set(
 )
 ```
 
+# Introduction
+
+This is an example of a data processing pipeline for compound-specific Gas Chromatography Isotope Ratio Mass Spectrometry (GC-IRMS) carbon isotope measurements. It can be downloaded as a template (or just to see the plain-text code) by following the `Source` link above. Knitting for stand-alone data analysis works best to `HTML` rather than the website rendering you see here. To make this formatting change simply delete line #6 in the template file (the line that says `rmarkdown::html_vignette:`).
+
+Note that all code chunks that contain a critical step towards the final data (i.e. do more than visualization or a data summary) are marked with `(*)` in the header to make it easier to follow all key steps during interactive use. 
+
+This example was run using **[isoreader](http://isoreader.kopflab.org) version `r packageVersion("isoreader")`** and **[isoprocessor](http://isoprocessor.kopflab.org/) version `r packageVersion("isoprocessor")`**. If you want to reproduce the example, please make sure that you have these or newer versions of both packages installed:
+
+```{r gh-installation, eval = FALSE}
+# restart your R session (this command only works in RStudio)
+.rs.restartR()
+
+# installs the development tools package if not yet installed
+if(!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools") 
+
+# installs the newest version of isoreader and isoprocessor
+devtools::install_github("isoverse/isoreader")
+devtools::install_github("isoverse/isoprocessor")
+```
+
 # Load packages
 
-```{r, message=FALSE, warning=FALSE}
+```{r packages, message=FALSE, warning=FALSE}
 library(tidyverse) # general data wrangling and plotting
 library(isoreader) # reading the raw data files
 library(isoprocessor) # processing the data
@@ -72,8 +92,12 @@ iso_files_raw <-
 ## Process file info & peak table (*)
 
 ```{r}
-# process file information
+# process
 iso_files <- iso_files_raw %>% 
+  # set peak table from vendor data table
+  iso_set_peak_table_from_auto_vendor_data_table() %>% 
+  # convert units from mV to V for amplitudes and area
+  iso_convert_peak_table_units(V = mV, Vs = mVs) %>% 
   # rename key file info columns
   iso_rename_file_info(id1 = `Identifier 1`, id2 = `Identifier 2`) %>% 
   # parse text info into numbers
@@ -122,17 +146,14 @@ iso_files <- iso_files_raw %>%
     seed_oxidation, injection_volume, concentration, volume
   )
 
-# set peak table from vendor data table with default isodat template
-iso_files <- iso_set_peak_table_from_isodat_vendor_data_table(iso_files) %>% 
-  # convert units from mV to V for amplitudes and area
-  iso_convert_peak_table_units(V = mV, Vs = mVs)
 ```
 
 ## Show file information
 
 ```{r}
 # display file information
-iso_files %>% iso_get_file_info() %>% select(-file_id, -folder) %>% 
+iso_files %>% 
+  iso_get_file_info() %>% select(-file_id, -folder) %>% 
   iso_make_units_explicit() %>% knitr::kable()
 ```
 
@@ -177,22 +198,20 @@ on_off_summary <-
     select = c(amp44, area44, d13C),
     include_file_info = c(file_datetime, id2)
   ) %>% 
-  # make units explicit
-  iso_make_units_explicit() %>% 
   # summarize information
   group_by(file_datetime, id2) %>% 
   iso_summarize_data_table() 
   
 
 # table
-on_off_summary %>% knitr::kable(digits = 3)
+on_off_summary %>% iso_make_units_explicit() %>% knitr::kable(digits = 3)
 
 # plot
 on_off_summary %>% 
   # use generic data plot function
   iso_plot_data(
-    x = file_datetime, y = `d13C [permil] sd`,
-    size = `amp44 [V] mean`, color = id2,
+    x = file_datetime, y = `d13C sd`,
+    size = `amp44 mean`, color = id2,
     points = TRUE,
     date_labels = "%b %d - %H:%M"
   ) + 
@@ -235,8 +254,8 @@ linearity_summary %>%
   filter(term == "amp44") %>%
   mutate(
     term = "linearity [permil/V]",
-    estimate = 1000 * signif(estimate, 2),
-    std.error = 1000 * signif(std.error, 1)
+    estimate = signif(estimate, 2),
+    std.error = signif(std.error, 1)
   ) %>% 
   knitr::kable(digits = 4)
 
@@ -247,11 +266,10 @@ linearity_summary %>%
   iso_plot_data(
     x = amp44, y = d13C,
     color = format(file_datetime),
-    points = TRUE
-  ) +
-  # customize with the linear fit
-  facet_grid(panel ~ file_datetime) +
-  geom_smooth(method = "lm")
+    points = TRUE,
+    panel = file_datetime,
+    geom_smooth(method = "lm")
+  )
 ```
 
 # Samples and Standards
@@ -361,20 +379,16 @@ peak_table_w_ids %>%
   # focus on reference peaks only
   filter(!is.na(ref_nr)) %>% 
   # mark ref peak used for raw delta values (assuming the same in all anlysis)
-  mutate(ref_info = paste0(ref_nr, ifelse(is_ref == 1, "*", "")) %>% 
-           factor() %>% fct_inorder()) %>% 
-  # calculate deviations from average measured ratio in each file
-  group_by(file_id) %>% 
-  mutate(delta_vs_avg = (`r45/44` / mean(`r45/44`) - 1) * 1000) %>% 
-  ungroup() %>% 
-  mutate(Analysis = factor(Analysis)) %>% 
-   # visualize
-  iso_plot_data(
-    x = Analysis, y = delta_vs_avg, fill = ref_info,
-    geom_bar(stat = "identity", position = "dodge")
-  ) + 
-  labs(x = "Analysis", y = "Deviation from run average (permil)", 
-       color = "Reference\npeak", fill = "Reference\npeak")
+  mutate(
+    ref_info = paste0(ref_nr, ifelse(is_ref == 1, "*", "")) %>% factor() %>% fct_inorder()
+  ) %>% 
+  # visualize
+  iso_plot_ref_peaks(
+    # specify the ratios to visualize
+    x = Analysis, ratio = `r45/44`, fill = ref_info,
+    panel_scales = "fixed"
+  ) +
+  labs(x = "Analysis", fill = "Reference\npeak")
 ```
 
 # Analyte peaks
@@ -387,8 +401,6 @@ peak_table_analytes <- peak_table_w_ids %>%
   # omit reference peaks for further processing (i.e. analyte peaks only)
   filter(is.na(ref_nr)) %>% 
   # for each analysis, calculate a few useful summary statistics
-  # Note: using a nest/unnest instead of group/ungroup to preserve units
-  # which is not (yet) supported in grouped mutates
   iso_mutate_peak_table(
     group_by = file_id,
     rel_area = area44 / sum(area44, na.rm = TRUE),
@@ -516,7 +528,7 @@ stds_w_calibs <- peak_table_w_stds %>%
   iso_generate_calibration(model = lm(d13C ~ true_d13C)) %>% 
   # unnest some useful file information for visualization
   iso_get_calibration_data(
-    select = c(file_datetime, injection_volume, seed_oxidation, mean_area_identified))
+    select = c(file_datetime, injection_volume, seed_oxidation, mean_area_identified)) 
 
 # check for problematic calibrations
 stds_w_calibs %>% iso_get_problematic_calibrations() -> problematic.calibs
@@ -537,7 +549,6 @@ stds_w_calibs %>%
       c(term, estimate, SE = std.error, signif),
     select_from_summary = 
       c(fit_R2 = adj.r.squared, fit_RMSD = deviance, residual_df = df.residual)) %>%
-  iso_remove_list_columns() %>% 
   arrange(term) %>% 
   knitr::kable(digits = 4)
 
@@ -548,11 +559,11 @@ stds_w_calibs %>%
     # x-axis, could also be e.g. Analysis or file_datetime (also use date_breaks!)
     x = mean_area_identified,
     # aesthetics
-    color = seed_oxidation, size = mean_area_identified
-  ) + 
-  # highlight RMSD threshold (0.5 is fairly liberal, can be stricter!)
-  geom_hline(tibble(term = factor("RMSD"), threshold = 0.5),
-             mapping = aes(yintercept = threshold), linetype = 2)
+    color = seed_oxidation, size = mean_area_identified,
+    # highlight RSD threshold
+    geom_hline(data = tibble(term = factor("RSD"), threshold = 0.5),
+               mapping = aes(yintercept = threshold), linetype = 2)
+  ) 
 ```
 
 ### Residuals
@@ -563,17 +574,15 @@ stds_w_calibs %>%
   iso_get_calibration_data() %>% 
   # focus on standard peaks
   filter(is_std_peak) %>% 
-  # calculate parameters to visualize
+  # calculate area deviation from mean
   iso_mutate_peak_table(
     group_by = Analysis,
-     `Var: residual` = resid,
-    `Var: area diff from mean` = 
-      iso_double_with_units((area44/mean(area44) - 1) * 100, "%")
+    area_dev = iso_double_with_units((area44/mean(area44) - 1) * 100, "%")
   ) %>% 
   # visualize
   iso_plot_data(
     # x and y 
-    x = compound, y = starts_with("Var"),
+    x = compound, y = c(residual = resid, `area dev. from mean` = area_dev),
     # grouping and aesthetics
     group = paste(Analysis, calib), color = seed_oxidation, linetype = calib,
     # geoms
@@ -607,7 +616,8 @@ global_calibs <-
     # - only analyses with seed oxidation (same as all the samples)
     use_in_calib = is_std_peak & area44 > iso_double_with_units(5, "Vs") & 
       area44 < iso_double_with_units(100, "Vs") & seed_oxidation == "yes"
-  )
+  ) %>% 
+  iso_remove_problematic_calibrations()
 ```
 
 ### Coefficients
@@ -621,7 +631,6 @@ global_calibs %>%
       c(term, estimate, SE = std.error, signif),
     select_from_summary = 
       c(fit_R2 = adj.r.squared, fit_RMSD = deviance, residual_df = df.residual)) %>%
-  iso_remove_list_columns() %>% 
   arrange(term) %>% 
   knitr::kable(digits = 4)
 
@@ -722,7 +731,7 @@ peak_table_calibrated %>%
 ### Isotopic values
 
 ```{r "samples", fig.width = 10, fig.height = 7}
-# Warning: data outside the calibration range MUST be taken with a big
+# Warning: data outside the calibration range MUST be taken with a
 # grain of salt, especially at the low signal area/amplitude end
 peak_table_calibrated %>% 
   # focus on samples

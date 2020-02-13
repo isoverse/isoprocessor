@@ -8,14 +8,22 @@
 \usage{
 iso_convert_peak_table_units(...)
 
-\method{iso_convert_peak_table_units}{iso_file_list}(iso_files, ...,
-  select = everything(), quiet = default(quiet))
+\method{iso_convert_peak_table_units}{iso_file_list}(
+  iso_files,
+  ...,
+  select = everything(),
+  quiet = default(quiet)
+)
 
-\method{iso_convert_peak_table_units}{data.frame}(peak_table, ...,
-  select = everything(), quiet = default(quiet))
+\method{iso_convert_peak_table_units}{data.frame}(
+  peak_table,
+  ...,
+  select = everything(),
+  quiet = default(quiet)
+)
 }
 \arguments{
-\item{...}{S3 method placeholder parameters, see class specific functions for details on parameters}
+\item{...}{which units to convert. Must be named character arguments - the values are the old units, the names are the new units. Each pair of old and new units must have the same base units and only differ in their SI prefix (e.g. \code{Vs = mVs, V = mV, nA = A, ...)}). For each unit to convert from, finds which columns amongst those found by \code{select} currently have those units.}
 
 \item{iso_files}{collection of continuous flow iso_file objects}
 
@@ -24,8 +32,6 @@ iso_convert_peak_table_units(...)
 \item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
 
 \item{peak_table}{a peak table data frame}
-
-\item{...}{which units to convert. Must be named character arguments - the values are the old units, the names are the new units. Each pair of old and new units must have the same base units and only differ in their SI prefix (e.g. \code{Vs = mVs, V = mV, nA = A, ...)}). For each unit to convert from, finds which columns amongst those found by \code{select} currently have those units.}
 }
 \description{
 This is a convenience function to convert the units of multiple peak table columns that are of type \code{\link{iso_double_with_units}} with the same units to a different SI prefix, e.g. from \code{mVs} to \code{Vs}. Uses \code{\link{iso_scale_double_with_units}} internally.

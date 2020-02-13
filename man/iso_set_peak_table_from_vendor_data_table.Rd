@@ -2,14 +2,26 @@
 % Please edit documentation in R/peak_table.R
 \name{iso_set_peak_table_from_vendor_data_table}
 \alias{iso_set_peak_table_from_vendor_data_table}
+\alias{iso_set_peak_table_from_auto_vendor_data_table}
 \alias{iso_set_peak_table_from_isodat_vendor_data_table}
 \title{Set peak table from vendor data}
 \usage{
-iso_set_peak_table_from_vendor_data_table(iso_files, direct_rename = c(),
-  regex_rename = c(), quiet = default(quiet))
+iso_set_peak_table_from_vendor_data_table(
+  iso_files,
+  direct_rename = c(),
+  regex_rename = c(),
+  quiet = default(quiet)
+)
 
-iso_set_peak_table_from_isodat_vendor_data_table(iso_files,
-  quiet = default(quiet))
+iso_set_peak_table_from_auto_vendor_data_table(
+  iso_files,
+  quiet = default(quiet)
+)
+
+iso_set_peak_table_from_isodat_vendor_data_table(
+  iso_files,
+  quiet = default(quiet)
+)
 }
 \arguments{
 \item{direct_rename}{select which columns to select and rename directly from the vendor data table. Must be a named vector with the values the vendor data table column names and the names the corresponding peak table column names.}
@@ -20,6 +32,8 @@ iso_set_peak_table_from_isodat_vendor_data_table(iso_files,
 Set the peak table from vendor data in each iso_file. Only the vendor data table columns that do exist in a file will be used, so this function can set peak table information across a variety of data files without errors. Provides a detailed info message about the columns that are used.
 }
 \details{
+\code{iso_set_peak_table_from_auto_vendor_data_table} is the go to function for setting peak tables because it will simply look at the file extension and decide which software specific function to use (e.g. \code{iso_set_peak_table_from_isodat_vendor_data_table}) for any Isodat files.
+
 \code{iso_set_peak_table_from_isodat_vendor_data_table} provides specialized functionality to set peak table information from an Isodat vendor data tables. For compatibility with all downstream isoprocessor calculations, the resulting peak table has a very specific set of columns which are listed below. Mapping for Isodat data tables:
 \itemize{
   \item peak_nr: "Nr."
@@ -39,8 +53,9 @@ Set the peak table from vendor data in each iso_file. Only the vendor data table
 }
 }
 \seealso{
-Other peak table functions: \code{\link{iso_get_peak_table}},
-  \code{\link{iso_mutate_peak_table}},
-  \code{\link{iso_set_peak_table}}
+Other peak table functions: 
+\code{\link{iso_get_peak_table}()},
+\code{\link{iso_mutate_peak_table}()},
+\code{\link{iso_set_peak_table}()}
 }
 \concept{peak table functions}

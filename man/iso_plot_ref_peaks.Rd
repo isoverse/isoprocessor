@@ -4,22 +4,48 @@
 \alias{iso_plot_ref_peaks}
 \title{Plot reference peaks}
 \usage{
-iso_plot_ref_peaks(dt, ratio, group_id, is_ref_condition,
-  is_ref_used = NULL, within_group = FALSE)
+iso_plot_ref_peaks(
+  dt,
+  x,
+  ratio,
+  ...,
+  group_id = file_id,
+  is_ref_condition = TRUE,
+  within_group = TRUE,
+  is_ref_used = NULL
+)
 }
 \arguments{
 \item{dt}{data table}
 
+\item{x}{which column to use for the x-axis}
+
 \item{ratio}{which ratio column(s) to compare for the reference peaks (can be multiple)}
 
-\item{group_id}{group identifier column(s) to clarify which peaks belongs to a single analysis - first column in group id is used for x axis labels}
+\item{...}{additional parameters passed to \link{iso_plot_data}}
 
-\item{is_ref_condition}{condition to identify which of the peaks are reference peaks. Must be a column or expression that evaluates to a logical (TRUE/FALSE).}
+\item{group_id}{group identifier column(s) to clarify across which data groups the reference peak deviation should be calcualted. By default calculates reference peak variations within each analysis.}
 
-\item{is_ref_used}{[optional] parameter to identify which of the reference peaks (\code{is_ref_condition}) are actually used for ratio/ratio calculations. Must be a column or expresion that evaluates to a logical (TRUE/FALSE). If this parameter is provided, the used reference peaks are higlight in solid while the other peaks are slightly opaque.}
+\item{is_ref_condition}{condition to identify which of the peaks are reference peaks (unless the peaks are prefilterd already). Must be a column or expression that evaluates to a logical (TRUE/FALSE).}
 
-\item{within_group}{whether to visualize the deviation within the specified group or across all groups}
+\item{within_group}{deprectated, use \code{group_id} to group accordingly}
+
+\item{is_ref_used}{deprecated, set an aesthetics directly via ... paramter to \link{iso_plot_data}}
 }
 \description{
 Visualize how consistent the reference peaks are across a serious of samples.
 }
+\seealso{
+Other plot functions: 
+\code{\link{iso_format}()},
+\code{\link{iso_mark_calibration_range}()},
+\code{\link{iso_mark_outliers}()},
+\code{\link{iso_mark_value_range}()},
+\code{\link{iso_plot_continuous_flow_data}()},
+\code{\link{iso_plot_data}()},
+\code{\link{iso_plot_dual_inlet_data}()},
+\code{\link{iso_plot_raw_data}()},
+\code{\link{iso_plot_residuals}()},
+\code{\link{iso_prepare_continuous_flow_plot_data}()}
+}
+\concept{plot functions}

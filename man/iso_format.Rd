@@ -4,8 +4,14 @@
 \alias{iso_format}
 \title{Format iso numbers}
 \usage{
-iso_format(..., signif = 3, format_names = "\%s: ",
-  format_units = "\%s", replace_permil = TRUE, sep = "\\n")
+iso_format(
+  ...,
+  signif = 3,
+  format_names = "\%s: ",
+  format_units = "\%s",
+  replace_permil = TRUE,
+  sep = "\\n"
+)
 }
 \arguments{
 \item{...}{variable names with data. Must have the same dimensions if multiple are supplied. Can be named to rename variable name output. Will include units in output for all \link{iso_double_with_units}.}
@@ -30,14 +36,16 @@ iso_format(x, y)
 iso_format(amplitude = x, d13C = y)
 }
 \seealso{
-Other plot functions: \code{\link{iso_mark_calibration_range}},
-  \code{\link{iso_mark_outliers}},
-  \code{\link{iso_mark_value_range}},
-  \code{\link{iso_plot_continuous_flow_data}},
-  \code{\link{iso_plot_data}},
-  \code{\link{iso_plot_dual_inlet_data}},
-  \code{\link{iso_plot_raw_data}},
-  \code{\link{iso_plot_residuals}},
-  \code{\link{iso_prepare_continuous_flow_plot_data}}
+Other plot functions: 
+\code{\link{iso_mark_calibration_range}()},
+\code{\link{iso_mark_outliers}()},
+\code{\link{iso_mark_value_range}()},
+\code{\link{iso_plot_continuous_flow_data}()},
+\code{\link{iso_plot_data}()},
+\code{\link{iso_plot_dual_inlet_data}()},
+\code{\link{iso_plot_raw_data}()},
+\code{\link{iso_plot_ref_peaks}()},
+\code{\link{iso_plot_residuals}()},
+\code{\link{iso_prepare_continuous_flow_plot_data}()}
 }
 \concept{plot functions}

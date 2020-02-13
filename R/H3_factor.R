@@ -11,7 +11,7 @@ summarize_H3_factors <- function(dt, is_H3_factor_file_condition, is_H3_factor_f
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
 
-  dt_cols <- get_column_names(!!enquo(dt), file_id = enquo(file_id), file_datetime = enquo(file_datetime),
+  dt_cols <- get_column_names(dt, file_id = enquo(file_id), file_datetime = enquo(file_datetime),
                               H3_factor = enquo(H3_factor), ampl = enquo(ampl), keep = enquo(keep),
                               n_reqs = list(keep = "*"))
   dt_new_cols <- get_new_column_names(is_H3_factor_file = enquo(is_H3_factor_file))
@@ -49,7 +49,7 @@ summarize_H3_factors <- function(dt, is_H3_factor_file_condition, is_H3_factor_f
 print_H3_factors <- function(dt, file_id = default(file_id), file_datetime = default(file_datetime),
                              H3_factor = default(H3_factor), is_H3_factor_file = default(is_H3_factor_file), ...) {
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  dt_cols <- get_column_names(!!enquo(dt), file_id = enquo(file_id), file_datetime = enquo(file_datetime), H3_factor = enquo(H3_factor))
+  dt_cols <- get_column_names(dt, file_id = enquo(file_id), file_datetime = enquo(file_datetime), H3_factor = enquo(H3_factor))
   iso_print_data_table(dt, select = c(!!file_id, !!file_datetime, !!H3_factor, n_analyses, low_amp, high_amp), filter = !!is_H3_factor_file, ...)
 }
 
@@ -62,7 +62,7 @@ plot_H3_factors <- function(dt, file_datetime = default(file_datetime), H3_facto
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  dt_cols <- get_column_names(!!enquo(dt), file_datetime = enquo(file_datetime),
+  dt_cols <- get_column_names(dt, file_datetime = enquo(file_datetime),
                               H3_factor = enquo(H3_factor), is_H3_factor_file = enquo(is_H3_factor_file),
                               color = enquo(color), label = enquo(label))
 

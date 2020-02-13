@@ -3,7 +3,6 @@ context("Settings and default values")
 test_that("info messages can be turned on and off", {
   # functionality exported from isoreader
   expect_message(iso_turn_info_messages_on(), "messages turned on")
-  expect_equal(default(), quo())
   expect_false(default("quiet"))
   expect_false(default(quiet))
   expect_silent(iso_turn_info_messages_off())
@@ -26,7 +25,7 @@ test_that("default process parameters work properly", {
 
   # reset and default of default
   expect_equal(iso_reset_default_processor_parameters(42), 42)
-  expect_equal(default(a), quo(a))
+  expect_equal(default(a), rlang::expr(a))
   expect_equal(iso_get_default_processor_parameters(), tibble(parameter = c("quiet"), value = c("FALSE")))
 
 })

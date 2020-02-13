@@ -1,34 +1,34 @@
 context("Standard and non-standard evaluation")
 
+test_that("Testing expression checks", {
+
+  df <- as_data_frame(mtcars) %>% tibble::rownames_to_column()
+
+  # basic errors
+  expect_error(check_expressions(), "no data frame supplied")
+  expect_error(check_expressions(5), "not a data frame")
+
+  # error messages
+  expect_error(check_expressions(df, quo(x == 5)), "not a valid expression")
+  expect_error(check_expressions(df, quo(x == 5), quo(y == 42)), "invalid expressions")
+
+  # test evaluations
+  expect_equal(
+    check_expressions(df, quo(mpg > 20), quo(ifelse(grepl("Merc", rowname), "test", rowname)), z = NULL),
+    df
+  )
+
+})
+
+
 test_that("Getting new column names work correctly", {
 
-  expect_error(get_new_column_names(a = quo(x^2)), "not .* valid column name")
-  expect_error(get_new_column_names(a = quo(x^2), b=quo(y^2)), "not .* valid column name")
+  expect_error(get_new_column_names(a = quo(x^2)), "not a valid column name")
+  expect_error(get_new_column_names(a = quo(x^2), b=quo(y^2)), "not a valid column name")
   expect_equal(get_new_column_names(a = quo(x)), list(a = "x"))
+  expect_equal(get_new_column_names(a = quo(`x^2`)), list(a = "x^2"))
   expect_equal(get_new_column_names(a = quo(default(x))), list(a = "x"))
   expect_equal(get_new_column_names(a = quo("x")), list(a = "x"))
-  expect_equal(get_new_column_names(a = quo(x), b = quo(default(y)), c = quo("z")), list(a = "x", b = "y", c = "z"))
+  expect_equal(get_new_column_names(a = quo(x), b = quo(default(y)), c = quo("z"), d = quo(`x^2`)), list(a = "x", b = "y", c = "z", d = "x^2"))
 
-})
-
-test_that("Column name to quosure conversion works correctly", {
-
-  expect_error(cols_to_quos(list(a="test", b=5)), "can only convert character")
-  expect_equal(cols_to_quos(letters[1:3]), quos(a, b, c))
-  expect_equal(cols_to_quos(letters[1]), quo(a))
-  expect_equal(cols_to_quos(letters[1], always_as_list = TRUE), quos(a))
-  expect_equal(cols_to_quos(list(x="a", y="b", z="c")), quos(a, b, c))
-  expect_equal(cols_to_quos(list(x="a", y="b", z="c"), keep_names = TRUE), quos(x = a, y = b, z = c))
-  expect_equal(cols_to_quos(list(x = "a", y = c("b", "c"))), quos(a, b, c))
-  expect_equal(cols_to_quos(list(x = "a", y = c("b", "c")), keep_names = TRUE), quos(x = a, y1 = b, y2 = c))
-  expect_equal(cols_to_quos(letters[1:3], negate = TRUE), quos(-a, -b, -c))
-})
-
-test_that("Column name to symbol list works correctly", {
-
-  expect_error(cols_to_symbol_list(list(a="test", b=5)), "can only convert character")
-  expect_equal(cols_to_symbol_list(letters[1:3]), list(sym("a"), sym("b"), sym("c")))
-  expect_equal(cols_to_symbol_list(letters[1]), list(sym("a")))
-  expect_equal(cols_to_symbol_list(list(x="a", y="b", z="c")), list(sym("a"), sym("b"), sym("c")))
-  expect_equal(cols_to_symbol_list(list(x="a", y="b", z="c"), keep_names = TRUE), list(x = sym("a"), y = sym("b"), z = sym("c")))
 })

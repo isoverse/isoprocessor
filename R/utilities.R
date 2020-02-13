@@ -141,7 +141,7 @@ nest_data <- function(dt, group_by = NULL, nested_data = nested_data) {
 
   # safety checks and column matching
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  dt_cols <- get_column_names(!!enquo(dt), group_by = enquo(group_by), n_reqs = list(group_by = "*"))
+  dt_cols <- get_column_names(dt, group_by = enquo(group_by), n_reqs = list(group_by = "*"))
   nested_col <- resolve_defaults(enquo(nested_data))
 
   # perform the nest
@@ -176,7 +176,7 @@ iso_remove_list_columns <- function(dt) {
 unnest_select_data <- function(dt, select = everything(), nested_data = nested_data, keep_remaining_nested_data = TRUE, keep_other_list_data = TRUE, keep_only_unique = TRUE) {
   # safety checks and column matching
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  dt_cols <- get_column_names(!!enquo(dt), nested_data = enquo(nested_data), type_reqs = list(nested_data = "list"))
+  dt_cols <- get_column_names(dt, nested_data = enquo(nested_data), type_reqs = list(nested_data = "list"))
 
   # columns before the nested data
   original_cols <- names(dt)
@@ -222,8 +222,11 @@ unnest_select_data <- function(dt, select = everything(), nested_data = nested_d
   if (length(setdiff(names(unnested_dt), keep_cols)) > 0 && keep_remaining_nested_data) {
     # renest if un-nesting is incomplete (i.e. data remains) and remaining data should be kept
     renested_dt <- unnested_dt %>% nest_data(group_by = !!keep_cols, nested = !!sym(dt_cols$nested_data))
-  } else
+    renested <- TRUE
+  } else {
     renested_dt <- unnested_dt[keep_cols]
+    renested <- FALSE
+  }
 
   # merge back with the original data frame
   renested_dt <- dt[regular_cols] %>% right_join(renested_dt, by = "..row..")
@@ -237,7 +240,7 @@ unnest_select_data <- function(dt, select = everything(), nested_data = nested_d
   before_nd_cols <- intersect(before_nd_cols, names(renested_dt))
   new_cols <- setdiff(names(renested_dt), original_cols) %>% setdiff(before_nd_cols)
   if (dt_cols$nested_data %in% before_nd_cols) before_nd_cols <- head(before_nd_cols, -1)
-
+  if (renested) new_cols <- c(new_cols, dt_cols$nested_data)
 
   # return
   renested_dt %>%
@@ -265,11 +268,10 @@ unnest_model_column <- function(dt, model_column, model_params = model_params, n
 
   # safety checks
   if (missing(model_column)) stop("specify which model column to unnest", call. = FALSE)
-  dt_quo <- enquo(dt)
 
   # deal with nested senarios
   if (nested_model) {
-    dt_cols <- get_column_names(!!dt_quo, model_params = enquo(model_params), type_reqs = list(model_params = "list"))
+    dt_cols <- get_column_names(dt, model_params = enquo(model_params), type_reqs = list(model_params = "list"))
 
     # unnest model params
     original_cols <- names(dt)
@@ -313,6 +315,38 @@ get_supported_models <- function() {
   )
 }
 
+# get all operations in an expression (in order of appearance)
+# this goes through the quo recursively
+# @param q quo
+# @return text vector
+get_call_operations <- function(q) {
+  q_ops <- c()
+  if (
+    (rlang::is_quosure(q) && rlang::quo_is_call(q)) ||
+    (!rlang::is_quosure(q) && rlang::is_call(q))) {
+    q_ops <- c(rlang::call_name(q), map(rlang::call_args(q), get_call_operations))
+  }
+  return(unname(unlist(q_ops)))
+}
+
+# get all variables in an expression (in order of appearance)
+# this goes through the quo recursively
+# @param q quo
+# @return text vector
+get_call_variables <- function(q) {
+  q_syms <- list()
+  if (
+    (rlang::is_quosure(q) && rlang::quo_is_symbol(q)) ||
+    (!rlang::is_quosure(q) && rlang::is_symbol(q))) {
+    q_syms <- rlang::as_label(q)
+  } else if (
+    (rlang::is_quosure(q) && rlang::quo_is_call(q)) ||
+    (!rlang::is_quosure(q) && rlang::is_call(q))) {
+    q_syms <- map(rlang::call_args(q), get_call_variables)
+  }
+  return(unique(unlist(q_syms)))
+}
+
 # get all variables used in a formula (in order of appearance)
 # @param formula_q quoted formula expression of form y1 + y2 + ... ~ x1 + x2 + x3
 get_formula_variables <- function(formula_q, get_x = TRUE, get_y = TRUE) {
@@ -321,20 +355,12 @@ get_formula_variables <- function(formula_q, get_x = TRUE, get_y = TRUE) {
   if (!rlang::quo_is_call(formula_q) || !rlang::call_name(formula_q) == "~")
     stop("not a valid formula of form 'y ~ ...': ", rlang::as_label(formula_q), call. = FALSE)
 
-  # deconstruct a call
-  get_vars <- function(arg) {
-    q_syms <- list()
-    if (rlang::is_symbol(arg)) q_syms <- rlang::as_label(arg)
-    else if (rlang::is_call(arg)) q_syms <- map(rlang::call_args(arg), get_vars)
-    return(unique(unlist(q_syms)))
-  }
-
   # take apart the formula
   left_q <- rlang::call_args(formula_q)[[1]]
   right_q <- rlang::call_args(formula_q)[[2]]
   vars <- c()
-  if (get_y) vars <- c(vars, get_vars(left_q))
-  if (get_x) vars <- c(vars, get_vars(right_q))
+  if (get_y) vars <- c(vars, get_call_variables(left_q))
+  if (get_x) vars <- c(vars, get_call_variables(right_q))
   return(vars)
 }
 
@@ -411,9 +437,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  dt_quo <- enquo(dt)
-  dt_cols <- get_column_names(!!dt_quo, model_data = enquo(model_data), type_reqs = list(model_data = "list"))
-  dt <- eval_tidy(dt_quo)
+  dt_cols <- get_column_names(dt, model_data = enquo(model_data), type_reqs = list(model_data = "list"))
   dt_new_cols <- get_new_column_names(
     model_name = enquo(model_name),
     model_enough_data = enquo(model_enough_data), model_data_points = enquo(model_data_points),
@@ -443,8 +467,8 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   lquos_info <-
     ifelse(
       nchar(names(lquos)) > 0,
-      sprintf("%s = '%s'", names(lquos), map_chr(lquos, quo_text)),
-      sprintf("'%s'", map_chr(lquos, quo_text))
+      sprintf("%s = '%s'", names(lquos), map_chr(lquos, as_label)),
+      sprintf("'%s'", map_chr(lquos, as_label))
     )
   if(!all(ok <- lquos_are_models)) {
     if (sum(!ok) > 1)
@@ -487,7 +511,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
   models <-
     tibble(
       ..model_id.. = 1:length(lquos),
-      model_formula = map_chr(lquos, quo_text),
+      model_formula = map_chr(lquos, as_label),
       !!dt_new_cols$model_name := ifelse(nchar(names(lquos)) > 0, names(lquos), model_formula),
       ..model_quo.. = map(lquos, identity),
       ..model_ys.. = model_vars_y,
@@ -568,7 +592,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
          "\nPlease double check that all peaks are mapped correctly ",
          "(see ?iso_get_problematic_peak_mappings and ",
          "?iso_summarize_peak_mappings) and that the filter condition ",
-         "('{quo_text(filter_quo)}') is correct. ") %>%
+         "('{as_label(filter_quo)}') is correct. ") %>%
     warning(immediate. = TRUE, call. = FALSE)
   }
 
@@ -658,19 +682,18 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  dt_quo <- enquo(dt)
 
   if (nested_model) {
     # nested model
     dt_cols <- get_column_names(
-      !!dt_quo, model_name = enquo(model_name), model_data = enquo(model_data),
+      dt, model_name = enquo(model_name), model_data = enquo(model_data),
       model_params = enquo(model_params),
       type_reqs = list(model_name = "character", model_data = "list", model_params = "list"))
 
     # check for columns inside nested data
     dt_cols <- c(
       dt_cols,
-      get_column_names(unnest(!!dt_quo, !!sym(dt_cols$model_params)),
+      get_column_names(unnest(dt, !!sym(dt_cols$model_params)),
                        model_fit = enquo(model_fit), type_reqs = list(model_fit = "list")))
 
     # pull out the model fit
@@ -682,7 +705,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
   } else {
     # not nested model
     dt_cols <- get_column_names(
-      !!dt_quo, model_data = enquo(model_data),
+      dt, model_data = enquo(model_data),
       model_name = enquo(model_name), model_fit = enquo(model_fit),
       type_reqs = list(model_name = "character", model_data = "list", model_fit = "list"))
   }
@@ -758,7 +781,7 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
               # normal predict =====
               # predict dependent variable (y) by normal regression predict
               new_data <- d %>% select(xs) %>% iso_strip_units()
-              pred <- stats::predict(fit, newdata = new_data)
+              pred <- stats::predict(fit, newdata = new_data, se = calculate_error)
               d_prediction <-
                 tibble(
                   ..rn.. = d$..rn..,
@@ -907,7 +930,6 @@ evaluate_range <- function(
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
-  dt_quo <- enquo(dt)
 
   # terms
   terms_quos <- rlang::enquos(...)
@@ -917,14 +939,14 @@ evaluate_range <- function(
 
   # dt columns
   dt_cols <- get_column_names(
-    !!dt_quo, model_data = enquo(model_data), type_reqs = list(model_data = "list"))
+    dt, model_data = enquo(model_data), type_reqs = list(model_data = "list"))
 
   # nested model
   if (nested_model) {
     dt_cols <- c(
       dt_cols,
       get_column_names(
-        !!dt_quo, model_params = enquo(model_params),type_reqs = list(model_params = "list"))
+        dt, model_params = enquo(model_params),type_reqs = list(model_params = "list"))
     )
   }
 
@@ -960,7 +982,6 @@ evaluate_range <- function(
         ~{
           # consider only data that is part of the regression
           d_in_calib <- .x[.x[[.y$in_reg]],]
-          my_d <<- d_in_calib
           if (nrow(d_in_calib) > 0) {
             # determine the ranges for all terms
             tryCatch(
@@ -1015,7 +1036,7 @@ evaluate_range <- function(
             mutate(
               in_range = case_when(
                 is.na(min) | is.na(max) ~ sprintf("'%s' range NA", term),
-                is.na(value) ~ sprintf("'%s' NA", term),
+                is.na(value) ~ sprintf("'%s' value NA", term),
                 value < min ~ sprintf("<'%s' range", term),
                 value > max ~ sprintf(">'%s' range", term),
                 TRUE ~ "OK"

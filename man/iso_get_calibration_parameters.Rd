@@ -5,30 +5,44 @@
 \alias{iso_unnest_calibration_parameters}
 \title{Get calibration parameters}
 \usage{
-iso_get_calibration_parameters(dt, calibration = last_calibration(dt),
-  select_from_coefs = everything(), select_from_summary = everything(),
-  keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE,
-  keep_other_calibrations = FALSE)
+iso_get_calibration_parameters(
+  dt,
+  calibration = last_calibration(dt),
+  select_from_coefs = everything(),
+  select_from_summary = everything(),
+  keep_calibration_parameters = keep_other_list_data,
+  keep_calibration_regressions = FALSE,
+  keep_other_calibrations = FALSE,
+  quiet = default(quiet),
+  keep_remaining_nested_data = FALSE,
+  keep_other_list_data = FALSE
+)
 
 iso_unnest_calibration_parameters(...)
 }
 \arguments{
-\item{dt}{nested data table with column \code{all_data} (see \link{iso_prepare_for_calibration})}
-
-\item{calibration}{the name of the calibration to get information for, by default the last calibration that was generated}
+\item{dt}{nested data frame with column \code{all_data} (see \link{iso_prepare_for_calibration}) and any number of calibrations (see \link{iso_generate_calibration})}
 
 \item{select_from_coefs}{which columns from the fit coeffiencts to include, supports full dplyr syntax including renaming}
 
 \item{select_from_summary}{which columns from the fit summary to include, supports full dplyr syntax including renaming}
 
-\item{keep_remaining_nested_data}{whether to keep any remaining parts of the partially unnested data (irrelevant if \code{select = everything()})}
+\item{keep_calibration_parameters}{whether to keep the calibration parameter columns (coefficients, summary, range) in the resulting data frame. By default, calibration parameters are kept to facilitate downstream operations that may need these calibration information (such as \link{iso_mark_calibration_range}).}
 
-\item{keep_other_list_data}{keep other list data columns (e.g. other data or model columns)}
+\item{keep_calibration_regressions}{whether to keep the actual calibration regression objects in the resulting data frame. By default, regression objects are NOT kept because they lead to large data objects and do not usually have additional use after \link{iso_apply_calibration} has been called. There is rarely a reason to change this parameter to \code{TRUE}.}
 
-\item{keep_other_calibrations}{whether other calibrations (besides the one specified by \code{calibration}) should be kept in the data table}
+\item{keep_other_calibrations}{whether columns that belong to other calibrations (besides the one specified by \code{calibration}) should be kept in the data table. By default, they are removed for clarity.}
+
+\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
+
+\item{keep_remaining_nested_data}{DEPRECATED - this parameter was removed for clarity and does no longer have any effect}
+
+\item{keep_other_list_data}{DEPRECATED - renamed to \code{keep_calibrations}}
+
+\item{...}{additional parameters to forward to the \code{func} function}
 }
 \description{
-Retrieve both calibration coefficients (\link{iso_get_calibration_coefs}) and calibration summary (\link{iso_get_calibration_summary}) columns in a single step. Typically this requires specifying \code{select_from_coefs} and \code{select_from_summary} as several columns in the coefficients and summary have the same names.
+This function is deprecated for clarity. Please use \code{\link{iso_get_calibration_coefficients}} and \code{\link{iso_get_calibration_summary}} directly.
 }
 \details{
 \code{iso_unnest_calibration_parameters} is deprecated in favor of the equivalent \code{iso_get_calibration_parameters} to standardize function call names. Please start using \code{iso_get_calibration_parameters} as \code{iso_unnest_calibration_parameters} will be deprecated in a future version of isoprocessor.

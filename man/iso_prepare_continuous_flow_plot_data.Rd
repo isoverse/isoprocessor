@@ -4,13 +4,23 @@
 \alias{iso_prepare_continuous_flow_plot_data}
 \title{Prepare plotting data from continuous flow files}
 \usage{
-iso_prepare_continuous_flow_plot_data(iso_files, data = c(),
-  include_file_info = NULL, time_interval = c(),
-  time_interval_units = "seconds", filter = NULL, normalize = FALSE,
-  zoom = NULL, zoom_group = data, peak_table = NULL,
-  file_id = default(file_id), rt = default(rt),
-  rt_start = default(rt_start), rt_end = default(rt_end),
-  rt_unit = NULL)
+iso_prepare_continuous_flow_plot_data(
+  iso_files,
+  data = c(),
+  include_file_info = NULL,
+  time_interval = c(),
+  time_interval_units = "seconds",
+  filter = NULL,
+  normalize = FALSE,
+  zoom = NULL,
+  zoom_group = data,
+  peak_table = NULL,
+  file_id = default(file_id),
+  rt = default(rt),
+  rt_start = default(rt_start),
+  rt_end = default(rt_end),
+  rt_unit = NULL
+)
 }
 \arguments{
 \item{iso_files}{collection of iso_file objects}
@@ -43,14 +53,16 @@ iso_prepare_continuous_flow_plot_data(iso_files, data = c(),
 This function helps with the preparation of plotting data from continuous flow data files (i.e. the raw chromatogram data). Call either explicity and pass the result to \code{\link{iso_plot_continuous_flow_data}} or let \code{\link{iso_plot_continuous_flow_data}} take care of preparing the plotting data directly from the \code{iso_files}. If a \code{peak_table} is provided for peak annotation purposes, uses \code{\link{iso_combine_raw_data_with_peak_table}} to combine the raw data from the iso_files with the provided peak data table.
 }
 \seealso{
-Other plot functions: \code{\link{iso_format}},
-  \code{\link{iso_mark_calibration_range}},
-  \code{\link{iso_mark_outliers}},
-  \code{\link{iso_mark_value_range}},
-  \code{\link{iso_plot_continuous_flow_data}},
-  \code{\link{iso_plot_data}},
-  \code{\link{iso_plot_dual_inlet_data}},
-  \code{\link{iso_plot_raw_data}},
-  \code{\link{iso_plot_residuals}}
+Other plot functions: 
+\code{\link{iso_format}()},
+\code{\link{iso_mark_calibration_range}()},
+\code{\link{iso_mark_outliers}()},
+\code{\link{iso_mark_value_range}()},
+\code{\link{iso_plot_continuous_flow_data}()},
+\code{\link{iso_plot_data}()},
+\code{\link{iso_plot_dual_inlet_data}()},
+\code{\link{iso_plot_raw_data}()},
+\code{\link{iso_plot_ref_peaks}()},
+\code{\link{iso_plot_residuals}()}
 }
 \concept{plot functions}

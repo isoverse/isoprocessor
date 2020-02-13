@@ -15,10 +15,12 @@
 <link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png" />
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/simplex/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -39,10 +41,11 @@
 
 
 
-<meta property="og:title" content="Mark outliers — iso_mark_outliers" />
 
+<meta property="og:title" content="Mark outliers — iso_mark_outliers" />
 <meta property="og:description" content="This is a convenience function to visually highlight values that fall outside the data range via a flexible condition statement. Optionally with a text label to make it easier to identify the analysis." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -83,7 +86,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.5</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.0</span>
       </span>
     </div>
 
@@ -114,7 +117,6 @@
   <a href="../reference/index.html">Reference</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/isoverse/isoprocessor">
@@ -141,14 +143,18 @@
     </div>
 
     <div class="ref-description">
-    
     <p>This is a convenience function to visually highlight values that fall outside the data range via a flexible <code>condition</code> statement. Optionally with a text label to make it easier to identify the analysis.</p>
-    
     </div>
 
-    <pre class="usage"><span class='fu'>iso_mark_outliers</span>(<span class='no'>p</span>, <span class='no'>condition</span>, <span class='kw'>label</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>size</span> <span class='kw'>=</span> <span class='fl'>2</span>, <span class='kw'>shape</span> <span class='kw'>=</span> <span class='fl'>16</span>,
-  <span class='kw'>color</span> <span class='kw'>=</span> <span class='st'>"black"</span>)</pre>
-    
+    <pre class="usage"><span class='fu'>iso_mark_outliers</span>(
+  <span class='no'>p</span>,
+  <span class='no'>condition</span>,
+  <span class='kw'>label</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>size</span> <span class='kw'>=</span> <span class='fl'>2</span>,
+  <span class='kw'>shape</span> <span class='kw'>=</span> <span class='fl'>16</span>,
+  <span class='kw'>color</span> <span class='kw'>=</span> <span class='st'>"black"</span>
+)</pre>
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -177,28 +183,28 @@
       <td><p>color of the outlier points</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p>Other plot functions: <code><a href='iso_format.html'>iso_format</a></code>,
-  <code><a href='iso_mark_calibration_range.html'>iso_mark_calibration_range</a></code>,
-  <code><a href='iso_mark_value_range.html'>iso_mark_value_range</a></code>,
-  <code><a href='iso_plot_continuous_flow_data.html'>iso_plot_continuous_flow_data</a></code>,
-  <code><a href='iso_plot_data.html'>iso_plot_data</a></code>,
-  <code><a href='iso_plot_dual_inlet_data.html'>iso_plot_dual_inlet_data</a></code>,
-  <code><a href='iso_plot_raw_data.html'>iso_plot_raw_data</a></code>,
-  <code><a href='iso_plot_residuals.html'>iso_plot_residuals</a></code>,
-  <code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a></code></p></div>
-    
+    <div class='dont-index'><p>Other plot functions: 
+<code><a href='iso_format.html'>iso_format</a>()</code>,
+<code><a href='iso_mark_calibration_range.html'>iso_mark_calibration_range</a>()</code>,
+<code><a href='iso_mark_value_range.html'>iso_mark_value_range</a>()</code>,
+<code><a href='iso_plot_continuous_flow_data.html'>iso_plot_continuous_flow_data</a>()</code>,
+<code><a href='iso_plot_data.html'>iso_plot_data</a>()</code>,
+<code><a href='iso_plot_dual_inlet_data.html'>iso_plot_dual_inlet_data</a>()</code>,
+<code><a href='iso_plot_raw_data.html'>iso_plot_raw_data</a>()</code>,
+<code><a href='iso_plot_ref_peaks.html'>iso_plot_ref_peaks</a>()</code>,
+<code><a href='iso_plot_residuals.html'>iso_plot_residuals</a>()</code>,
+<code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a>()</code></p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#see-also">See also</a></li>
-          </ul>
+    </ul>
 
   </div>
 </div>

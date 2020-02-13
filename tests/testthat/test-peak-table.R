@@ -43,8 +43,11 @@ test_that("test that setting peak table from vendor data table works", {
 
   # test data
   iso_file_a <- isoreader:::make_cf_data_structure("a")
+  iso_file_a$read_options$file_info <- TRUE
+  iso_file_a$read_options$vendor_data_table <- TRUE
+  iso_file_b <- iso_file_a
+  iso_file_b$file_info$file_id <- "b"
   iso_file_a$vendor_data_table <- tibble(a = 1, b1 = 1, b2 = 1)
-  iso_file_b <- isoreader:::make_cf_data_structure("b")
   iso_files <- c(iso_file_a, iso_file_b)
 
   # errors
@@ -90,6 +93,12 @@ test_that("test that setting peak table from vendor data table works", {
            amp2 = 1, amp3 = 1, bgrd2_start = 1, bgrd3_start = 1, bgrd2_end = 1, bgrd3_end = 1,
            area2 = 1, area3 = 1, `r3/2` = 1, `rd3/2` = 1, `d3/2` = 1, `d2H` = 1, `at2H` = 1)
   )
+
+  # auto vendor data table
+  expect_error(iso_set_peak_table_from_auto_vendor_data_table(iso_files), "no.*function.*software")
+  iso_file_a$file_info$file_path <- "test.dxf"
+  expect_message(out2 <- iso_set_peak_table_from_auto_vendor_data_table(iso_file_a), "setting peak table")
+  expect_equal(out$peak_table, out2$peak_table)
 
 })
 

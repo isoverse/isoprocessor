@@ -4,8 +4,15 @@
 \alias{iso_print_data_table}
 \title{Print data table}
 \usage{
-iso_print_data_table(dt, select = everything(), filter = TRUE,
-  print_func = default(print_func), title = NULL, unique = TRUE, ...)
+iso_print_data_table(
+  dt,
+  select = everything(),
+  filter = TRUE,
+  print_func = default(print_func),
+  title = NULL,
+  unique = TRUE,
+  ...
+)
 }
 \arguments{
 \item{dt}{data table}

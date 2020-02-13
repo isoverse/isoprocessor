@@ -4,8 +4,12 @@
 \alias{iso_evaluate_calibration_range}
 \title{Evaluate calibration range}
 \usage{
-iso_evaluate_calibration_range(dt, ...,
-  calibration = last_calibration(dt), quiet = default(quiet))
+iso_evaluate_calibration_range(
+  dt,
+  ...,
+  calibration = last_calibration(dt),
+  quiet = default(quiet)
+)
 }
 \arguments{
 \item{dt}{data table}
@@ -20,3 +24,17 @@ Evaluates the calibration ranges for all calibrations and all data with respect 
 \details{
 Note that this function requires prior generation of a calibration (\code{\link{iso_generate_calibration}}). All measured parameters and derived terms can be included in the calibration range evalution. However, if the predicted term is intended to be included in the range evaluation, the calibration(s) must also be applied (\code{\link{iso_apply_calibration}}) first so the predicted term is actually available.
 }
+\seealso{
+Other calibration functions: 
+\code{\link{iso_add_standards}()},
+\code{\link{iso_apply_calibration}()},
+\code{\link{iso_generate_calibration}()},
+\code{\link{iso_get_calibration_coefficients}()},
+\code{\link{iso_get_calibration_data}()},
+\code{\link{iso_get_calibration_range}()},
+\code{\link{iso_get_calibration_summary}()},
+\code{\link{iso_get_problematic_calibrations}()},
+\code{\link{iso_prepare_for_calibration}()},
+\code{\link{iso_remove_problematic_calibrations}()}
+}
+\concept{calibration functions}

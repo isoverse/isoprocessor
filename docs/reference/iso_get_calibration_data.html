@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Unnest data — iso_get_calibration_data • isoprocessor</title>
+<title>Retrieve calibration data — iso_get_calibration_data • isoprocessor</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -15,10 +15,12 @@
 <link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png" />
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/simplex/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -39,10 +41,11 @@
 
 
 
-<meta property="og:title" content="Unnest data — iso_get_calibration_data" />
 
-<meta property="og:description" content="Pull out columns from the all_data column. Typically used at various points after a dataset is prepared for calibration with iso_prepare_for_calibration, calibrations are generated with iso_generate_calibration and/or calibrations are applied with iso_apply_calibration. Note that unnesting of data columns that have multiple values per data set leads to row replication." />
+<meta property="og:title" content="Retrieve calibration data — iso_get_calibration_data" />
+<meta property="og:description" content="Pull out data from the all_data nested calibration data frame (by default unnests all columnes). Typically used at various points after a dataset is prepared for calibration with iso_prepare_for_calibration, calibrations are generated with iso_generate_calibration and/or calibrations are applied with iso_apply_calibration. Note that when unnesting multi-row data (i.e. almost always), remaining data and calibration parameters are replicated across the unnested data set. This is NOT a problem for any downstream functions and in fact allows them to access the underlying calibrations if needed (e.g. in iso_mark_calibration_range). However, if this is undesired, please set keep_remaining_data = FALSE and keep_calibrations = FALSE when calling iso_get_calibration_data or use the iso_remove_list_columns function afterwards, which removes all nested information." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -83,7 +86,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.5</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.0</span>
       </span>
     </div>
 
@@ -114,7 +117,6 @@
   <a href="../reference/index.html">Reference</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/isoverse/isoprocessor">
@@ -135,52 +137,94 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Unnest data</h1>
+    <h1>Retrieve calibration data</h1>
     <small class="dont-index">Source: <a href='https://github.com/isoverse/isoprocessor/blob/master/R/calibration.R'><code>R/calibration.R</code></a></small>
     <div class="hidden name"><code>iso_get_calibration_data.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    
-    <p>Pull out columns from the <code>all_data</code> column. Typically used at various points after a dataset is prepared for calibration with <a href='iso_prepare_for_calibration.html'>iso_prepare_for_calibration</a>, calibrations are generated with <a href='iso_generate_calibration.html'>iso_generate_calibration</a> and/or calibrations are applied with <a href='iso_apply_calibration.html'>iso_apply_calibration</a>. Note that unnesting of data columns that have multiple values per data set leads to row replication.</p>
-    
+    <p>Pull out data from the <code>all_data</code> nested calibration data frame (by default unnests all columnes). Typically used at various points after a dataset is prepared for calibration with <a href='iso_prepare_for_calibration.html'>iso_prepare_for_calibration</a>, calibrations are generated with <a href='iso_generate_calibration.html'>iso_generate_calibration</a> and/or calibrations are applied with <a href='iso_apply_calibration.html'>iso_apply_calibration</a>. Note that when unnesting multi-row data (i.e. almost always), remaining data and calibration parameters are replicated across the unnested data set. This is NOT a problem for any downstream functions and in fact allows them to access the underlying calibrations if needed (e.g. in <code><a href='iso_mark_calibration_range.html'>iso_mark_calibration_range</a></code>). However, if this is undesired, please set <code>keep_remaining_data = FALSE</code> and <code>keep_calibrations = FALSE</code> when calling <code>iso_get_calibration_data</code> or use the <code><a href='iso_remove_list_columns.html'>iso_remove_list_columns</a></code> function afterwards, which removes all nested information.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>iso_get_calibration_data</span>(<span class='no'>dt</span>, <span class='kw'>select</span> <span class='kw'>=</span> <span class='fu'>everything</span>(),
-  <span class='kw'>keep_remaining_nested_data</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>keep_other_list_data</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+    <pre class="usage"><span class='fu'>iso_get_calibration_data</span>(
+  <span class='no'>dt</span>,
+  <span class='kw'>select</span> <span class='kw'>=</span> <span class='fu'>everything</span>(),
+  <span class='kw'>keep_remaining_data</span> <span class='kw'>=</span> <span class='no'>keep_remaining_nested_data</span>,
+  <span class='kw'>keep_calibration_parameters</span> <span class='kw'>=</span> <span class='no'>keep_other_list_data</span>,
+  <span class='kw'>keep_calibration_regressions</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>),
+  <span class='kw'>keep_remaining_nested_data</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>keep_other_list_data</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
+)
 
 <span class='fu'>iso_unnest_data</span>(<span class='no'>...</span>)</pre>
-    
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
+      <th>dt</th>
+      <td><p>nested data frame with column <code>all_data</code> (see <a href='iso_prepare_for_calibration.html'>iso_prepare_for_calibration</a>) and any number of calibrations (see <a href='iso_generate_calibration.html'>iso_generate_calibration</a>)</p></td>
+    </tr>
+    <tr>
       <th>select</th>
-      <td><p>which columns to unnest - use <code><a href='https://rdrr.io/r/base/c.html'>c(...)</a></code> to select multiple, supports all <a href='https://dplyr.tidyverse.org/reference/select.html'>select</a> syntax including renaming columns. Includes all columns by default (i.e. unnests an entire nested data frame).</p></td>
+      <td><p>which columns to unnest - use <code><a href='https://rdrr.io/r/base/c.html'>c(...)</a></code> to select multiple, supports all <a href='https://dplyr.tidyverse.org/reference/select.html'>select</a> syntax including renaming columns. Includes all columns by default (i.e. unnests all information).</p></td>
+    </tr>
+    <tr>
+      <th>keep_remaining_data</th>
+      <td><p>whether to keep the remaining parts of the partially unnested <code>all_data</code> data set (irrelevant if <code>select = everything()</code>). By default, remainig data is kept.</p></td>
+    </tr>
+    <tr>
+      <th>keep_calibration_parameters</th>
+      <td><p>whether to keep the calibration parameter columns (coefficients, summary, range) in the resulting data frame. By default, calibration parameters are kept to facilitate downstream operations that may need these calibration information (such as <a href='iso_mark_calibration_range.html'>iso_mark_calibration_range</a>).</p></td>
+    </tr>
+    <tr>
+      <th>keep_calibration_regressions</th>
+      <td><p>whether to keep the actual calibration regression objects in the resulting data frame. By default, regression objects are NOT kept because they lead to large data objects and do not usually have additional use after <a href='iso_apply_calibration.html'>iso_apply_calibration</a> has been called. There is rarely a reason to change this parameter to <code>TRUE</code>.</p></td>
+    </tr>
+    <tr>
+      <th>quiet</th>
+      <td><p>whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.</p></td>
     </tr>
     <tr>
       <th>keep_remaining_nested_data</th>
-      <td><p>whether to keep any remaining parts of the partially unnested data (irrelevant if <code>select = everything()</code>)</p></td>
+      <td><p>DEPRECATED - renamed to <code>keep_remaining_data</code></p></td>
     </tr>
     <tr>
       <th>keep_other_list_data</th>
-      <td><p>keep other list data columns (e.g. other data or model columns)</p></td>
+      <td><p>DEPRECATED - renamed to <code>keep_calibrations</code></p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>additional parameters to forward to the <code>func</code> function</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p><code>iso_unnest_data</code> is deprecated in favor of the more specific <code>iso_get_calibration_data</code> and will be removed in a future version of isoprocessor.</p>
-    
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p>Other calibration functions: 
+<code><a href='iso_add_standards.html'>iso_add_standards</a>()</code>,
+<code><a href='iso_apply_calibration.html'>iso_apply_calibration</a>()</code>,
+<code><a href='iso_evaluate_calibration_range.html'>iso_evaluate_calibration_range</a>()</code>,
+<code><a href='iso_generate_calibration.html'>iso_generate_calibration</a>()</code>,
+<code><a href='iso_get_calibration_coefficients.html'>iso_get_calibration_coefficients</a>()</code>,
+<code><a href='iso_get_calibration_range.html'>iso_get_calibration_range</a>()</code>,
+<code><a href='iso_get_calibration_summary.html'>iso_get_calibration_summary</a>()</code>,
+<code><a href='iso_get_problematic_calibrations.html'>iso_get_problematic_calibrations</a>()</code>,
+<code><a href='iso_prepare_for_calibration.html'>iso_prepare_for_calibration</a>()</code>,
+<code><a href='iso_remove_problematic_calibrations.html'>iso_remove_problematic_calibrations</a>()</code></p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#details">Details</a></li>
-          </ul>
+      <li><a href="#see-also">See also</a></li>
+    </ul>
 
   </div>
 </div>

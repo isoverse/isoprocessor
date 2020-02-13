@@ -175,26 +175,32 @@ test_that("test that plot dual inlet works properly", {
 test_that("test that referencd peak visualization works", {
 
   expect_error(iso_plot_ref_peaks(), "no data table")
-  expect_error(iso_plot_ref_peaks(tibble()), "no condition.*reference peak")
-  expect_error(iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = TRUE), "missing parameter.*ratio.*group_id.*")
-  expect_error(iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = TRUE, ratio = displ, group_id = DNE), "group_id.*unknown column")
-  expect_error(iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = cyl > 100, ratio = displ, group_id = model), "no data")
+  expect_error(iso_plot_ref_peaks(tibble()), "missing parameter.*x")
+  expect_error(iso_plot_ref_peaks(tibble(x=1:5), x), "missing parameter.*ratio")
+  expect_error(iso_plot_ref_peaks(tibble(x=1:5, y=1:5), x, ratio = y), "file_id.*unknown column")
+  expect_error(iso_plot_ref_peaks(tibble(x=1:5, y=1:5, file_id="a"), x, ratio = y, is_ref_condition = FALSE), "no data")
 
   # simple generation tests
-  expect_true((p <- iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = TRUE, ratio = displ, group_id = model)) %>% ggplot2::is.ggplot())
-  expect_true("ref_peak_nr" %in% rlang::as_label(p$mapping$fill))
-  expect_true("model" %in% rlang::as_label(p$mapping$x))
-  expect_true("total_delta_deviation" %in% rlang::as_label(p$mapping$y))
-  expect_true(iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = TRUE, ratio = c(displ, hwy), group_id = model) %>% ggplot2::is.ggplot())
-  expect_true(iso_plot_ref_peaks(ggplot2::mpg, is_ref_condition = cyl > 6, ratio = c(displ, hwy), group_id = model) %>% ggplot2::is.ggplot())
-
-  # FIXME: test more (evaluate the resulting plots in more detail?)
+  expect_true((p <- iso_plot_ref_peaks(tibble(x=1:5, y=1:5, file_id="a"), x, ratio = c(z = y))) %>% ggplot2::is.ggplot())
+  expect_true("x" %in% rlang::as_label(p$mapping$x))
+  expect_true("z" %in% rlang::as_label(p$mapping$y))
+  expect_true((p <- iso_plot_ref_peaks(tibble(x=1:5, y=1:5, z=1:5, file_id="a"), x, ratio = c(y, z))) %>% ggplot2::is.ggplot())
+  expect_true("y_value" %in% rlang::as_label(p$mapping$y))
 
 })
 
-test_that("visualization works", {
+# iso_plot_data works ======
 
-  # @FIXME implement visualization function test
+test_that("test that iso_plot_data visualization works", {
+
+  expect_error(iso_plot_data(), "no data")
+  expect_error(iso_plot_data(tibble()), "no data")
+  expect_error(iso_plot_data(ggplot2::mpg), "provide.*x")
+  expect_error(iso_plot_data(ggplot2::mpg, cyl), "provide.*y")
+  expect_warning(iso_plot_data(ggplot2::mpg, cyl, hwy), "plot will be blank")
+  expect_silent(iso_plot_data(ggplot2::mpg, cyl, hwy, geom_point()))
+
+  # @FIXME implement full suite of visualization function test
 
 })
 

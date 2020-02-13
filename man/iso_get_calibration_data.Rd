@@ -3,23 +3,57 @@
 \name{iso_get_calibration_data}
 \alias{iso_get_calibration_data}
 \alias{iso_unnest_data}
-\title{Unnest data}
+\title{Retrieve calibration data}
 \usage{
-iso_get_calibration_data(dt, select = everything(),
-  keep_remaining_nested_data = TRUE, keep_other_list_data = TRUE)
+iso_get_calibration_data(
+  dt,
+  select = everything(),
+  keep_remaining_data = keep_remaining_nested_data,
+  keep_calibration_parameters = keep_other_list_data,
+  keep_calibration_regressions = FALSE,
+  quiet = default(quiet),
+  keep_remaining_nested_data = TRUE,
+  keep_other_list_data = TRUE
+)
 
 iso_unnest_data(...)
 }
 \arguments{
-\item{select}{which columns to unnest - use \code{c(...)} to select multiple, supports all \link[dplyr]{select} syntax including renaming columns. Includes all columns by default (i.e. unnests an entire nested data frame).}
+\item{dt}{nested data frame with column \code{all_data} (see \link{iso_prepare_for_calibration}) and any number of calibrations (see \link{iso_generate_calibration})}
 
-\item{keep_remaining_nested_data}{whether to keep any remaining parts of the partially unnested data (irrelevant if \code{select = everything()})}
+\item{select}{which columns to unnest - use \code{c(...)} to select multiple, supports all \link[dplyr]{select} syntax including renaming columns. Includes all columns by default (i.e. unnests all information).}
 
-\item{keep_other_list_data}{keep other list data columns (e.g. other data or model columns)}
+\item{keep_remaining_data}{whether to keep the remaining parts of the partially unnested \code{all_data} data set (irrelevant if \code{select = everything()}). By default, remainig data is kept.}
+
+\item{keep_calibration_parameters}{whether to keep the calibration parameter columns (coefficients, summary, range) in the resulting data frame. By default, calibration parameters are kept to facilitate downstream operations that may need these calibration information (such as \link{iso_mark_calibration_range}).}
+
+\item{keep_calibration_regressions}{whether to keep the actual calibration regression objects in the resulting data frame. By default, regression objects are NOT kept because they lead to large data objects and do not usually have additional use after \link{iso_apply_calibration} has been called. There is rarely a reason to change this parameter to \code{TRUE}.}
+
+\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
+
+\item{keep_remaining_nested_data}{DEPRECATED - renamed to \code{keep_remaining_data}}
+
+\item{keep_other_list_data}{DEPRECATED - renamed to \code{keep_calibrations}}
+
+\item{...}{additional parameters to forward to the \code{func} function}
 }
 \description{
-Pull out columns from the \code{all_data} column. Typically used at various points after a dataset is prepared for calibration with \link{iso_prepare_for_calibration}, calibrations are generated with \link{iso_generate_calibration} and/or calibrations are applied with \link{iso_apply_calibration}. Note that unnesting of data columns that have multiple values per data set leads to row replication.
+Pull out data from the \code{all_data} nested calibration data frame (by default unnests all columnes). Typically used at various points after a dataset is prepared for calibration with \link{iso_prepare_for_calibration}, calibrations are generated with \link{iso_generate_calibration} and/or calibrations are applied with \link{iso_apply_calibration}. Note that when unnesting multi-row data (i.e. almost always), remaining data and calibration parameters are replicated across the unnested data set. This is NOT a problem for any downstream functions and in fact allows them to access the underlying calibrations if needed (e.g. in \code{\link{iso_mark_calibration_range}}). However, if this is undesired, please set \code{keep_remaining_data = FALSE} and \code{keep_calibrations = FALSE} when calling \code{iso_get_calibration_data} or use the \code{\link{iso_remove_list_columns}} function afterwards, which removes all nested information.
 }
 \details{
 \code{iso_unnest_data} is deprecated in favor of the more specific \code{iso_get_calibration_data} and will be removed in a future version of isoprocessor.
 }
+\seealso{
+Other calibration functions: 
+\code{\link{iso_add_standards}()},
+\code{\link{iso_apply_calibration}()},
+\code{\link{iso_evaluate_calibration_range}()},
+\code{\link{iso_generate_calibration}()},
+\code{\link{iso_get_calibration_coefficients}()},
+\code{\link{iso_get_calibration_range}()},
+\code{\link{iso_get_calibration_summary}()},
+\code{\link{iso_get_problematic_calibrations}()},
+\code{\link{iso_prepare_for_calibration}()},
+\code{\link{iso_remove_problematic_calibrations}()}
+}
+\concept{calibration functions}

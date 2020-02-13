@@ -15,10 +15,12 @@
 <link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png" />
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/simplex/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -39,10 +41,11 @@
 
 
 
-<meta property="og:title" content="Visualize the data — iso_plot_data" />
 
-<meta property="og:description" content="General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with facet_wrap or theme calls). Make sure to specify lines = TRUE and/or points = TRUE to add the lines/points respectively. Accepts multiple y variables in which case they are plotted in a facet_wrap with new variables panel holding the name of the y variable panels, y_value holding the values and y_error holding the error values (if y_error is supplied). Also always generates a new column called variable that holds the variable names (y) supplied to this function." />
+<meta property="og:title" content="Visualize the data — iso_plot_data" />
+<meta property="og:description" content="General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with facet_wrap or theme calls). Make sure to specify lines = TRUE and/or points = TRUE to add the lines/points respectively. Accepts multiple y variables in which case they are plotted in a facet_wrap with new variables panel holding the name of the y variable panels, y_value holding the values and y_error holding the error values (if y_error is supplied). Also always generates a new column called variable that holds the variable names (y) supplied to this function. All aesthetics parameters expect variables or expressions that are valid in the context of the dt. For convenience, all aesthetics can also be (re)-named on the fly with c(new_name = expr) and will include column units in the legend captions by default." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -83,7 +86,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.5</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.0</span>
       </span>
     </div>
 
@@ -114,7 +117,6 @@
   <a href="../reference/index.html">Reference</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/isoverse/isoprocessor">
@@ -141,17 +143,31 @@
     </div>
 
     <div class="ref-description">
-    
-    <p>General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with <a href='https://ggplot2.tidyverse.org/reference/facet_wrap.html'>facet_wrap</a> or <a href='https://ggplot2.tidyverse.org/reference/theme.html'>theme</a> calls). Make sure to specify <code>lines = TRUE</code> and/or <code>points = TRUE</code> to add the lines/points respectively. Accepts multiple y variables in which case they are plotted in a <a href='https://ggplot2.tidyverse.org/reference/facet_wrap.html'>facet_wrap</a> with new variables <code>panel</code> holding the name of the y variable panels, <code>y_value</code> holding the values and <code>y_error</code> holding the error values (if <code>y_error</code> is supplied). Also always generates a new column called <code>variable</code> that holds the variable names (<code>y</code>) supplied to this function.</p>
-    
+    <p>General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with <a href='https://ggplot2.tidyverse.org/reference/facet_wrap.html'>facet_wrap</a> or <a href='https://ggplot2.tidyverse.org/reference/theme.html'>theme</a> calls). Make sure to specify <code>lines = TRUE</code> and/or <code>points = TRUE</code> to add the lines/points respectively. Accepts multiple y variables in which case they are plotted in a <a href='https://ggplot2.tidyverse.org/reference/facet_wrap.html'>facet_wrap</a> with new variables <code>panel</code> holding the name of the y variable panels, <code>y_value</code> holding the values and <code>y_error</code> holding the error values (if <code>y_error</code> is supplied). Also always generates a new column called <code>variable</code> that holds the variable names (<code>y</code>) supplied to this function. All aesthetics parameters expect variables or expressions that are valid in the context of the <code>dt</code>. For convenience, all aesthetics can also be (re)-named on the fly with <code><a href='https://rdrr.io/r/base/c.html'>c(new_name = expr)</a></code> and will include column units in the legend captions by default.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>iso_plot_data</span>(<span class='no'>dt</span>, <span class='no'>x</span>, <span class='no'>y</span>, <span class='no'>...</span>, <span class='kw'>y_error</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>group</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>color</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>fill</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>shape</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>size</span> <span class='kw'>=</span> <span class='fl'>4</span>,
-  <span class='kw'>linetype</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>alpha</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>label</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>panel</span> <span class='kw'>=</span> <span class='no'>panel</span> ~ <span class='no'>.</span>,
-  <span class='kw'>panel_scales</span> <span class='kw'>=</span> <span class='st'>"free_y"</span>, <span class='kw'>lines</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>points</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>date_breaks</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>date_labels</span> <span class='kw'>=</span> <span class='st'>"%d %b %H:%M"</span>)</pre>
-    
+    <pre class="usage"><span class='fu'>iso_plot_data</span>(
+  <span class='no'>dt</span>,
+  <span class='no'>x</span>,
+  <span class='no'>y</span>,
+  <span class='no'>...</span>,
+  <span class='kw'>y_error</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>group</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>color</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>fill</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>shape</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>size</span> <span class='kw'>=</span> <span class='fl'>4</span>,
+  <span class='kw'>linetype</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>alpha</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>label</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>panel</span> <span class='kw'>=</span> <span class='no'>panel</span> ~ <span class='no'>.</span>,
+  <span class='kw'>panel_scales</span> <span class='kw'>=</span> <span class='st'>"free_y"</span>,
+  <span class='kw'>lines</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>points</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>date_breaks</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>date_labels</span> <span class='kw'>=</span> <span class='st'>"%d %b %H:%M"</span>
+)</pre>
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -161,11 +177,11 @@
     </tr>
     <tr>
       <th>x</th>
-      <td><p>the column for the x-axis aesthetic. Can be a numeric, text or datetime column (text and datetime column labels will be automatically rotated by 90 degrees). For clarity of the plot, only single variables are allowed. Use named vector with <code><a href='https://rdrr.io/r/base/c.html'>c(new_x = x)</a></code> to rename the x variable on the fly. By default will show units in the axis names if there are any. If a datetime column is provided for <code>x</code>, parameters <code>date_breaks</code> (example: <code>date_breaks = "2 hours"</code>) and <code>date_labels</code> can be set to fine-tune the x-axis appearance. See scale_date for additional details. Note that <code>x</code> can also be <code>x = NULL</code> for single data point plots - in this case the x axis is completely omitted.</p></td>
+      <td><p>the column or expression for the x-axis aesthetic. Can be a numeric, text or datetime column (text and datetime column labels will be automatically rotated by 90 degrees). For clarity of the plot, only one x variable or expression is allowed. Use named vector with <code><a href='https://rdrr.io/r/base/c.html'>c(new_x = x)</a></code> to rename the x variable or expression on the fly. By default will show units in the axis names if there are any. If a datetime column is provided for <code>x</code>, parameters <code>date_breaks</code> (example: <code>date_breaks = "2 hours"</code>) and <code>date_labels</code> can be set to fine-tune the x-axis appearance. See scale_date for additional details. Note that <code>x</code> can also be <code>x = NULL</code> for single data point plots - in this case the x axis is completely omitted.</p></td>
     </tr>
     <tr>
       <th>y</th>
-      <td><p>which columns to visualize. Combine with <code><a href='https://rdrr.io/r/base/c.html'>c(y1, y2)</a></code> to show multiple variables in a <a href='https://ggplot2.tidyverse.org/reference/facet_wrap.html'>facet_wrap</a>. Use named vector with <code><a href='https://rdrr.io/r/base/c.html'>c(new_y1 = y1)</a></code> to rename variables on the fly. By default will show units in the axis names if there are any.</p></td>
+      <td><p>which columns/expressions to visualize. Combine with <code><a href='https://rdrr.io/r/base/c.html'>c(y1, y2)</a></code> or use <a href='https://dplyr.tidyverse.org/reference/select.html'>select</a> syntax (e.g. <code>starts_with(...)</code>) to show multiple variables in a <a href='https://ggplot2.tidyverse.org/reference/facet_wrap.html'>facet_wrap</a>. Use named vector with <code><a href='https://rdrr.io/r/base/c.html'>c(new_y1 = y1)</a></code> to rename variables/expressions on the fly. By default will show units in the axis names if there are any.</p></td>
     </tr>
     <tr>
       <th>...</th>
@@ -181,15 +197,15 @@
     </tr>
     <tr>
       <th>color</th>
-      <td><p>variable to use for color aesthetic for the plot</p></td>
+      <td><p>variable to use for color aesthetic for the plot or constant value for the point and line color</p></td>
     </tr>
     <tr>
       <th>fill</th>
-      <td><p>variable to use for the fill aesthetic of the plot</p></td>
+      <td><p>variable to use for the fill aesthetic of the plot or constant value for the point fill</p></td>
     </tr>
     <tr>
       <th>shape</th>
-      <td><p>variable to use for shape aesthetic for the plot</p></td>
+      <td><p>variable to use for shape aesthetic for the plot or constant vlaue for the point shape</p></td>
     </tr>
     <tr>
       <th>size</th>
@@ -197,11 +213,11 @@
     </tr>
     <tr>
       <th>linetype</th>
-      <td><p>variable to use for linetype aesthetic for the plot</p></td>
+      <td><p>variable to use for linetype aesthetic for the plot or constant value for the line type</p></td>
     </tr>
     <tr>
       <th>alpha</th>
-      <td><p>variable to use for the opacity aesthetic for the plot (1 = 100% opaque, 0 = completely transparent)</p></td>
+      <td><p>variable to use for the opacity aesthetic for the plot or constant value for the point and line opacity (1 = 100% opaque, 0 = completely transparent)</p></td>
     </tr>
     <tr>
       <th>label</th>
@@ -232,28 +248,28 @@
       <td><p>datetime label pattern for x axis if it is a datetime</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p>Other plot functions: <code><a href='iso_format.html'>iso_format</a></code>,
-  <code><a href='iso_mark_calibration_range.html'>iso_mark_calibration_range</a></code>,
-  <code><a href='iso_mark_outliers.html'>iso_mark_outliers</a></code>,
-  <code><a href='iso_mark_value_range.html'>iso_mark_value_range</a></code>,
-  <code><a href='iso_plot_continuous_flow_data.html'>iso_plot_continuous_flow_data</a></code>,
-  <code><a href='iso_plot_dual_inlet_data.html'>iso_plot_dual_inlet_data</a></code>,
-  <code><a href='iso_plot_raw_data.html'>iso_plot_raw_data</a></code>,
-  <code><a href='iso_plot_residuals.html'>iso_plot_residuals</a></code>,
-  <code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a></code></p></div>
-    
+    <div class='dont-index'><p>Other plot functions: 
+<code><a href='iso_format.html'>iso_format</a>()</code>,
+<code><a href='iso_mark_calibration_range.html'>iso_mark_calibration_range</a>()</code>,
+<code><a href='iso_mark_outliers.html'>iso_mark_outliers</a>()</code>,
+<code><a href='iso_mark_value_range.html'>iso_mark_value_range</a>()</code>,
+<code><a href='iso_plot_continuous_flow_data.html'>iso_plot_continuous_flow_data</a>()</code>,
+<code><a href='iso_plot_dual_inlet_data.html'>iso_plot_dual_inlet_data</a>()</code>,
+<code><a href='iso_plot_raw_data.html'>iso_plot_raw_data</a>()</code>,
+<code><a href='iso_plot_ref_peaks.html'>iso_plot_ref_peaks</a>()</code>,
+<code><a href='iso_plot_residuals.html'>iso_plot_residuals</a>()</code>,
+<code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a>()</code></p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#see-also">See also</a></li>
-          </ul>
+    </ul>
 
   </div>
 </div>

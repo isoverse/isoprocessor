@@ -43,7 +43,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.5</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.0</span>
       </span>
     </div>
 
@@ -120,19 +120,16 @@
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="kw"><a href="https://rdrr.io/r/base/options.html">options</a></span>(<span class="dt">warn =</span> <span class="dv">2</span>)</a>
 <a class="sourceLine" id="cb8-2" data-line-number="2"><span class="kw">iso_read_continuous_flow</span>(<span class="kw"><a href="../../reference/iso_get_processor_example.html">iso_get_processor_example</a></span>(<span class="st">"gc_irms_example_carbon.cf.rds"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb8-3" data-line-number="3"><span class="st">  </span><span class="kw">iso_get_raw_data</span>()</a></code></pre></div>
-<pre><code>## Registered S3 method overwritten by 'R.oo':
-##   method        from       
-##   throw.default R.methodsS3</code></pre>
 <pre><code>## Info: preparing to read 1 data files (all will be cached)...</code></pre>
 <pre><code>## Info: reading file 'gc_irms_example_carbon.cf.rds' with '.cf.rds' reader</code></pre>
-<pre><code>## Info: loaded data for 47 data files from R Data Storage - checking loa...</code></pre>
-<pre><code>## Info: finished reading 1 files in 0.90 secs</code></pre>
+<pre><code>## Info: loaded data for 47 data files from R Data Storage - checking loaded f...</code></pre>
+<pre><code>## Info: finished reading 1 files in 0.79 secs</code></pre>
 <pre><code>## Info: encountered 2 problems in total</code></pre>
 <pre><code>## # A tibble: 2 x 4
-##   file_id         type  func            details                            
-##   &lt;chr&gt;           &lt;chr&gt; &lt;chr&gt;           &lt;chr&gt;                              
-## 1 BF2133__A5 con… error extract_dxf_ra… cannot identify measured masses - …
-## 2 BF2110__A5_0_5… error extract_dxf_ra… cannot identify measured masses - …</code></pre>
+##   file_id         type  func             details                                
+##   &lt;chr&gt;           &lt;chr&gt; &lt;chr&gt;            &lt;chr&gt;                                  
+## 1 BF2133__A5 con… error extract_dxf_raw… cannot identify measured masses - bloc…
+## 2 BF2110__A5_0_5… error extract_dxf_raw… cannot identify measured masses - bloc…</code></pre>
 <pre><code>## Info: aggregating raw data from 47 data file(s)</code></pre>
 <pre><code>## # A tibble: 701,681 x 6
 ##    file_id                    tp time.s v44.mV v45.mV v46.mV
@@ -151,6 +148,7 @@
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
+
       </div>
 
 </div>

@@ -27,7 +27,8 @@ Define the default parameters for calculations used in this package.
 \code{iso_reset_default_processor_parameters} resets all default function parameters for this package.
 }
 \seealso{
-Other settings functions: \code{\link{iso_get_default_processor_parameters}},
-  \code{\link{iso_show_default_processor_parameters}}
+Other settings functions: 
+\code{\link{iso_get_default_processor_parameters}()},
+\code{\link{iso_show_default_processor_parameters}()}
 }
 \concept{settings functions}

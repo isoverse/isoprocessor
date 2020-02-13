@@ -4,9 +4,15 @@
 \alias{unnest_model_column}
 \title{Unnest model results column}
 \usage{
-unnest_model_column(dt, model_column, model_params = model_params,
-  nested_model = FALSE, select = everything(),
-  keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE)
+unnest_model_column(
+  dt,
+  model_column,
+  model_params = model_params,
+  nested_model = FALSE,
+  select = everything(),
+  keep_remaining_nested_data = FALSE,
+  keep_other_list_data = FALSE
+)
 }
 \arguments{
 \item{model_column}{name of the model column to unnest}

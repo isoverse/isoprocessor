@@ -15,10 +15,12 @@
 <link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png" />
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/simplex/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -39,11 +41,12 @@
 
 
 
-<meta property="og:title" content="unnest parts of a data frame without loosing the rest — unnest_select_data" />
 
+<meta property="og:title" content="unnest parts of a data frame without loosing the rest — unnest_select_data" />
 <meta property="og:description" content="note that this will lead to row duplication if the unnested variables have multiple entries per row of the dt data frame
 also note that this will remove rows that have NULL in the nested_data column" />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -84,7 +87,7 @@ also note that this will remove rows that have NULL in the nested_data column" /
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.5</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.0</span>
       </span>
     </div>
 
@@ -115,7 +118,6 @@ also note that this will remove rows that have NULL in the nested_data column" /
   <a href="../reference/index.html">Reference</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/isoverse/isoprocessor">
@@ -142,16 +144,19 @@ also note that this will remove rows that have NULL in the nested_data column" /
     </div>
 
     <div class="ref-description">
-    
     <p>note that this will lead to row duplication if the unnested variables have multiple entries per row of the <code>dt</code> data frame
 also note that this will remove rows that have NULL in the nested_data column</p>
-    
     </div>
 
-    <pre class="usage"><span class='fu'>unnest_select_data</span>(<span class='no'>dt</span>, <span class='kw'>select</span> <span class='kw'>=</span> <span class='fu'>everything</span>(),
-  <span class='kw'>nested_data</span> <span class='kw'>=</span> <span class='no'>nested_data</span>, <span class='kw'>keep_remaining_nested_data</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>keep_other_list_data</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>keep_only_unique</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
-    
+    <pre class="usage"><span class='fu'>unnest_select_data</span>(
+  <span class='no'>dt</span>,
+  <span class='kw'>select</span> <span class='kw'>=</span> <span class='fu'>everything</span>(),
+  <span class='kw'>nested_data</span> <span class='kw'>=</span> <span class='no'>nested_data</span>,
+  <span class='kw'>keep_remaining_nested_data</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>keep_other_list_data</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>keep_only_unique</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
+)</pre>
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -172,14 +177,14 @@ also note that this will remove rows that have NULL in the nested_data column</p
       <td><p>keep other list data columns (e.g. other data or model columns)</p></td>
     </tr>
     </table>
-    
+
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-                </ul>
+    </ul>
 
   </div>
 </div>

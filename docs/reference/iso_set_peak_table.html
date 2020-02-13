@@ -15,10 +15,12 @@
 <link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png" />
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/simplex/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -39,10 +41,11 @@
 
 
 
-<meta property="og:title" content="Set peak table — iso_set_peak_table" />
 
+<meta property="og:title" content="Set peak table — iso_set_peak_table" />
 <meta property="og:description" content="Set peak table for a collection of isofiles. Peak tables have to have at least a file_id column but are otherwise flexible. That said, isoprocessor functionality that operates on peak tables assumes that all columns with numbers are iso_double_with_units and that retention times are recorded in rt_start, rt_end, and rt (apex retention time) columns." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -83,7 +86,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.5</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.0</span>
       </span>
     </div>
 
@@ -114,7 +117,6 @@
   <a href="../reference/index.html">Reference</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/isoverse/isoprocessor">
@@ -141,14 +143,16 @@
     </div>
 
     <div class="ref-description">
-    
     <p>Set peak table for a collection of isofiles. Peak tables have to have at least a <code>file_id</code> column but are otherwise flexible. That said, isoprocessor functionality that operates on peak tables assumes that all columns with numbers are <code><a href='https://rdrr.io/pkg/isoreader/man/iso_double_with_units.html'>iso_double_with_units</a></code> and that retention times are recorded in <code>rt_start</code>, <code>rt_end</code>, and <code>rt</code> (apex retention time) columns.</p>
-    
     </div>
 
-    <pre class="usage"><span class='fu'>iso_set_peak_table</span>(<span class='no'>iso_files</span>, <span class='kw'>peak_table</span> <span class='kw'>=</span> <span class='fu'>tibble</span>(<span class='kw'>file_id</span> <span class='kw'>=</span>
-  <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>)), <span class='kw'>reset_missing</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))</pre>
-    
+    <pre class="usage"><span class='fu'>iso_set_peak_table</span>(
+  <span class='no'>iso_files</span>,
+  <span class='kw'>peak_table</span> <span class='kw'>=</span> <span class='fu'>tibble</span>(<span class='kw'>file_id</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(<span class='fl'>0</span>)),
+  <span class='kw'>reset_missing</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>)
+)</pre>
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -165,28 +169,25 @@
       <td><p>whether to reset the <code>peak_table</code> of any <code>iso_files</code> whose<code>file_id</code> is not in the <code>peak_table</code>. If set to <code>FALSE</code>, will preserve pre-existing peak table data instead.</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>This funciton will issue a warning if the <code>peak_table</code> has <code>file_id</code> values that are not part of the <code>iso_files</code>. It will reset peak tables for all <code>iso_files</code> whose <code>file_id</code> is not part of <code>peak_table</code> unless <code>reset_missing</code> is set to <code>FALSE</code>, in which case pre-existing peak table data will be preserved unaltered. To reset all peak tables, simply call this function without the <code>peak_table</code> parameter.</p>
-    
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p>Other peak table functions: <code><a href='iso_get_peak_table.html'>iso_get_peak_table</a></code>,
-  <code><a href='iso_mutate_peak_table.html'>iso_mutate_peak_table</a></code>,
-  <code><a href='iso_set_peak_table_from_vendor_data_table.html'>iso_set_peak_table_from_vendor_data_table</a></code></p></div>
-    
+    <div class='dont-index'><p>Other peak table functions: 
+<code><a href='iso_get_peak_table.html'>iso_get_peak_table</a>()</code>,
+<code><a href='iso_mutate_peak_table.html'>iso_mutate_peak_table</a>()</code>,
+<code><a href='iso_set_peak_table_from_vendor_data_table.html'>iso_set_peak_table_from_vendor_data_table</a>()</code></p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#details">Details</a></li>
-
       <li><a href="#see-also">See also</a></li>
-          </ul>
+    </ul>
 
   </div>
 </div>

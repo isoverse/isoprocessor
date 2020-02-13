@@ -4,10 +4,16 @@
 \alias{iso_combine_raw_data_with_peak_table}
 \title{Generate chromatographic data with peak table information.}
 \usage{
-iso_combine_raw_data_with_peak_table(raw_data, peak_table,
-  file_id = default(file_id), data_trace = NULL, rt = default(rt),
-  rt_start = default(rt_start), rt_end = default(rt_end),
-  rt_unit = NULL)
+iso_combine_raw_data_with_peak_table(
+  raw_data,
+  peak_table,
+  file_id = default(file_id),
+  data_trace = NULL,
+  rt = default(rt),
+  rt_start = default(rt_start),
+  rt_end = default(rt_end),
+  rt_unit = NULL
+)
 }
 \arguments{
 \item{raw_data}{the raw chromatographic data. If in long format, \code{data_trace} must be set to identify peaks correctly with the individual data traces.}
