@@ -15,10 +15,12 @@
 <link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png" />
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/simplex/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -39,10 +41,11 @@
 
 
 
-<meta property="og:title" content="Map peaks based on retention time — iso_map_peaks" />
 
+<meta property="og:title" content="Map peaks based on retention time — iso_map_peaks" />
 <meta property="og:description" content="This function makes it easy to map peaks based on pre-defined peak maps. It is implemented to work on iso_files as well as directly on peak_table data frames. It reports all peaks including missing peaks and ambiguous peaks by adding a set of information columns for each entry (is_identified, is_missing, is_ambiguous, n_matches, n_overlapping). For routine downstream data processing, this function is usually followed by iso_summarize_peak_mappings and iso_get_problematic_peak_mappings to inspect the problematic peaks and iso_remove_problematic_peak_mappings to proceed only with mapped peaks that are clearly identified. Note that without this filter, one must proceed with great caution interpreting the ambiguous peaks. Also note that if the compound column already exists in peak_table, it will be overwritten with the new mappings from the peak maps but will issue a warning that this is happening." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -83,7 +86,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.8</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.0</span>
       </span>
     </div>
 
@@ -114,7 +117,6 @@
   <a href="../reference/index.html">Reference</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/isoverse/isoprocessor">
@@ -141,27 +143,38 @@
     </div>
 
     <div class="ref-description">
-    
     <p>This function makes it easy to map peaks based on pre-defined peak maps. It is implemented to work on <code>iso_files</code> as well as directly on <code>peak_table</code> data frames. It reports all peaks including missing peaks and ambiguous peaks by adding a set of information columns for each entry (<code>is_identified</code>, <code>is_missing</code>, <code>is_ambiguous</code>, <code>n_matches</code>, <code>n_overlapping</code>). For routine downstream data processing, this function is usually followed by <code><a href='iso_summarize_peak_mappings.html'>iso_summarize_peak_mappings</a></code> and <code><a href='iso_get_problematic_peak_mappings.html'>iso_get_problematic_peak_mappings</a></code> to inspect the problematic peaks and <code><a href='iso_remove_problematic_peak_mappings.html'>iso_remove_problematic_peak_mappings</a></code> to proceed only with mapped peaks that are clearly identified. Note that without this filter, one must proceed with great caution interpreting the ambiguous peaks. Also note that if the <code>compound</code> column already exists in <code>peak_table</code>, it will be overwritten with the new mappings from the peak maps but will issue a warning that this is happening.</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>iso_map_peaks</span>(<span class='no'>...</span>)
 
 <span class='co'># S3 method for iso_file_list</span>
-<span class='fu'>iso_map_peaks</span>(<span class='no'>iso_files</span>, <span class='no'>peak_maps</span>,
-  <span class='kw'>map_id</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>map_id</span>), <span class='kw'>compound</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>compound</span>),
-  <span class='kw'>rt</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt</span>), <span class='kw'>rt_start</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt_start</span>),
-  <span class='kw'>rt_end</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt_end</span>), <span class='kw'>rt_prefix_divider</span> <span class='kw'>=</span> <span class='st'>":"</span>,
-  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))
+<span class='fu'>iso_map_peaks</span>(
+  <span class='no'>iso_files</span>,
+  <span class='no'>peak_maps</span>,
+  <span class='kw'>map_id</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>map_id</span>),
+  <span class='kw'>compound</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>compound</span>),
+  <span class='kw'>rt</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt</span>),
+  <span class='kw'>rt_start</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt_start</span>),
+  <span class='kw'>rt_end</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt_end</span>),
+  <span class='kw'>rt_prefix_divider</span> <span class='kw'>=</span> <span class='st'>":"</span>,
+  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>)
+)
 
 <span class='co'># S3 method for data.frame</span>
-<span class='fu'>iso_map_peaks</span>(<span class='no'>peak_table</span>, <span class='no'>peak_maps</span>,
-  <span class='kw'>file_id</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>file_id</span>), <span class='kw'>map_id</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>map_id</span>),
-  <span class='kw'>compound</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>compound</span>), <span class='kw'>rt</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt</span>),
-  <span class='kw'>rt_start</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt_start</span>), <span class='kw'>rt_end</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt_end</span>),
-  <span class='kw'>rt_prefix_divider</span> <span class='kw'>=</span> <span class='st'>":"</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))</pre>
-    
+<span class='fu'>iso_map_peaks</span>(
+  <span class='no'>peak_table</span>,
+  <span class='no'>peak_maps</span>,
+  <span class='kw'>file_id</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>file_id</span>),
+  <span class='kw'>map_id</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>map_id</span>),
+  <span class='kw'>compound</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>compound</span>),
+  <span class='kw'>rt</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt</span>),
+  <span class='kw'>rt_start</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt_start</span>),
+  <span class='kw'>rt_end</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>rt_end</span>),
+  <span class='kw'>rt_prefix_divider</span> <span class='kw'>=</span> <span class='st'>":"</span>,
+  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>)
+)</pre>
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -214,7 +227,7 @@
       <td><p>the column(s) in peak_table that uniquely identify a file/set of peaks that belong together</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>data frame with mapped peaks and the following information columns:</p><ul>
@@ -226,24 +239,21 @@
 <li><p><code>n_overlapping</code>: the number of overlapping peaks that match the same peak definition</p></li>
 </ul>
 
-    
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p>Other peak mapping functions: <code><a href='iso_get_problematic_peaks.html'>iso_get_problematic_peaks</a></code>,
-  <code><a href='iso_remove_problematic_peak_mappings.html'>iso_remove_problematic_peak_mappings</a></code>,
-  <code><a href='iso_summarize_peak_mappings.html'>iso_summarize_peak_mappings</a></code></p></div>
-    
+    <div class='dont-index'><p>Other peak mapping functions: 
+<code><a href='iso_get_problematic_peaks.html'>iso_get_problematic_peaks</a>()</code>,
+<code><a href='iso_remove_problematic_peak_mappings.html'>iso_remove_problematic_peak_mappings</a>()</code>,
+<code><a href='iso_summarize_peak_mappings.html'>iso_summarize_peak_mappings</a>()</code></p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#value">Value</a></li>
-
       <li><a href="#see-also">See also</a></li>
-          </ul>
+    </ul>
 
   </div>
 </div>

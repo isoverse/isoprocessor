@@ -4,10 +4,17 @@
 \alias{iso_plot_calibration_parameters}
 \title{Visualize calibration parameters}
 \usage{
-iso_plot_calibration_parameters(dt, ..., x = calibration_model_name(),
-  calibration = last_calibration(dt), select_from_summary = c(R2 =
-  adj.r.squared, RSD = sigma), color = signif, panel = term ~ .,
-  panel_scales = "free", points = TRUE)
+iso_plot_calibration_parameters(
+  dt,
+  ...,
+  x = calibration_model_name(),
+  calibration = last_calibration(dt),
+  select_from_summary = c(R2 = adj.r.squared, RSD = sigma),
+  color = signif,
+  panel = term ~ .,
+  panel_scales = "free",
+  points = TRUE
+)
 }
 \arguments{
 \item{dt}{data frame to plot data from}

@@ -4,9 +4,16 @@
 \alias{evaluate_range}
 \title{evaluate regression ranges}
 \usage{
-evaluate_range(dt, ..., nested_model = FALSE, model_data = model_data,
-  model_params = model_params, in_reg = in_reg,
-  model_range = model_range, in_range = in_range)
+evaluate_range(
+  dt,
+  ...,
+  nested_model = FALSE,
+  model_data = model_data,
+  model_params = model_params,
+  in_reg = in_reg,
+  model_range = model_range,
+  in_range = in_range
+)
 }
 \arguments{
 \item{dt}{data table}

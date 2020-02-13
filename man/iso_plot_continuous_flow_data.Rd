@@ -8,22 +8,47 @@
 \usage{
 iso_plot_continuous_flow_data(...)
 
-\method{iso_plot_continuous_flow_data}{iso_file_list}(iso_files,
-  data = c(), time_interval = c(), time_interval_units = "seconds",
-  filter = NULL, normalize = FALSE, zoom = NULL, panel = data,
-  color = file_id, linetype = NULL, label = file_id,
+\method{iso_plot_continuous_flow_data}{iso_file_list}(
+  iso_files,
+  data = c(),
+  time_interval = c(),
+  time_interval_units = "seconds",
+  filter = NULL,
+  normalize = FALSE,
+  zoom = NULL,
+  panel = data,
+  color = file_id,
+  linetype = NULL,
+  label = file_id,
   peak_table = iso_get_peak_table(iso_files, quiet = TRUE),
-  file_id = default(file_id), rt = default(rt),
-  rt_start = default(rt_start), rt_end = default(rt_end),
-  rt_unit = NULL, peak_marker = FALSE, peak_bounds = FALSE,
-  peak_bgrd = FALSE, peak_label = NULL, peak_label_filter = NULL,
-  peak_label_size = 2, peak_label_repel = 1)
+  file_id = default(file_id),
+  rt = default(rt),
+  rt_start = default(rt_start),
+  rt_end = default(rt_end),
+  rt_unit = NULL,
+  peak_marker = FALSE,
+  peak_bounds = FALSE,
+  peak_bgrd = FALSE,
+  peak_label = NULL,
+  peak_label_filter = NULL,
+  peak_label_size = 2,
+  peak_label_repel = 1
+)
 
-\method{iso_plot_continuous_flow_data}{data.frame}(df, panel = data,
-  color = file_id, linetype = NULL, label = file_id,
-  peak_marker = FALSE, peak_bounds = FALSE, peak_bgrd = FALSE,
-  peak_label = NULL, peak_label_filter = NULL, peak_label_size = 2,
-  peak_label_repel = 1)
+\method{iso_plot_continuous_flow_data}{data.frame}(
+  df,
+  panel = data,
+  color = file_id,
+  linetype = NULL,
+  label = file_id,
+  peak_marker = FALSE,
+  peak_bounds = FALSE,
+  peak_bgrd = FALSE,
+  peak_label = NULL,
+  peak_label_filter = NULL,
+  peak_label_size = 2,
+  peak_label_repel = 1
+)
 }
 \arguments{
 \item{...}{S3 method placeholder parameters, see class specific functions for details on parameters}
@@ -82,15 +107,16 @@ iso_plot_continuous_flow_data(...)
 This function provides easy plotting for mass and ratio chromatograms from continuous flow IRMS data. It can be called either directly with a set of \code{iso_file} objects, or with a data frame prepared for plotting chromatographic data (see \code{\link{iso_prepare_continuous_flow_plot_data}}).
 }
 \seealso{
-Other plot functions: \code{\link{iso_format}},
-  \code{\link{iso_mark_calibration_range}},
-  \code{\link{iso_mark_outliers}},
-  \code{\link{iso_mark_value_range}},
-  \code{\link{iso_plot_data}},
-  \code{\link{iso_plot_dual_inlet_data}},
-  \code{\link{iso_plot_raw_data}},
-  \code{\link{iso_plot_ref_peaks}},
-  \code{\link{iso_plot_residuals}},
-  \code{\link{iso_prepare_continuous_flow_plot_data}}
+Other plot functions: 
+\code{\link{iso_format}()},
+\code{\link{iso_mark_calibration_range}()},
+\code{\link{iso_mark_outliers}()},
+\code{\link{iso_mark_value_range}()},
+\code{\link{iso_plot_data}()},
+\code{\link{iso_plot_dual_inlet_data}()},
+\code{\link{iso_plot_raw_data}()},
+\code{\link{iso_plot_ref_peaks}()},
+\code{\link{iso_plot_residuals}()},
+\code{\link{iso_prepare_continuous_flow_plot_data}()}
 }
 \concept{plot functions}

@@ -15,10 +15,12 @@
 <link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png" />
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/simplex/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -39,10 +41,11 @@
 
 
 
-<meta property="og:title" content="Calculate deltas — iso_calculate_deltas" />
 
+<meta property="og:title" content="Calculate deltas — iso_calculate_deltas" />
 <meta property="og:description" content="Calculate delta values from recorded data in dual inlet files (continuous flow not yet supported). Note that these are recorded delta values of sample vs. standard in each dual inlet file and NOT normalized against any external standard or reported values of the standard. They usually need at least a frame shift correction afterwards. Also note that the delta values are only multipled by 1000 if in_permil=TRUE (the default), otherwise returns raw values without unit multiplication." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -83,7 +86,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.8</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.0</span>
       </span>
     </div>
 
@@ -114,7 +117,6 @@
   <a href="../reference/index.html">Reference</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/isoverse/isoprocessor">
@@ -141,21 +143,30 @@
     </div>
 
     <div class="ref-description">
-    
     <p>Calculate delta values from recorded data in dual inlet files (continuous flow not yet supported). Note that these are recorded delta values of sample vs. standard in each dual inlet file and NOT normalized against any external standard or reported values of the standard. They usually need at least a frame shift correction afterwards. Also note that the delta values are only multipled by 1000 if <code>in_permil=TRUE</code> (the default), otherwise returns raw values without unit multiplication.</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>iso_calculate_deltas</span>(<span class='no'>...</span>)
 
 <span class='co'># S3 method for iso_file_list</span>
-<span class='fu'>iso_calculate_deltas</span>(<span class='no'>iso_files</span>, <span class='no'>deltas</span>,
-  <span class='kw'>bracket</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>in_permil</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))
+<span class='fu'>iso_calculate_deltas</span>(
+  <span class='no'>iso_files</span>,
+  <span class='no'>deltas</span>,
+  <span class='kw'>bracket</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>in_permil</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>)
+)
 
 <span class='co'># S3 method for data.frame</span>
-<span class='fu'>iso_calculate_deltas</span>(<span class='no'>df</span>, <span class='no'>deltas</span>, <span class='kw'>bracket</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>in_permil</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>ratio_prefix</span> <span class='kw'>=</span> <span class='st'>"r"</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))</pre>
-    
+<span class='fu'>iso_calculate_deltas</span>(
+  <span class='no'>df</span>,
+  <span class='no'>deltas</span>,
+  <span class='kw'>bracket</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>in_permil</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>ratio_prefix</span> <span class='kw'>=</span> <span class='st'>"r"</span>,
+  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>)
+)</pre>
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -184,26 +195,22 @@
       <td><p>the prefix of the ratio columns. Default is <code>"r"</code> which is what <code><a href='iso_calculate_ratios.html'>iso_calculate_ratios</a></code> generates.</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>the passed in data with deltas added</p>
-    
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>If <code>bracket=TRUE</code> (the default), the delta values are calculated from the raw data ratios of the sample and the two bracketing standards in the same cycle and cycle before it (this implicitly assumes that the pre-standard has cycle number 0) If <code>bracket=FALSE</code>, the delta values are calculated straight from the corresponding raw data ratios of the sample and the standard in the same cycle. Delta values are only stored in the <code>sample</code> rows of the raw data, not in the <code>standard</code> rows.</p>
-    
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#value">Value</a></li>
-
       <li><a href="#details">Details</a></li>
-          </ul>
+    </ul>
 
   </div>
 </div>

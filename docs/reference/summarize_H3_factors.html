@@ -15,10 +15,12 @@
 <link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png" />
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/simplex/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -39,10 +41,11 @@
 
 
 
-<meta property="og:title" content="Summarize H3 factors — summarize_H3_factors" />
 
+<meta property="og:title" content="Summarize H3 factors — summarize_H3_factors" />
 <meta property="og:description" content="Summarize H3 factors" />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -83,7 +86,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.8</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.0</span>
       </span>
     </div>
 
@@ -114,7 +117,6 @@
   <a href="../reference/index.html">Reference</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/isoverse/isoprocessor">
@@ -141,17 +143,20 @@
     </div>
 
     <div class="ref-description">
-    
     <p>Summarize H3 factors</p>
-    
     </div>
 
-    <pre class="usage"><span class='fu'>summarize_H3_factors</span>(<span class='no'>dt</span>, <span class='no'>is_H3_factor_file_condition</span>,
+    <pre class="usage"><span class='fu'>summarize_H3_factors</span>(
+  <span class='no'>dt</span>,
+  <span class='no'>is_H3_factor_file_condition</span>,
   <span class='kw'>is_H3_factor_file</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>is_H3_factor_file</span>),
-  <span class='kw'>file_id</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>file_id</span>), <span class='kw'>file_datetime</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>file_datetime</span>),
-  <span class='kw'>H3_factor</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>H3_factor</span>), <span class='kw'>ampl</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>ampl</span>),
-  <span class='kw'>keep</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='kw'>NULL</span>))</pre>
-    
+  <span class='kw'>file_id</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>file_id</span>),
+  <span class='kw'>file_datetime</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>file_datetime</span>),
+  <span class='kw'>H3_factor</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>H3_factor</span>),
+  <span class='kw'>ampl</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>ampl</span>),
+  <span class='kw'>keep</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='kw'>NULL</span>)
+)</pre>
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -164,14 +169,14 @@
       <td><p>condition to find H3 factor files</p></td>
     </tr>
     </table>
-    
+
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-                </ul>
+    </ul>
 
   </div>
 </div>

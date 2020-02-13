@@ -15,10 +15,12 @@
 <link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png" />
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/simplex/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -39,10 +41,11 @@
 
 
 
-<meta property="og:title" content="Mutate peak table — iso_mutate_peak_table" />
 
+<meta property="og:title" content="Mutate peak table — iso_mutate_peak_table" />
 <meta property="og:description" content="Mutate a peak table data frame either stand-alone (iso_get_peak_table) or within isofile objects. Works just like dplyr's mutate for changing existing columns or introducing new ones, except that it provides an information message and preserves column units even in grouped operations (mutate should gain this functionality in version 0.9)." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -83,7 +86,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.8</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.0</span>
       </span>
     </div>
 
@@ -114,7 +117,6 @@
   <a href="../reference/index.html">Reference</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/isoverse/isoprocessor">
@@ -141,21 +143,17 @@
     </div>
 
     <div class="ref-description">
-    
     <p>Mutate a peak table data frame either stand-alone (<code><a href='iso_get_peak_table.html'>iso_get_peak_table</a></code>) or within isofile objects. Works just like dplyr's <a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a> for changing existing columns or introducing new ones, except that it provides an information message and preserves column units even in grouped operations (<a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a> should gain this functionality in version 0.9).</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>iso_mutate_peak_table</span>(<span class='no'>iso_files</span>, <span class='no'>...</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))
 
 <span class='co'># S3 method for iso_file_list</span>
-<span class='fu'>iso_mutate_peak_table</span>(<span class='no'>iso_files</span>, <span class='no'>...</span>,
-  <span class='kw'>group_by</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))
+<span class='fu'>iso_mutate_peak_table</span>(<span class='no'>iso_files</span>, <span class='no'>...</span>, <span class='kw'>group_by</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))
 
 <span class='co'># S3 method for data.frame</span>
-<span class='fu'>iso_mutate_peak_table</span>(<span class='no'>peak_table</span>, <span class='no'>...</span>,
-  <span class='kw'>group_by</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))</pre>
-    
+<span class='fu'>iso_mutate_peak_table</span>(<span class='no'>peak_table</span>, <span class='no'>...</span>, <span class='kw'>group_by</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>))</pre>
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -169,7 +167,7 @@
     </tr>
     <tr>
       <th>quiet</th>
-      <td><p>whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages. Set parameter to overwrite global defaults for this function or set global defaults with calls to iso_turn_info_message_on and iso_turn_info_message_off</p></td>
+      <td><p>whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages. Set parameter to overwrite global defaults for this function or set global defaults with calls to <a href='https://rdrr.io/pkg/isoreader/man/iso_info_messages.html'>iso_turn_info_message_on</a> and <a href='https://rdrr.io/pkg/isoreader/man/iso_info_messages.html'>iso_turn_info_message_off</a></p></td>
     </tr>
     <tr>
       <th>group_by</th>
@@ -180,22 +178,21 @@
       <td><p>data frame with the peak table (can be grouped prior to this function call or via the <code>group_by</code> parameter)</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p>Other peak table functions: <code><a href='iso_get_peak_table.html'>iso_get_peak_table</a></code>,
-  <code><a href='iso_set_peak_table_from_vendor_data_table.html'>iso_set_peak_table_from_vendor_data_table</a></code>,
-  <code><a href='iso_set_peak_table.html'>iso_set_peak_table</a></code></p></div>
-    
+    <div class='dont-index'><p>Other peak table functions: 
+<code><a href='iso_get_peak_table.html'>iso_get_peak_table</a>()</code>,
+<code><a href='iso_set_peak_table_from_vendor_data_table.html'>iso_set_peak_table_from_vendor_data_table</a>()</code>,
+<code><a href='iso_set_peak_table.html'>iso_set_peak_table</a>()</code></p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#see-also">See also</a></li>
-          </ul>
+    </ul>
 
   </div>
 </div>

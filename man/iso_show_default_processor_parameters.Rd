@@ -4,8 +4,12 @@
 \alias{iso_show_default_processor_parameters}
 \title{Show the current default processor parameters}
 \usage{
-iso_show_default_processor_parameters(data = NULL,
-  print_func = default(print_func), ..., quiet = default(quiet))
+iso_show_default_processor_parameters(
+  data = NULL,
+  print_func = default(print_func),
+  ...,
+  quiet = default(quiet)
+)
 }
 \arguments{
 \item{data}{can be used to include this function call within a pipeline}
@@ -24,7 +28,8 @@ Shows a table with the default function parameters for this package.
 DEPRECATE
 }
 \seealso{
-Other settings functions: \code{\link{iso_get_default_processor_parameters}},
-  \code{\link{iso_set_default_processor_parameters}}
+Other settings functions: 
+\code{\link{iso_get_default_processor_parameters}()},
+\code{\link{iso_set_default_processor_parameters}()}
 }
 \concept{settings functions}

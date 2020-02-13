@@ -4,11 +4,16 @@
 \alias{summarize_H3_factors}
 \title{Summarize H3 factors}
 \usage{
-summarize_H3_factors(dt, is_H3_factor_file_condition,
+summarize_H3_factors(
+  dt,
+  is_H3_factor_file_condition,
   is_H3_factor_file = default(is_H3_factor_file),
-  file_id = default(file_id), file_datetime = default(file_datetime),
-  H3_factor = default(H3_factor), ampl = default(ampl),
-  keep = default(NULL))
+  file_id = default(file_id),
+  file_datetime = default(file_datetime),
+  H3_factor = default(H3_factor),
+  ampl = default(ampl),
+  keep = default(NULL)
+)
 }
 \arguments{
 \item{dt}{data table}

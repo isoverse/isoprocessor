@@ -7,6 +7,7 @@ articles:
   ea_irms_example_carbon: ea_irms_example_carbon.html
   gc_irms_example_carbon: gc_irms_example_carbon.html
   operations: operations.html
+  scan: scan.html
   Untitled: tmp/Untitled.html
 urls:
   reference: http://isoprocessor.isoverse.org//reference

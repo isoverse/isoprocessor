@@ -8,17 +8,30 @@
 \usage{
 iso_map_peaks(...)
 
-\method{iso_map_peaks}{iso_file_list}(iso_files, peak_maps,
-  map_id = default(map_id), compound = default(compound),
-  rt = default(rt), rt_start = default(rt_start),
-  rt_end = default(rt_end), rt_prefix_divider = ":",
-  quiet = default(quiet))
+\method{iso_map_peaks}{iso_file_list}(
+  iso_files,
+  peak_maps,
+  map_id = default(map_id),
+  compound = default(compound),
+  rt = default(rt),
+  rt_start = default(rt_start),
+  rt_end = default(rt_end),
+  rt_prefix_divider = ":",
+  quiet = default(quiet)
+)
 
-\method{iso_map_peaks}{data.frame}(peak_table, peak_maps,
-  file_id = default(file_id), map_id = default(map_id),
-  compound = default(compound), rt = default(rt),
-  rt_start = default(rt_start), rt_end = default(rt_end),
-  rt_prefix_divider = ":", quiet = default(quiet))
+\method{iso_map_peaks}{data.frame}(
+  peak_table,
+  peak_maps,
+  file_id = default(file_id),
+  map_id = default(map_id),
+  compound = default(compound),
+  rt = default(rt),
+  rt_start = default(rt_start),
+  rt_end = default(rt_end),
+  rt_prefix_divider = ":",
+  quiet = default(quiet)
+)
 }
 \arguments{
 \item{...}{S3 method placeholder parameters, see class specific functions for details on parameters}
@@ -60,8 +73,9 @@ data frame with mapped peaks and the following information columns:
 This function makes it easy to map peaks based on pre-defined peak maps. It is implemented to work on \code{iso_files} as well as directly on \code{peak_table} data frames. It reports all peaks including missing peaks and ambiguous peaks by adding a set of information columns for each entry (\code{is_identified}, \code{is_missing}, \code{is_ambiguous}, \code{n_matches}, \code{n_overlapping}). For routine downstream data processing, this function is usually followed by \code{\link{iso_summarize_peak_mappings}} and \code{\link{iso_get_problematic_peak_mappings}} to inspect the problematic peaks and \code{\link{iso_remove_problematic_peak_mappings}} to proceed only with mapped peaks that are clearly identified. Note that without this filter, one must proceed with great caution interpreting the ambiguous peaks. Also note that if the \code{compound} column already exists in \code{peak_table}, it will be overwritten with the new mappings from the peak maps but will issue a warning that this is happening.
 }
 \seealso{
-Other peak mapping functions: \code{\link{iso_get_problematic_peaks}},
-  \code{\link{iso_remove_problematic_peak_mappings}},
-  \code{\link{iso_summarize_peak_mappings}}
+Other peak mapping functions: 
+\code{\link{iso_get_problematic_peaks}()},
+\code{\link{iso_remove_problematic_peak_mappings}()},
+\code{\link{iso_summarize_peak_mappings}()}
 }
 \concept{peak mapping functions}

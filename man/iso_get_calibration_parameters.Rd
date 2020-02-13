@@ -5,12 +5,18 @@
 \alias{iso_unnest_calibration_parameters}
 \title{Get calibration parameters}
 \usage{
-iso_get_calibration_parameters(dt, calibration = last_calibration(dt),
-  select_from_coefs = everything(), select_from_summary = everything(),
+iso_get_calibration_parameters(
+  dt,
+  calibration = last_calibration(dt),
+  select_from_coefs = everything(),
+  select_from_summary = everything(),
   keep_calibration_parameters = keep_other_list_data,
   keep_calibration_regressions = FALSE,
-  keep_other_calibrations = FALSE, quiet = default(quiet),
-  keep_remaining_nested_data = FALSE, keep_other_list_data = FALSE)
+  keep_other_calibrations = FALSE,
+  quiet = default(quiet),
+  keep_remaining_nested_data = FALSE,
+  keep_other_list_data = FALSE
+)
 
 iso_unnest_calibration_parameters(...)
 }

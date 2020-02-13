@@ -4,10 +4,17 @@
 \alias{iso_export_calibration_to_excel}
 \title{Export calibration to Excel}
 \usage{
-iso_export_calibration_to_excel(calibs_df, filepath, ...,
-  include_all_data = TRUE, include_calib_coefs = TRUE,
-  include_calib_summary = TRUE, include_calib_range = TRUE,
-  with_explicit_units = TRUE, quiet = default(quiet))
+iso_export_calibration_to_excel(
+  calibs_df,
+  filepath,
+  ...,
+  include_all_data = TRUE,
+  include_calib_coefs = TRUE,
+  include_calib_summary = TRUE,
+  include_calib_range = TRUE,
+  with_explicit_units = TRUE,
+  quiet = default(quiet)
+)
 }
 \arguments{
 \item{calibs_df}{data frame that includes calibration columns (i.e. the output of functions like \link{iso_generate_calibration}, \link{iso_apply_calibration}, \link{iso_evaluate_calibration_range}). Can be the output from \link{iso_get_calibration_data} if called after a calibration has been generated.}

@@ -4,8 +4,16 @@
 \alias{iso_plot_ref_peaks}
 \title{Plot reference peaks}
 \usage{
-iso_plot_ref_peaks(dt, x, ratio, ..., group_id = file_id,
-  is_ref_condition = TRUE, within_group = TRUE, is_ref_used = NULL)
+iso_plot_ref_peaks(
+  dt,
+  x,
+  ratio,
+  ...,
+  group_id = file_id,
+  is_ref_condition = TRUE,
+  within_group = TRUE,
+  is_ref_used = NULL
+)
 }
 \arguments{
 \item{dt}{data table}
@@ -28,15 +36,16 @@ iso_plot_ref_peaks(dt, x, ratio, ..., group_id = file_id,
 Visualize how consistent the reference peaks are across a serious of samples.
 }
 \seealso{
-Other plot functions: \code{\link{iso_format}},
-  \code{\link{iso_mark_calibration_range}},
-  \code{\link{iso_mark_outliers}},
-  \code{\link{iso_mark_value_range}},
-  \code{\link{iso_plot_continuous_flow_data}},
-  \code{\link{iso_plot_data}},
-  \code{\link{iso_plot_dual_inlet_data}},
-  \code{\link{iso_plot_raw_data}},
-  \code{\link{iso_plot_residuals}},
-  \code{\link{iso_prepare_continuous_flow_plot_data}}
+Other plot functions: 
+\code{\link{iso_format}()},
+\code{\link{iso_mark_calibration_range}()},
+\code{\link{iso_mark_outliers}()},
+\code{\link{iso_mark_value_range}()},
+\code{\link{iso_plot_continuous_flow_data}()},
+\code{\link{iso_plot_data}()},
+\code{\link{iso_plot_dual_inlet_data}()},
+\code{\link{iso_plot_raw_data}()},
+\code{\link{iso_plot_residuals}()},
+\code{\link{iso_prepare_continuous_flow_plot_data}()}
 }
 \concept{plot functions}

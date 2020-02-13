@@ -8,20 +8,26 @@
 \usage{
 iso_summarize_peak_mappings(...)
 
-\method{iso_summarize_peak_mappings}{iso_file_list}(iso_files,
-  include_file_info = NULL, compound = default(compound),
-  rt = default(rt))
+\method{iso_summarize_peak_mappings}{iso_file_list}(
+  iso_files,
+  include_file_info = NULL,
+  compound = default(compound),
+  rt = default(rt)
+)
 
-\method{iso_summarize_peak_mappings}{data.frame}(peak_table,
-  file_id = default(file_id), compound = default(compound),
-  rt = default(rt))
+\method{iso_summarize_peak_mappings}{data.frame}(
+  peak_table,
+  file_id = default(file_id),
+  compound = default(compound),
+  rt = default(rt)
+)
 }
 \arguments{
 \item{...}{S3 method placeholder parameters, see class specific functions for details on parameters}
 
 \item{iso_files}{collection of continuous flow iso_file objects}
 
-\item{include_file_info}{which file information to include (see \code{\link{iso_get_file_info}}). Use \code{c(...)} to select multiple, supports all \link[dplyr]{select} syntax including renaming columns.}
+\item{include_file_info}{which file information to include (see \code{\link[isoreader]{iso_get_file_info}}). Use \code{c(...)} to select multiple, supports all \link[dplyr]{select} syntax including renaming columns.}
 
 \item{compound}{the column in peak_maps that holds compound information}
 
@@ -44,8 +50,9 @@ summary data table with one row for each unique combination of the \code{file_id
 Summarize peaks after peak mapping. This function is called after \link{iso_map_peaks} and can be used in combination with \link{iso_get_problematic_peaks} to inspect problematic peaks in particular. For the \code{file_id} parameter, make sure to use the same set or a subset of the columns used to identify individual files in the \link{iso_map_peaks} call before.
 }
 \seealso{
-Other peak mapping functions: \code{\link{iso_get_problematic_peaks}},
-  \code{\link{iso_map_peaks}},
-  \code{\link{iso_remove_problematic_peak_mappings}}
+Other peak mapping functions: 
+\code{\link{iso_get_problematic_peaks}()},
+\code{\link{iso_map_peaks}()},
+\code{\link{iso_remove_problematic_peak_mappings}()}
 }
 \concept{peak mapping functions}

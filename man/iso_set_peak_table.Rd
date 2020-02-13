@@ -4,8 +4,12 @@
 \alias{iso_set_peak_table}
 \title{Set peak table}
 \usage{
-iso_set_peak_table(iso_files, peak_table = tibble(file_id =
-  character(0)), reset_missing = TRUE, quiet = default(quiet))
+iso_set_peak_table(
+  iso_files,
+  peak_table = tibble(file_id = character(0)),
+  reset_missing = TRUE,
+  quiet = default(quiet)
+)
 }
 \arguments{
 \item{iso_files}{iso file(s) for which to set peak tables}
@@ -21,8 +25,9 @@ Set peak table for a collection of isofiles. Peak tables have to have at least a
 This funciton will issue a warning if the \code{peak_table} has \code{file_id} values that are not part of the \code{iso_files}. It will reset peak tables for all \code{iso_files} whose \code{file_id} is not part of \code{peak_table} unless \code{reset_missing} is set to \code{FALSE}, in which case pre-existing peak table data will be preserved unaltered. To reset all peak tables, simply call this function without the \code{peak_table} parameter.
 }
 \seealso{
-Other peak table functions: \code{\link{iso_get_peak_table}},
-  \code{\link{iso_mutate_peak_table}},
-  \code{\link{iso_set_peak_table_from_vendor_data_table}}
+Other peak table functions: 
+\code{\link{iso_get_peak_table}()},
+\code{\link{iso_mutate_peak_table}()},
+\code{\link{iso_set_peak_table_from_vendor_data_table}()}
 }
 \concept{peak table functions}
