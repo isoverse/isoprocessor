@@ -28,7 +28,7 @@ iso_combine_raw_data_with_peak_table <- function(
   raw_data_cols <- get_column_names(
     raw_data, file_id = enquo(file_id), n_reqs = list(file_id = "+"))
   data_trace_quo <- enquo(data_trace)
-  isoreader:::check_expressions(raw_data, data_trace_quo)
+  check_expressions(raw_data, data_trace_quo)
   if (rlang::quo_is_null(data_trace_quo)) data_trace_quo <- quo("all")
 
   # find peak table columns
