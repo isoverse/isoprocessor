@@ -8,18 +8,16 @@
 \usage{
 iso_mutate_peak_table(iso_files, ..., quiet = default(quiet))
 
-\method{iso_mutate_peak_table}{iso_file_list}(iso_files, ...,
-  group_by = NULL, quiet = default(quiet))
+\method{iso_mutate_peak_table}{iso_file_list}(iso_files, ..., group_by = NULL, quiet = default(quiet))
 
-\method{iso_mutate_peak_table}{data.frame}(peak_table, ...,
-  group_by = NULL, quiet = default(quiet))
+\method{iso_mutate_peak_table}{data.frame}(peak_table, ..., group_by = NULL, quiet = default(quiet))
 }
 \arguments{
 \item{iso_files}{collection of iso_file objects}
 
 \item{...}{dplyr-style \link[dplyr]{mutate} conditions applied to the combined peak_table (see \code{\link{iso_get_peak_table}})}
 
-\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages. Set parameter to overwrite global defaults for this function or set global defaults with calls to \link[=iso_info_messages]{iso_turn_info_message_on} and \link[=iso_info_messages]{iso_turn_info_message_off}}
+\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages. Set parameter to overwrite global defaults for this function or set global defaults with calls to \link[isoreader:iso_info_messages]{iso_turn_info_message_on} and \link[isoreader:iso_info_messages]{iso_turn_info_message_off}}
 
 \item{group_by}{a single \link[dplyr]{group_by} column to group by before applying the mutate statement}
 
@@ -29,8 +27,9 @@ iso_mutate_peak_table(iso_files, ..., quiet = default(quiet))
 Mutate a peak table data frame either stand-alone (\code{\link{iso_get_peak_table}}) or within isofile objects. Works just like dplyr's \link[dplyr]{mutate} for changing existing columns or introducing new ones, except that it provides an information message and preserves column units even in grouped operations (\link[dplyr]{mutate} should gain this functionality in version 0.9).
 }
 \seealso{
-Other peak table functions: \code{\link{iso_get_peak_table}},
-  \code{\link{iso_set_peak_table_from_vendor_data_table}},
-  \code{\link{iso_set_peak_table}}
+Other peak table functions: 
+\code{\link{iso_get_peak_table}()},
+\code{\link{iso_set_peak_table_from_vendor_data_table}()},
+\code{\link{iso_set_peak_table}()}
 }
 \concept{peak table functions}

@@ -21,9 +21,9 @@ test_that("test that calibration prep works properly", {
   expect_error(iso_prepare_for_calibration(tibble(), group_by = bla), "unknown column")
 
   # simple nesting
-  expect_message(out <- iso_prepare_for_calibration(tibble()), "nesting the entire dataset")
+  expect_message(out <- iso_prepare_for_calibration(ggplot2::mpg), "nesting the entire dataset")
   expect_equal(names(out), "all_data")
-  expect_equal(out %>% unnest(all_data), tibble())
+  expect_equal(out %>% unnest(all_data), ggplot2::mpg)
 
   # grouped nesting
   expect_message(out <- iso_prepare_for_calibration(ggplot2::mpg, group_by = cyl), "grouping.*cyl")

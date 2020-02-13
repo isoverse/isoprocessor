@@ -15,10 +15,12 @@
 <link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png" />
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png" />
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/simplex/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -39,10 +41,11 @@
 
 
 
-<meta property="og:title" content="Format iso numbers — iso_format" />
 
+<meta property="og:title" content="Format iso numbers — iso_format" />
 <meta property="og:description" content="Function to easily format number columns for peak labels or other text output." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -83,7 +86,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.8</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.0</span>
       </span>
     </div>
 
@@ -114,7 +117,6 @@
   <a href="../reference/index.html">Reference</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/isoverse/isoprocessor">
@@ -141,14 +143,18 @@
     </div>
 
     <div class="ref-description">
-    
     <p>Function to easily format number columns for peak labels or other text output.</p>
-    
     </div>
 
-    <pre class="usage"><span class='fu'>iso_format</span>(<span class='no'>...</span>, <span class='kw'>signif</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>format_names</span> <span class='kw'>=</span> <span class='st'>"%s: "</span>,
-  <span class='kw'>format_units</span> <span class='kw'>=</span> <span class='st'>"%s"</span>, <span class='kw'>replace_permil</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>sep</span> <span class='kw'>=</span> <span class='st'>"\n"</span>)</pre>
-    
+    <pre class="usage"><span class='fu'>iso_format</span>(
+  <span class='no'>...</span>,
+  <span class='kw'>signif</span> <span class='kw'>=</span> <span class='fl'>3</span>,
+  <span class='kw'>format_names</span> <span class='kw'>=</span> <span class='st'>"%s: "</span>,
+  <span class='kw'>format_units</span> <span class='kw'>=</span> <span class='st'>"%s"</span>,
+  <span class='kw'>replace_permil</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>sep</span> <span class='kw'>=</span> <span class='st'>"\n"</span>
+)</pre>
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -177,20 +183,20 @@
       <td><p>separator between variables if multiple are provided in <code>...</code></p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p>Other plot functions: <code><a href='iso_mark_calibration_range.html'>iso_mark_calibration_range</a></code>,
-  <code><a href='iso_mark_outliers.html'>iso_mark_outliers</a></code>,
-  <code><a href='iso_mark_value_range.html'>iso_mark_value_range</a></code>,
-  <code><a href='iso_plot_continuous_flow_data.html'>iso_plot_continuous_flow_data</a></code>,
-  <code><a href='iso_plot_data.html'>iso_plot_data</a></code>,
-  <code><a href='iso_plot_dual_inlet_data.html'>iso_plot_dual_inlet_data</a></code>,
-  <code><a href='iso_plot_raw_data.html'>iso_plot_raw_data</a></code>,
-  <code><a href='iso_plot_ref_peaks.html'>iso_plot_ref_peaks</a></code>,
-  <code><a href='iso_plot_residuals.html'>iso_plot_residuals</a></code>,
-  <code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a></code></p></div>
-    
+    <div class='dont-index'><p>Other plot functions: 
+<code><a href='iso_mark_calibration_range.html'>iso_mark_calibration_range</a>()</code>,
+<code><a href='iso_mark_outliers.html'>iso_mark_outliers</a>()</code>,
+<code><a href='iso_mark_value_range.html'>iso_mark_value_range</a>()</code>,
+<code><a href='iso_plot_continuous_flow_data.html'>iso_plot_continuous_flow_data</a>()</code>,
+<code><a href='iso_plot_data.html'>iso_plot_data</a>()</code>,
+<code><a href='iso_plot_dual_inlet_data.html'>iso_plot_dual_inlet_data</a>()</code>,
+<code><a href='iso_plot_raw_data.html'>iso_plot_raw_data</a>()</code>,
+<code><a href='iso_plot_ref_peaks.html'>iso_plot_ref_peaks</a>()</code>,
+<code><a href='iso_plot_residuals.html'>iso_plot_residuals</a>()</code>,
+<code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a>()</code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='no'>x</span> <span class='kw'>&lt;-</span> <span class='fu'>iso_double_with_units</span>(<span class='fl'>1</span>:<span class='fl'>5</span>, <span class='st'>"V"</span>)
@@ -203,9 +209,7 @@
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#see-also">See also</a></li>
-      
       <li><a href="#examples">Examples</a></li>
     </ul>
 

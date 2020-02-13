@@ -4,10 +4,17 @@
 \alias{calculate_backgrounds}
 \title{Calculate background signals}
 \usage{
-calculate_backgrounds(data, method, signal_pattern = "^[vi]\\\\d+",
-  bg_suffix = "_bgrd", time = default("time"),
-  peak = default("peak"), bgrd = default("bgrd"),
-  file = default("file"), quiet = default("quiet"))
+calculate_backgrounds(
+  data,
+  method,
+  signal_pattern = "^[vi]\\\\d+",
+  bg_suffix = "_bgrd",
+  time = default("time"),
+  peak = default("peak"),
+  bgrd = default("bgrd"),
+  file = default("file"),
+  quiet = default("quiet")
+)
 }
 \arguments{
 \item{data}{the data frame with chromatographic and peak information}

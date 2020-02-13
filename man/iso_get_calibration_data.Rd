@@ -5,11 +5,16 @@
 \alias{iso_unnest_data}
 \title{Retrieve calibration data}
 \usage{
-iso_get_calibration_data(dt, select = everything(),
+iso_get_calibration_data(
+  dt,
+  select = everything(),
   keep_remaining_data = keep_remaining_nested_data,
   keep_calibration_parameters = keep_other_list_data,
-  keep_calibration_regressions = FALSE, quiet = default(quiet),
-  keep_remaining_nested_data = TRUE, keep_other_list_data = TRUE)
+  keep_calibration_regressions = FALSE,
+  quiet = default(quiet),
+  keep_remaining_nested_data = TRUE,
+  keep_other_list_data = TRUE
+)
 
 iso_unnest_data(...)
 }
@@ -39,15 +44,16 @@ Pull out data from the \code{all_data} nested calibration data frame (by default
 \code{iso_unnest_data} is deprecated in favor of the more specific \code{iso_get_calibration_data} and will be removed in a future version of isoprocessor.
 }
 \seealso{
-Other calibration functions: \code{\link{iso_add_standards}},
-  \code{\link{iso_apply_calibration}},
-  \code{\link{iso_evaluate_calibration_range}},
-  \code{\link{iso_generate_calibration}},
-  \code{\link{iso_get_calibration_coefficients}},
-  \code{\link{iso_get_calibration_range}},
-  \code{\link{iso_get_calibration_summary}},
-  \code{\link{iso_get_problematic_calibrations}},
-  \code{\link{iso_prepare_for_calibration}},
-  \code{\link{iso_remove_problematic_calibrations}}
+Other calibration functions: 
+\code{\link{iso_add_standards}()},
+\code{\link{iso_apply_calibration}()},
+\code{\link{iso_evaluate_calibration_range}()},
+\code{\link{iso_generate_calibration}()},
+\code{\link{iso_get_calibration_coefficients}()},
+\code{\link{iso_get_calibration_range}()},
+\code{\link{iso_get_calibration_summary}()},
+\code{\link{iso_get_problematic_calibrations}()},
+\code{\link{iso_prepare_for_calibration}()},
+\code{\link{iso_remove_problematic_calibrations}()}
 }
 \concept{calibration functions}

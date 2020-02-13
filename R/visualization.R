@@ -56,7 +56,7 @@ iso_prepare_continuous_flow_plot_data <- function(
   # check for zoom_gruop column(s) existence
   aes_quos <- list(zoom_group = enquo(zoom_group))
   if (rlang::quo_is_null(aes_quos$zoom_group)) aes_quos$zoom_group <- quo(1)
-  isoreader:::check_expressions(raw_data, aes_quos$zoom_group)
+  check_expressions(raw_data, aes_quos$zoom_group)
 
   # only work with desired data (masses and ratios)
   select_data <- if(length(data) == 0) unique(raw_data$data) else as.character(data)
@@ -238,7 +238,7 @@ iso_format <- function(..., signif = 3, format_names = "%s: ", format_units="%s"
   # full text
   return(
     do.call(paste, args = c(values, list(sep = "\n"))) %>%
-      stringr::str_replace(fixed("permil"), "\u2030")
+      stringr::str_replace_all(fixed("permil"), "\u2030")
   )
 }
 
@@ -393,7 +393,7 @@ iso_plot_continuous_flow_data.data.frame <- function(
     time_min = quo("time_min"), time_max = quo("time_max"),
     is_ratio = quo("is_ratio"), data = quo("data"), value = quo("value"))
   peak_cols <- c("peak_marker", "peak_point", "peak_start", "peak_end") %in% names(df)
-  isoreader:::check_expressions(df, aes_quos$color, aes_quos$linetype, aes_quos$label, aes_quos$panel)
+  check_expressions(df, aes_quos$color, aes_quos$linetype, aes_quos$label, aes_quos$panel)
 
   # add panel column to allow expressions
   if (!quo_is_null(aes_quos$panel)) {
@@ -423,7 +423,7 @@ iso_plot_continuous_flow_data.data.frame <- function(
       warning(immediate. = TRUE, call. = FALSE)
   }
   if (!quo_is_null(aes_quos$peak_label)) {
-    isoreader:::check_expressions(df, aes_quos$peak_label)
+    check_expressions(df, aes_quos$peak_label)
   }
 
   # peak boundaries - consider making this an area background
@@ -605,7 +605,7 @@ iso_plot_dual_inlet_data <- function(
                    linetype = enquo(linetype), shape = enquo(shape),
                    label = enquo(label))
   aes_cols <- list()
-  isoreader:::check_expressions(raw_data, aes_quos$color, aes_quos$linetype, aes_quos$shape, aes_quos$label)
+  check_expressions(raw_data, aes_quos$color, aes_quos$linetype, aes_quos$shape, aes_quos$label)
 
   if (quo_is_null(aes_quos$panel)) {
     # no panel
@@ -824,6 +824,7 @@ iso_plot_data <- function(
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
+  if (nrow(dt) == 0) stop("the provided data table has no data to plot (0 rows)", call. = FALSE)
   if (missing(x)) stop("have to provide an x variable or expression to plot", call. = FALSE)
   if (missing(y)) stop("have to provide at least one y variable or expression to plot", call. = FALSE)
 

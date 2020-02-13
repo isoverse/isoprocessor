@@ -58,10 +58,11 @@ iso_map_peaks.iso_file_list <- function(
   if (nrow(peak_table) == 0) return(iso_files)
 
   # see if map id column comes from file info
-  file_info <- iso_get_file_info(iso_files, select = !!map_id_quo, quiet = TRUE)
-  file_info_cols <- names(file_info) %>% stringr::str_subset(fixed("file_id"), negate = TRUE)
-  if (length(file_info_cols) > 0) {
-    peak_table <- dplyr::left_join(file_info, peak_table, by = "file_id")
+  file_info <- iso_get_file_info(iso_files, quiet = TRUE)
+  map_id_cols <- get_column_names(file_info, map_id = map_id_quo, n_reqs = list(map_id = "*"), cols_must_exist = FALSE, warn = FALSE)$map_id
+  if (length(map_id_cols) > 0) {
+    map_id_cols <- stringr::str_subset(map_id_cols, fixed("file_id"), negate = TRUE)
+    peak_table <- dplyr::left_join(dplyr::select(file_info, file_id, !!!map_id_cols), peak_table, by = "file_id")
   }
 
   # map peaks
@@ -80,8 +81,8 @@ iso_map_peaks.iso_file_list <- function(
     )
 
   # remove extra file info columns again
-  if (length(file_info_cols) > 0) {
-    mapped_peak_table <- dplyr::select(mapped_peak_table, !!!map(file_info_cols, ~quo(-!!sym(.x))))
+  if (length(map_id_cols) > 0) {
+    mapped_peak_table <- dplyr::select(mapped_peak_table, !!!map(map_id_cols, ~quo(-!!sym(.x))))
   }
 
   # assign peak table (note: go for direct assigment even if it generates some
@@ -106,26 +107,33 @@ iso_map_peaks.data.frame <- function(
   if (nrow(peak_table) == 0) stop("no data in the peak table", call. = FALSE)
 
   # find regular peak_table columns
-  peak_table_cols <- isoreader:::get_column_names(
+  peak_table_cols <- get_column_names(
     peak_table, file_id = enquo(file_id), rt = enquo(rt), rt_start = enquo(rt_start), rt_end = enquo(rt_end),
     n_reqs = list(file_id = "+"))
 
   # find peak_table map_id column
-  map_quo <- resolve_defaults(enquo(map_id))
-  peak_table_cols$map_id <- tidyselect::vars_select(names(peak_table), map_id = !!map_quo, .strict = FALSE)
+  map_exp <- resolve_defaults(enquo(map_id))
+  peak_table_cols$map_id <-
+    get_column_names(peak_table, map_id = map_exp, n_reqs = list(map_id = "*"), cols_must_exist = FALSE, warn = FALSE)$map_id
+
   if (length(peak_table_cols$map_id) > 1)
     glue::glue("map id must be stored in a single column, not: '{paste(peak_table_cols$map_id, collapse = \"', '\")}'") %>%
     stop(call. = FALSE)
 
   # find peak_table compound column
   compound_quo <- resolve_defaults(enquo(compound))
-  peak_table_cols$compound <- tidyselect::vars_select(names(peak_table), compound = !!compound_quo, .strict = FALSE)
+  peak_table_cols$compound <-
+    get_column_names(peak_table, compound = compound_quo, n_reqs = list(compound = "?"), cols_must_exist = FALSE, warn = FALSE)$compound
 
-  # find peak map columns
-  pm_cols <- isoreader:::get_column_names(!!enquo(peak_maps), compound = compound_quo)
+  # find peak map compound columns
+  pm_cols <- get_column_names(peak_maps, compound = compound_quo)
 
   # find new columns
-  new_cols <- isoprocessor:::get_new_column_names(peak_info = quo(peak_info), is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous), n_matches = quo(n_matches), n_overlapping = quo(n_overlapping))
+  new_cols <- get_new_column_names(peak_info = quo(peak_info), is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous), n_matches = quo(n_matches), n_overlapping = quo(n_overlapping))
+
+  # FIXME: is it possible to revert peak mapping to make it safer if applied twice?
+  # i.e. can we remove all new_cols if they exist + compound col + peak_info + any
+  # information that comes from the peak_maps data frame? (e.g. ref nr)
 
   # deal with pre-existing compound column
   n_overwritten <- 0L
@@ -135,7 +143,7 @@ iso_map_peaks.data.frame <- function(
   }
 
   # read peak maps
-  if (peak_maps %>% select(starts_with(peak_table_cols$rt)) %>% ncol() == 0) {
+  if (peak_maps %>% select(starts_with(peak_table_cols$rt[[1]])) %>% ncol() == 0) {
     glue::glue("peak maps do not have any columns that match or start with the ",
                "provided retention time column name '{peak_table_cols$rt}'. ",
                "Available columns: {paste(names(peak_maps), collapse = ', ')}") %>%
@@ -148,7 +156,7 @@ iso_map_peaks.data.frame <- function(
     # add NA compound to map undefined peaks
     vctrs::vec_rbind(tibble(compound = NA_character_)) %>% unique() %>%
     # gather map retention times
-    gather(..map_id.., ..rt_target.., starts_with(peak_table_cols$rt)) %>%
+    gather(..map_id.., ..rt_target.., starts_with(peak_table_cols$rt[[1]])) %>%
     # replace the rt prefix to get to the actual map name
     mutate(..map_id.. := str_replace(..map_id.., fixed(str_c(peak_table_cols$rt, rt_prefix_divider)), "")) %>%
     # only keep the NA compound and everything that has a ..rt_target..
@@ -163,13 +171,13 @@ iso_map_peaks.data.frame <- function(
   } else if (length(map_ids) == 1 && length(peak_table_cols$map_id) == 0) {
     glue::glue(
       "map id defined ('{map_ids}') ",
-      "but the '{quo_text(map_quo)}' column does not exist in the data frame.") %>%
+      "but the '{as_label(map_exp)}' column does not exist in the data frame.") %>%
       stop(call. = FALSE)
   } else if (length(map_ids) >= 1 && length(peak_table_cols$map_id) == 0) {
     # multiple maps but no map id defined
     glue::glue(
       "more than one map defined ({paste(map_ids, collapse = ', ')}) ",
-      "but the '{quo_text(map_quo)}' column does not exist in the maps data frame.") %>%
+      "but the '{as_label(map_exp)}' column does not exist in the maps data frame.") %>%
       stop(call. = FALSE)
   } else {
     # all in order
@@ -296,9 +304,9 @@ iso_map_peaks.data.frame <- function(
 
   # clean up map id
   if (multiple_maps) {
-    all_data <- rename(all_data, !!peak_table_cols$map_id := ..map_id..)
+    all_data <- dplyr::rename(all_data, !!peak_table_cols$map_id := ..map_id..)
   } else {
-    all_data <- select(all_data, -..map_id..)
+    all_data <- dplyr::select(all_data, -..map_id..)
   }
 
   # return
@@ -378,7 +386,7 @@ iso_get_problematic_peak_mappings.data.frame <- function(peak_table, select = ev
 
   # safety checks
   if (missing(peak_table)) stop("no data table supplied", call. = FALSE)
-  peak_table_cols <- get_column_names(!!enquo(peak_table), select = enquo(select),
+  peak_table_cols <- get_column_names(peak_table, select = enquo(select),
                               is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous),
                               n_reqs = list(select = "+"))
 
@@ -470,7 +478,7 @@ iso_summarize_peak_mappings.data.frame <- function(peak_table, file_id = default
 
   # safety checks
   peak_table_cols <-
-    isoreader:::get_column_names(
+    get_column_names(
       peak_table, file_id = enquo(file_id), peak_info = quo(peak_info),
       compound = enquo(compound), rt = enquo(rt),
       is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous),
@@ -583,7 +591,7 @@ iso_remove_problematic_peak_mappings.data.frame <- function(
 
   # safety checks
   if (missing(peak_table)) stop("no data table supplied", call. = FALSE)
-  peak_table_cols <- get_column_names(!!enquo(peak_table), is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous))
+  peak_table_cols <- get_column_names(peak_table, is_identified = quo(is_identified), is_missing = quo(is_missing), is_ambiguous = quo(is_ambiguous))
 
   # filtering
   peak_table_out <- peak_table %>%

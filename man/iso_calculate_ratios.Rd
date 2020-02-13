@@ -8,11 +8,9 @@
 \usage{
 iso_calculate_ratios(...)
 
-\method{iso_calculate_ratios}{iso_file_list}(iso_files, ratios,
-  quiet = default(quiet))
+\method{iso_calculate_ratios}{iso_file_list}(iso_files, ratios, quiet = default(quiet))
 
-\method{iso_calculate_ratios}{data.frame}(df, ratios,
-  quiet = default(quiet))
+\method{iso_calculate_ratios}{data.frame}(df, ratios, quiet = default(quiet))
 }
 \arguments{
 \item{...}{S3 method placeholder parameters, see class specific functions for details on parameters}

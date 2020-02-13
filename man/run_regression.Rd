@@ -4,12 +4,23 @@
 \alias{run_regression}
 \title{run a set of regressions}
 \usage{
-run_regression(dt, model, nest_model = FALSE, min_n_datapoints = 1,
-  model_data = model_data, model_filter_condition = NULL,
-  model_name = model_name, model_enough_data = model_enough_data,
-  model_data_points = model_data_points, model_fit = model_fit,
-  model_coefs = model_coefs, model_summary = model_summary,
-  model_params = model_params, in_reg = in_reg, residual = residual)
+run_regression(
+  dt,
+  model,
+  nest_model = FALSE,
+  min_n_datapoints = 1,
+  model_data = model_data,
+  model_filter_condition = NULL,
+  model_name = model_name,
+  model_enough_data = model_enough_data,
+  model_data_points = model_data_points,
+  model_fit = model_fit,
+  model_coefs = model_coefs,
+  model_summary = model_summary,
+  model_params = model_params,
+  in_reg = in_reg,
+  residual = residual
+)
 }
 \arguments{
 \item{dt}{data table}

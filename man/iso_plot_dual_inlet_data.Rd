@@ -4,9 +4,17 @@
 \alias{iso_plot_dual_inlet_data}
 \title{Plot mass data from dual inlet files}
 \usage{
-iso_plot_dual_inlet_data(iso_files, data = c(), filter = NULL,
-  panel = data, color = file_id, linetype = NULL, shape = type,
-  label = file_id, ...)
+iso_plot_dual_inlet_data(
+  iso_files,
+  data = c(),
+  filter = NULL,
+  panel = data,
+  color = file_id,
+  linetype = NULL,
+  shape = type,
+  label = file_id,
+  ...
+)
 }
 \arguments{
 \item{iso_files}{collection of iso_file objects}
@@ -34,15 +42,16 @@ Plot mass data from dual inlet files
 normalization is not useful for dual inlet data, except potentially between standard and sample - however, for this it is more meaningful to simply plot the relevant ratios together
 }
 \seealso{
-Other plot functions: \code{\link{iso_format}},
-  \code{\link{iso_mark_calibration_range}},
-  \code{\link{iso_mark_outliers}},
-  \code{\link{iso_mark_value_range}},
-  \code{\link{iso_plot_continuous_flow_data}},
-  \code{\link{iso_plot_data}},
-  \code{\link{iso_plot_raw_data}},
-  \code{\link{iso_plot_ref_peaks}},
-  \code{\link{iso_plot_residuals}},
-  \code{\link{iso_prepare_continuous_flow_plot_data}}
+Other plot functions: 
+\code{\link{iso_format}()},
+\code{\link{iso_mark_calibration_range}()},
+\code{\link{iso_mark_outliers}()},
+\code{\link{iso_mark_value_range}()},
+\code{\link{iso_plot_continuous_flow_data}()},
+\code{\link{iso_plot_data}()},
+\code{\link{iso_plot_raw_data}()},
+\code{\link{iso_plot_ref_peaks}()},
+\code{\link{iso_plot_residuals}()},
+\code{\link{iso_prepare_continuous_flow_plot_data}()}
 }
 \concept{plot functions}

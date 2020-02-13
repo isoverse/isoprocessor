@@ -8,11 +8,22 @@
 \usage{
 iso_calculate_deltas(...)
 
-\method{iso_calculate_deltas}{iso_file_list}(iso_files, deltas,
-  bracket = TRUE, in_permil = TRUE, quiet = default(quiet))
+\method{iso_calculate_deltas}{iso_file_list}(
+  iso_files,
+  deltas,
+  bracket = TRUE,
+  in_permil = TRUE,
+  quiet = default(quiet)
+)
 
-\method{iso_calculate_deltas}{data.frame}(df, deltas, bracket = TRUE,
-  in_permil = TRUE, ratio_prefix = "r", quiet = default(quiet))
+\method{iso_calculate_deltas}{data.frame}(
+  df,
+  deltas,
+  bracket = TRUE,
+  in_permil = TRUE,
+  ratio_prefix = "r",
+  quiet = default(quiet)
+)
 }
 \arguments{
 \item{...}{S3 method placeholder parameters, see class specific functions for details on parameters}

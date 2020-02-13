@@ -92,8 +92,12 @@ iso_files_raw <-
 ## Process file info & peak table (*)
 
 ```{r}
-# process file information
+# process
 iso_files <- iso_files_raw %>% 
+  # set peak table from vendor data table
+  iso_set_peak_table_from_auto_vendor_data_table() %>% 
+  # convert units from mV to V for amplitudes and area
+  iso_convert_peak_table_units(V = mV, Vs = mVs) %>% 
   # rename key file info columns
   iso_rename_file_info(id1 = `Identifier 1`, id2 = `Identifier 2`) %>% 
   # parse text info into numbers
@@ -142,10 +146,6 @@ iso_files <- iso_files_raw %>%
     seed_oxidation, injection_volume, concentration, volume
   )
 
-# set peak table from vendor data table with default isodat template
-iso_files <- iso_set_peak_table_from_isodat_vendor_data_table(iso_files) %>% 
-  # convert units from mV to V for amplitudes and area
-  iso_convert_peak_table_units(V = mV, Vs = mVs)
 ```
 
 ## Show file information

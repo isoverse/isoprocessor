@@ -24,11 +24,11 @@ below to see their documentation.
 \describe{
   \item{dplyr}{\code{\link[dplyr]{filter}}}
 
-  \item{isoreader}{\code{\link[isoreader]{extract_substring}}, \code{\link[isoreader]{extract_word}}, \code{\link[isoreader]{iso_turn_info_messages_on}}, \code{\link[isoreader]{iso_turn_info_messages_off}}}
+  \item{isoreader}{\code{\link[isoreader]{extract_substring}}, \code{\link[isoreader]{extract_word}}, \code{\link[isoreader]{iso_turn_info_messages_off}}, \code{\link[isoreader]{iso_turn_info_messages_on}}}
 
   \item{magrittr}{\code{\link[magrittr]{\%>\%}}}
 
-  \item{readr}{\code{\link[readr]{parse_number}}, \code{\link[readr]{parse_logical}}, \code{\link[readr]{parse_integer}}, \code{\link[readr]{parse_double}}, \code{\link[readr]{parse_datetime}}}
+  \item{readr}{\code{\link[readr]{parse_datetime}}, \code{\link[readr]{parse_double}}, \code{\link[readr]{parse_integer}}, \code{\link[readr]{parse_logical}}, \code{\link[readr]{parse_number}}}
 
   \item{tidyr}{\code{\link[tidyr]{unnest}}}
 }}

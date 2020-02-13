@@ -141,7 +141,7 @@ iso_set_peak_table_from_vendor_data_table <- function(iso_files, direct_rename =
       mutate(label = sprintf(" - for %d file(s): %s", n, label)) %>%
       arrange(desc(n))
 
-    glue::glue("Info: setting peak table from vendor data table with the following renames:\n",
+    glue::glue("Info: setting peak table for {length(iso_files)} file(s) from vendor data table with the following renames:\n",
                paste(info$label, collapse = "\n")) %>%
       message()
   }
@@ -170,6 +170,56 @@ iso_set_peak_table_from_vendor_data_table <- function(iso_files, direct_rename =
 
 }
 
+#' @rdname iso_set_peak_table_from_vendor_data_table
+#' @aliases iso_set_peak_table_from_auto_vendor_data_table
+#' @details \code{iso_set_peak_table_from_auto_vendor_data_table} is the go to function for setting peak tables because it will simply look at the file extension and decide which software specific function to use (e.g. \code{iso_set_peak_table_from_isodat_vendor_data_table}) for any Isodat files.
+#' @export
+iso_set_peak_table_from_auto_vendor_data_table <- function(iso_files, quiet = default(quiet)) {
+
+  # continuous flow file check
+  if (!isoreader::iso_is_continuous_flow(iso_files))
+    stop("peak table information can only be set for continuous flow files", call. = FALSE)
+
+  # available functions
+  funcs <- tibble(
+    software = c("Isodat"),
+    func = c(iso_set_peak_table_from_isodat_vendor_data_table)
+  )
+
+  # single file
+  is_single <- iso_is_file(iso_files)
+  if (is_single) iso_files <- iso_as_file_list(iso_files)
+
+  # find software file ids
+  software_file_ids <-
+    iso_files %>%
+    isoreader::iso_get_file_info(file_path, quiet = TRUE) %>%
+    dplyr::mutate(extension = stringr::str_extract(file_path, "\\.[^.]+$")) %>%
+    dplyr::left_join(isoreader::iso_get_supported_file_types(), by = "extension") %>%
+    dplyr::group_by(software) %>%
+    dplyr::summarize(file_ids = list(file_id)) %>%
+    dplyr::left_join(funcs, by = "software")
+
+  # safety checks
+  if (nrow(miss <- filter(software_file_ids, purrr::map_lgl(func, is.null))) > 0) {
+    glue::glue(
+      "no specialized function available (yet) for using vendor data tables ",
+      "from the following software: ", paste(miss$software, collapse = ", ")) %>%
+      stop(call. = FALSE)
+  }
+
+  # apply functions
+  apply_software_files_ids <- filter(software_file_ids, !purrr::map_lgl(func, is.null))
+  for (i in 1:nrow(apply_software_files_ids)) {
+    iso_files[apply_software_files_ids[[i, "file_ids"]]] <-
+      apply_software_files_ids[[i, "func"]](iso_files[apply_software_files_ids[[i, "file_ids"]]], quiet = quiet)
+  }
+
+  if (is_single) return(iso_files[[1]])
+  else return(iso_files)
+}
+
+#'
 #' @rdname iso_set_peak_table_from_vendor_data_table
 #' @aliases iso_set_peak_table_from_isodat_vendor_data_table
 #' @details \code{iso_set_peak_table_from_isodat_vendor_data_table} provides specialized functionality to set peak table information from an Isodat vendor data tables. For compatibility with all downstream isoprocessor calculations, the resulting peak table has a very specific set of columns which are listed below. Mapping for Isodat data tables:

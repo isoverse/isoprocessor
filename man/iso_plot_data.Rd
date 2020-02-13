@@ -4,11 +4,27 @@
 \alias{iso_plot_data}
 \title{Visualize the data}
 \usage{
-iso_plot_data(dt, x, y, ..., y_error = NULL, group = NULL,
-  color = NULL, fill = NULL, shape = NULL, size = 4,
-  linetype = NULL, alpha = NULL, label = NULL, panel = panel ~ .,
-  panel_scales = "free_y", lines = FALSE, points = FALSE,
-  date_breaks = NULL, date_labels = "\%d \%b \%H:\%M")
+iso_plot_data(
+  dt,
+  x,
+  y,
+  ...,
+  y_error = NULL,
+  group = NULL,
+  color = NULL,
+  fill = NULL,
+  shape = NULL,
+  size = 4,
+  linetype = NULL,
+  alpha = NULL,
+  label = NULL,
+  panel = panel ~ .,
+  panel_scales = "free_y",
+  lines = FALSE,
+  points = FALSE,
+  date_breaks = NULL,
+  date_labels = "\%d \%b \%H:\%M"
+)
 }
 \arguments{
 \item{dt}{data frame to plot data from}
@@ -53,15 +69,16 @@ iso_plot_data(dt, x, y, ..., y_error = NULL, group = NULL,
 General purpose convenience visualization function. Simply add other ggplot components after calling this function to customize more (e.g. with \link[ggplot2]{facet_wrap} or \link[ggplot2]{theme} calls). Make sure to specify \code{lines = TRUE} and/or \code{points = TRUE} to add the lines/points respectively. Accepts multiple y variables in which case they are plotted in a \link[ggplot2]{facet_wrap} with new variables \code{panel} holding the name of the y variable panels, \code{y_value} holding the values and \code{y_error} holding the error values (if \code{y_error} is supplied). Also always generates a new column called \code{variable} that holds the variable names (\code{y}) supplied to this function. All aesthetics parameters expect variables or expressions that are valid in the context of the \code{dt}. For convenience, all aesthetics can also be (re)-named on the fly with \code{c(new_name = expr)} and will include column units in the legend captions by default.
 }
 \seealso{
-Other plot functions: \code{\link{iso_format}},
-  \code{\link{iso_mark_calibration_range}},
-  \code{\link{iso_mark_outliers}},
-  \code{\link{iso_mark_value_range}},
-  \code{\link{iso_plot_continuous_flow_data}},
-  \code{\link{iso_plot_dual_inlet_data}},
-  \code{\link{iso_plot_raw_data}},
-  \code{\link{iso_plot_ref_peaks}},
-  \code{\link{iso_plot_residuals}},
-  \code{\link{iso_prepare_continuous_flow_plot_data}}
+Other plot functions: 
+\code{\link{iso_format}()},
+\code{\link{iso_mark_calibration_range}()},
+\code{\link{iso_mark_outliers}()},
+\code{\link{iso_mark_value_range}()},
+\code{\link{iso_plot_continuous_flow_data}()},
+\code{\link{iso_plot_dual_inlet_data}()},
+\code{\link{iso_plot_raw_data}()},
+\code{\link{iso_plot_ref_peaks}()},
+\code{\link{iso_plot_residuals}()},
+\code{\link{iso_prepare_continuous_flow_plot_data}()}
 }
 \concept{plot functions}

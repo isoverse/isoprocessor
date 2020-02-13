@@ -177,7 +177,7 @@ test_that("test that referencd peak visualization works", {
   expect_error(iso_plot_ref_peaks(), "no data table")
   expect_error(iso_plot_ref_peaks(tibble()), "missing parameter.*x")
   expect_error(iso_plot_ref_peaks(tibble(x=1:5), x), "missing parameter.*ratio")
-  expect_error(iso_plot_ref_peaks(tibble(x=1:5, y=1:5), x, ratio = y), "file_id.*not found")
+  expect_error(iso_plot_ref_peaks(tibble(x=1:5, y=1:5), x, ratio = y), "file_id.*unknown column")
   expect_error(iso_plot_ref_peaks(tibble(x=1:5, y=1:5, file_id="a"), x, ratio = y, is_ref_condition = FALSE), "no data")
 
   # simple generation tests
@@ -193,7 +193,14 @@ test_that("test that referencd peak visualization works", {
 
 test_that("test that iso_plot_data visualization works", {
 
-  # @FIXME implement visualization function test
+  expect_error(iso_plot_data(), "no data")
+  expect_error(iso_plot_data(tibble()), "no data")
+  expect_error(iso_plot_data(ggplot2::mpg), "provide.*x")
+  expect_error(iso_plot_data(ggplot2::mpg, cyl), "provide.*y")
+  expect_warning(iso_plot_data(ggplot2::mpg, cyl, hwy), "plot will be blank")
+  expect_silent(iso_plot_data(ggplot2::mpg, cyl, hwy, geom_point()))
+
+  # @FIXME implement full suite of visualization function test
 
 })
 

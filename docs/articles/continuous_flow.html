@@ -43,7 +43,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.5.8</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.0</span>
       </span>
     </div>
 
@@ -97,7 +97,7 @@
     <div class="page-header toc-ignore">
       <h1>Continuous Flow Examples</h1>
             
-            <h4 class="date">2019-11-26</h4>
+            <h4 class="date">2020-02-13</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/isoverse/isoprocessor/blob/master/vignettes/continuous_flow.Rmd"><code>vignettes/continuous_flow.Rmd</code></a></small>
       <div class="hidden name"><code>continuous_flow.Rmd</code></div>
@@ -125,15 +125,12 @@
 <a class="sourceLine" id="cb2-6" data-line-number="6">    <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_get_reader_example.html">iso_get_reader_example</a></span>(<span class="st">"continuous_flow_example.dxf"</span>),</a>
 <a class="sourceLine" id="cb2-7" data-line-number="7">    <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_get_reader_example.html">iso_get_reader_example</a></span>(<span class="st">"linearity_example.dxf"</span>)</a>
 <a class="sourceLine" id="cb2-8" data-line-number="8">  )</a>
-<a class="sourceLine" id="cb2-9" data-line-number="9"><span class="co">#&gt; Registered S3 method overwritten by 'R.oo':</span></a>
-<a class="sourceLine" id="cb2-10" data-line-number="10"><span class="co">#&gt;   method        from       </span></a>
-<a class="sourceLine" id="cb2-11" data-line-number="11"><span class="co">#&gt;   throw.default R.methodsS3</span></a>
-<a class="sourceLine" id="cb2-12" data-line-number="12"><span class="co">#&gt; Info: preparing to read 4 data files (all will be cached)...</span></a>
-<a class="sourceLine" id="cb2-13" data-line-number="13"><span class="co">#&gt; Info: reading file 'continuous_flow_example.cf' from cache...</span></a>
-<a class="sourceLine" id="cb2-14" data-line-number="14"><span class="co">#&gt; Info: reading file 'continuous_flow_example.iarc' from cache...</span></a>
-<a class="sourceLine" id="cb2-15" data-line-number="15"><span class="co">#&gt; Info: reading file 'continuous_flow_example.dxf' from cache...</span></a>
-<a class="sourceLine" id="cb2-16" data-line-number="16"><span class="co">#&gt; Info: reading file 'linearity_example.dxf' from cache...</span></a>
-<a class="sourceLine" id="cb2-17" data-line-number="17"><span class="co">#&gt; Info: finished reading 4 files in 0.50 secs</span></a></code></pre></div>
+<a class="sourceLine" id="cb2-9" data-line-number="9"><span class="co">#&gt; Info: preparing to read 4 data files (all will be cached)...</span></a>
+<a class="sourceLine" id="cb2-10" data-line-number="10"><span class="co">#&gt; Info: reading file 'continuous_flow_example.cf' from cache...</span></a>
+<a class="sourceLine" id="cb2-11" data-line-number="11"><span class="co">#&gt; Info: reading file 'continuous_flow_example.iarc' from cache...</span></a>
+<a class="sourceLine" id="cb2-12" data-line-number="12"><span class="co">#&gt; Info: reading file 'continuous_flow_example.dxf' from cache...</span></a>
+<a class="sourceLine" id="cb2-13" data-line-number="13"><span class="co">#&gt; Info: reading file 'linearity_example.dxf' from cache...</span></a>
+<a class="sourceLine" id="cb2-14" data-line-number="14"><span class="co">#&gt; Info: finished reading 4 files in 0.39 secs</span></a></code></pre></div>
 </div>
 <div id="chromatograms" class="section level1">
 <h1 class="hasAnchor">
@@ -156,7 +153,7 @@
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co"># this is a convenience function to set peak table from isodat data table, it </span></a>
 <a class="sourceLine" id="cb5-2" data-line-number="2"><span class="co"># provides detailed information on the information copied to the peak table</span></a>
 <a class="sourceLine" id="cb5-3" data-line-number="3">iso_files &lt;-<span class="st"> </span><span class="kw"><a href="../reference/iso_set_peak_table_from_vendor_data_table.html">iso_set_peak_table_from_isodat_vendor_data_table</a></span>(iso_files)</a>
-<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="co">#&gt; Info: setting peak table from vendor data table with the following renames:</span></a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="co">#&gt; Info: setting peak table for 7 file(s) from vendor data table with the following renames:</span></a>
 <a class="sourceLine" id="cb5-5" data-line-number="5"><span class="co">#&gt; - for 1 file(s): 'Nr.'-&gt;'peak_nr', 'Is Ref.?'-&gt;'is_ref', 'Start'-&gt;'rt_start', 'Rt'-&gt;'rt', 'End'-&gt;'rt_end', 'Ampl 2'-&gt;'amp2', 'Ampl 3'-&gt;'amp3', 'BGD 2'-&gt;'bgrd2_start', 'BGD 3'-&gt;'bgrd3_start', 'BGD 2'-&gt;'bgrd2_end', 'BGD 3'-&gt;'bgrd3_end', 'rIntensity 2'-&gt;'area2', 'rIntensity 3'-&gt;'area3', 'rR 3H2/2H2'-&gt;'r3/2', 'rd 3H2/2H2'-&gt;'rd3/2', 'd 3H2/2H2'-&gt;'d3/2', 'd 2H/1H'-&gt;'d2H', 'AT% 2H/1H'-&gt;'at2H'</span></a>
 <a class="sourceLine" id="cb5-6" data-line-number="6"><span class="co">#&gt; - for 1 file(s): 'Nr.'-&gt;'peak_nr', 'Is Ref.?'-&gt;'is_ref', 'Start'-&gt;'rt_start', 'Rt'-&gt;'rt', 'End'-&gt;'rt_end', 'Ampl 28'-&gt;'amp28', 'Ampl 29'-&gt;'amp29', 'Ampl 30'-&gt;'amp30', 'Ampl 44'-&gt;'amp44', 'Ampl 45'-&gt;'amp45', 'Ampl 46'-&gt;'amp46', 'BGD 28'-&gt;'bgrd28_start', 'BGD 29'-&gt;'bgrd29_start', 'BGD 30'-&gt;'bgrd30_start', 'BGD 44'-&gt;'bgrd44_start', 'BGD 45'-&gt;'bgrd45_start', 'BGD 46'-&gt;'bgrd46_start', 'BGD 28'-&gt;'bgrd28_end', 'BGD 29'-&gt;'bgrd29_end', 'BGD 30'-&gt;'bgrd30_end', 'BGD 44'-&gt;'bgrd44_end', 'BGD 45'-&gt;'bgrd45_end', 'BGD 46'-&gt;'bgrd46_end', 'rIntensity 28'-&gt;'area28', 'rIntensity 29'-&gt;'area29', 'rIntensity 30'-&gt;'area30', 'rIntensity 44'-&gt;'area44', 'rIntensity 45'-&gt;'area45', 'rIntensity 46'-&gt;'area46', 'rR 29N2/28N2'-&gt;'r29/28', 'rR 45CO2/44CO2'-&gt;'r45/44', 'rR 46CO2/44CO2'-&gt;'r46/44', 'rd 29N2/28N2'-&gt;'rd29/28', 'rd 45CO2/44CO2'-&gt;'rd45/44', 'rd 46CO2/44CO2'-&gt;'rd46/44', 'd 29N2/28N2'-&gt;'d29/28', 'd 45CO2/44CO2'-&gt;'d45/44', 'd 46CO2/44CO2'-&gt;'d46/44', 'd 15N/14N'-&gt;'d15N', 'd 13C/12C'-&gt;'d13C', 'd 18O/16O'-&gt;'d18O', 'd 17O/16O'-&gt;'d17O', 'AT% 15N/14N'-&gt;'at15N', 'AT% 13C/12C'-&gt;'at13C', 'AT% 18O/16O'-&gt;'at18O'</span></a>
 <a class="sourceLine" id="cb5-7" data-line-number="7"><span class="co">#&gt; - for 1 file(s): 'Nr.'-&gt;'peak_nr', 'Is Ref.?'-&gt;'is_ref', 'Start'-&gt;'rt_start', 'Rt'-&gt;'rt', 'End'-&gt;'rt_end', 'Ampl 44'-&gt;'amp44', 'Ampl 45'-&gt;'amp45', 'Ampl 46'-&gt;'amp46', 'BGD 44'-&gt;'bgrd44_start', 'BGD 45'-&gt;'bgrd45_start', 'BGD 46'-&gt;'bgrd46_start', 'BGD 44'-&gt;'bgrd44_end', 'BGD 45'-&gt;'bgrd45_end', 'BGD 46'-&gt;'bgrd46_end', 'rIntensity 44'-&gt;'area44', 'rIntensity 45'-&gt;'area45', 'rIntensity 46'-&gt;'area46', 'rR 45N2O/44N2O'-&gt;'r45/44', 'rR 46N2O/44N2O'-&gt;'r46/44', 'rd 45N2O/44N2O'-&gt;'rd45/44', 'rd 46N2O/44N2O'-&gt;'rd46/44', 'd 45N2O/44N2O'-&gt;'d45/44', 'd 46N2O/44N2O'-&gt;'d46/44', 'd 18O/16O'-&gt;'d18O', 'd 15N/14N'-&gt;'d15N', 'd 17O/16O'-&gt;'d17O', 'AT% 15N/14N'-&gt;'at15N', 'AT% 18O/16O'-&gt;'at18O'</span></a>
@@ -274,6 +271,7 @@
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
+
         <div id="tocnav">
       <h2 class="hasAnchor">
 <a href="#tocnav" class="anchor"></a>Contents</h2>

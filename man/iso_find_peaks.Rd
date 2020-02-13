@@ -8,8 +8,7 @@
 \usage{
 iso_find_peaks(...)
 
-\method{iso_find_peaks}{iso_file_list}(iso_files, ...,
-  quiet = default(quiet))
+\method{iso_find_peaks}{iso_file_list}(iso_files, ..., quiet = default(quiet))
 
 \method{iso_find_peaks}{data.frame}(df, quiet = default(quiet))
 }

@@ -25,9 +25,9 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 # global knitting options for automatic saving of all plots as .png and .pdf
 knitr::opts_chunk$set(
-  # dev = c("png", "pdf"), fig.keep = "all",
-  # dev.args = list(pdf = list(encoding = "WinAnsi", useDingbats = FALSE)),
-  # fig.path = file.path("fig_output", paste0(gsub("\\.[Rr]md", "", knitr::current_input()), "_"))
+  dev = c("png", "pdf"), fig.keep = "all",
+  dev.args = list(pdf = list(encoding = "WinAnsi", useDingbats = FALSE)),
+  fig.path = file.path("fig_output", paste0(gsub("\\.[Rr]md", "", knitr::current_input()), "_"))
 )
 ```
 
@@ -78,11 +78,26 @@ iso_files_raw <-
   iso_filter_files_with_problems()
 ```
 
-## Process file info (*)
+## Process file info & peak table (*)
 
 ```{r}
-# process file information
+# peak identification
+peak_map <- 
+  tibble::tribble(
+    ~compound,     ~ref_nr, ~rt,
+    # peak map data (row-by-row)
+    "CO2 analyte", NA,		  300,
+    "CO2 ref",			1,	  	415,
+    "CO2 ref",			2,	  	465
+  )
+peak_map %>% knitr::kable(digits = 0)
+
+# process
 iso_files <- iso_files_raw %>% 
+  # set peak table from vendor data table
+  iso_set_peak_table_from_auto_vendor_data_table() %>% 
+  # convert units from mV to V for amplitudes and area
+  iso_convert_peak_table_units(V = mV, Vs = mVs) %>% 
   # rename key file info columns
   iso_rename_file_info(
     id1 = `Identifier 1`, id2 = `Identifier 2`, prep = Preparation,
@@ -110,27 +125,7 @@ iso_files <- iso_files_raw %>%
   # focus only on the relevant file info, discarding the rest
   iso_select_file_info(folder, analysis, seq_nr, file_datetime, id1, id2, type, mass) %>% 
   # filter out emptys at the beginning of the run
-  iso_filter_files(type != "empty")
-```
-
-## Process peak table (*)
-
-```{r}
-# peak identification
-peak_map <- 
-  tibble::tribble(
-    ~compound,     ~ref_nr, ~rt,
-    # peak map data (row-by-row)
-    "CO2 analyte", NA,		  300,
-    "CO2 ref",			1,	  	415,
-    "CO2 ref",			2,	  	465
-  )
-peak_map %>% knitr::kable(digits = 0)
-
-# set peak table from vendor data table with default isodat template
-iso_files <- iso_set_peak_table_from_isodat_vendor_data_table(iso_files) %>% 
-  # convert units from mV to V for amplitudes and area
-  iso_convert_peak_table_units(V = mV, Vs = mVs) %>% 
+  iso_filter_files(type != "empty") %>% 
   # identify peaks
   iso_map_peaks(peak_map)
 

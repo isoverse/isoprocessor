@@ -8,22 +8,30 @@
 \usage{
 iso_remove_problematic_peak_mappings(...)
 
-\method{iso_remove_problematic_peak_mappings}{iso_file_list}(iso_files,
-  remove_unidentified = TRUE, remove_missing = TRUE,
-  remove_ambiguous = TRUE, remove_mapping_info_columns = TRUE,
-  quiet = default(quiet))
+\method{iso_remove_problematic_peak_mappings}{iso_file_list}(
+  iso_files,
+  remove_unidentified = TRUE,
+  remove_missing = TRUE,
+  remove_ambiguous = TRUE,
+  remove_mapping_info_columns = TRUE,
+  quiet = default(quiet)
+)
 
-\method{iso_remove_problematic_peak_mappings}{data.frame}(peak_table,
-  remove_unidentified = TRUE, remove_missing = TRUE,
-  remove_ambiguous = TRUE, remove_mapping_info_columns = TRUE,
-  quiet = default(quiet))
+\method{iso_remove_problematic_peak_mappings}{data.frame}(
+  peak_table,
+  remove_unidentified = TRUE,
+  remove_missing = TRUE,
+  remove_ambiguous = TRUE,
+  remove_mapping_info_columns = TRUE,
+  quiet = default(quiet)
+)
 }
 \arguments{
 \item{...}{S3 method placeholder parameters, see class specific functions for details on parameters}
 
 \item{iso_files}{collection of continuous flow iso_file objects}
 
-\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages. Set parameter to overwrite global defaults for this function or set global defaults with calls to \link[=iso_info_messages]{iso_turn_info_message_on} and \link[=iso_info_messages]{iso_turn_info_message_off}}
+\item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages. Set parameter to overwrite global defaults for this function or set global defaults with calls to \link[isoreader:iso_info_messages]{iso_turn_info_message_on} and \link[isoreader:iso_info_messages]{iso_turn_info_message_off}}
 
 \item{peak_table}{data frame with mapped peaks. Requires the \code{is_identified}, \code{is_missing} and \code{is_ambiguous} columns to be present.}
 
@@ -41,8 +49,9 @@ the data with the problematic peak mappings remove
 Remove peak mappings that were problematic (unidentified, missing, or ambiguous) during peak mapping.
 }
 \seealso{
-Other peak mapping functions: \code{\link{iso_get_problematic_peaks}},
-  \code{\link{iso_map_peaks}},
-  \code{\link{iso_summarize_peak_mappings}}
+Other peak mapping functions: 
+\code{\link{iso_get_problematic_peaks}()},
+\code{\link{iso_map_peaks}()},
+\code{\link{iso_summarize_peak_mappings}()}
 }
 \concept{peak mapping functions}
