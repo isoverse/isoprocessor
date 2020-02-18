@@ -52,25 +52,21 @@ iso_export_calibration_to_excel <- function(
 
   # make excel workbook
   wb <- openxlsx::createWorkbook()
-  hs <- openxlsx::createStyle(textDecoration = "bold")
-
   ws_names <- c()
 
   # additional data
   if (length(add_data) > 0) {
     for (tab in names(add_data)) {
       ws_names <- c(ws_names, tab)
-      openxlsx::addWorksheet(wb, tail(ws_names, 1))
-      openxlsx::writeData(wb, tail(ws_names, 1), with_units(add_data[[tab]]), headerStyle = hs)
+      isoreader:::add_excel_sheet(wb, tail(ws_names, 1), with_units(add_data[[tab]]))
     }
   }
 
   # all data
   if (include_all_data) {
     ws_names <- c(ws_names, "all data")
-    openxlsx::addWorksheet(wb, tail(ws_names, 1))
     all_data <- calibs_df %>% iso_get_calibration_data(keep_calibration_parameters = FALSE, quiet = quiet)
-    openxlsx::writeData(wb, tail(ws_names, 1), with_units(all_data), headerStyle = hs)
+    isoreader:::add_excel_sheet(wb, tail(ws_names, 1), with_units(all_data))
   }
 
   # all calibs
@@ -81,25 +77,22 @@ iso_export_calibration_to_excel <- function(
     # model coefs
     if (include_calib_coefs) {
       ws_names <- c(ws_names, if (calib == "") "calib coefs" else paste(calib, "coefs"))
-      openxlsx::addWorksheet(wb, tail(ws_names, 1))
       calib_coefs <- calibs_df %>% iso_get_calibration_coefficients(calibration = calib, quiet = quiet)
-      openxlsx::writeData(wb, tail(ws_names, 1), calib_coefs, headerStyle = hs)
+      isoreader:::add_excel_sheet(wb, tail(ws_names, 1), calib_coefs)
     }
 
     # model summary
     if (include_calib_summary) {
       ws_names <- c(ws_names, if (calib == "") "calib summary" else paste(calib, "summary"))
-      openxlsx::addWorksheet(wb, tail(ws_names, 1))
       calib_summary <- calibs_df %>% iso_get_calibration_summary(calibration = calib)
-      openxlsx::writeData(wb, tail(ws_names, 1), calib_summary, headerStyle = hs)
+      isoreader:::add_excel_sheet(wb, tail(ws_names, 1), calib_summary)
     }
 
     # model range
     if (include_calib_range && has_model_range(calibs_df, calibration = calib)) {
       ws_names <- c(ws_names, if (calib == "") "calib range" else paste(calib, "range"))
-      openxlsx::addWorksheet(wb, tail(ws_names, 1))
       calib_range <- calibs_df %>% iso_get_calibration_range(calibration = calib, quiet = quiet)
-      openxlsx::writeData(wb, tail(ws_names, 1), calib_range, headerStyle = hs)
+      isoreader:::add_excel_sheet(wb, tail(ws_names, 1), calib_range)
     }
   }
 
