@@ -209,3 +209,12 @@ test_that("calibration ranges work", {
   expect_warning(iso_plot_calibration_range(), "deprecated")
 
 })
+
+test_that("marking outliers works", {
+
+  expect_error(iso_mark_outliers(), "no base plot")
+  expect_warning(p <- iso_mark_outliers(ggplot2::ggplot(ggplot2::mpg) + ggplot2::aes(hwy, cty) + ggplot2::geom_point(), condition = TRUE, sd = 3), "cutoff.*will be ignored")
+  expect_true(ggplot2::is.ggplot(p))
+
+})
+
