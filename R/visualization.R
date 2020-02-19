@@ -765,7 +765,7 @@ iso_plot_ref_peaks <- function(dt, x, ratio, ..., group_id = file_id, is_ref_con
     refs, x = !!sym(dt_cols$x), y = c(!!!map(names(mutate_quos), sym)),
     ...,
     geom_bar(stat = "identity", position = "dodge")
-  ) + labs(y = "Deviation from average (\U2030)")
+  ) + labs(y = "Deviation from average [\U2030]")
 }
 
 # data and calibration plots =========
