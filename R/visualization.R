@@ -756,7 +756,6 @@ iso_plot_ref_peaks <- function(dt, x, ratio, ..., group_id = file_id, is_ref_con
     map(dt_cols$ratio, ~quo( (!!sym(.x) / mean(!!sym(.x), na.rm = TRUE) - 1) * 1000)) %>%
     setNames(names(dt_cols$ratio))
   refs <- refs %>%
-    mutate(!!dt_cols$x := factor(!!sym(dt_cols$x)) %>% forcats::as_factor()) %>%
     group_by(!!!map(dt_cols$group_id, sym)) %>%
     mutate(!!!mutate_quos) %>%
     ungroup()
@@ -766,7 +765,7 @@ iso_plot_ref_peaks <- function(dt, x, ratio, ..., group_id = file_id, is_ref_con
     refs, x = !!sym(dt_cols$x), y = c(!!!map(names(mutate_quos), sym)),
     ...,
     geom_bar(stat = "identity", position = "dodge")
-  ) + labs(y = "Deviation from average (permil)")
+  ) + labs(y = "Deviation from average (\U2030)")
 }
 
 # data and calibration plots =========
