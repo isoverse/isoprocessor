@@ -207,7 +207,8 @@ iso_files %>%
     panel_scales = "fixed"
   ) %>% 
   # mark outlier
-  iso_mark_outliers(y_value > 0.25, label = iso_format(seq_nr)) +
+  iso_mark_value_range(plus_minus_value = 0.25) %>% 
+  iso_mark_outliers(plus_minus_value = 0.25, label = iso_format(seq_nr)) +
   # add labels
   labs(x = "Sequence #", fill = "Reference\npeak")
 

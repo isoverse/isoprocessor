@@ -282,7 +282,13 @@ iso_convert_peak_table_units.data.frame <- function(peak_table, ..., select = ev
       message()
   }
 
-  all_cols <- tidyselect::vars_select(names(peak_table), !!select_quo, .strict = FALSE)
+  if (rlang::as_label(select_quo) == "everything()")
+    all_cols <- rlang::set_names(names(peak_table))
+  else
+    all_cols <- isoreader:::get_column_names(
+      peak_table, select = select_quo, n_reqs = list(select = "*"),
+      cols_must_exist = FALSE, warn = FALSE)$select
+
   all_units <- iso_get_units(peak_table[all_cols])
   all_cols <- all_cols[!is.na(all_units)]
   all_units <- all_units[!is.na(all_units)]
@@ -300,7 +306,7 @@ iso_convert_peak_table_units.data.frame <- function(peak_table, ..., select = ev
     mutate(quos = map2(col, to_units, generate_quo))
 
   # run mutate
-  return(mutate(peak_table, !!!with(conversions, setNames(quos, col))))
+  return(dplyr::mutate(peak_table, !!!with(conversions, setNames(quos, col))))
 }
 
 

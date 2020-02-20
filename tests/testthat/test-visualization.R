@@ -212,9 +212,13 @@ test_that("calibration ranges work", {
 
 test_that("marking outliers works", {
 
+  p <- ggplot2::ggplot(ggplot2::mpg) + ggplot2::aes(hwy, cty) + ggplot2::geom_point()
   expect_error(iso_mark_outliers(), "no base plot")
-  expect_warning(p <- iso_mark_outliers(ggplot2::ggplot(ggplot2::mpg) + ggplot2::aes(hwy, cty) + ggplot2::geom_point(), condition = TRUE, sd = 3), "cutoff.*will be ignored")
-  expect_true(ggplot2::is.ggplot(p))
+  expect_error(iso_mark_outliers(p), "no cutoff provided")
+  expect_error(iso_mark_outliers(p, plus_minus_value = 5, plus_minus_sd = 5), "more than one")
+  expect_error(iso_mark_outliers(p, condition = TRUE, plus_minus_sd = 5), "more than one")
+  expect_error(iso_mark_outliers(p, plus_minus_value = 5, condition = TRUE), "more than one")
+  expect_true(ggplot2::is.ggplot(p <- iso_mark_outliers(p, condition = TRUE)))
 
 })
 
