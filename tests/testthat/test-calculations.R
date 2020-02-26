@@ -26,6 +26,12 @@ test_that("test that ratios can be calculated", {
   expect_silent(raw_data_w_ratio2 <- iso_calculate_ratios(raw_data2, ratios = c("46/44"), quiet = TRUE))
   expect_equal(raw_data_w_ratio2$`r46/44`, with(raw_data2, i46.nA/i44.nA))
 
+  # with channels
+  raw_data3 <- dplyr::tibble(file_id = "a", tp = 1:10, time.s = tp*0.2, vC1.mV = runif(10), vC2.mV = runif(10))
+  expect_message(iso_calculate_ratios(raw_data3, ratios = c("2/1")), "calculating ratio.*1 data file.*r2/1")
+  expect_silent(raw_data_w_ratio3 <- iso_calculate_ratios(raw_data3, ratios = c("2/1"), quiet = TRUE))
+  expect_equal(raw_data_w_ratio3$`r2/1`, with(raw_data3, vC2.mV/vC1.mV))
+
   # mixed v and i raw data
   raw_all <- vctrs::vec_rbind(raw_data, raw_data2)
   expect_message(raw_data_w_ratios <- iso_calculate_ratios(raw_all, ratios = c("45/44", "46/44")), "calculating ratio.*2 data file.*r45/44.*r46/44")

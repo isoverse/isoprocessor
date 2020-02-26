@@ -74,7 +74,7 @@ iso_calculate_ratios.data.frame <- function(df, ratios, quiet = default(quiet)) 
   ratio_columns <- generate_ratio_column_names(ratios)
 
   # available mass columns
-  mass_column_pattern <- "^([vi])(\\d+)\\.(.*)$"
+  mass_column_pattern <- "^([vi])C?(\\d+)\\.(.*)$"
   mass_lookup_df <- names(df) %>%
     stringr::str_subset(mass_column_pattern) %>%
     stringr::str_match(mass_column_pattern) %>%
