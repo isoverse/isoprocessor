@@ -58,9 +58,6 @@
     <loc>http://isoprocessor.isoverse.org//reference/iso_find_peaks.html</loc>
   </url>
   <url>
-    <loc>http://isoprocessor.isoverse.org//reference/iso_format.html</loc>
-  </url>
-  <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_generate_calibration.html</loc>
   </url>
   <url>
@@ -142,10 +139,16 @@
     <loc>http://isoprocessor.isoverse.org//reference/iso_plot_residuals.html</loc>
   </url>
   <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_plot_scan_data.html</loc>
+  </url>
+  <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_prepare_continuous_flow_plot_data.html</loc>
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_prepare_for_calibration.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_prepare_scan_plot_data.html</loc>
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_print_data_table.html</loc>
@@ -170,6 +173,9 @@
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_set_peak_table.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_set_peak_table_from_auto_vendor_data_table.html</loc>
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_set_peak_table_from_vendor_data_table.html</loc>

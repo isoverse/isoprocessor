@@ -2,7 +2,7 @@
 % Please edit documentation in R/peak_table.R
 \name{iso_set_peak_table_from_vendor_data_table}
 \alias{iso_set_peak_table_from_vendor_data_table}
-\alias{iso_set_peak_table_from_auto_vendor_data_table}
+\alias{iso_set_peak_table_automatically_from_vendor_data_table}
 \alias{iso_set_peak_table_from_isodat_vendor_data_table}
 \title{Set peak table from vendor data}
 \usage{
@@ -13,7 +13,7 @@ iso_set_peak_table_from_vendor_data_table(
   quiet = default(quiet)
 )
 
-iso_set_peak_table_from_auto_vendor_data_table(
+iso_set_peak_table_automatically_from_vendor_data_table(
   iso_files,
   quiet = default(quiet)
 )
@@ -32,7 +32,7 @@ iso_set_peak_table_from_isodat_vendor_data_table(
 Set the peak table from vendor data in each iso_file. Only the vendor data table columns that do exist in a file will be used, so this function can set peak table information across a variety of data files without errors. Provides a detailed info message about the columns that are used.
 }
 \details{
-\code{iso_set_peak_table_from_auto_vendor_data_table} is the go to function for setting peak tables because it will simply look at the file extension and decide which software specific function to use (e.g. \code{iso_set_peak_table_from_isodat_vendor_data_table}) for any Isodat files.
+\code{iso_set_peak_table_automatically_from_vendor_data_table} is the easiest way to set peak tables from vendor data because it will simply look at the file extension and decide which software specific function to use (e.g. \code{iso_set_peak_table_from_isodat_vendor_data_table}) for any Isodat files.
 
 \code{iso_set_peak_table_from_isodat_vendor_data_table} provides specialized functionality to set peak table information from an Isodat vendor data tables. For compatibility with all downstream isoprocessor calculations, the resulting peak table has a very specific set of columns which are listed below. Mapping for Isodat data tables:
 \itemize{

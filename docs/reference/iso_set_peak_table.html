@@ -86,7 +86,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.0</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.2</span>
       </span>
     </div>
 
@@ -97,6 +97,9 @@
 </li>
 <li>
   <a href="../articles/continuous_flow.html">Continuous Flow</a>
+</li>
+<li>
+  <a href="../articles/scan.html">Scan</a>
 </li>
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
@@ -143,7 +146,7 @@
     </div>
 
     <div class="ref-description">
-    <p>Set peak table for a collection of isofiles. Peak tables have to have at least a <code>file_id</code> column but are otherwise flexible. That said, isoprocessor functionality that operates on peak tables assumes that all columns with numbers are <code><a href='https://rdrr.io/pkg/isoreader/man/iso_double_with_units.html'>iso_double_with_units</a></code> and that retention times are recorded in <code>rt_start</code>, <code>rt_end</code>, and <code>rt</code> (apex retention time) columns.</p>
+    <p>Set peak table for a collection of isofiles. Peak tables have to have at least a <code>file_id</code> column but are otherwise flexible. That said, isoprocessor functionality that operates on peak tables assumes that all columns with numbers are <code><a href='https://rdrr.io/pkg/isoreader/man/iso_with_units.html'>iso_double_with_units</a></code> and that retention times are recorded in <code>rt_start</code>, <code>rt_end</code>, and <code>rt</code> (apex retention time) columns.</p>
     </div>
 
     <pre class="usage"><span class='fu'>iso_set_peak_table</span>(

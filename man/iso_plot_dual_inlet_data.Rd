@@ -21,7 +21,7 @@ iso_plot_dual_inlet_data(
 
 \item{data}{which masses and ratios to plot (e.g. \code{c("44", "45", "45/44")} - without the units), if omitted, all available masses and ratios are plotted. Note that ratios should be calculated using \code{\link{iso_calculate_ratios}} prior to plotting.}
 
-\item{filter}{any filter condition to apply to the data beyond the masses/ratio selection (param \code{data}) and time interval (param \code{time_interval}). For details on the available data columns see \link{iso_get_raw_data} with parameters \code{gather = TRUE} and \code{include_file_info = everything()} (i.e. all file info is available for plotting aesthetics).}
+\item{filter}{any filter condition to apply to the data beyond the masses/ratio selection (param \code{data}) and time interval (param \code{time_interval}). For details on the available data columns see \link[isoreader]{iso_get_raw_data} with parameters \code{gather = TRUE} and \code{include_file_info = everything()} (i.e. all file info is available for plotting aesthetics).}
 
 \item{panel}{whether to panel data by anything - any data column is possible (see notes in the \code{filter} parameter) but the most commonly used options are \code{panel = NULL} (overlay all), \code{panel = data} (by mass/ratio data), \code{panel = file_id} (panel by files, alternatively use any appropriate file_info column), and \code{panel = type} (panel by sample vs standard). Additionally it is possible to panel two variables against each other (i.e. use a \link[ggplot2]{facet_grid}), e.g. by specifying the formula \code{panel = data ~ file_id} (data in the panel rows, files in the panel columns) or \code{panel = data ~ type}.The default for this parameter is simple panelling by \code{data}.}
 
@@ -43,7 +43,6 @@ normalization is not useful for dual inlet data, except potentially between stan
 }
 \seealso{
 Other plot functions: 
-\code{\link{iso_format}()},
 \code{\link{iso_mark_calibration_range}()},
 \code{\link{iso_mark_outliers}()},
 \code{\link{iso_mark_value_range}()},
@@ -52,6 +51,8 @@ Other plot functions:
 \code{\link{iso_plot_raw_data}()},
 \code{\link{iso_plot_ref_peaks}()},
 \code{\link{iso_plot_residuals}()},
-\code{\link{iso_prepare_continuous_flow_plot_data}()}
+\code{\link{iso_plot_scan_data}()},
+\code{\link{iso_prepare_continuous_flow_plot_data}()},
+\code{\link{iso_prepare_scan_plot_data}()}
 }
 \concept{plot functions}

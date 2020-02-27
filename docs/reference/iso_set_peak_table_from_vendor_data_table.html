@@ -86,7 +86,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.0</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.2</span>
       </span>
     </div>
 
@@ -97,6 +97,9 @@
 </li>
 <li>
   <a href="../articles/continuous_flow.html">Continuous Flow</a>
+</li>
+<li>
+  <a href="../articles/scan.html">Scan</a>
 </li>
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
@@ -153,7 +156,7 @@
   <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>)
 )
 
-<span class='fu'>iso_set_peak_table_from_auto_vendor_data_table</span>(
+<span class='fu'>iso_set_peak_table_automatically_from_vendor_data_table</span>(
   <span class='no'>iso_files</span>,
   <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>)
 )
@@ -178,7 +181,7 @@
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p><code>iso_set_peak_table_from_auto_vendor_data_table</code> is the go to function for setting peak tables because it will simply look at the file extension and decide which software specific function to use (e.g. <code>iso_set_peak_table_from_isodat_vendor_data_table</code>) for any Isodat files.</p>
+    <p><code>iso_set_peak_table_automatically_from_vendor_data_table</code> is the easiest way to set peak tables from vendor data because it will simply look at the file extension and decide which software specific function to use (e.g. <code>iso_set_peak_table_from_isodat_vendor_data_table</code>) for any Isodat files.</p>
 <p><code>iso_set_peak_table_from_isodat_vendor_data_table</code> provides specialized functionality to set peak table information from an Isodat vendor data tables. For compatibility with all downstream isoprocessor calculations, the resulting peak table has a very specific set of columns which are listed below. Mapping for Isodat data tables:</p><ul>
 <li><p>peak_nr: "Nr."</p></li>
 <li><p>is_ref: "Is Ref.?"</p></li>
