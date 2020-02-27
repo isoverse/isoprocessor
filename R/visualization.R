@@ -656,144 +656,6 @@ iso_prepare_dual_inlet_plot_data <- function(
   return(plot_data)
 }
 
-
-
-#' Plotdata from dual inlet files
-#'
-#' @inheritParams iso_plot_continuous_flow_data
-#' @param filter any filter condition to apply to the data beyond the masses/ratio selection (param \code{data}) and time interval (param \code{time_interval}). For details on the available data columns see \link[isoreader]{iso_get_raw_data} with parameters \code{gather = TRUE} and \code{include_file_info = everything()} (i.e. all file info is available for plotting aesthetics).
-#' @param panel whether to panel data by anything - any data column is possible (see notes in the \code{filter} parameter) but the most commonly used options are \code{panel = NULL} (overlay all), \code{panel = data} (by mass/ratio data), \code{panel = file_id} (panel by files, alternatively use any appropriate file_info column), and \code{panel = type} (panel by sample vs standard). Additionally it is possible to panel two variables against each other (i.e. use a \link[ggplot2]{facet_grid}), e.g. by specifying the formula \code{panel = data ~ file_id} (data in the panel rows, files in the panel columns) or \code{panel = data ~ type}.The default for this parameter is simple panelling by \code{data}.
-#' @param shape whether to shape data points by anything, options are the same as for \code{panel} but the default is \code{type} (sample vs standard).
-#' @param ... deprecated parameters
-#' @note normalization is not useful for dual inlet data, except potentially between standard and sample - however, for this it is more meaningful to simply plot the relevant ratios together
-#' @family plot functions
-#' @export
-old_iso_plot_dual_inlet_data <- function(
-  iso_files, data = c(), filter = NULL,
-  panel = data, color = file_id, linetype = NULL, shape = type, label = file_id,
-  ...) {
-
-  # checks
-  if(!iso_is_dual_inlet(iso_files))
-    stop("iso_plot_dual_inlet_data can only plot dual inlet iso_files", call. = FALSE)
-
-  # check for deprecated parameters
-  dots <- list(...)
-  old <- c("panel_by", "color_by", "linetype_by", "shape_by")
-  if (any(old %in% names(dots))) {
-    glue("deprecated parameter(s): ",
-         "'{collapse(old[old %in% names(dots)], sep=\"', '\")}' ",
-         "- please check the function documentation for details on ",
-         "the updated parameters") %>%
-      stop(call. = FALSE)
-  }
-  if (length(dots) > 0) {
-    glue("unkown parameter(s): ",
-         "'{collapse(names(dots), sep=\"', '\")}' ") %>%
-      stop(call. = FALSE)
-  }
-
-  # global vars
-  cycle <- value <- type <- data_wo_units <- NULL
-
-  # collect raw data
-  raw_data <- iso_get_raw_data(iso_files, gather = TRUE, quiet = TRUE, include_file_info = everything())
-  if (nrow(raw_data) == 0) stop("no raw data in supplied iso_files", call. = FALSE)
-
-  # check for column existence
-  aes_quos <- list(panel = enquo(panel), color = enquo(color),
-                   linetype = enquo(linetype), shape = enquo(shape),
-                   label = enquo(label))
-  aes_cols <- list()
-  check_expressions(raw_data, aes_quos$color, aes_quos$linetype, aes_quos$shape, aes_quos$label)
-
-  if (quo_is_null(aes_quos$panel)) {
-    # no panel
-    aes_cols$panel <- c()
-  } else if (quo_is_symbol(aes_quos$panel)) {
-    # single symbol --> facet_wrap
-    aes_cols <- c(aes_cols, get_column_names(raw_data, panel = aes_quos$panel))
-  } else {
-    # formula --> facet_grid
-    aes_cols <- c(aes_cols, get_column_names(
-      raw_data,
-      panel_rows = aes_quos$panel %>% rlang::quo_squash() %>% rlang::f_lhs(),
-      panel_cols = aes_quos$panel %>% rlang::quo_squash() %>% rlang::f_rhs()))
-  }
-
-  # only work with desired data (masses and ratios)
-  select_data <- if(length(data) == 0) unique(raw_data$data) else as.character(data)
-  if ( length(missing <- setdiff(select_data, unique(raw_data$data))) > 0 )
-    stop("data not available in the provided iso_files: ", str_c(missing, collapse = ", "), call. = FALSE)
-  raw_data <- dplyr::filter(raw_data, data %in% select_data)
-
-  # general filter
-  filter_quo <- enquo(filter)
-  if (!quo_is_null(filter_quo)) {
-    raw_data <- dplyr::filter(raw_data, !!filter_quo)
-  }
-
-  # plot data
-  plot_data <-
-    raw_data %>%
-    # data with units and in correct order
-    mutate(
-      data_wo_units = data,
-      data = ifelse(!is.na(units), str_c(data, " [", units, "]"), data)
-    ) %>% {
-      data_levels <- tibble::deframe(select(., data, data_wo_units) %>% unique())
-      data_sorting <- sapply(select_data, function(x) which(data_levels == x)) %>% unlist(use.names = F)
-      mutate(., data = factor(data, levels = names(data_levels)[data_sorting]))
-    }
-
-  # generate plot
-  group_quos <- list(quo(file_id))
-  p <- plot_data %>%
-    ggplot() +
-    aes(cycle, value) +
-    geom_line() +
-    geom_point(size = 2) +
-    scale_x_continuous("Cycle", breaks = c(0:max(plot_data$cycle))) +
-    scale_y_continuous("Signal") +
-    theme_bw()
-
-  # paneling
-  if (!quo_is_null(aes_quos$panel)) {
-    if (quo_is_symbol(aes_quos$panel))
-      p <- p + facet_wrap(rlang::new_formula(NULL, sym(aes_cols$panel)), scales = "free_y")
-    else
-      p <- p + facet_grid(rlang::new_formula(sym(aes_cols$panel_rows), sym(aes_cols$panel_cols)), scales = "free_y")
-  }
-
-  # color
-  if (!quo_is_null(aes_quos$color)) {
-    p <- p %+% aes_(color = aes_quos$color)
-    group_quos <- c(group_quos, aes_quos['color'])
-  }
-
-  # linetype
-  if (!quo_is_null(aes_quos$linetype)) {
-    p <- p %+% aes_(linetype = aes_quos$linetype)
-    group_quos <- c(group_quos, aes_quos['linetype'])
-  }
-
-  # shape_by
-  if (!quo_is_null(aes_quos$shape)) {
-    p <- p %+% aes_(shape = aes_quos$shape)
-    group_quos <- c(group_quos, aes_quos['shape'])
-  }
-
-  # group quo
-  p <- p %+% aes_(group = quo(paste(!!!group_quos)))
-
-  # label
-  if (!quo_is_null(aes_quos$label))
-    p <- p %+% aes_(label = aes_quos$label)
-
-  # return plot
-  return(p)
-}
-
 # scan ======
 
 #' Plot data from scan files
@@ -1595,7 +1457,7 @@ iso_plot_calibration_parameters <- function(
 #' @param alpha alpha of the shading boxes
 #' @family plot functions
 #' @export
-iso_mark_x_range <- function(p, condition, color = NA, fill = "gray", alpha = 0.5) {
+iso_mark_x_range <- function(p, condition, color = NA, fill = "gray", alpha = 0.25) {
 
   # safety checks
   if (missing(p)) stop("no base plot provided. If piping to this function make sure to use '%>%' instead of '+'.", call. = FALSE)
@@ -1646,7 +1508,8 @@ iso_mark_x_range <- function(p, condition, color = NA, fill = "gray", alpha = 0.
                       xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
                       color = NULL, shape = NULL, fill = NULL, alpha = NULL,
                       size = NULL, linetype = NULL),
-        color = color, fill = fill, alpha = alpha
+        color = color, fill = fill, alpha = alpha,
+        show.legend = FALSE
       ),
       p$layers
     )
