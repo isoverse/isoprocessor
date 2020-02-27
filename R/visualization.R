@@ -22,7 +22,7 @@ find_time_column <- function(df) {
 #' @param data which masses and ratios to plot (e.g. \code{c("44", "45", "45/44")} - without the units), if omitted, all available masses and ratios are plotted. Note that ratios should be calculated using \code{\link{iso_calculate_ratios}} prior to plotting.
 #' @param time_interval which time interval to plot
 #' @param time_interval_units which units the time interval is in, default is "seconds"
-#' @param filter any filter condition to apply to the data beyond the masses/ratio selection (param \code{data}) and time interval (param \code{time_interval}). For details on the available data columns see \link{iso_get_raw_data} with parameters \code{gather = TRUE} and \code{include_file_info = everything()} (i.e. all file info is available for plotting aesthetics).
+#' @param filter any filter condition to apply to the data beyond the masses/ratio selection (param \code{data}) and time interval (param \code{time_interval}). For details on the available data columns see \link[isoreader]{iso_get_raw_data} with parameters \code{gather = TRUE} and \code{include_file_info = everything()} (i.e. all file info is available for plotting aesthetics).
 #' @param normalize whether to normalize the data (default is FALSE, i.e. no normalization). If TRUE, normalizes each trace across all files (i.e. normalized to the global max/min). This is particularly useful for overlay plotting different mass and/or ratio traces (\code{panel = NULL}). Note that zooming (if \code{zoom} is set) is applied after normalizing.
 #' @param zoom if not set, automatically scales to the maximum range in the selected time_interval in each plotting panel. If set, scales by the indicated factor, i.e. values > 1 are zoom in, values < 1 are zoom out, baseline always remains the bottom anchor point. Note that zooming is always relative to the max in each zoom_group (by default \code{zoom_group = data}, i.e. each trace is zoomed separately). The maximum considered may be outside the visible time window. Note that for \code{zoom_group} other than \code{data} (e.g. \code{file_id} or \code{NULL}), zooming is relative to the max signal across all mass traces. Typically it makes most sense to set the \code{zoom_group} to the same variable as the planned \code{panel} parameter to the plotting function. Lastly, note that zooming only affects masses, ratios are never zoomed.
 #' @param peak_table a data frame that describes the peaks in this chromatogram. By default, the chromatographic data is prepared WITHOUT peaks information. Supply this parameter to add in the peaks data. Typically via \code{\link{iso_get_peak_table}}. Note that the following parameters must also be set correctly IF \code{peak_table} is supplied and has non-standard column names: \code{file_id}, \code{rt}, \code{rt_start}, \code{rt_end}.
@@ -191,64 +191,12 @@ iso_prepare_continuous_flow_plot_data <- function(
   return(plot_data)
 }
 
-# format numbers for plotting ====
-
-#' Format iso numbers
-#'
-#' Function to easily format number columns for peak labels or other text output.
-#' @param ... variable names with data. Must have the same dimensions if multiple are supplied. Can be named to rename variable name output. Will include units in output for all \link{iso_double_with_units}.
-#' @param signif number of significant digits for numbered data
-#' @param format_names how to format the variable names, set to \code{NULL} to remove names
-#' @param format_units how to format the units from \code{\link{iso_double_with_units}} variables, set to \code{NULL} to omit units
-#' @param replace_permil whether to replace the term 'permil' with the permil symbol (\\u2030)
-#' @param sep separator between variables if multiple are provided in \code{...}
-#' @family plot functions
-#' @examples
-#' x <- iso_double_with_units(1:5, "V")
-#' y <- iso_double_with_units(1:5, "permil")
-#' iso_format(x, y)
-#' iso_format(amplitude = x, d13C = y)
-#' @export
-iso_format <- function(..., signif = 3, format_names = "%s: ", format_units="%s", replace_permil = TRUE, sep = "\n") {
-  # find variable names
-  vars <- rlang::enquos(...)
-  has_name <- nchar(names(vars)) > 0
-  names(vars)[!has_name] <- map_chr(vars[!has_name], rlang::as_label)
-
-  # evaluate variables
-  vars <- map(vars, rlang::eval_tidy)
-
-  # check length
-  vars_size <- map_int(vars, length)
-  if (!all(vars_size == vars_size[1]))
-    stop("iso_format encountered variables with unequal lengths", call. = FALSE)
-
-  # format data
-  values <- map2(vars, names(vars), ~{
-    value <-
-      if (iso_is_double_with_units(.x) && !is.null(format_units))
-        paste0(signif(.x, digits = signif), sprintf(format_units, iso_get_units(.x)))
-      else if (iso_is_double_with_units(.x) || is.numeric(.x))
-        as.character(signif(as.numeric(.x), digits = signif))
-      else as.character(.x)
-    if (!is.null(format_names)) value <- paste0(sprintf(format_names, .y), value)
-    value
-  })
-
-  # full text
-  return(
-    do.call(paste, args = c(values, list(sep = "\n"))) %>%
-      stringr::str_replace_all(fixed("permil"), "\u2030")
-  )
-}
-
 # raw data plots =====
 
 #' Plot raw data from isoreader files
 #'
 #' Convenience function for making quick standard plots for raw isoreader data.
-#' Calls \code{\link{iso_plot_continuous_flow_data}} and \code{\link{iso_plot_dual_inlet_data}} for data specific plotting (see those functions for parameter details).
-#' For customizing plotting calls, it is easier to use \code{\link{iso_plot_continuous_flow_data}} and \code{\link{iso_plot_dual_inlet_data}} directly.
+#' Calls \code{\link{iso_plot_continuous_flow_data}}, \code{\link{iso_plot_dual_inlet_data}} and \code{\link{iso_plot_scan_data}} for data specific plotting (see those functions for parameter details). For customizing plotting calls, it is recommended to use \code{\link{iso_plot_continuous_flow_data}}, \code{\link{iso_plot_dual_inlet_data}} and \code{\link{iso_plot_scan_data}} directly.
 #'
 #' @param iso_files collection of iso_file objects
 #' @param ... parameters for the data specific plotting functions
@@ -266,10 +214,13 @@ iso_plot_raw_data <- function(iso_files, ..., quiet = default(quiet)) {
     iso_plot_continuous_flow_data (iso_files, ...)
   else if (iso_is_dual_inlet(iso_files))
     iso_plot_dual_inlet_data (iso_files, ...)
+  else if (iso_is_scan(iso_files))
+    iso_plot_scan_data (iso_files, ...)
   else
     stop("plotting of this type of iso_files not yet supported", call. = FALSE)
 }
 
+# continuous flow ======
 
 #' Plot chromatogram from continuous flow data
 #'
@@ -558,10 +509,12 @@ iso_plot_continuous_flow_data.data.frame <- function(
 
 }
 
+# dual inlet ========
+
 #' Plot mass data from dual inlet files
 #'
 #' @inheritParams iso_plot_continuous_flow_data
-#' @param filter any filter condition to apply to the data beyond the masses/ratio selection (param \code{data}) and time interval (param \code{time_interval}). For details on the available data columns see \link{iso_get_raw_data} with parameters \code{gather = TRUE} and \code{include_file_info = everything()} (i.e. all file info is available for plotting aesthetics).
+#' @param filter any filter condition to apply to the data beyond the masses/ratio selection (param \code{data}) and time interval (param \code{time_interval}). For details on the available data columns see \link[isoreader]{iso_get_raw_data} with parameters \code{gather = TRUE} and \code{include_file_info = everything()} (i.e. all file info is available for plotting aesthetics).
 #' @param panel whether to panel data by anything - any data column is possible (see notes in the \code{filter} parameter) but the most commonly used options are \code{panel = NULL} (overlay all), \code{panel = data} (by mass/ratio data), \code{panel = file_id} (panel by files, alternatively use any appropriate file_info column), and \code{panel = type} (panel by sample vs standard). Additionally it is possible to panel two variables against each other (i.e. use a \link[ggplot2]{facet_grid}), e.g. by specifying the formula \code{panel = data ~ file_id} (data in the panel rows, files in the panel columns) or \code{panel = data ~ type}.The default for this parameter is simple panelling by \code{data}.
 #' @param shape whether to shape data points by anything, options are the same as for \code{panel} but the default is \code{type} (sample vs standard).
 #' @param ... deprecated parameters
@@ -694,6 +647,223 @@ iso_plot_dual_inlet_data <- function(
   return(p)
 }
 
+# scan ======
+
+#' Plot data from scan files
+#'
+#' This function provides easy plotting for mass and ratio traces from IRMSs scan data. It can be called either directly with a set of \code{iso_file} objects, or with a data frame prepared for plotting scan data (see \code{\link{iso_prepare_scan_plot_data}}).
+#'
+#' @param ... S3 method placeholder parameters, see class specific functions for details on parameters
+#' @family plot functions
+#' @export
+iso_plot_scan_data <- function(...) {
+  UseMethod("iso_plot_scan_data")
+}
+
+#' @export
+iso_plot_scan_data.default <- function(x, ...) {
+  stop("this function is not defined for objects of type '",
+       class(x)[1], "'", call. = FALSE)
+}
+
+#' @export
+iso_plot_scan_data.iso_file <- function(iso_files, ...) {
+  iso_plot_scan_data(iso_as_file_list(iso_files), ...)
+}
+
+#' @inheritParams iso_prepare_scan_plot_data
+#' @rdname iso_plot_scan_data
+#' @export
+iso_plot_scan_data.iso_file_list <- function(
+  iso_files, data = c(), type, filter = NULL,
+  x_interval = c(), y_interval = c(),
+  panel = file_id, color = data, linetype = NULL, label = data, ...) {
+
+  # safety checks
+  if(!iso_is_scan(iso_files))
+    stop("iso_plot_scan_data can only plot scan iso_files", call. = FALSE)
+
+  # retrieve data (with all info so additional aesthetics are easy to include)
+  plot_data <- iso_prepare_scan_plot_data(
+    iso_files,
+    data = data,
+    include_file_info = everything(),
+    filter = !!enquo(filter)
+  )
+
+  # plot scan data
+  iso_plot_scan_data(
+    plot_data,
+    type = !!rlang::enquo(type),
+    x_interval = x_interval,
+    y_interval = y_interval,
+    panel = !!enquo(panel),
+    color = !!enquo(color),
+    linetype = !!enquo(linetype),
+    label = !!enquo(label),
+    ...
+  )
+
+}
+
+#' @rdname iso_plot_scan_data
+#' @param df a data frame of the scan data prepared for plotting (see \code{\link{iso_prepare_scan_plot_data}})
+#' @param type which type of scan data to plot. Only required if there are more than one type of scan data.
+#' @param x_interval optional constraints on x axis values
+#' @param y_interval optional constraints on y axis values
+#' @param ... additional parameters passed on to \link{iso_plot_data}
+#' @inheritParams iso_prepare_scan_plot_data
+#' @inheritParams iso_plot_data
+#' @export
+iso_plot_scan_data.data.frame <- function(
+  df, type, x_interval = c(), y_interval = c(),
+  panel = file_id, color = data, linetype = NULL, label = data, ...) {
+
+  # check for data
+  if (nrow(df) == 0) stop("no data provided", call. = FALSE)
+
+  # check for type
+  type_quo <- rlang::enquo(type)
+  types <- unique(df$type)
+  if (rlang::quo_is_missing(type_quo) && length(types) > 1) {
+    # too many types
+    sprintf(
+      "found more than 1 type of scan file: '%s'. Please specify which type to plot by setting the 'type' parameter to one of these options: %s",
+      paste(types, collapse = "', '"),
+      paste(sprintf("'type = \"%s\"'", types), collapse = " or ")
+    ) %>% stop(call. = FALSE)
+  } else if (!rlang::quo_is_missing(type_quo)) {
+    # type defined, let's filter by it
+    filter_type <- rlang::eval_tidy(type_quo)
+    df <- dplyr::filter(df, .data$type == !!filter_type)
+    if (nrow(df) == 0) {
+      sprintf("no data for type '%s'. Available type: '%s'",
+              filter_type, paste(types, collapse = "', '")) %>%
+        stop(call. = FALSE)
+    }
+  }
+
+  # x interval safety checks
+  if (length(x_interval) > 0 && (!is.numeric(x_interval) || length(x_interval) != 2)) {
+    stop("x interval needs to be a vector with two numeric entries, found: ", str_c(x_interval, collapse = ", "), call. = FALSE)
+  }
+
+  # y interval safety checks
+  if (length(y_interval) > 0 && (!is.numeric(y_interval) || length(y_interval) != 2)) {
+    stop("y interval needs to be a vector with two numeric entries, found: ", str_c(y_interval, collapse = ", "), call. = FALSE)
+  }
+
+  # adjust y scale if x is set but y is not
+  if (length(x_interval) == 2 && is.numeric(x_interval) && !(length(y_interval) == 2 && is.numeric(y_interval))) {
+    df <- df %>%
+      dplyr::arrange(x) %>%
+      dplyr::group_by(file_id, data) %>%
+      dplyr::mutate(
+        ..discard = x < x_interval[1] | x > x_interval[2],
+        ..change = c(0, diff(..discard)),
+        ..border = ..change == 1 | c(..change[-1], 0) == -1
+      ) %>%
+      dplyr::ungroup() %>%
+      dplyr::filter(!..discard | ..border) %>%
+      dplyr::select(-..discard, -..change, -..border)
+  }
+
+  # x axis label
+  x_lab <- sprintf("%s [%s]", df$type, df$x_units) %>% unique()
+  if (length(x_lab) > 1) x_lab <- unique(df$type)
+
+  # generate plot
+  p <- iso_plot_data(
+    df, x, value, group = paste(file_id, data),
+    color = !!enquo(color), linetype = !!enquo(linetype), label = !!enquo(label),
+    panel = !!enquo(panel), lines = TRUE, ...
+  ) +
+    scale_x_continuous(expand = c(0, 0)) +
+    labs(x = x_lab, y = "Signal")
+
+  # x and y intervals
+  if (length(x_interval) == 2 && length(y_interval) == 2) {
+    p <- p + coord_cartesian(xlim = x_interval, ylim = y_interval) +
+      scale_y_continuous(expand = c(0, 0))
+  } else if (length(x_interval) == 2) {
+    p <- p + coord_cartesian(xlim = x_interval)
+  } else if (length(y_interval) == 2) {
+    p <- p + coord_cartesian(ylim = y_interval) +
+      scale_y_continuous(expand = c(0, 0))
+  }
+
+  # return plot
+  return(p)
+}
+
+#' Prepare plotting data from scan files
+#'
+#' This function helps with the preparation of plotting data from scan files. Call either explicity and pass the result to \code{\link{iso_plot_scan_data}} or let \code{\link{iso_plot_scan_data}} take care of preparing the plotting data directly from the \code{iso_files}.
+#'
+#' @param iso_files collection of iso_file objects
+#' @param data which masses and ratios to plot (e.g. \code{c("44", "45", "45/44")} - without the units), if omitted, all available masses and ratios are plotted. Note that ratios should be calculated using \code{\link{iso_calculate_ratios}} prior to plotting.
+#' @param include_file_info which file information to include (see \link[isoreader]{iso_get_file_info}). Use c(...) to select multiple, supports all \link[dplyr]{select} syntax including renaming columns.
+#' @param filter any filter condition to apply to the data beyond the masses/ratio selection (param \code{data}) and time interval (param \code{time_interval}). For details on the available data columns see \link[isoreader]{iso_get_raw_data} with parameters \code{gather = TRUE} and \code{include_file_info = everything()} (i.e. all file info is available for plotting aesthetics).
+#'
+#' @family plot functions
+#' @export
+iso_prepare_scan_plot_data <- function(
+  iso_files, data = c(), include_file_info = type, filter = NULL) {
+
+  # safety checks
+  if(!iso_is_scan(iso_files))
+    stop("can only prepare scan iso_files for plotting", call. = FALSE)
+
+  # collect raw data
+  raw_data <- iso_get_raw_data(iso_files, gather = TRUE, quiet = TRUE)
+  if (nrow(raw_data) == 0) stop("no raw data in supplied iso_files", call. = FALSE)
+
+  # add in file info
+  file_info <- iso_get_file_info(iso_files, select = !!enquo(include_file_info), quiet = TRUE)
+  if (!"type" %in% names(file_info)) {
+    stop("'type' must be included in the file information", call. = FALSE)
+  }
+  raw_data <- dplyr::left_join(raw_data, file_info, by = "file_id")
+
+  # only work with desired data
+  available_data <- unique(raw_data$data)
+  select_data <- if(length(data) == 0) available_data else as.character(data)
+  if ( length(missing <- setdiff(select_data, unique(raw_data$data))) > 0 )
+    stop("data not available in the provided iso_files (don't include units): ", str_c(missing, collapse = ", "), call. = FALSE)
+  raw_data <- dplyr::filter(raw_data, .data$data %in% select_data)
+
+  # general filter
+  filter_quo <- enquo(filter)
+  if (!quo_is_null(filter_quo)) {
+    raw_data <- dplyr::filter(raw_data, !!filter_quo)
+    if (nrow(raw_data) == 0) {
+      sprintf("no data left with filter '%s'", rlang::as_label(filter_quo)) %>%
+        stop(call. = FALSE)
+    }
+  }
+
+  # plot data
+  plot_data <-
+    raw_data %>%
+    # add units to data for proper grouping
+    dplyr::mutate(
+      data_wo_units = .data$data,
+      data = ifelse(!is.na(.data$units), paste0(.data$data, " [", .data$units, "]"), .data$data)
+    ) %>%
+    dplyr::select(1:.data$category, .data$data, .data$data_wo_units, everything())
+
+  # switch to factors for proper grouping
+  data_levels <- tibble::deframe(select(plot_data, data, data_wo_units) %>% unique())
+  data_sorting <- purrr::map_int(select_data, ~which(data_levels == .x)) %>% unlist(use.names = FALSE)
+  plot_data <- plot_data %>%
+    dplyr::mutate(
+      data = factor(data, levels = names(data_levels)[data_sorting]),
+      data_wo_units = factor(data_wo_units, levels = unique(as.character(data_levels)[data_sorting]))
+    )
+
+  # return
+  return(plot_data)
+}
 
 
 # reference peaks =========
@@ -831,6 +1001,11 @@ iso_plot_data <- function(
   add_geoms <- list(...)
   if (!lines && !points && length(add_geoms) == 0) {
     warning("no automatic geoms (points or lines) included, plot will be blank", immediate. = TRUE, call. = FALSE)
+  }
+  if (!all(probs <- purrr::map_lgl(add_geoms, ~is(.x, "Layer")))) {
+    sprintf("unrecognized parameter(s) '%s'. Can only add geoms as aditional parameters.",
+            paste(names(add_geoms)[!probs], collapse = "', '")) %>%
+      stop(call. = FALSE)
   }
 
   # info
@@ -1168,7 +1343,7 @@ iso_plot_residuals <- function(
     theme(legend.position = "bottom", legend.direction = "vertical")
 
   if (value_ranges)
-    p <- iso_mark_value_range(p, mean = FALSE, sd = 1)
+    p <- iso_mark_value_range(p, mean = FALSE, plus_minus_sd = 1)
 
   return(p)
 }

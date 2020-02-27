@@ -1,34 +1,5 @@
 context("Visualization Utils")
 
-# iso_format ====
-
-test_that("test that iso_format works properly", {
-
-  expect_error(iso_format(1:5, 1), "unequal lengths")
-  x <- 1:2
-  expect_equal(
-    iso_format(x, b = iso_double_with_units(pi * 1:2, "V"), signif = 3),
-    c("x: 1\nb: 3.14V", "x: 2\nb: 6.28V")
-  )
-  expect_equal(
-    iso_format(a = x, b = iso_double_with_units(pi * 1:2, "V"), signif = 3),
-    c("a: 1\nb: 3.14V", "a: 2\nb: 6.28V")
-  )
-  expect_equal(
-    iso_format(a = x, b = iso_double_with_units(pi * 1:2, "V"), signif = 4),
-    c("a: 1\nb: 3.142V", "a: 2\nb: 6.283V")
-  )
-  expect_equal(
-    iso_format(x, iso_double_with_units(pi * 1:2, "V"), signif = 3, format_names = NULL),
-    c("1\n3.14V", "2\n6.28V")
-  )
-  expect_equal(
-    iso_format(x, iso_double_with_units(pi * 1:2, "V"), signif = 3, format_names = NULL, format_units = NULL),
-    c("1\n3.14", "2\n6.28")
-  )
-
-})
-
 # raw data ========
 
 context("Plotting functions")
@@ -169,6 +140,70 @@ test_that("test that plot dual inlet works properly", {
 
 })
 
+
+# scan plot ====
+
+test_that("test that plot scan works properly", {
+
+  expect_error(iso_plot_scan_data(42), "not defined")
+  expect_is(scan <- isoreader:::make_scan_data_structure("NA"), "scan")
+  scan$read_options$file_info <- TRUE
+  scan$read_options$raw_data <- TRUE
+  expect_error(iso_plot_scan_data(scan), "no raw data in supplied iso_files")
+
+  # make test data
+  scan$file_info$type <- "x"
+  scan$raw_data <- tibble(step = 1:10, x = step*10, x_units = "unit", v44.mV = runif(10), v46.mV = runif(10))
+  scan2 <- scan
+  scan2$file_info$file_id <- "NA2"
+  scan2$file_info$type <- "y"
+
+  # test for errors
+  expect_error(iso_prepare_scan_plot_data(scan, include_file_info = c()), "type.*must be included")
+  expect_error(iso_plot_scan_data(scan, type = "y"), "no data for type.*y.*Available.*x")
+  expect_error(iso_plot_scan_data(c(scan, scan2)), "found more than 1 type")
+  expect_error(iso_plot_scan_data(scan, data = 45), "data not available")
+  expect_error(iso_plot_scan_data(scan, x_interval = 5), "x interval needs to be a vector")
+  expect_error(iso_plot_scan_data(scan, x_interval = c("a", "b")), "x interval needs to be a vector")
+  expect_error(iso_plot_scan_data(scan, y_interval = 5), "y interval needs to be a vector")
+  expect_error(iso_plot_scan_data(scan, y_interval = c("a", "b")), "y interval needs to be a vector")
+  expect_error(iso_plot_scan_data(scan, filter = FALSE), "no data left with filter")
+
+  # generate plot
+  expect_true(is.ggplot(p <- iso_plot_scan_data(scan, data = c("44"))))
+  expect_true(all(p$data$data %in% c("44 [mV]")))
+  expect_true(identical(p$data$data %>% levels(), "44 [mV]"))
+
+  # aesthetics, mapping, panelling formatting tests - defaults first
+  expect_true(all(names(p$mapping) %in% c("colour", "x", "y", "group", "label")))
+  expect_true("data" %in% rlang::as_label(p$mapping$colour))
+  expect_true("x" %in% rlang::as_label(p$mapping$x))
+  expect_true("value" %in% rlang::as_label(p$mapping$y))
+  expect_true("data" %in% rlang::as_label(p$mapping$label))
+  expect_equal(class(p$facet)[1], "FacetWrap")
+  expect_equal(names(p$facet$params$facets), "file_id")
+
+  # then custom specifications
+  expect_true(is.ggplot(p <- iso_plot_scan_data(scan, panel = NULL, color = data, linetype = file_id)))
+  expect_true(all(p$data$data %in% c("44 [mV]", "46 [mV]"))) # all selected by default
+  expect_true(all(names(p$mapping) %in% c("colour", "x", "y", "group", "linetype", "label")))
+  expect_true("data" %in% rlang::as_label(p$mapping$colour))
+  expect_true("file_id" %in% rlang::as_label(p$mapping$linetype))
+  expect_equal(class(p$facet)[1], "FacetNull")
+  expect_true(is.ggplot(p <- iso_plot_scan_data(scan, data = "44", panel = file_id, color = type, linetype = data, shape = file_id)))
+  expect_true(all(names(p$mapping) %in% c("x", "y", "group", "colour", "linetype", "shape", "label")))
+  expect_true("type" %in% rlang::as_label(p$mapping$colour))
+  expect_true("data" %in% rlang::as_label(p$mapping$linetype))
+  expect_true("file_id" %in% rlang::as_label(p$mapping$shape))
+  expect_equal(class(p$facet)[1], "FacetWrap")
+  expect_equal(names(p$facet$params$facets), "file_id")
+
+  expect_true(is.ggplot(p <- iso_plot_raw_data(scan, data = "44", panel = file_id ~ data)))
+  expect_equal(class(p$facet)[1], "FacetGrid")
+  expect_equal(names(p$facet$params$rows), "file_id")
+  expect_equal(names(p$facet$params$cols), "data")
+
+})
 
 # ref peaks =========
 
