@@ -86,7 +86,7 @@ iso_files_raw <-
 # process peak table
 iso_files_w_peak_table <- iso_files_raw %>% 
   # set peak table from vendor data table
-  iso_set_peak_table_from_auto_vendor_data_table() %>% 
+  iso_set_peak_table_automatically_from_vendor_data_table() %>% 
   # convert units from mV to V for amplitudes and area
   iso_convert_peak_table_units(V = mV, Vs = mVs) 
 ```
@@ -275,7 +275,7 @@ peak_table %>%
   # generate plot
   iso_plot_data(x = mass, y = d13C, color = type, size = 3, points = TRUE, panel = type ~ .) %>% 
   # mark +/- 1, 2, 3 std. deviation value ranges
-  iso_mark_value_range(sd = c(1,2,3)) %>% 
+  iso_mark_value_range(plus_minus_sd = c(1,2,3)) %>% 
   # mark outliers (those outside the 3 sigma range)
   iso_mark_outliers(sd = 3, label = analysis)
 ```
@@ -465,7 +465,7 @@ peak_table_lin_corr %>%
     area44, c(d13C, d13C_lin_corr), color = variable, panel = NULL, points = TRUE
   ) %>% 
   # show standard deviation range
-  iso_mark_value_range(mean = FALSE, sd = 1)
+  iso_mark_value_range(mean = FALSE, plus_minus_sd = 1)
 ```
 
 ## Isotopic scaling
