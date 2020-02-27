@@ -82,7 +82,7 @@ test_that("test that plot continuous flow works properly", {
 
 test_that("test that plot dual inlet works properly", {
 
-  expect_error(iso_plot_dual_inlet_data(42), "can only plot dual inlet")
+  expect_error(iso_plot_dual_inlet_data(42), "not defined")
   expect_is(di <- isoreader:::make_di_data_structure("NA"), "dual_inlet")
   di$read_options$file_info <- TRUE
   di$read_options$raw_data <- TRUE
@@ -92,19 +92,13 @@ test_that("test that plot dual inlet works properly", {
   di$raw_data <- data_frame(type = rep(c("standard", "sample"), each = 5), cycle = rep(1:5, times = 2), v44.mV = runif(10), v46.mV = runif(10))
 
   # test for errors
-  expect_error(iso_plot_raw_data(di, panel = DNE), "unknown column")
-  expect_error(iso_plot_raw_data(di, panel = DNE ~ data), "unknown column")
-  expect_error(iso_plot_raw_data(di, panel = data ~ DNE), "unknown column")
-  expect_error(iso_plot_raw_data(di, color = DNE), "not.*valid")
-  expect_error(iso_plot_raw_data(di, linetype = DNE), "not.*valid")
-  expect_error(iso_plot_raw_data(di, shape = DNE), "not.*valid")
-  expect_error(iso_plot_raw_data(di, label = DNE), "not.*valid")
+  expect_error(iso_plot_dual_inlet_data(di, data = 45), "data not available")
+  expect_error(iso_plot_dual_inlet_data(di, filter = FALSE), "no data left with filter")
 
   # generate plot
   di <- iso_calculate_ratios(di, "46/44")
-  expect_message(p <- iso_plot_raw_data(di, c("46/44", "44"), quiet = FALSE), "plotting data")
+  expect_silent(p <- iso_plot_dual_inlet_data(di, c("46/44", "44")))
   expect_true(is.ggplot(p))
-  expect_silent(iso_plot_raw_data(di, "44", quiet = TRUE))
   expect_true(all(p$data$data %in% c("44 [mV]", "46/44"))) # only these datas selected
   expect_true(identical(p$data$data %>% levels(), c("46/44", "44 [mV]")))
 
@@ -249,6 +243,30 @@ test_that("calibration ranges work", {
 
 })
 
+# x range ======
+
+test_that("marking x range works", {
+
+  p <- ggplot2::ggplot(ggplot2::mpg) + ggplot2::aes(hwy, cty) + ggplot2::geom_point()
+  expect_error(iso_mark_x_range(), "no base plot")
+  expect_error(iso_mark_x_range(p), "condition.*required")
+
+  # @FIXME: implement more
+
+})
+
+# value range ====
+
+test_that("marking value range works", {
+
+  p <- ggplot2::ggplot(ggplot2::mpg) + ggplot2::aes(hwy, cty) + ggplot2::geom_point()
+  expect_error(iso_mark_value_range(), "no base plot")
+  expect_warning(iso_mark_value_range(p, sd = 1), "renamed")
+
+})
+
+# outliers =====
+
 test_that("marking outliers works", {
 
   p <- ggplot2::ggplot(ggplot2::mpg) + ggplot2::aes(hwy, cty) + ggplot2::geom_point()
@@ -259,5 +277,7 @@ test_that("marking outliers works", {
   expect_error(iso_mark_outliers(p, plus_minus_value = 5, condition = TRUE), "more than one")
   expect_true(ggplot2::is.ggplot(p <- iso_mark_outliers(p, condition = TRUE)))
 
+  # @FIXME: implement more
 })
+
 
