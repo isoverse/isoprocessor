@@ -196,7 +196,7 @@ Visualize the reference peaks. It looks like the sample at `seq_nr=66` has an ab
 ```{r "ref_peak_variation", fig.width=9, fig.height=7}
 iso_files %>% 
   # get all peaks
-  iso_get_peak_table(include_file_info = c(seq_nr, analysis), quiet = TRUE) %>% 
+  iso_get_peak_table(include_file_info = c(seq_nr, analysis, type), quiet = TRUE) %>% 
   # focus on reference peaks only and add reference info
   filter(!is.na(ref_nr)) %>% 
   mutate(ref_info = paste0(ref_nr, ifelse(is_ref == 1, "*", ""))) %>% 
@@ -206,7 +206,8 @@ iso_files %>%
     x = seq_nr, ratio = c(`r45/44`, `r46/44`), fill = ref_info,
     panel_scales = "fixed"
   ) %>% 
-  # mark outlier
+  # mark ranges & outliers
+  iso_mark_x_range(condition = type == "sample", fill = "peru", alpha = 0.2) %>% 
   iso_mark_value_range(plus_minus_value = 0.25) %>% 
   iso_mark_outliers(plus_minus_value = 0.25, label = iso_format(seq_nr)) +
   # add labels

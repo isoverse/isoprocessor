@@ -595,7 +595,7 @@ iso_plot_dual_inlet_data.data.frame <- function(
 #' This function helps with the preparation of plotting data from dual inlet files. Call either explicity and pass the result to \code{\link{iso_plot_dual_inlet_data}} or let \code{\link{iso_plot_dual_inlet_data}} take care of preparing the plotting data directly from the \code{iso_files}.
 #'
 #' @param iso_files collection of iso_file objects
-#' @param data which masses, ratios and deltas to plot (e.g. \code{c("44", "45", "45/44", "d45/44)} - without the units), if omitted, all available masses, ratios, and delta values are plotted. Note that ratios should be calculated using \code{\link{iso_calculate_ratios}} and delta values should be calculated using \code{\link{iso_calculate_deltas}} prior to plotting.
+#' @param data which masses, ratios and deltas to plot (e.g. \code{c("44", "45", "45/44", "d45/44")} - without the units), if omitted, all available masses, ratios, and delta values are plotted. Note that ratios should be calculated using \code{\link{iso_calculate_ratios}} and delta values should be calculated using \code{\link{iso_calculate_deltas}} prior to plotting.
 #' @param include_file_info which file information to include (see \link[isoreader]{iso_get_file_info}). Use c(...) to select multiple, supports all \link[dplyr]{select} syntax including renaming columns.
 #' @param filter any filter condition to apply to the data beyond the masses/ratio/delta selection (param \code{data}). For details on the available data columns see \link[isoreader]{iso_get_raw_data} with parameters \code{gather = TRUE} and \code{include_file_info = everything()}.
 #'
