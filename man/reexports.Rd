@@ -15,6 +15,7 @@
 \alias{\%>\%}
 \alias{filter}
 \alias{unnest}
+\alias{iso_format}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -24,7 +25,7 @@ below to see their documentation.
 \describe{
   \item{dplyr}{\code{\link[dplyr]{filter}}}
 
-  \item{isoreader}{\code{\link[isoreader]{extract_substring}}, \code{\link[isoreader]{extract_word}}, \code{\link[isoreader]{iso_turn_info_messages_off}}, \code{\link[isoreader]{iso_turn_info_messages_on}}}
+  \item{isoreader}{\code{\link[isoreader]{extract_substring}}, \code{\link[isoreader]{extract_word}}, \code{\link[isoreader]{iso_format}}, \code{\link[isoreader]{iso_turn_info_messages_off}}, \code{\link[isoreader]{iso_turn_info_messages_on}}}
 
   \item{magrittr}{\code{\link[magrittr]{\%>\%}}}
 

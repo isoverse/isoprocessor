@@ -22,6 +22,8 @@ navbar:
     href: articles/dual_inlet.html
   - text: Continuous Flow
     href: articles/continuous_flow.html
+  - text: Scan
+    href: articles/scan.html
   - text: "Processing Examples"
     menu:
       - text: "Bulk carbon isotope analysis"

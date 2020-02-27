@@ -95,7 +95,7 @@ iso_files_raw <-
 # process
 iso_files <- iso_files_raw %>% 
   # set peak table from vendor data table
-  iso_set_peak_table_from_auto_vendor_data_table() %>% 
+  iso_set_peak_table_automatically_from_vendor_data_table() %>% 
   # convert units from mV to V for amplitudes and area
   iso_convert_peak_table_units(V = mV, Vs = mVs) %>% 
   # rename key file info columns

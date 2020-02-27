@@ -67,10 +67,14 @@ iso_convert_time <- function(iso_files, to, quiet = default(quiet)) {
 iso_convert_signals <- function(iso_files, to, R, R_units = NA, quiet = default(quiet)) {
 
   # checks
-  if(!iso_is_continuous_flow(iso_files) && !iso_is_dual_inlet(iso_files)) stop("can only convert signals in continuous flow and dual inlet iso_files", call. = FALSE)
-  if(missing(to)) stop("no unit to convert to specified", call. = FALSE)
-  if(!missing(R) && is.na(R_units)) stop("resistor values (R) are specified but their units (R_units) are not", call. = FALSE)
-  if(missing(R) && !is.na(R_units)) stop("resistor units (R_units) are specified but resistor values (R) are not", call. = FALSE)
+  if(!iso_is_continuous_flow(iso_files) && !iso_is_dual_inlet(iso_files) &&!iso_is_scan(iso_files))
+    stop("can only convert signals in continuous flow and dual inlet iso_files", call. = FALSE)
+  if(missing(to))
+    stop("no unit to convert to specified", call. = FALSE)
+  if(!missing(R) && is.na(R_units))
+    stop("resistor values (R) are specified but their units (R_units) are not", call. = FALSE)
+  if(missing(R) && !is.na(R_units))
+    stop("resistor units (R_units) are specified but resistor values (R) are not", call. = FALSE)
   if(!missing(R) && ( !is.vector(R, "numeric") || is.null(names(R)) || any(names(R) == "")))
     stop("specified resistance values have to be a named numeric vector - e.g., c(R45=0.3)", call. = FALSE)
   single_file <- iso_is_file(iso_files) # to make sure return is the same as supplied
@@ -90,7 +94,7 @@ iso_convert_signals <- function(iso_files, to, R, R_units = NA, quiet = default(
 
   # apply signal conversion
   func <- "iso_convert_signals"
-  signal_pattern <- sprintf("^[iv](\\d+)\\.(\\w+)$")
+  signal_pattern <- sprintf("^[iv]C?(\\d+)\\.(\\w+)$")
   to_units <- get_unit_scaling(to, c("V", "A"))
   R_name <- R.Ohm <- NULL # global vars
   iso_files <- iso_files %>% lapply(function(iso_file) {
@@ -146,7 +150,7 @@ iso_convert_signals <- function(iso_files, to, R, R_units = NA, quiet = default(
           details = "cannot automatically determine resistor values, resistor data not linked to masses", warn = FALSE))
       } else {
         R <- iso_file$method_info$resistors %>%
-          mutate(R_name = str_c("R", mass)) %>%
+          mutate(R_name = ifelse(!is.na(mass), str_c("R", mass), str_c("R", cup))) %>%
           select(R_name, R.Ohm) %>% tibble::deframe()
         R_units <- "Ohm"
       }
@@ -282,7 +286,13 @@ iso_convert_peak_table_units.data.frame <- function(peak_table, ..., select = ev
       message()
   }
 
-  all_cols <- tidyselect::vars_select(names(peak_table), !!select_quo, .strict = FALSE)
+  if (rlang::as_label(select_quo) == "everything()")
+    all_cols <- rlang::set_names(names(peak_table))
+  else
+    all_cols <- isoreader:::get_column_names(
+      peak_table, select = select_quo, n_reqs = list(select = "*"),
+      cols_must_exist = FALSE, warn = FALSE)$select
+
   all_units <- iso_get_units(peak_table[all_cols])
   all_cols <- all_cols[!is.na(all_units)]
   all_units <- all_units[!is.na(all_units)]
@@ -300,7 +310,7 @@ iso_convert_peak_table_units.data.frame <- function(peak_table, ..., select = ev
     mutate(quos = map2(col, to_units, generate_quo))
 
   # run mutate
-  return(mutate(peak_table, !!!with(conversions, setNames(quos, col))))
+  return(dplyr::mutate(peak_table, !!!with(conversions, setNames(quos, col))))
 }
 
 
@@ -444,7 +454,7 @@ scale_signals <- function(data, signal_cols, to, R = c(), R_units = "GOhm", quie
   # signal columns
   v_prefix <- "v" # voltage columns prefix
   i_prefix <- "i" # current columns prefix
-  signal_pattern <- sprintf("^[%s%s](\\d+)\\.(\\w+)$", v_prefix, i_prefix)
+  signal_pattern <- sprintf("^[%s%s]C?(\\d+)\\.(\\w+)$", v_prefix, i_prefix)
   if (any(wrong <- !str_detect(signal_cols, signal_pattern))) {
     stop("some signal columns do not fit the expected pattern for signal colum names: ",
          str_c(signal_cols[wrong], collapse =", "), call. = FALSE)
