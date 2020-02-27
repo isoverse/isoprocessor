@@ -997,15 +997,25 @@ iso_plot_data <- function(
   if (missing(x)) stop("have to provide an x variable or expression to plot", call. = FALSE)
   if (missing(y)) stop("have to provide at least one y variable or expression to plot", call. = FALSE)
 
-  # warnings
-  add_geoms <- list(...)
+  #check additional geoms for issues
+  add_geom_quos <- rlang::enquos(...)
+  add_geom_quos <- add_geom_quos[!purrr::map_lgl(add_geom_quos, rlang::quo_is_null)]
+  add_geoms <- map(add_geom_quos, rlang::eval_tidy)
+  if (!all(good <- purrr::map_lgl(add_geoms, ~is(.x, "Layer")))) {
+    dot_exprs <- purrr::map_chr(add_geom_quos[!good], rlang::quo_text)
+    dot_names <- names(add_geoms[!good])
+    if (!is.null(dot_names))
+      dot_info <- ifelse(nchar(dot_names) > 0, sprintf("%s='%s'", dot_names, dot_exprs), sprintf("'%s'", dot_exprs))
+    else
+      dot_info <- sprintf("'%s'", dot_exprs)
+    glue::glue(
+      "ignoring unrecognized parameter(s) {paste(dot_info, collapse = ', ')}. ",
+      "Can only add geoms as aditional parameters.") %>%
+      warning(call. = FALSE, immediate. = TRUE)
+    add_geoms <- add_geoms[good]
+  }
   if (!lines && !points && length(add_geoms) == 0) {
     warning("no automatic geoms (points or lines) included, plot will be blank", immediate. = TRUE, call. = FALSE)
-  }
-  if (!all(probs <- purrr::map_lgl(add_geoms, ~is(.x, "Layer")))) {
-    sprintf("unrecognized parameter(s) '%s'. Can only add geoms as aditional parameters.",
-            paste(names(add_geoms)[!probs], collapse = "', '")) %>%
-      stop(call. = FALSE)
   }
 
   # info

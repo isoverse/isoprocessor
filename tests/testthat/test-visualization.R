@@ -233,7 +233,11 @@ test_that("test that iso_plot_data visualization works", {
   expect_error(iso_plot_data(ggplot2::mpg), "provide.*x")
   expect_error(iso_plot_data(ggplot2::mpg, cyl), "provide.*y")
   expect_warning(iso_plot_data(ggplot2::mpg, cyl, hwy), "plot will be blank")
+  expect_warning(iso_plot_data(ggplot2::mpg, cyl, hwy, 42), "ignoring unrecognized parameter")
+  expect_warning(iso_plot_data(ggplot2::mpg, cyl, hwy, DNE = 42), "ignoring unrecognized parameter")
   expect_silent(iso_plot_data(ggplot2::mpg, cyl, hwy, geom_point()))
+  expect_silent(iso_plot_data(ggplot2::mpg, cyl, hwy, add = geom_point()))
+
 
   # @FIXME implement full suite of visualization function test
 
