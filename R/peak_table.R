@@ -170,11 +170,20 @@ iso_set_peak_table_from_vendor_data_table <- function(iso_files, direct_rename =
 
 }
 
-#' @rdname iso_set_peak_table_from_vendor_data_table
-#' @aliases iso_set_peak_table_from_auto_vendor_data_table
-#' @details \code{iso_set_peak_table_from_auto_vendor_data_table} is the go to function for setting peak tables because it will simply look at the file extension and decide which software specific function to use (e.g. \code{iso_set_peak_table_from_isodat_vendor_data_table}) for any Isodat files.
+#' renamed to iso_set_peak_table_automatically_from_vendor_data_table
+#'
+#' This function has been renamed to \link{iso_set_peak_table_automatically_from_vendor_data_table}. Please call \link{iso_set_peak_table_automatically_from_vendor_data_table} directly to avoid the warning.
 #' @export
-iso_set_peak_table_from_auto_vendor_data_table <- function(iso_files, quiet = default(quiet)) {
+iso_set_peak_table_from_auto_vendor_data_table <- function(...){
+  warning("'iso_set_peak_table_from_auto_vendor_data_table' has been renamed to 'iso_set_peak_table_automatically_from_vendor_data_table'. Please call the latter function directly to avoid this warning.", immediate. = TRUE, call. = FALSE)
+  iso_set_peak_table_automatically_from_vendor_data_table(...)
+}
+
+#' @rdname iso_set_peak_table_from_vendor_data_table
+#' @aliases iso_set_peak_table_automatically_from_vendor_data_table
+#' @details \code{iso_set_peak_table_automatically_from_vendor_data_table} is the easiest way to set peak tables from vendor data because it will simply look at the file extension and decide which software specific function to use (e.g. \code{iso_set_peak_table_from_isodat_vendor_data_table}) for any Isodat files.
+#' @export
+iso_set_peak_table_automatically_from_vendor_data_table <- function(iso_files, quiet = default(quiet)) {
 
   # continuous flow file check
   if (!isoreader::iso_is_continuous_flow(iso_files))
@@ -205,14 +214,16 @@ iso_set_peak_table_from_auto_vendor_data_table <- function(iso_files, quiet = de
     glue::glue(
       "no specialized function available (yet) for using vendor data tables ",
       "from the following software: ", paste(miss$software, collapse = ", ")) %>%
-      stop(call. = FALSE)
+      warning(call. = FALSE, immediate. = TRUE)
   }
 
   # apply functions
   apply_software_files_ids <- filter(software_file_ids, !purrr::map_lgl(func, is.null))
-  for (i in 1:nrow(apply_software_files_ids)) {
-    iso_files[apply_software_files_ids[[i, "file_ids"]]] <-
-      apply_software_files_ids[[i, "func"]](iso_files[apply_software_files_ids[[i, "file_ids"]]], quiet = quiet)
+  if (nrow(apply_software_files_ids) > 0) {
+    for (i in 1:nrow(apply_software_files_ids)) {
+      iso_files[apply_software_files_ids[[i, "file_ids"]]] <-
+        apply_software_files_ids[[i, "func"]](iso_files[apply_software_files_ids[[i, "file_ids"]]], quiet = quiet)
+    }
   }
 
   if (is_single) return(iso_files[[1]])
@@ -446,7 +457,7 @@ iso_get_peak_table <- function(
 
   # warnings
   if (all(!peak_table$has_pt)) {
-    warning("none of the iso files has a peak_table yet. To use peak table functionality, make sure to create a peak table by either adopting the vendor_data_table (?iso_set_peak_table_from_vendor_data_table), finding peaks (?iso_find_peaks), or setting a table manually (?iso_set_peak_table).", call. = FALSE, immediate. = TRUE)
+    warning("none of the iso files has a peak_table yet. To use peak table functionality, make sure to create a peak table by either adopting the vendor_data_table (?iso_set_peak_table_automatically_from_vendor_data_table), finding peaks (?iso_find_peaks), or setting a table manually (?iso_set_peak_table).", call. = FALSE, immediate. = TRUE)
   }
 
   # make sure to include only existing data

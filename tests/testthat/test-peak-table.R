@@ -95,9 +95,11 @@ test_that("test that setting peak table from vendor data table works", {
   )
 
   # auto vendor data table
-  expect_error(iso_set_peak_table_from_auto_vendor_data_table(iso_files), "no.*function.*software")
+  expect_warning(iso_set_peak_table_automatically_from_vendor_data_table(iso_files), "no.*function.*software")
   iso_file_a$file_info$file_path <- "test.dxf"
-  expect_message(out2 <- iso_set_peak_table_from_auto_vendor_data_table(iso_file_a), "setting peak table")
+  expect_warning(out1 <- iso_set_peak_table_from_auto_vendor_data_table(iso_file_a), "has been renamed")
+  expect_equal(out$peak_table, out1$peak_table)
+  expect_message(out2 <- iso_set_peak_table_automatically_from_vendor_data_table(iso_file_a), "setting peak table")
   expect_equal(out$peak_table, out2$peak_table)
 
 })

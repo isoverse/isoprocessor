@@ -7,7 +7,7 @@
 #' @importFrom dplyr mutate select rename filter as_data_frame inner_join left_join right_join anti_join data_frame %>% bind_rows group_by ungroup arrange summarize do case_when row_number
 #' @importFrom tidyr nest unnest gather
 #' @importFrom purrr map map_lgl map_int map_dbl map_chr map2 map2_lgl map2_chr safely pmap
-#' @importFrom ggplot2 ggplot aes aes_string aes_q geom_bar geom_point geom_line geom_hline geom_rect geom_vline theme_bw theme labs element_text %+% scale_x_continuous scale_y_continuous expand_limits facet_grid facet_wrap is.ggplot aes_
+#' @importFrom ggplot2 ggplot aes aes_string aes_q geom_bar geom_smooth geom_point geom_line geom_hline geom_rect geom_vline theme_bw theme labs element_text %+% scale_x_continuous scale_x_datetime scale_linetype_manual scale_y_continuous expand_limits facet_grid facet_wrap is.ggplot aes_ coord_cartesian
 #' @importFrom tibble tibble as_tibble
 #' @importFrom stringr str_c str_replace fixed str_detect
 #' @importFrom forcats as_factor

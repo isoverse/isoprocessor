@@ -15,12 +15,10 @@ iso_plot_raw_data(iso_files, ..., quiet = default(quiet))
 }
 \description{
 Convenience function for making quick standard plots for raw isoreader data.
-Calls \code{\link{iso_plot_continuous_flow_data}} and \code{\link{iso_plot_dual_inlet_data}} for data specific plotting (see those functions for parameter details).
-For customizing plotting calls, it is easier to use \code{\link{iso_plot_continuous_flow_data}} and \code{\link{iso_plot_dual_inlet_data}} directly.
+Calls \code{\link{iso_plot_continuous_flow_data}}, \code{\link{iso_plot_dual_inlet_data}} and \code{\link{iso_plot_scan_data}} for data specific plotting (see those functions for parameter details). For customizing plotting calls, it is recommended to use \code{\link{iso_plot_continuous_flow_data}}, \code{\link{iso_plot_dual_inlet_data}} and \code{\link{iso_plot_scan_data}} directly.
 }
 \seealso{
 Other plot functions: 
-\code{\link{iso_format}()},
 \code{\link{iso_mark_calibration_range}()},
 \code{\link{iso_mark_outliers}()},
 \code{\link{iso_mark_value_range}()},
@@ -29,6 +27,8 @@ Other plot functions:
 \code{\link{iso_plot_dual_inlet_data}()},
 \code{\link{iso_plot_ref_peaks}()},
 \code{\link{iso_plot_residuals}()},
-\code{\link{iso_prepare_continuous_flow_plot_data}()}
+\code{\link{iso_plot_scan_data}()},
+\code{\link{iso_prepare_continuous_flow_plot_data}()},
+\code{\link{iso_prepare_scan_plot_data}()}
 }
 \concept{plot functions}

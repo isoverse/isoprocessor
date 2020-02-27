@@ -58,6 +58,12 @@ collapse <- function(...) {
     glue::collapse(...)
 }
 
+# text formatting
+
+# has migrated to isoreader
+#' @export
+isoreader::iso_format
+
 # information display ====
 
 #' Print data table

@@ -43,7 +43,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.0</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.2</span>
       </span>
     </div>
 
@@ -54,6 +54,9 @@
 </li>
 <li>
   <a href="../articles/continuous_flow.html">Continuous Flow</a>
+</li>
+<li>
+  <a href="../articles/scan.html">Scan</a>
 </li>
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
@@ -97,7 +100,7 @@
     <div class="page-header toc-ignore">
       <h1>Continuous Flow Examples</h1>
             
-            <h4 class="date">2020-02-13</h4>
+            <h4 class="date">2020-02-27</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/isoverse/isoprocessor/blob/master/vignettes/continuous_flow.Rmd"><code>vignettes/continuous_flow.Rmd</code></a></small>
       <div class="hidden name"><code>continuous_flow.Rmd</code></div>
@@ -118,7 +121,7 @@
 <h1 class="hasAnchor">
 <a href="#reading-files" class="anchor"></a>Reading files</h1>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co"># read a few of the continuous flow examples provided with isoreader</span></a>
-<a class="sourceLine" id="cb2-2" data-line-number="2">iso_files &lt;-<span class="st"> </span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">cf_files &lt;-<span class="st"> </span></a>
 <a class="sourceLine" id="cb2-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_read_continuous_flow.html">iso_read_continuous_flow</a></span>(</a>
 <a class="sourceLine" id="cb2-4" data-line-number="4">    <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_get_reader_example.html">iso_get_reader_example</a></span>(<span class="st">"continuous_flow_example.cf"</span>),</a>
 <a class="sourceLine" id="cb2-5" data-line-number="5">    <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_get_reader_example.html">iso_get_reader_example</a></span>(<span class="st">"continuous_flow_example.iarc"</span>),</a>
@@ -130,18 +133,18 @@
 <a class="sourceLine" id="cb2-11" data-line-number="11"><span class="co">#&gt; Info: reading file 'continuous_flow_example.iarc' from cache...</span></a>
 <a class="sourceLine" id="cb2-12" data-line-number="12"><span class="co">#&gt; Info: reading file 'continuous_flow_example.dxf' from cache...</span></a>
 <a class="sourceLine" id="cb2-13" data-line-number="13"><span class="co">#&gt; Info: reading file 'linearity_example.dxf' from cache...</span></a>
-<a class="sourceLine" id="cb2-14" data-line-number="14"><span class="co">#&gt; Info: finished reading 4 files in 0.39 secs</span></a></code></pre></div>
+<a class="sourceLine" id="cb2-14" data-line-number="14"><span class="co">#&gt; Info: finished reading 4 files in 0.64 secs</span></a></code></pre></div>
 </div>
 <div id="chromatograms" class="section level1">
 <h1 class="hasAnchor">
 <a href="#chromatograms" class="anchor"></a>Chromatograms</h1>
 <p>Plotting the raw data (i.e. the mass chromatograms) can be done either with the generic <code><a href="../reference/iso_plot_raw_data.html">iso_plot_raw_data()</a></code> function for a simple plot with default parameters, or directly using the continuous flow specific <code>iso_plot_continuous_flow()</code> (recommended), which can be highly customized. Note that the following plot shows the data from all files in their originally recorded signal intensity units. For examples of how to convert to a common unit, see the section on <strong>Signal conversion</strong> further down.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw"><a href="../reference/iso_plot_continuous_flow_data.html">iso_plot_continuous_flow_data</a></span>(iso_files)</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw"><a href="../reference/iso_plot_continuous_flow_data.html">iso_plot_continuous_flow_data</a></span>(cf_files)</a></code></pre></div>
 <p><img src="continuous_flow_files/figure-html/all%20data-1.png" width="960"></p>
 <p>All customization options are described in the function help (<code><a href="../reference/iso_plot_continuous_flow_data.html">?iso_plot_continuous_flow_data</a></code>) and include, for example, plotting only a specific subset of masses (which will omit data from files that don’t include this mass):</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="co"># plot just masses 2, 44 and 45</span></a>
 <a class="sourceLine" id="cb4-2" data-line-number="2"><span class="kw"><a href="../reference/iso_plot_continuous_flow_data.html">iso_plot_continuous_flow_data</a></span>(</a>
-<a class="sourceLine" id="cb4-3" data-line-number="3">  iso_files,</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3">  cf_files,</a>
 <a class="sourceLine" id="cb4-4" data-line-number="4">  <span class="dt">data =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"2"</span>, <span class="st">"44"</span>, <span class="st">"45"</span>)</a>
 <a class="sourceLine" id="cb4-5" data-line-number="5">)</a></code></pre></div>
 <p><img src="continuous_flow_files/figure-html/select%20masses-1.png" width="960"></p>
@@ -152,14 +155,14 @@
 <p>Continuous flow data is usually interpreted in the context of the individiual peaks in the chromatogram. For this purpose, isoprocessor provides several functions to set the peak table including <code><a href="../reference/iso_set_peak_table.html">iso_set_peak_table()</a></code> (set a peak table manually), <code><a href="../reference/iso_set_peak_table_from_vendor_data_table.html">iso_set_peak_table_from_vendor_data_table()</a></code> (use the data table precomputed by the vendor software and extracted from the data files by isoreader), and <code><a href="../reference/iso_find_peaks.html">iso_find_peaks()</a></code> (find peaks de novo from the raw chromatographic data). The latter is not yet implemented but coming soon. Here we provide the example of setting the peak table from Isodat-computed data.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co"># this is a convenience function to set peak table from isodat data table, it </span></a>
 <a class="sourceLine" id="cb5-2" data-line-number="2"><span class="co"># provides detailed information on the information copied to the peak table</span></a>
-<a class="sourceLine" id="cb5-3" data-line-number="3">iso_files &lt;-<span class="st"> </span><span class="kw"><a href="../reference/iso_set_peak_table_from_vendor_data_table.html">iso_set_peak_table_from_isodat_vendor_data_table</a></span>(iso_files)</a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">cf_files &lt;-<span class="st"> </span><span class="kw"><a href="../reference/iso_set_peak_table_from_vendor_data_table.html">iso_set_peak_table_from_isodat_vendor_data_table</a></span>(cf_files)</a>
 <a class="sourceLine" id="cb5-4" data-line-number="4"><span class="co">#&gt; Info: setting peak table for 7 file(s) from vendor data table with the following renames:</span></a>
 <a class="sourceLine" id="cb5-5" data-line-number="5"><span class="co">#&gt; - for 1 file(s): 'Nr.'-&gt;'peak_nr', 'Is Ref.?'-&gt;'is_ref', 'Start'-&gt;'rt_start', 'Rt'-&gt;'rt', 'End'-&gt;'rt_end', 'Ampl 2'-&gt;'amp2', 'Ampl 3'-&gt;'amp3', 'BGD 2'-&gt;'bgrd2_start', 'BGD 3'-&gt;'bgrd3_start', 'BGD 2'-&gt;'bgrd2_end', 'BGD 3'-&gt;'bgrd3_end', 'rIntensity 2'-&gt;'area2', 'rIntensity 3'-&gt;'area3', 'rR 3H2/2H2'-&gt;'r3/2', 'rd 3H2/2H2'-&gt;'rd3/2', 'd 3H2/2H2'-&gt;'d3/2', 'd 2H/1H'-&gt;'d2H', 'AT% 2H/1H'-&gt;'at2H'</span></a>
 <a class="sourceLine" id="cb5-6" data-line-number="6"><span class="co">#&gt; - for 1 file(s): 'Nr.'-&gt;'peak_nr', 'Is Ref.?'-&gt;'is_ref', 'Start'-&gt;'rt_start', 'Rt'-&gt;'rt', 'End'-&gt;'rt_end', 'Ampl 28'-&gt;'amp28', 'Ampl 29'-&gt;'amp29', 'Ampl 30'-&gt;'amp30', 'Ampl 44'-&gt;'amp44', 'Ampl 45'-&gt;'amp45', 'Ampl 46'-&gt;'amp46', 'BGD 28'-&gt;'bgrd28_start', 'BGD 29'-&gt;'bgrd29_start', 'BGD 30'-&gt;'bgrd30_start', 'BGD 44'-&gt;'bgrd44_start', 'BGD 45'-&gt;'bgrd45_start', 'BGD 46'-&gt;'bgrd46_start', 'BGD 28'-&gt;'bgrd28_end', 'BGD 29'-&gt;'bgrd29_end', 'BGD 30'-&gt;'bgrd30_end', 'BGD 44'-&gt;'bgrd44_end', 'BGD 45'-&gt;'bgrd45_end', 'BGD 46'-&gt;'bgrd46_end', 'rIntensity 28'-&gt;'area28', 'rIntensity 29'-&gt;'area29', 'rIntensity 30'-&gt;'area30', 'rIntensity 44'-&gt;'area44', 'rIntensity 45'-&gt;'area45', 'rIntensity 46'-&gt;'area46', 'rR 29N2/28N2'-&gt;'r29/28', 'rR 45CO2/44CO2'-&gt;'r45/44', 'rR 46CO2/44CO2'-&gt;'r46/44', 'rd 29N2/28N2'-&gt;'rd29/28', 'rd 45CO2/44CO2'-&gt;'rd45/44', 'rd 46CO2/44CO2'-&gt;'rd46/44', 'd 29N2/28N2'-&gt;'d29/28', 'd 45CO2/44CO2'-&gt;'d45/44', 'd 46CO2/44CO2'-&gt;'d46/44', 'd 15N/14N'-&gt;'d15N', 'd 13C/12C'-&gt;'d13C', 'd 18O/16O'-&gt;'d18O', 'd 17O/16O'-&gt;'d17O', 'AT% 15N/14N'-&gt;'at15N', 'AT% 13C/12C'-&gt;'at13C', 'AT% 18O/16O'-&gt;'at18O'</span></a>
 <a class="sourceLine" id="cb5-7" data-line-number="7"><span class="co">#&gt; - for 1 file(s): 'Nr.'-&gt;'peak_nr', 'Is Ref.?'-&gt;'is_ref', 'Start'-&gt;'rt_start', 'Rt'-&gt;'rt', 'End'-&gt;'rt_end', 'Ampl 44'-&gt;'amp44', 'Ampl 45'-&gt;'amp45', 'Ampl 46'-&gt;'amp46', 'BGD 44'-&gt;'bgrd44_start', 'BGD 45'-&gt;'bgrd45_start', 'BGD 46'-&gt;'bgrd46_start', 'BGD 44'-&gt;'bgrd44_end', 'BGD 45'-&gt;'bgrd45_end', 'BGD 46'-&gt;'bgrd46_end', 'rIntensity 44'-&gt;'area44', 'rIntensity 45'-&gt;'area45', 'rIntensity 46'-&gt;'area46', 'rR 45N2O/44N2O'-&gt;'r45/44', 'rR 46N2O/44N2O'-&gt;'r46/44', 'rd 45N2O/44N2O'-&gt;'rd45/44', 'rd 46N2O/44N2O'-&gt;'rd46/44', 'd 45N2O/44N2O'-&gt;'d45/44', 'd 46N2O/44N2O'-&gt;'d46/44', 'd 18O/16O'-&gt;'d18O', 'd 15N/14N'-&gt;'d15N', 'd 17O/16O'-&gt;'d17O', 'AT% 15N/14N'-&gt;'at15N', 'AT% 18O/16O'-&gt;'at18O'</span></a>
 <a class="sourceLine" id="cb5-8" data-line-number="8"></a>
-<a class="sourceLine" id="cb5-9" data-line-number="9"><span class="co"># display the resulting peak table now stored in the iso_files for the first file</span></a>
-<a class="sourceLine" id="cb5-10" data-line-number="10">iso_files[<span class="dv">1</span>] <span class="op">%&gt;%</span><span class="st"> </span><span class="kw"><a href="../reference/iso_get_peak_table.html">iso_get_peak_table</a></span>() <span class="op">%&gt;%</span><span class="st"> </span>rmarkdown<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/rmarkdown/man/paged_table.html">paged_table</a></span>()</a>
+<a class="sourceLine" id="cb5-9" data-line-number="9"><span class="co"># display the resulting peak table now stored in the cf_files for the first file</span></a>
+<a class="sourceLine" id="cb5-10" data-line-number="10">cf_files[<span class="dv">1</span>] <span class="op">%&gt;%</span><span class="st"> </span><span class="kw"><a href="../reference/iso_get_peak_table.html">iso_get_peak_table</a></span>() <span class="op">%&gt;%</span><span class="st"> </span>rmarkdown<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/rmarkdown/man/paged_table.html">paged_table</a></span>()</a>
 <a class="sourceLine" id="cb5-11" data-line-number="11"><span class="co">#&gt; Info: aggregating peak table from 1 data file(s)</span></a></code></pre></div>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
@@ -170,14 +173,14 @@
 <div id="peak-labels" class="section level1">
 <h1 class="hasAnchor">
 <a href="#peak-labels" class="anchor"></a>Peak Labels</h1>
-<p>Since peak information is often key for interpretating chromatograms, the <code>iso_plot_continuous_flow_data</code> function also provides a suite of peak data integration parameters that make it easy to highlight peaks in the chromatogram and label them with any number of desired information. Now that the collection of <code>iso_files</code> has peak table information stored within, it is easy to make use of these for visualization.</p>
+<p>Since peak information is often key for interpretating chromatograms, the <code>iso_plot_continuous_flow_data</code> function also provides a suite of peak data integration parameters that make it easy to highlight peaks in the chromatogram and label them with any number of desired information. Now that the collection of <code>cf_files</code> has peak table information stored within, it is easy to make use of these for visualization.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="kw"><a href="../reference/iso_plot_continuous_flow_data.html">iso_plot_continuous_flow_data</a></span>(</a>
-<a class="sourceLine" id="cb6-2" data-line-number="2">  iso_files, </a>
+<a class="sourceLine" id="cb6-2" data-line-number="2">  cf_files, </a>
 <a class="sourceLine" id="cb6-3" data-line-number="3">  <span class="co"># select which data to plot and how to plot it</span></a>
 <a class="sourceLine" id="cb6-4" data-line-number="4">  <span class="dt">data =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"2"</span>, <span class="st">"3"</span>), <span class="dt">color =</span> data, <span class="dt">panel =</span> <span class="ot">NULL</span>,</a>
 <a class="sourceLine" id="cb6-5" data-line-number="5">  <span class="co"># specify what to highlight about the peaks (here: bounds, ret. time and dD)</span></a>
 <a class="sourceLine" id="cb6-6" data-line-number="6">  <span class="dt">peak_bounds =</span> <span class="ot">TRUE</span>,</a>
-<a class="sourceLine" id="cb6-7" data-line-number="7">  <span class="dt">peak_label =</span> <span class="kw"><a href="../reference/iso_format.html">iso_format</a></span>(rt, <span class="dt">dD =</span> d2H, <span class="dt">signif =</span> <span class="dv">3</span>),</a>
+<a class="sourceLine" id="cb6-7" data-line-number="7">  <span class="dt">peak_label =</span> <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_format.html">iso_format</a></span>(rt, <span class="dt">dD =</span> d2H, <span class="dt">signif =</span> <span class="dv">3</span>),</a>
 <a class="sourceLine" id="cb6-8" data-line-number="8">  <span class="dt">peak_label_size =</span> <span class="dv">3</span>,</a>
 <a class="sourceLine" id="cb6-9" data-line-number="9">  <span class="co"># specify which labels to display (only the 2 trace, between 500 and 1500s)</span></a>
 <a class="sourceLine" id="cb6-10" data-line-number="10">  <span class="dt">peak_label_filter =</span> data <span class="op">==</span><span class="st"> "2 [mV]"</span> <span class="op">&amp;</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/between.html">between</a></span>(time.s, <span class="dv">500</span>, <span class="dv">1500</span>)</a>
@@ -188,14 +191,14 @@
 <h1 class="hasAnchor">
 <a href="#isotope-ratios" class="anchor"></a>Isotope ratios</h1>
 <p>Raw data typically only includes ion signals but isotope ratios are often needed to calculate and visualize the data. For this purpose, isoreader provides a dynamic ratio calculation function (<code><a href="../reference/iso_calculate_ratios.html">iso_calculate_ratios()</a></code>) that accepts any combination of masses, here demonstrated for the standard CO2 ratios <span class="math inline">\(\frac{46}{44}\)</span> and <span class="math inline">\(\frac{45}{44}\)</span>. Additionally, the following example demonstrates how the <code>filter</code> parameter can be used to exclude plotting artifacts (here e.g. the extreme ratio values seen right after the magnet jump). Notice how the ratios calculated from current intensities are close to 0 (as the real ratios likely are) whereas those calculated from voltages are close to 1 (due to the so chosen, different resistors in the detector circuit). See the section on <strong>Signal conversion</strong> further down on how to scale to uniform intensity units to address this comparison obstacle.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1">iso_files &lt;-</a>
-<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="st">  </span>iso_files <span class="op">%&gt;%</span><span class="st"> </span></a>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1">cf_files &lt;-</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="st">  </span>cf_files <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb7-3" data-line-number="3"><span class="st">  </span><span class="co"># calculate 46/44 and 45/44 ratios</span></a>
 <a class="sourceLine" id="cb7-4" data-line-number="4"><span class="st">  </span><span class="kw"><a href="../reference/iso_calculate_ratios.html">iso_calculate_ratios</a></span>(<span class="dt">ratios =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"46/44"</span>, <span class="st">"45/44"</span>))</a>
 <a class="sourceLine" id="cb7-5" data-line-number="5"><span class="co">#&gt; Info: calculating ratio(s) in 7 data file(s): r46/44, r45/44</span></a>
 <a class="sourceLine" id="cb7-6" data-line-number="6"></a>
 <a class="sourceLine" id="cb7-7" data-line-number="7"><span class="kw"><a href="../reference/iso_plot_continuous_flow_data.html">iso_plot_continuous_flow_data</a></span>(</a>
-<a class="sourceLine" id="cb7-8" data-line-number="8">  iso_files,</a>
+<a class="sourceLine" id="cb7-8" data-line-number="8">  cf_files,</a>
 <a class="sourceLine" id="cb7-9" data-line-number="9">  <span class="co"># visualize ratios along with main ion</span></a>
 <a class="sourceLine" id="cb7-10" data-line-number="10">  <span class="dt">data =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"44"</span>, <span class="st">"45/44"</span>, <span class="st">"46/44"</span>),</a>
 <a class="sourceLine" id="cb7-11" data-line-number="11">  <span class="co"># plot all masses but ratios only 0 to 2 to omit peak jump artifacts</span></a>
@@ -208,14 +211,14 @@
 <a href="#time-conversion" class="anchor"></a>Time conversion</h1>
 <p>Most continuous flow data is reported in time units of seconds but this is not always the most useful unit. Isoreader provides easy time scaling functionality that will work for all standard time units (minutes, hours, days, etc.) regardless of which time units individual isofiles were initially recorded in.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="co"># convert to minutes</span></a>
-<a class="sourceLine" id="cb8-2" data-line-number="2">iso_files &lt;-<span class="st"> </span><span class="kw"><a href="../reference/iso_convert_time.html">iso_convert_time</a></span>(iso_files, <span class="dt">to =</span> <span class="st">"minutes"</span>) </a>
+<a class="sourceLine" id="cb8-2" data-line-number="2">cf_files &lt;-<span class="st"> </span><span class="kw"><a href="../reference/iso_convert_time.html">iso_convert_time</a></span>(cf_files, <span class="dt">to =</span> <span class="st">"minutes"</span>) </a>
 <a class="sourceLine" id="cb8-3" data-line-number="3"><span class="co">#&gt; Info: converting time to 'minutes' for 7 continuous flow data file(s)</span></a>
 <a class="sourceLine" id="cb8-4" data-line-number="4"></a>
 <a class="sourceLine" id="cb8-5" data-line-number="5"><span class="co"># plot masses 2 and 3</span></a>
-<a class="sourceLine" id="cb8-6" data-line-number="6"><span class="kw"><a href="../reference/iso_plot_continuous_flow_data.html">iso_plot_continuous_flow_data</a></span>(iso_files, <span class="dt">data =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">2</span>, <span class="dv">3</span>))</a></code></pre></div>
+<a class="sourceLine" id="cb8-6" data-line-number="6"><span class="kw"><a href="../reference/iso_plot_continuous_flow_data.html">iso_plot_continuous_flow_data</a></span>(cf_files, <span class="dt">data =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">2</span>, <span class="dv">3</span>))</a></code></pre></div>
 <p><img src="continuous_flow_files/figure-html/time%20conversion-1.png" width="960"></p>
 <p>In this context, another useful customization option of the plotting function is the option to select a specific time window (in any time units, regardless of what is plotted), and the possibility to adjust plot aesthetics such as color, linetype, and paneling:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1">iso_files <span class="op">%&gt;%</span><span class="st"> </span></a>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1">cf_files <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb9-2" data-line-number="2"><span class="st">  </span><span class="co"># calculate 3/2 ratio on the file</span></a>
 <a class="sourceLine" id="cb9-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_calculate_ratios.html">iso_calculate_ratios</a></span>(<span class="st">"3/2"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb9-4" data-line-number="4"><span class="st">  </span><span class="kw"><a href="../reference/iso_plot_continuous_flow_data.html">iso_plot_continuous_flow_data</a></span>(</a>
@@ -227,7 +230,7 @@
 <a class="sourceLine" id="cb9-10" data-line-number="10">    <span class="dt">panel =</span> category,</a>
 <a class="sourceLine" id="cb9-11" data-line-number="11">    <span class="dt">color =</span> data,</a>
 <a class="sourceLine" id="cb9-12" data-line-number="12">    <span class="co"># add peak labels</span></a>
-<a class="sourceLine" id="cb9-13" data-line-number="13">    <span class="dt">peak_label =</span> <span class="kw"><a href="../reference/iso_format.html">iso_format</a></span>(<span class="dt">RT =</span> rt, <span class="dt">A =</span> amp2),</a>
+<a class="sourceLine" id="cb9-13" data-line-number="13">    <span class="dt">peak_label =</span> <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_format.html">iso_format</a></span>(<span class="dt">RT =</span> rt, <span class="dt">A =</span> amp2),</a>
 <a class="sourceLine" id="cb9-14" data-line-number="14">    <span class="dt">peak_label_filter =</span> data <span class="op">==</span><span class="st"> "2 [mV]"</span>, <span class="dt">peak_label_size =</span> <span class="dv">4</span></a>
 <a class="sourceLine" id="cb9-15" data-line-number="15">  )</a>
 <a class="sourceLine" id="cb9-16" data-line-number="16"><span class="co">#&gt; Info: calculating ratio(s) in 7 data file(s): r3/2</span></a></code></pre></div>
@@ -237,7 +240,7 @@
 <h1 class="hasAnchor">
 <a href="#signal-conversion" class="anchor"></a>Signal conversion</h1>
 <p>Likewise, isoreader can convert between different signal units. This is particularly useful for comparing data files from different mass specs that record signals differentally. The earlier plot of mass 44 illustrated this scenario where some data was recorded in mV and some in nA. Voltages and currents can be scaled within each unit without restriction and with any valid SI prefix (e.g. from mV to V or nA to pA), however, for conversion from voltage to current or vice-versa, the appropriate resistor values need to be provided or be available from the data files themselves. The following is an example of scaling from voltage to current with the resistor values automatically read from the original data files (see file information section for details). Notice how the mass 44 signal is now in the same units for all files and the ratios are on comparable scales because they are calculated from the same unit intensities:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">iso_files <span class="op">%&gt;%</span><span class="st"> </span></a>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">cf_files <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb10-2" data-line-number="2"><span class="st">  </span><span class="co"># convert all signals to nano ampere</span></a>
 <a class="sourceLine" id="cb10-3" data-line-number="3"><span class="st">  </span><span class="kw"><a href="../reference/iso_convert_signals.html">iso_convert_signals</a></span>(<span class="dt">to =</span> <span class="st">"nA"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb10-4" data-line-number="4"><span class="st">  </span><span class="co"># re-calculate ratios with the new unuts</span></a>
@@ -260,7 +263,7 @@
 <p>Since all isoreader plots are standard <a href="http://ggplot2.tidyverse.org/">ggplot</a> objects, they can be modified with any ggplot commands. For example to modify the themes:</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(ggplot2)</a>
 <a class="sourceLine" id="cb11-2" data-line-number="2"><span class="co"># replot</span></a>
-<a class="sourceLine" id="cb11-3" data-line-number="3"><span class="kw"><a href="../reference/iso_plot_continuous_flow_data.html">iso_plot_continuous_flow_data</a></span>(iso_files, <span class="dt">data =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">2</span>,<span class="dv">3</span>)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb11-3" data-line-number="3"><span class="kw"><a href="../reference/iso_plot_continuous_flow_data.html">iso_plot_continuous_flow_data</a></span>(cf_files, <span class="dt">data =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">2</span>,<span class="dv">3</span>)) <span class="op">+</span></a>
 <a class="sourceLine" id="cb11-4" data-line-number="4"><span class="st">  </span><span class="co"># add vertical dashed line (ggplot functionality)</span></a>
 <a class="sourceLine" id="cb11-5" data-line-number="5"><span class="st">  </span><span class="kw"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_vline</a></span>(<span class="dt">xintercept =</span> <span class="dv">15</span>, <span class="dt">linetype =</span> <span class="dv">2</span>) <span class="op">+</span></a>
 <a class="sourceLine" id="cb11-6" data-line-number="6"><span class="st">  </span><span class="co"># modify plot styling (ggplot functionality)</span></a>

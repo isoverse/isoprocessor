@@ -16,22 +16,104 @@ knitr::opts_chunk$set(
 )
 ```
 
+# Introduction
 
-```{r "scans", fig.width=10, fig.height=10, eval=FALSE}
-# FIXME: should go into isoprocessor vignette once the functions there exist
-iso_files %>% 
-  iso_get_raw_data(include_file_info = type) %>%
-  dplyr::mutate(panel = sprintf("%s [%s]", type, units)) %>% 
-  tidyr::pivot_longer(
-    matches("vC?\\d+"),
-    names_to = "mass",
-    values_to = "value",
-    values_drop_na = TRUE
-  ) %>% 
-  ggplot2::ggplot() +
-  ggplot2::aes(x, value, color = mass) + 
-  ggplot2::geom_line() +
-  ggplot2::facet_wrap(~ panel + file_id, scales = "free")
+Isoprocessor supports several plotting and data conversion functions for scan data. This vignette shows some of the functionality for scan files read by the [isoreader package](http://isoprocessor.isoverse.org) (see the [corresponding vignette](http://isoreader.isoverse.org/articles/scan.html) for details on data retrieval, storage and export). 
+
+```{r, warning=FALSE, message=FALSE}
+# load isoreader and isoprocessor packages
+library(isoreader)
+library(isoprocessor)
 ```
 
+# Reading files
 
+```{r}
+# read scan examples provided by the isoreader package
+scan_files <- 
+  iso_read_scan(
+    iso_get_reader_example("peak_shape_scan_example.scn"),
+    iso_get_reader_example("background_scan_example.scn"),
+    iso_get_reader_example("full_scan_example.scn"),
+    iso_get_reader_example("time_scan_example.scn")
+  )
+```
+
+# Visualization
+
+Plotting the raw data can be done either with the generic `iso_plot_raw_data()` function for a simple plot with default parameters, or directly using the scan specific `iso_plot_scan_data()`:
+
+## Voltage Scan
+
+```{r "all_data_HV", fig.width = 12, fig.asp = 0.8}
+iso_plot_scan_data(scan_files, type = "High Voltage")
+```
+
+## Magnet Scan
+
+```{r "all_data_magnet", fig.width = 12, fig.asp = 0.8}
+iso_plot_scan_data(scan_files, type = "MagnetCurrent")
+```
+
+## Time Scan
+
+```{r "all_data_clock", fig.width = 12, fig.asp = 0.8}
+iso_plot_scan_data(scan_files, type = "Clock")
+```
+
+## Customization
+
+All customization options are described in the function help (`?iso_plot_scan_data`) and include, for example, plotting only a specific subset of masses:
+
+```{r "select_masses", fig.width = 10, fig.asp = 0.3}
+# plot just masses 44 and 45
+iso_plot_scan_data(
+  scan_files, type = "High Voltage",
+  data = c("44", "45")
+)
+```
+
+# Isotope ratios
+
+Isoprocessor provides a dynamic ratio calculation function (`iso_calculate_ratios()`) that accepts any combination of masses, here demonstrated for several different ratios. In this context, another useful customization option of the plotting function is the option to adjust plot aesthetics such as color, shape, and paneling:
+
+```{r "ratios", fig.width = 8, fig.asp = 1}
+scan_files <-
+  scan_files %>% 
+  # calculate 46/44, 45/44
+  iso_calculate_ratios(ratios = c("46/44", "45/44"))
+
+iso_plot_scan_data(
+  scan_files, type = "High Voltage",
+  # visualize masses and ratios
+  data = c(44:46, "45/44", "46/44"),
+  # focus on peak
+  x_interval = c(9.44, 9.49),
+  # panel including by category
+  panel = category ~ file_id
+)
+```
+
+# Signal conversion
+
+Isoprocessor can convert between different signal units to examine the primary ion currents. 
+
+```{r "signal_conversion", fig.width = 10, fig.asp = 0.3}
+scan_files %>% 
+  # convert all signals to nano ampere
+  iso_convert_signals(to = "pA") %>% 
+  # plot primary ion currents
+  iso_plot_scan_data(data = c(44, 45))
+```
+
+# Plot styling
+
+Since all isoprocessor plots are standard [ggplot](http://ggplot2.tidyverse.org/) objects, they can be modified with any ggplot commands. 
+
+```{r "plot styling", message=FALSE, fig.width = 8, fig.asp = 0.7}
+library(ggplot2)
+# replot
+iso_plot_scan_data(scan_files, type = "MagnetCurrent") +
+  # modify plot styling (ggplot functionality)
+  theme(text = element_text(size = 20))
+```

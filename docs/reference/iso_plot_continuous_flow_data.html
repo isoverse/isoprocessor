@@ -86,7 +86,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.0</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.2</span>
       </span>
     </div>
 
@@ -97,6 +97,9 @@
 </li>
 <li>
   <a href="../articles/continuous_flow.html">Continuous Flow</a>
+</li>
+<li>
+  <a href="../articles/scan.html">Scan</a>
 </li>
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
@@ -217,7 +220,7 @@
     </tr>
     <tr>
       <th>filter</th>
-      <td><p>any filter condition to apply to the data beyond the masses/ratio selection (param <code>data</code>) and time interval (param <code>time_interval</code>). For details on the available data columns see iso_get_raw_data with parameters <code>gather = TRUE</code> and <code>include_file_info = everything()</code> (i.e. all file info is available for plotting aesthetics).</p></td>
+      <td><p>any filter condition to apply to the data beyond the masses/ratio selection (param <code>data</code>) and time interval (param <code>time_interval</code>). For details on the available data columns see <a href='https://rdrr.io/pkg/isoreader/man/iso_get_raw_data.html'>iso_get_raw_data</a> with parameters <code>gather = TRUE</code> and <code>include_file_info = everything()</code> (i.e. all file info is available for plotting aesthetics).</p></td>
     </tr>
     <tr>
       <th>normalize</th>
@@ -265,7 +268,7 @@
     </tr>
     <tr>
       <th>rt_unit</th>
-      <td><p>which time unit the retention time columns (<code>rt</code>, <code>rt_start</code>, <code>rt_end</code>) are in. Only required if the retention time columns are not <code><a href='https://rdrr.io/pkg/isoreader/man/iso_double_with_units.html'>iso_double_with_units</a></code> columns and are not in the same unit as the time column of the raw data. If provided, will override column units.</p></td>
+      <td><p>which time unit the retention time columns (<code>rt</code>, <code>rt_start</code>, <code>rt_end</code>) are in. Only required if the retention time columns are not <code><a href='https://rdrr.io/pkg/isoreader/man/iso_with_units.html'>iso_double_with_units</a></code> columns and are not in the same unit as the time column of the raw data. If provided, will override column units.</p></td>
     </tr>
     <tr>
       <th>peak_marker</th>
@@ -281,7 +284,7 @@
     </tr>
     <tr>
       <th>peak_label</th>
-      <td><p>whether to label identified peaks. Any valid column or complex expression is supported and ALL columns in the provided <code>peak_table</code> can be used in this expression. The easiest way to generate well constructed peak labels is via the <code><a href='iso_format.html'>iso_format</a></code> function. To provide more space for peak labels, it is sometimes useful to use a <code>zoom</code> value smaller than 1 to zoom out a bit, e.g. <code>zoom = 0.9</code>. If peak labels overlap, consider changing <code>peak_label_size</code> and/or <code>peak_label_repel</code>. Note that this only works if a <code>peak_table</code> was provided to identify the peaks and will issue a warning if <code>peak_label</code> is set but no peaks were identified. Also note that peaks whose value at the peak retention time is not visible on the panel due to e.g. a high <code>zoom</code> value will not have a visible label either.</p></td>
+      <td><p>whether to label identified peaks. Any valid column or complex expression is supported and ALL columns in the provided <code>peak_table</code> can be used in this expression. The easiest way to generate well constructed peak labels is via the <code><a href='https://rdrr.io/pkg/isoreader/man/iso_format.html'>iso_format</a></code> function. To provide more space for peak labels, it is sometimes useful to use a <code>zoom</code> value smaller than 1 to zoom out a bit, e.g. <code>zoom = 0.9</code>. If peak labels overlap, consider changing <code>peak_label_size</code> and/or <code>peak_label_repel</code>. Note that this only works if a <code>peak_table</code> was provided to identify the peaks and will issue a warning if <code>peak_label</code> is set but no peaks were identified. Also note that peaks whose value at the peak retention time is not visible on the panel due to e.g. a high <code>zoom</code> value will not have a visible label either.</p></td>
     </tr>
     <tr>
       <th>peak_label_filter</th>
@@ -304,7 +307,6 @@
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <div class='dont-index'><p>Other plot functions: 
-<code><a href='iso_format.html'>iso_format</a>()</code>,
 <code><a href='iso_mark_calibration_range.html'>iso_mark_calibration_range</a>()</code>,
 <code><a href='iso_mark_outliers.html'>iso_mark_outliers</a>()</code>,
 <code><a href='iso_mark_value_range.html'>iso_mark_value_range</a>()</code>,
@@ -313,7 +315,9 @@
 <code><a href='iso_plot_raw_data.html'>iso_plot_raw_data</a>()</code>,
 <code><a href='iso_plot_ref_peaks.html'>iso_plot_ref_peaks</a>()</code>,
 <code><a href='iso_plot_residuals.html'>iso_plot_residuals</a>()</code>,
-<code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a>()</code></p></div>
+<code><a href='iso_plot_scan_data.html'>iso_plot_scan_data</a>()</code>,
+<code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a>()</code>,
+<code><a href='iso_prepare_scan_plot_data.html'>iso_prepare_scan_plot_data</a>()</code></p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
