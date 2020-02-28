@@ -70,7 +70,7 @@ iso_plot_continuous_flow_data.iso_file <- function(iso_files, ...) {
 #' @rdname iso_plot_continuous_flow_data
 #' @export
 iso_plot_continuous_flow_data.iso_file_list <- function(
-  iso_files, data = c(),
+  iso_files, data = character(),
   time_interval = c(), time_interval_units = "seconds",
   filter = NULL,
   normalize = FALSE, zoom = NULL,
@@ -346,7 +346,7 @@ iso_plot_continuous_flow_data.data.frame <- function(
 #' @family plot functions
 #' @export
 iso_prepare_continuous_flow_plot_data <- function(
-  iso_files, data = c(), include_file_info = NULL,
+  iso_files, data = character(), include_file_info = NULL,
   time_interval = c(), time_interval_units = "seconds",
   filter = NULL,
   normalize = FALSE, zoom = NULL, zoom_group = data,
@@ -375,7 +375,7 @@ iso_prepare_continuous_flow_plot_data <- function(
   check_expressions(raw_data, aes_quos$zoom_group)
 
   # only work with desired data (masses and ratios)
-  select_data <- if(length(data) == 0) unique(raw_data$data) else as.character(data)
+  select_data <- if(!is.null(data) && length(data) == 0) unique(raw_data$data) else as.character(data)
   if ( length(missing <- setdiff(select_data, unique(raw_data$data))) > 0 )
     stop("data not available in the provided iso_files (don't include units): ", str_c(missing, collapse = ", "), call. = FALSE)
   raw_data <- dplyr::filter(raw_data, data %in% select_data)
@@ -534,7 +534,7 @@ iso_plot_dual_inlet_data.iso_file <- function(iso_files, ...) {
 #' @rdname iso_plot_dual_inlet_data
 #' @export
 iso_plot_dual_inlet_data.iso_file_list <- function(
-  iso_files, data = c(), filter = NULL,
+  iso_files, data = character(), filter = NULL,
   panel = data, color = file_id, linetype = NULL, shape = type, size = 2, label = file_id,
   ...) {
 
@@ -602,7 +602,7 @@ iso_plot_dual_inlet_data.data.frame <- function(
 #' @family plot functions
 #' @export
 iso_prepare_dual_inlet_plot_data <- function(
-  iso_files, data = c(), include_file_info = NULL, filter = NULL) {
+  iso_files, data = character(), include_file_info = NULL, filter = NULL) {
 
   # safety checks
   if(!iso_is_dual_inlet(iso_files))
@@ -618,7 +618,7 @@ iso_prepare_dual_inlet_plot_data <- function(
 
   # only work with desired data
   available_data <- unique(raw_data$data)
-  select_data <- if(length(data) == 0) available_data else as.character(data)
+  select_data <- if(!is.null(data) && length(data) == 0) available_data else as.character(data)
   if ( length(missing <- setdiff(select_data, unique(raw_data$data))) > 0 )
     stop("data not available in the provided iso_files (don't include units): ", str_c(missing, collapse = ", "), call. = FALSE)
   raw_data <- dplyr::filter(raw_data, .data$data %in% select_data)
@@ -683,7 +683,7 @@ iso_plot_scan_data.iso_file <- function(iso_files, ...) {
 #' @rdname iso_plot_scan_data
 #' @export
 iso_plot_scan_data.iso_file_list <- function(
-  iso_files, data = c(), type, filter = NULL,
+  iso_files, data = character(), type, filter = NULL,
   x_interval = c(), y_interval = c(),
   panel = file_id, color = data, linetype = NULL, label = data, ...) {
 
@@ -816,7 +816,7 @@ iso_plot_scan_data.data.frame <- function(
 #' @family plot functions
 #' @export
 iso_prepare_scan_plot_data <- function(
-  iso_files, data = c(), include_file_info = type, filter = NULL) {
+  iso_files, data = character(), include_file_info = type, filter = NULL) {
 
   # safety checks
   if(!iso_is_scan(iso_files))
@@ -835,7 +835,7 @@ iso_prepare_scan_plot_data <- function(
 
   # only work with desired data
   available_data <- unique(raw_data$data)
-  select_data <- if(length(data) == 0) available_data else as.character(data)
+  select_data <- if(!is.null(data) && length(data) == 0) available_data else as.character(data)
   if ( length(missing <- setdiff(select_data, unique(raw_data$data))) > 0 )
     stop("data not available in the provided iso_files (don't include units): ", str_c(missing, collapse = ", "), call. = FALSE)
   raw_data <- dplyr::filter(raw_data, .data$data %in% select_data)
