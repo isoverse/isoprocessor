@@ -2,9 +2,13 @@
 % Please edit documentation in R/visualization.R
 \name{iso_plot_dual_inlet_data}
 \alias{iso_plot_dual_inlet_data}
-\title{Plot mass data from dual inlet files}
+\alias{iso_plot_dual_inlet_data.iso_file_list}
+\alias{iso_plot_dual_inlet_data.data.frame}
+\title{Plot data from dual inlet files}
 \usage{
-iso_plot_dual_inlet_data(
+iso_plot_dual_inlet_data(...)
+
+\method{iso_plot_dual_inlet_data}{iso_file_list}(
   iso_files,
   data = c(),
   filter = NULL,
@@ -12,40 +16,54 @@ iso_plot_dual_inlet_data(
   color = file_id,
   linetype = NULL,
   shape = type,
+  size = 2,
+  label = file_id,
+  ...
+)
+
+\method{iso_plot_dual_inlet_data}{data.frame}(
+  df,
+  panel = data,
+  color = file_id,
+  linetype = NULL,
+  shape = type,
+  size = 2,
   label = file_id,
   ...
 )
 }
 \arguments{
+\item{...}{additional parameters passed on to \link{iso_plot_data}}
+
 \item{iso_files}{collection of iso_file objects}
 
-\item{data}{which masses and ratios to plot (e.g. \code{c("44", "45", "45/44")} - without the units), if omitted, all available masses and ratios are plotted. Note that ratios should be calculated using \code{\link{iso_calculate_ratios}} prior to plotting.}
+\item{data}{which masses, ratios and deltas to plot (e.g. \code{c("44", "45", "45/44", "d45/44")} - without the units), if omitted, all available masses, ratios, and delta values are plotted. Note that ratios should be calculated using \code{\link{iso_calculate_ratios}} and delta values should be calculated using \code{\link{iso_calculate_deltas}} prior to plotting.}
 
-\item{filter}{any filter condition to apply to the data beyond the masses/ratio selection (param \code{data}) and time interval (param \code{time_interval}). For details on the available data columns see \link[isoreader]{iso_get_raw_data} with parameters \code{gather = TRUE} and \code{include_file_info = everything()} (i.e. all file info is available for plotting aesthetics).}
+\item{filter}{any filter condition to apply to the data beyond the masses/ratio/delta selection (param \code{data}). For details on the available data columns see \link[isoreader]{iso_get_raw_data} with parameters \code{gather = TRUE} and \code{include_file_info = everything()}.}
 
-\item{panel}{whether to panel data by anything - any data column is possible (see notes in the \code{filter} parameter) but the most commonly used options are \code{panel = NULL} (overlay all), \code{panel = data} (by mass/ratio data), \code{panel = file_id} (panel by files, alternatively use any appropriate file_info column), and \code{panel = type} (panel by sample vs standard). Additionally it is possible to panel two variables against each other (i.e. use a \link[ggplot2]{facet_grid}), e.g. by specifying the formula \code{panel = data ~ file_id} (data in the panel rows, files in the panel columns) or \code{panel = data ~ type}.The default for this parameter is simple panelling by \code{data}.}
+\item{panel}{whether to panel the data by anything. If using a single parameter (e.g. \code{panel = panel}), will generate a \link[ggplot2]{facet_wrap}. If using a formula (e.g. \code{panel = panel ~ .} or \code{panel = file_id ~ panel}), will generate a \link[ggplot2]{facet_grid}. The default for this parameter is to panel via facet grid by the y variable name but only if multiple \code{y} columns are provided. Otherwise will not generate any facets. If additional facet parameters are desired, please leave use \link[ggplot2]{facet_wrap} and \link[ggplot2]{facet_grid} diretly.}
 
-\item{color}{whether to color plot by anything, options are the same as for \code{panel} but the default is \code{file_id}}
+\item{color}{variable to use for color aesthetic for the plot or constant value for the point and line color}
 
-\item{linetype}{whether to differentiate by linetype, options are the same as for \code{panel} but the default is \code{NULL} (i.e. no linetype aesthetic). Note that a limited number of linetypes (6) is defined by default and the plot will fail if a higher number is required unless specified using \code{\link[ggplot2]{scale_linetype}}.}
+\item{linetype}{variable to use for linetype aesthetic for the plot or constant value for the line type}
 
-\item{shape}{whether to shape data points by anything, options are the same as for \code{panel} but the default is \code{type} (sample vs standard).}
+\item{shape}{variable to use for shape aesthetic for the plot or constant vlaue for the point shape}
 
-\item{label}{this is primarily of use for turning the generated ggplots into interactive plots via \code{\link[plotly]{ggplotly}} as the \code{label} will be rendered as an additional mousover label. Any unique file identifier is a useful choice, the default is \code{file_id}.}
+\item{size}{variable to use for size aesthetic for the plot or constant value for the points size}
 
-\item{...}{deprecated parameters}
+\item{label}{this is primarily of use for turning the generated ggplots into interactive plots via \code{\link[plotly]{ggplotly}} as the \code{label} will be rendered as an additional mousover label.}
+
+\item{df}{a data frame of the dual inlet data prepared for plotting (see \code{\link{iso_prepare_dual_inlet_plot_data}})}
 }
 \description{
-Plot mass data from dual inlet files
-}
-\note{
-normalization is not useful for dual inlet data, except potentially between standard and sample - however, for this it is more meaningful to simply plot the relevant ratios together
+This function provides easy plotting for mass, ratio and delta traces from IRMS dual inlet data. It can be called either directly with a set of \code{iso_file} objects, or with a data frame prepared for plotting dual inlet data (see \code{\link{iso_prepare_dual_inlet_plot_data}}).
 }
 \seealso{
 Other plot functions: 
 \code{\link{iso_mark_calibration_range}()},
 \code{\link{iso_mark_outliers}()},
 \code{\link{iso_mark_value_range}()},
+\code{\link{iso_mark_x_range}()},
 \code{\link{iso_plot_continuous_flow_data}()},
 \code{\link{iso_plot_data}()},
 \code{\link{iso_plot_raw_data}()},
@@ -53,6 +71,7 @@ Other plot functions:
 \code{\link{iso_plot_residuals}()},
 \code{\link{iso_plot_scan_data}()},
 \code{\link{iso_prepare_continuous_flow_plot_data}()},
+\code{\link{iso_prepare_dual_inlet_plot_data}()},
 \code{\link{iso_prepare_scan_plot_data}()}
 }
 \concept{plot functions}
