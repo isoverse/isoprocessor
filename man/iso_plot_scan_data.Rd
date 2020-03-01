@@ -10,7 +10,7 @@ iso_plot_scan_data(...)
 
 \method{iso_plot_scan_data}{iso_file_list}(
   iso_files,
-  data = c(),
+  data = character(),
   type,
   filter = NULL,
   x_interval = c(),

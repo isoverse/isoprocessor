@@ -10,7 +10,7 @@ iso_plot_dual_inlet_data(...)
 
 \method{iso_plot_dual_inlet_data}{iso_file_list}(
   iso_files,
-  data = c(),
+  data = character(),
   filter = NULL,
   panel = data,
   color = file_id,

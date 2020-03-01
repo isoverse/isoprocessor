@@ -6,7 +6,7 @@
 \usage{
 iso_prepare_continuous_flow_plot_data(
   iso_files,
-  data = c(),
+  data = character(),
   include_file_info = NULL,
   time_interval = c(),
   time_interval_units = "seconds",

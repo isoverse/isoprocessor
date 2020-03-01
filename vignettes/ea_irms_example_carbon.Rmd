@@ -184,7 +184,7 @@ iso_files %>%
     data = c(44), color = label, panel = NULL,
     # peak labels for the analyte peak
     peak_label = iso_format(id1, rt, d13C, signif = 3),
-    peak_label_size = 3,
+    peak_label_options = list(size = 3, nudge_x = 50),
     peak_label_filter = compound == "CO2 analyte"
   ) 
 ```

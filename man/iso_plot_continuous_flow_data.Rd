@@ -10,7 +10,7 @@ iso_plot_continuous_flow_data(...)
 
 \method{iso_plot_continuous_flow_data}{iso_file_list}(
   iso_files,
-  data = c(),
+  data = character(),
   time_interval = c(),
   time_interval_units = "seconds",
   filter = NULL,
@@ -31,6 +31,7 @@ iso_plot_continuous_flow_data(...)
   peak_bgrd = FALSE,
   peak_label = NULL,
   peak_label_filter = NULL,
+  peak_label_options = list(size = peak_label_size, force = peak_label_repel),
   peak_label_size = 2,
   peak_label_repel = 1
 )
@@ -46,6 +47,7 @@ iso_plot_continuous_flow_data(...)
   peak_bgrd = FALSE,
   peak_label = NULL,
   peak_label_filter = NULL,
+  peak_label_options = list(size = peak_label_size, force = peak_label_repel),
   peak_label_size = 2,
   peak_label_repel = 1
 )
@@ -97,9 +99,11 @@ iso_plot_continuous_flow_data(...)
 
 \item{peak_label_filter}{a filter for the peak labels (if supplied). Can be useful for highlighting only a subset of peaks with peak labels (e.g. only one data trace, or only those in a certain portion of the chromatogram). Only interpreted if \code{peak_table} is set.}
 
-\item{peak_label_size}{the font size for the peak labels. Depends largely on how much data is shown and how busy the chromatograms are. Default is a rather small font size (2), adjust as needed.}
+\item{peak_label_options}{styling options to be used for the \link[ggrepel]{geom_text_repel} peak labels. All parameters suppored by \link[ggrepel]{geom_text_repel} are allowed. Particularly useful ones are \code{size}, \code{force}, \code{nudge_x}, \code{nudge_y}, \code{segment.color} ("black" is set by default, switch to \code{NULL} to get the same as the color aesthetic), \code{segment.size} and \code{segment.alpha}.}
 
-\item{peak_label_repel}{how strongly the labels repel each other. Increase the value if large labels overlap (e.g. to 5 or 10).}
+\item{peak_label_size}{deprecated - please use \code{peak_label_options(size = 5)} instead.}
+
+\item{peak_label_repel}{deprecated - please use \code{peak_label_options(force = 2)} instead.}
 
 \item{df}{a data frame of the chromatographic data prepared for plotting (see \code{\link{iso_prepare_continuous_flow_plot_data}})}
 }

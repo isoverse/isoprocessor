@@ -170,7 +170,7 @@ iso_plot_continuous_flow_data(
   time_interval = c(1000, 3200),
   # peak labels for all peaks > 2V
   peak_label = iso_format(rt, d13C, signif = 3),
-  peak_label_size = 3,
+  peak_label_options = list(size = 3),
   peak_label_filter = amp44 > 2000
 ) +
   # customize resulting ggplot
