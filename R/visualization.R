@@ -1034,6 +1034,8 @@ iso_plot_data <- function(
   add_geom_quos <- rlang::enquos(...)
   add_geom_quos <- add_geom_quos[!purrr::map_lgl(add_geom_quos, rlang::quo_is_null)]
   add_geoms <- map(add_geom_quos, rlang::eval_tidy)
+  add_geom_quos <- add_geom_quos[!purrr::map_lgl(add_geoms, is.null)]
+  add_geoms <- add_geoms[!purrr::map_lgl(add_geoms, is.null)]
   if (!all(good <- purrr::map_lgl(add_geoms, ~is(.x, "Layer")))) {
     dot_exprs <- purrr::map_chr(add_geom_quos[!good], rlang::quo_text)
     dot_names <- names(add_geoms[!good])
