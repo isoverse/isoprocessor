@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Plot mass data from dual inlet files — iso_plot_dual_inlet_data • isoprocessor</title>
+<title>Plot data from dual inlet files — iso_plot_dual_inlet_data • isoprocessor</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -42,8 +42,8 @@
 
 
 
-<meta property="og:title" content="Plot mass data from dual inlet files — iso_plot_dual_inlet_data" />
-<meta property="og:description" content="Plot mass data from dual inlet files" />
+<meta property="og:title" content="Plot data from dual inlet files — iso_plot_dual_inlet_data" />
+<meta property="og:description" content="This function provides easy plotting for mass, ratio and delta traces from IRMS dual inlet data. It can be called either directly with a set of iso_file objects, or with a data frame prepared for plotting dual inlet data (see iso_prepare_dual_inlet_plot_data)." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -86,7 +86,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.2</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.4</span>
       </span>
     </div>
 
@@ -140,23 +140,39 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Plot mass data from dual inlet files</h1>
+    <h1>Plot data from dual inlet files</h1>
     <small class="dont-index">Source: <a href='https://github.com/isoverse/isoprocessor/blob/master/R/visualization.R'><code>R/visualization.R</code></a></small>
     <div class="hidden name"><code>iso_plot_dual_inlet_data.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Plot mass data from dual inlet files</p>
+    <p>This function provides easy plotting for mass, ratio and delta traces from IRMS dual inlet data. It can be called either directly with a set of <code>iso_file</code> objects, or with a data frame prepared for plotting dual inlet data (see <code><a href='iso_prepare_dual_inlet_plot_data.html'>iso_prepare_dual_inlet_plot_data</a></code>).</p>
     </div>
 
-    <pre class="usage"><span class='fu'>iso_plot_dual_inlet_data</span>(
+    <pre class="usage"><span class='fu'>iso_plot_dual_inlet_data</span>(<span class='no'>...</span>)
+
+<span class='co'># S3 method for iso_file_list</span>
+<span class='fu'>iso_plot_dual_inlet_data</span>(
   <span class='no'>iso_files</span>,
-  <span class='kw'>data</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(),
+  <span class='kw'>data</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(),
   <span class='kw'>filter</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>panel</span> <span class='kw'>=</span> <span class='no'>data</span>,
   <span class='kw'>color</span> <span class='kw'>=</span> <span class='no'>file_id</span>,
   <span class='kw'>linetype</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>shape</span> <span class='kw'>=</span> <span class='no'>type</span>,
+  <span class='kw'>size</span> <span class='kw'>=</span> <span class='fl'>2</span>,
+  <span class='kw'>label</span> <span class='kw'>=</span> <span class='no'>file_id</span>,
+  <span class='no'>...</span>
+)
+
+<span class='co'># S3 method for data.frame</span>
+<span class='fu'>iso_plot_dual_inlet_data</span>(
+  <span class='no'>df</span>,
+  <span class='kw'>panel</span> <span class='kw'>=</span> <span class='no'>data</span>,
+  <span class='kw'>color</span> <span class='kw'>=</span> <span class='no'>file_id</span>,
+  <span class='kw'>linetype</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>shape</span> <span class='kw'>=</span> <span class='no'>type</span>,
+  <span class='kw'>size</span> <span class='kw'>=</span> <span class='fl'>2</span>,
   <span class='kw'>label</span> <span class='kw'>=</span> <span class='no'>file_id</span>,
   <span class='no'>...</span>
 )</pre>
@@ -165,52 +181,58 @@
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
+      <th>...</th>
+      <td><p>additional parameters passed on to <a href='iso_plot_data.html'>iso_plot_data</a></p></td>
+    </tr>
+    <tr>
       <th>iso_files</th>
       <td><p>collection of iso_file objects</p></td>
     </tr>
     <tr>
       <th>data</th>
-      <td><p>which masses and ratios to plot (e.g. <code><a href='https://rdrr.io/r/base/c.html'>c("44", "45", "45/44")</a></code> - without the units), if omitted, all available masses and ratios are plotted. Note that ratios should be calculated using <code><a href='iso_calculate_ratios.html'>iso_calculate_ratios</a></code> prior to plotting.</p></td>
+      <td><p>which masses, ratios and deltas to plot (e.g. <code><a href='https://rdrr.io/r/base/c.html'>c("44", "45", "45/44", "d45/44")</a></code> - without the units), if omitted, all available masses, ratios, and delta values are plotted. Note that ratios should be calculated using <code><a href='iso_calculate_ratios.html'>iso_calculate_ratios</a></code> and delta values should be calculated using <code><a href='iso_calculate_deltas.html'>iso_calculate_deltas</a></code> prior to plotting.</p></td>
     </tr>
     <tr>
       <th>filter</th>
-      <td><p>any filter condition to apply to the data beyond the masses/ratio selection (param <code>data</code>) and time interval (param <code>time_interval</code>). For details on the available data columns see <a href='https://rdrr.io/pkg/isoreader/man/iso_get_raw_data.html'>iso_get_raw_data</a> with parameters <code>gather = TRUE</code> and <code>include_file_info = everything()</code> (i.e. all file info is available for plotting aesthetics).</p></td>
+      <td><p>any filter condition to apply to the data beyond the masses/ratio/delta selection (param <code>data</code>). For details on the available data columns see <a href='https://rdrr.io/pkg/isoreader/man/iso_get_raw_data.html'>iso_get_raw_data</a> with parameters <code>gather = TRUE</code> and <code>include_file_info = everything()</code>.</p></td>
     </tr>
     <tr>
       <th>panel</th>
-      <td><p>whether to panel data by anything - any data column is possible (see notes in the <code>filter</code> parameter) but the most commonly used options are <code>panel = NULL</code> (overlay all), <code>panel = data</code> (by mass/ratio data), <code>panel = file_id</code> (panel by files, alternatively use any appropriate file_info column), and <code>panel = type</code> (panel by sample vs standard). Additionally it is possible to panel two variables against each other (i.e. use a <a href='https://ggplot2.tidyverse.org/reference/facet_grid.html'>facet_grid</a>), e.g. by specifying the formula <code>panel = data ~ file_id</code> (data in the panel rows, files in the panel columns) or <code>panel = data ~ type</code>.The default for this parameter is simple panelling by <code>data</code>.</p></td>
+      <td><p>whether to panel the data by anything. If using a single parameter (e.g. <code>panel = panel</code>), will generate a <a href='https://ggplot2.tidyverse.org/reference/facet_wrap.html'>facet_wrap</a>. If using a formula (e.g. <code>panel = panel ~ .</code> or <code>panel = file_id ~ panel</code>), will generate a <a href='https://ggplot2.tidyverse.org/reference/facet_grid.html'>facet_grid</a>. The default for this parameter is to panel via facet grid by the y variable name but only if multiple <code>y</code> columns are provided. Otherwise will not generate any facets. If additional facet parameters are desired, please leave use <a href='https://ggplot2.tidyverse.org/reference/facet_wrap.html'>facet_wrap</a> and <a href='https://ggplot2.tidyverse.org/reference/facet_grid.html'>facet_grid</a> diretly.</p></td>
     </tr>
     <tr>
       <th>color</th>
-      <td><p>whether to color plot by anything, options are the same as for <code>panel</code> but the default is <code>file_id</code></p></td>
+      <td><p>variable to use for color aesthetic for the plot or constant value for the point and line color</p></td>
     </tr>
     <tr>
       <th>linetype</th>
-      <td><p>whether to differentiate by linetype, options are the same as for <code>panel</code> but the default is <code>NULL</code> (i.e. no linetype aesthetic). Note that a limited number of linetypes (6) is defined by default and the plot will fail if a higher number is required unless specified using <code><a href='https://ggplot2.tidyverse.org/reference/scale_linetype.html'>scale_linetype</a></code>.</p></td>
+      <td><p>variable to use for linetype aesthetic for the plot or constant value for the line type</p></td>
     </tr>
     <tr>
       <th>shape</th>
-      <td><p>whether to shape data points by anything, options are the same as for <code>panel</code> but the default is <code>type</code> (sample vs standard).</p></td>
+      <td><p>variable to use for shape aesthetic for the plot or constant vlaue for the point shape</p></td>
+    </tr>
+    <tr>
+      <th>size</th>
+      <td><p>variable to use for size aesthetic for the plot or constant value for the points size</p></td>
     </tr>
     <tr>
       <th>label</th>
-      <td><p>this is primarily of use for turning the generated ggplots into interactive plots via <code><a href='https://rdrr.io/pkg/plotly/man/ggplotly.html'>ggplotly</a></code> as the <code>label</code> will be rendered as an additional mousover label. Any unique file identifier is a useful choice, the default is <code>file_id</code>.</p></td>
+      <td><p>this is primarily of use for turning the generated ggplots into interactive plots via <code><a href='https://rdrr.io/pkg/plotly/man/ggplotly.html'>ggplotly</a></code> as the <code>label</code> will be rendered as an additional mousover label.</p></td>
     </tr>
     <tr>
-      <th>...</th>
-      <td><p>deprecated parameters</p></td>
+      <th>df</th>
+      <td><p>a data frame of the dual inlet data prepared for plotting (see <code><a href='iso_prepare_dual_inlet_plot_data.html'>iso_prepare_dual_inlet_plot_data</a></code>)</p></td>
     </tr>
     </table>
 
-    <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
-
-    <p>normalization is not useful for dual inlet data, except potentially between standard and sample - however, for this it is more meaningful to simply plot the relevant ratios together</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <div class='dont-index'><p>Other plot functions: 
 <code><a href='iso_mark_calibration_range.html'>iso_mark_calibration_range</a>()</code>,
 <code><a href='iso_mark_outliers.html'>iso_mark_outliers</a>()</code>,
 <code><a href='iso_mark_value_range.html'>iso_mark_value_range</a>()</code>,
+<code><a href='iso_mark_x_range.html'>iso_mark_x_range</a>()</code>,
 <code><a href='iso_plot_continuous_flow_data.html'>iso_plot_continuous_flow_data</a>()</code>,
 <code><a href='iso_plot_data.html'>iso_plot_data</a>()</code>,
 <code><a href='iso_plot_raw_data.html'>iso_plot_raw_data</a>()</code>,
@@ -218,6 +240,7 @@
 <code><a href='iso_plot_residuals.html'>iso_plot_residuals</a>()</code>,
 <code><a href='iso_plot_scan_data.html'>iso_plot_scan_data</a>()</code>,
 <code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a>()</code>,
+<code><a href='iso_prepare_dual_inlet_plot_data.html'>iso_prepare_dual_inlet_plot_data</a>()</code>,
 <code><a href='iso_prepare_scan_plot_data.html'>iso_prepare_scan_plot_data</a>()</code></p></div>
 
   </div>
@@ -225,7 +248,6 @@
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#note">Note</a></li>
       <li><a href="#see-also">See also</a></li>
     </ul>
 

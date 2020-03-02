@@ -86,7 +86,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.2</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.4</span>
       </span>
     </div>
 
@@ -151,7 +151,7 @@
 
     <pre class="usage"><span class='fu'>iso_prepare_scan_plot_data</span>(
   <span class='no'>iso_files</span>,
-  <span class='kw'>data</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(),
+  <span class='kw'>data</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(),
   <span class='kw'>include_file_info</span> <span class='kw'>=</span> <span class='no'>type</span>,
   <span class='kw'>filter</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
 )</pre>
@@ -173,7 +173,7 @@
     </tr>
     <tr>
       <th>filter</th>
-      <td><p>any filter condition to apply to the data beyond the masses/ratio selection (param <code>data</code>) and time interval (param <code>time_interval</code>). For details on the available data columns see <a href='https://rdrr.io/pkg/isoreader/man/iso_get_raw_data.html'>iso_get_raw_data</a> with parameters <code>gather = TRUE</code> and <code>include_file_info = everything()</code> (i.e. all file info is available for plotting aesthetics).</p></td>
+      <td><p>any filter condition to apply to the data beyond the masses/ratio selection (param <code>data</code>). For details on the available data columns see <a href='https://rdrr.io/pkg/isoreader/man/iso_get_raw_data.html'>iso_get_raw_data</a> with parameters <code>gather = TRUE</code> and <code>include_file_info = everything()</code> (i.e. all file info is available for plotting aesthetics).</p></td>
     </tr>
     </table>
 
@@ -183,6 +183,7 @@
 <code><a href='iso_mark_calibration_range.html'>iso_mark_calibration_range</a>()</code>,
 <code><a href='iso_mark_outliers.html'>iso_mark_outliers</a>()</code>,
 <code><a href='iso_mark_value_range.html'>iso_mark_value_range</a>()</code>,
+<code><a href='iso_mark_x_range.html'>iso_mark_x_range</a>()</code>,
 <code><a href='iso_plot_continuous_flow_data.html'>iso_plot_continuous_flow_data</a>()</code>,
 <code><a href='iso_plot_data.html'>iso_plot_data</a>()</code>,
 <code><a href='iso_plot_dual_inlet_data.html'>iso_plot_dual_inlet_data</a>()</code>,
@@ -190,7 +191,8 @@
 <code><a href='iso_plot_ref_peaks.html'>iso_plot_ref_peaks</a>()</code>,
 <code><a href='iso_plot_residuals.html'>iso_plot_residuals</a>()</code>,
 <code><a href='iso_plot_scan_data.html'>iso_plot_scan_data</a>()</code>,
-<code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a>()</code></p></div>
+<code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a>()</code>,
+<code><a href='iso_prepare_dual_inlet_plot_data.html'>iso_prepare_dual_inlet_plot_data</a>()</code></p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">

@@ -35,9 +35,6 @@ Existing functionality includes signal conversion (voltage to current and back),
 You can install the dependency [isoreader](http://isoreader.isoverse.org/) and [isoprocessor](http://isoprocessor.isoverse.org/) itself both from GitHub using the `devtools` package. Note that while [isoprocessor](http://isoprocessor.isoverse.org/) uses some functions from [isoreader](http://isoreader.isoverse.org/), it does NOT require IRMS data to be read with [isoreader](http://isoreader.isoverse.org/), it can be used standalone with raw data obtained differently.
 
 ```{r gh-installation, eval = FALSE}
-# restart your R session (this command only works in RStudio)
-.rs.restartR()
-
 # installs the development tools package if not yet installed
 if(!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools") 
 
@@ -51,12 +48,11 @@ devtools::install_github("isoverse/isoprocessor")
 To update to a newer version of isoprocessor:
 
 ```{r update, eval = FALSE}
-# restart your R session (this command only works in RStudio)
-.rs.restartR()
-
 # installs the newest version of isoprocessor
 devtools::install_github("isoverse/isoprocessor")
 ```
+
+Troubleshooting note: depending on your workspace and operating system, you may have to re-start your R session, delete previous versions of these packages (`remove.packages("isoprocessor")`, `remove.packages("isoreader")`), and/or manually install some dependencies (e.g. the `digest` package tends to cause trouble: `remove.packages("digest"); install.packages("digest")`).
 
 ## Functionality
 

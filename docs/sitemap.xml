@@ -112,6 +112,9 @@
     <loc>http://isoprocessor.isoverse.org//reference/iso_mark_value_range.html</loc>
   </url>
   <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_mark_x_range.html</loc>
+  </url>
+  <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_mutate_peak_table.html</loc>
   </url>
   <url>
@@ -143,6 +146,9 @@
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_prepare_continuous_flow_plot_data.html</loc>
+  </url>
+  <url>
+    <loc>http://isoprocessor.isoverse.org//reference/iso_prepare_dual_inlet_plot_data.html</loc>
   </url>
   <url>
     <loc>http://isoprocessor.isoverse.org//reference/iso_prepare_for_calibration.html</loc>

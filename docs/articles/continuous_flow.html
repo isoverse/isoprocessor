@@ -43,7 +43,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.2</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.4</span>
       </span>
     </div>
 
@@ -100,7 +100,7 @@
     <div class="page-header toc-ignore">
       <h1>Continuous Flow Examples</h1>
             
-            <h4 class="date">2020-02-27</h4>
+            <h4 class="date">2020-03-01</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/isoverse/isoprocessor/blob/master/vignettes/continuous_flow.Rmd"><code>vignettes/continuous_flow.Rmd</code></a></small>
       <div class="hidden name"><code>continuous_flow.Rmd</code></div>
@@ -133,7 +133,7 @@
 <a class="sourceLine" id="cb2-11" data-line-number="11"><span class="co">#&gt; Info: reading file 'continuous_flow_example.iarc' from cache...</span></a>
 <a class="sourceLine" id="cb2-12" data-line-number="12"><span class="co">#&gt; Info: reading file 'continuous_flow_example.dxf' from cache...</span></a>
 <a class="sourceLine" id="cb2-13" data-line-number="13"><span class="co">#&gt; Info: reading file 'linearity_example.dxf' from cache...</span></a>
-<a class="sourceLine" id="cb2-14" data-line-number="14"><span class="co">#&gt; Info: finished reading 4 files in 0.64 secs</span></a></code></pre></div>
+<a class="sourceLine" id="cb2-14" data-line-number="14"><span class="co">#&gt; Info: finished reading 4 files in 0.59 secs</span></a></code></pre></div>
 </div>
 <div id="chromatograms" class="section level1">
 <h1 class="hasAnchor">
@@ -181,7 +181,7 @@
 <a class="sourceLine" id="cb6-5" data-line-number="5">  <span class="co"># specify what to highlight about the peaks (here: bounds, ret. time and dD)</span></a>
 <a class="sourceLine" id="cb6-6" data-line-number="6">  <span class="dt">peak_bounds =</span> <span class="ot">TRUE</span>,</a>
 <a class="sourceLine" id="cb6-7" data-line-number="7">  <span class="dt">peak_label =</span> <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_format.html">iso_format</a></span>(rt, <span class="dt">dD =</span> d2H, <span class="dt">signif =</span> <span class="dv">3</span>),</a>
-<a class="sourceLine" id="cb6-8" data-line-number="8">  <span class="dt">peak_label_size =</span> <span class="dv">3</span>,</a>
+<a class="sourceLine" id="cb6-8" data-line-number="8">  <span class="dt">peak_label_options =</span> <span class="kw"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="dt">size =</span> <span class="dv">3</span>),</a>
 <a class="sourceLine" id="cb6-9" data-line-number="9">  <span class="co"># specify which labels to display (only the 2 trace, between 500 and 1500s)</span></a>
 <a class="sourceLine" id="cb6-10" data-line-number="10">  <span class="dt">peak_label_filter =</span> data <span class="op">==</span><span class="st"> "2 [mV]"</span> <span class="op">&amp;</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw"><a href="https://dplyr.tidyverse.org/reference/between.html">between</a></span>(time.s, <span class="dv">500</span>, <span class="dv">1500</span>)</a>
 <a class="sourceLine" id="cb6-11" data-line-number="11">)</a></code></pre></div>
@@ -231,9 +231,10 @@
 <a class="sourceLine" id="cb9-11" data-line-number="11">    <span class="dt">color =</span> data,</a>
 <a class="sourceLine" id="cb9-12" data-line-number="12">    <span class="co"># add peak labels</span></a>
 <a class="sourceLine" id="cb9-13" data-line-number="13">    <span class="dt">peak_label =</span> <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_format.html">iso_format</a></span>(<span class="dt">RT =</span> rt, <span class="dt">A =</span> amp2),</a>
-<a class="sourceLine" id="cb9-14" data-line-number="14">    <span class="dt">peak_label_filter =</span> data <span class="op">==</span><span class="st"> "2 [mV]"</span>, <span class="dt">peak_label_size =</span> <span class="dv">4</span></a>
-<a class="sourceLine" id="cb9-15" data-line-number="15">  )</a>
-<a class="sourceLine" id="cb9-16" data-line-number="16"><span class="co">#&gt; Info: calculating ratio(s) in 7 data file(s): r3/2</span></a></code></pre></div>
+<a class="sourceLine" id="cb9-14" data-line-number="14">    <span class="dt">peak_label_filter =</span> data <span class="op">==</span><span class="st"> "2 [mV]"</span>, </a>
+<a class="sourceLine" id="cb9-15" data-line-number="15">    <span class="dt">peak_label_options =</span> <span class="kw"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="dt">size =</span> <span class="dv">4</span>)</a>
+<a class="sourceLine" id="cb9-16" data-line-number="16">  )</a>
+<a class="sourceLine" id="cb9-17" data-line-number="17"><span class="co">#&gt; Info: calculating ratio(s) in 7 data file(s): r3/2</span></a></code></pre></div>
 <p><img src="continuous_flow_files/figure-html/time%20window-1.png" width="960"></p>
 </div>
 <div id="signal-conversion" class="section level1">
