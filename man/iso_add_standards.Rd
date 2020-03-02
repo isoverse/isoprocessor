@@ -2,9 +2,21 @@
 % Please edit documentation in R/calibration.R
 \name{iso_add_standards}
 \alias{iso_add_standards}
+\alias{iso_add_standards.iso_file_list}
+\alias{iso_add_standards.data.frame}
 \title{Add calibration standards}
 \usage{
-iso_add_standards(
+iso_add_standards(...)
+
+\method{iso_add_standards}{iso_file_list}(
+  iso_files,
+  stds,
+  match_by = default(std_match_by),
+  is_std_peak = default(is_std_peak),
+  quiet = default(quiet)
+)
+
+\method{iso_add_standards}{data.frame}(
   dt,
   stds,
   match_by = default(std_match_by),
@@ -14,7 +26,9 @@ iso_add_standards(
 )
 }
 \arguments{
-\item{dt}{data table}
+\item{...}{S3 method placeholder parameters, see class specific functions for details on parameters}
+
+\item{iso_files}{collection of continuous flow iso_file objects}
 
 \item{stds}{standards data frame}
 
@@ -24,16 +38,18 @@ iso_add_standards(
 
 \item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
 
+\item{dt}{data frame with the peak table}
+
 \item{is_standard}{renamed to \code{is_std_peak} because the naming caused too much confusion, will be removed in future versions, please use \code{is_std_peak} instead}
 }
 \value{
-data frame with standards data frame merged in and the following information column added:
+iso files with standards data frame merged into the peak table and the following information column added:
 \itemize{
-\item{\code{is standard}: }{a logical TRUE/FALSE indicating which data table entry is a standard}
+\item{\code{is_std_peak}: }{a logical TRUE/FALSE indicating which data table entry is a standard}
 }
 }
 \description{
-Add calibration standards
+Convenience function to add calibration standards to a continuous flow peak table (standalone or inside an isofiles object).
 }
 \seealso{
 Other calibration functions: 
