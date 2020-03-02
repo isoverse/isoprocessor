@@ -6,7 +6,7 @@
 \usage{
 iso_prepare_dual_inlet_plot_data(
   iso_files,
-  data = c(),
+  data = character(),
   include_file_info = NULL,
   filter = NULL
 )

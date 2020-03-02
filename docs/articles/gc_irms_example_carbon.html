@@ -43,7 +43,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.2</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.4</span>
       </span>
     </div>
 
@@ -100,7 +100,7 @@
       <h1>GC-IRMS data processing example</h1>
             <h3 class="subtitle">carbon isotopes in alkanes</h3>
             
-            <h4 class="date">2020-02-27</h4>
+            <h4 class="date">2020-03-01</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/isoverse/isoprocessor/blob/master/vignettes/gc_irms_example_carbon.Rmd"><code>vignettes/gc_irms_example_carbon.Rmd</code></a></small>
       <div class="hidden name"><code>gc_irms_example_carbon.Rmd</code></div>
@@ -114,7 +114,7 @@
 <a href="#introduction" class="anchor"></a>Introduction</h1>
 <p>This is an example of a data processing pipeline for compound-specific Gas Chromatography Isotope Ratio Mass Spectrometry (GC-IRMS) carbon isotope measurements. It can be downloaded as a template (or just to see the plain-text code) by following the <code>Source</code> link above. Knitting for stand-alone data analysis works best to <code>HTML</code> rather than the website rendering you see here. To make this formatting change simply delete line #6 in the template file (the line that says <code>rmarkdown::html_vignette:</code>).</p>
 <p>Note that all code chunks that contain a critical step towards the final data (i.e. do more than visualization or a data summary) are marked with <code>(*)</code> in the header to make it easier to follow all key steps during interactive use.</p>
-<p>This example was run using <strong><a href="http://isoreader.kopflab.org">isoreader</a> version 1.1.2</strong> and <strong><a href="http://isoprocessor.kopflab.org/">isoprocessor</a> version 0.6.2</strong>. If you want to reproduce the example, please make sure that you have these or newer versions of both packages installed:</p>
+<p>This example was run using <strong><a href="http://isoreader.kopflab.org">isoreader</a> version 1.1.4</strong> and <strong><a href="http://isoprocessor.kopflab.org/">isoprocessor</a> version 0.6.4</strong>. If you want to reproduce the example, please make sure that you have these or newer versions of both packages installed:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co"># restart your R session (this command only works in RStudio)</span></a>
 <a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">.rs.restartR</span>()</a>
 <a class="sourceLine" id="cb1-3" data-line-number="3"></a>
@@ -122,8 +122,8 @@
 <a class="sourceLine" id="cb1-5" data-line-number="5"><span class="cf">if</span>(<span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span>(<span class="st">"devtools"</span>, <span class="dt">quietly =</span> <span class="ot">TRUE</span>)) <span class="kw"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span>(<span class="st">"devtools"</span>) </a>
 <a class="sourceLine" id="cb1-6" data-line-number="6"></a>
 <a class="sourceLine" id="cb1-7" data-line-number="7"><span class="co"># installs the newest version of isoreader and isoprocessor</span></a>
-<a class="sourceLine" id="cb1-8" data-line-number="8">devtools<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/devtools/man/remote-reexports.html">install_github</a></span>(<span class="st">"isoverse/isoreader"</span>)</a>
-<a class="sourceLine" id="cb1-9" data-line-number="9">devtools<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/devtools/man/remote-reexports.html">install_github</a></span>(<span class="st">"isoverse/isoprocessor"</span>)</a></code></pre></div>
+<a class="sourceLine" id="cb1-8" data-line-number="8">devtools<span class="op">::</span><span class="kw"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span>(<span class="st">"isoverse/isoreader"</span>)</a>
+<a class="sourceLine" id="cb1-9" data-line-number="9">devtools<span class="op">::</span><span class="kw"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span>(<span class="st">"isoverse/isoprocessor"</span>)</a></code></pre></div>
 </div>
 <div id="load-packages" class="section level1">
 <h1 class="hasAnchor">
@@ -131,7 +131,7 @@
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(tidyverse) <span class="co"># general data wrangling and plotting</span></a>
 <a class="sourceLine" id="cb2-2" data-line-number="2"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(isoreader) <span class="co"># reading the raw data files</span></a>
 <a class="sourceLine" id="cb2-3" data-line-number="3"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(isoprocessor) <span class="co"># processing the data</span></a></code></pre></div>
-<p>This analysis was run using <a href="http://isoreader.kopflab.org">isoreader</a> version 1.1.2 and <a href="http://isoprocessor.kopflab.org/">isoprocessor</a> version 0.6.2.</p>
+<p>This analysis was run using <a href="http://isoreader.kopflab.org">isoreader</a> version 1.1.4 and <a href="http://isoprocessor.kopflab.org/">isoprocessor</a> version 0.6.4.</p>
 <p>For use as a data processing template, please follow the <code>Source</code> link above, download the raw file and adapt as needed. Knitting for stand-alone data analysis works best to <code>HTML</code> rather than the in-package default <code>html_vignette</code>.</p>
 <p>All code chunks that contain a critical step towards the final data (i.e. do more than visualization or a data summary) are marked with <code>(*)</code> in the header to make it easier to follow all key steps during interactive use.</p>
 </div>
@@ -157,7 +157,7 @@
 <a class="sourceLine" id="cb3-14" data-line-number="14"><span class="co">#&gt; Info: preparing to read 1 data files (all will be cached), setting up 1 par...</span></a>
 <a class="sourceLine" id="cb3-15" data-line-number="15"><span class="co">#&gt; Info (process 1): reading file 'gc_irms_example_carbon.cf.rds' with '.cf.rd...</span></a>
 <a class="sourceLine" id="cb3-16" data-line-number="16"><span class="co">#&gt; Info (process 1): loaded data for 47 data files from R Data Storage - check...</span></a>
-<a class="sourceLine" id="cb3-17" data-line-number="17"><span class="co">#&gt; Info: finished reading 1 files in 8.92 secs</span></a>
+<a class="sourceLine" id="cb3-17" data-line-number="17"><span class="co">#&gt; Info: finished reading 1 files in 5.07 secs</span></a>
 <a class="sourceLine" id="cb3-18" data-line-number="18"><span class="co">#&gt; Info: encountered 2 problems in total</span></a>
 <a class="sourceLine" id="cb3-19" data-line-number="19"><span class="co">#&gt; # A tibble: 2 x 4</span></a>
 <a class="sourceLine" id="cb3-20" data-line-number="20"><span class="co">#&gt;   file_id         type  func             details                                </span></a>
@@ -811,7 +811,7 @@
 <a class="sourceLine" id="cb6-8" data-line-number="8">  <span class="dt">time_interval =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">1000</span>, <span class="dv">3200</span>),</a>
 <a class="sourceLine" id="cb6-9" data-line-number="9">  <span class="co"># peak labels for all peaks &gt; 2V</span></a>
 <a class="sourceLine" id="cb6-10" data-line-number="10">  <span class="dt">peak_label =</span> <span class="kw"><a href="https://rdrr.io/pkg/isoreader/man/iso_format.html">iso_format</a></span>(rt, d13C, <span class="dt">signif =</span> <span class="dv">3</span>),</a>
-<a class="sourceLine" id="cb6-11" data-line-number="11">  <span class="dt">peak_label_size =</span> <span class="dv">3</span>,</a>
+<a class="sourceLine" id="cb6-11" data-line-number="11">  <span class="dt">peak_label_options =</span> <span class="kw"><a href="https://rdrr.io/r/base/list.html">list</a></span>(<span class="dt">size =</span> <span class="dv">3</span>),</a>
 <a class="sourceLine" id="cb6-12" data-line-number="12">  <span class="dt">peak_label_filter =</span> amp44 <span class="op">&gt;</span><span class="st"> </span><span class="dv">2000</span></a>
 <a class="sourceLine" id="cb6-13" data-line-number="13">) <span class="op">+</span></a>
 <a class="sourceLine" id="cb6-14" data-line-number="14"><span class="st">  </span><span class="co"># customize resulting ggplot</span></a>
@@ -3075,7 +3075,7 @@
 <a class="sourceLine" id="cb40-5" data-line-number="5">    <span class="co"># include data summary as an additional useful tab</span></a>
 <a class="sourceLine" id="cb40-6" data-line-number="6">    <span class="st">`</span><span class="dt">data summary</span><span class="st">`</span> =<span class="st"> </span>peak_data_summary</a>
 <a class="sourceLine" id="cb40-7" data-line-number="7">  )</a>
-<a class="sourceLine" id="cb40-8" data-line-number="8"><span class="co">#&gt; Info: exporting calibrations into Excel '20200227_gc_irms_example_carbon_export.xlsx'...</span></a>
+<a class="sourceLine" id="cb40-8" data-line-number="8"><span class="co">#&gt; Info: exporting calibrations into Excel '20200301_gc_irms_example_carbon_export.xlsx'...</span></a>
 <a class="sourceLine" id="cb40-9" data-line-number="9"><span class="co">#&gt; Info: retrieving all data</span></a>
 <a class="sourceLine" id="cb40-10" data-line-number="10"><span class="co">#&gt; Info: retrieving all coefficient information for calibration</span></a>
 <a class="sourceLine" id="cb40-11" data-line-number="11"><span class="co">#&gt; Info: retrieving all summary information for calibration</span></a>

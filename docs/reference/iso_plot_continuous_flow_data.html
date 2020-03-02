@@ -86,7 +86,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.2</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.4</span>
       </span>
     </div>
 
@@ -154,7 +154,7 @@
 <span class='co'># S3 method for iso_file_list</span>
 <span class='fu'>iso_plot_continuous_flow_data</span>(
   <span class='no'>iso_files</span>,
-  <span class='kw'>data</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(),
+  <span class='kw'>data</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(),
   <span class='kw'>time_interval</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(),
   <span class='kw'>time_interval_units</span> <span class='kw'>=</span> <span class='st'>"seconds"</span>,
   <span class='kw'>filter</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
@@ -175,6 +175,7 @@
   <span class='kw'>peak_bgrd</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>peak_label</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>peak_label_filter</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>peak_label_options</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='kw'>size</span> <span class='kw'>=</span> <span class='no'>peak_label_size</span>, <span class='kw'>force</span> <span class='kw'>=</span> <span class='no'>peak_label_repel</span>),
   <span class='kw'>peak_label_size</span> <span class='kw'>=</span> <span class='fl'>2</span>,
   <span class='kw'>peak_label_repel</span> <span class='kw'>=</span> <span class='fl'>1</span>
 )
@@ -191,6 +192,7 @@
   <span class='kw'>peak_bgrd</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>peak_label</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>peak_label_filter</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>peak_label_options</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='kw'>size</span> <span class='kw'>=</span> <span class='no'>peak_label_size</span>, <span class='kw'>force</span> <span class='kw'>=</span> <span class='no'>peak_label_repel</span>),
   <span class='kw'>peak_label_size</span> <span class='kw'>=</span> <span class='fl'>2</span>,
   <span class='kw'>peak_label_repel</span> <span class='kw'>=</span> <span class='fl'>1</span>
 )</pre>
@@ -291,12 +293,16 @@
       <td><p>a filter for the peak labels (if supplied). Can be useful for highlighting only a subset of peaks with peak labels (e.g. only one data trace, or only those in a certain portion of the chromatogram). Only interpreted if <code>peak_table</code> is set.</p></td>
     </tr>
     <tr>
+      <th>peak_label_options</th>
+      <td><p>styling options to be used for the <a href='https://rdrr.io/pkg/ggrepel/man/geom_text_repel.html'>geom_text_repel</a> peak labels. All parameters suppored by <a href='https://rdrr.io/pkg/ggrepel/man/geom_text_repel.html'>geom_text_repel</a> are allowed. Particularly useful ones are <code>size</code>, <code>force</code>, <code>nudge_x</code>, <code>nudge_y</code>, <code>segment.color</code> ("black" is set by default, switch to <code>NULL</code> to get the same as the color aesthetic), <code>segment.size</code> and <code>segment.alpha</code>.</p></td>
+    </tr>
+    <tr>
       <th>peak_label_size</th>
-      <td><p>the font size for the peak labels. Depends largely on how much data is shown and how busy the chromatograms are. Default is a rather small font size (2), adjust as needed.</p></td>
+      <td><p>deprecated - please use <code>peak_label_options(size = 5)</code> instead.</p></td>
     </tr>
     <tr>
       <th>peak_label_repel</th>
-      <td><p>how strongly the labels repel each other. Increase the value if large labels overlap (e.g. to 5 or 10).</p></td>
+      <td><p>deprecated - please use <code>peak_label_options(force = 2)</code> instead.</p></td>
     </tr>
     <tr>
       <th>df</th>
@@ -310,6 +316,7 @@
 <code><a href='iso_mark_calibration_range.html'>iso_mark_calibration_range</a>()</code>,
 <code><a href='iso_mark_outliers.html'>iso_mark_outliers</a>()</code>,
 <code><a href='iso_mark_value_range.html'>iso_mark_value_range</a>()</code>,
+<code><a href='iso_mark_x_range.html'>iso_mark_x_range</a>()</code>,
 <code><a href='iso_plot_data.html'>iso_plot_data</a>()</code>,
 <code><a href='iso_plot_dual_inlet_data.html'>iso_plot_dual_inlet_data</a>()</code>,
 <code><a href='iso_plot_raw_data.html'>iso_plot_raw_data</a>()</code>,
@@ -317,6 +324,7 @@
 <code><a href='iso_plot_residuals.html'>iso_plot_residuals</a>()</code>,
 <code><a href='iso_plot_scan_data.html'>iso_plot_scan_data</a>()</code>,
 <code><a href='iso_prepare_continuous_flow_plot_data.html'>iso_prepare_continuous_flow_plot_data</a>()</code>,
+<code><a href='iso_prepare_dual_inlet_plot_data.html'>iso_prepare_dual_inlet_plot_data</a>()</code>,
 <code><a href='iso_prepare_scan_plot_data.html'>iso_prepare_scan_plot_data</a>()</code></p></div>
 
   </div>

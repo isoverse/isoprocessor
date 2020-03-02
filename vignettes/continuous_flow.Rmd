@@ -81,7 +81,7 @@ iso_plot_continuous_flow_data(
   # specify what to highlight about the peaks (here: bounds, ret. time and dD)
   peak_bounds = TRUE,
   peak_label = iso_format(rt, dD = d2H, signif = 3),
-  peak_label_size = 3,
+  peak_label_options = list(size = 3),
   # specify which labels to display (only the 2 trace, between 500 and 1500s)
   peak_label_filter = data == "2 [mV]" & dplyr::between(time.s, 500, 1500)
 )
@@ -135,7 +135,8 @@ cf_files %>%
     color = data,
     # add peak labels
     peak_label = iso_format(RT = rt, A = amp2),
-    peak_label_filter = data == "2 [mV]", peak_label_size = 4
+    peak_label_filter = data == "2 [mV]", 
+    peak_label_options = list(size = 4)
   )
 ```
 

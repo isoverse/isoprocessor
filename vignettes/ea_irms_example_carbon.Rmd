@@ -23,12 +23,14 @@ vignette: >
 # global knitting options for code rendering
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
-# global knitting options for automatic saving of all plots as .png and .pdf
-knitr::opts_chunk$set(
-  dev = c("png", "pdf"), fig.keep = "all",
-  dev.args = list(pdf = list(encoding = "WinAnsi", useDingbats = FALSE)),
-  fig.path = file.path("fig_output", paste0(gsub("\\.[Rr]md", "", knitr::current_input()), "_"))
-)
+# change to TRUE to enable global knitting options for automatic saving of all plots as .png and .pdf
+if (FALSE) {
+  knitr::opts_chunk$set(
+    dev = c("png", "pdf"), fig.keep = "all",
+    dev.args = list(pdf = list(encoding = "WinAnsi", useDingbats = FALSE)),
+    fig.path = file.path("fig_output", paste0(gsub("\\.[Rr]md", "", knitr::current_input()), "_"))
+  )
+}
 ```
 
 # Introduction
@@ -184,7 +186,7 @@ iso_files %>%
     data = c(44), color = label, panel = NULL,
     # peak labels for the analyte peak
     peak_label = iso_format(id1, rt, d13C, signif = 3),
-    peak_label_size = 3,
+    peak_label_options = list(size = 3, nudge_x = 50),
     peak_label_filter = compound == "CO2 analyte"
   ) 
 ```
@@ -193,7 +195,7 @@ iso_files %>%
 
 Visualize the reference peaks. It looks like the sample at `seq_nr=66` has an abnormously high `r46/44` difference between the two reference peaks (>0.5 permil). However, it is stable for `r45/44` so will likely be okay for d13C. Nevertheless, we'll flag it as potentially problematic to keep an eye on the sample in the final data.
 
-```{r "ref_peak_variation", fig.width=9, fig.height=7}
+```{r "ref_peak_variation", fig.width=9, fig.height=7, warning=FALSE}
 iso_files %>% 
   # get all peaks
   iso_get_peak_table(include_file_info = c(seq_nr, analysis, type), quiet = TRUE) %>% 
@@ -278,7 +280,7 @@ peak_table %>%
   # mark +/- 1, 2, 3 std. deviation value ranges
   iso_mark_value_range(plus_minus_sd = c(1,2,3)) %>% 
   # mark outliers (those outside the 3 sigma range)
-  iso_mark_outliers(sd = 3, label = analysis)
+  iso_mark_outliers(plus_minus_sd = 3, label = analysis)
 ```
 
 ## Identify outliers (*)

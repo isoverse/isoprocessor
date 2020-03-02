@@ -25,14 +25,14 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>")
 
-# global knitting options for automatic saving of all plots as .png and .pdf
-# @user: comment these IN to automatically save plots in a `fig_output` folder during knitting
-knitr::opts_chunk$set(
-  # dev = c("png", "pdf"),
-  # dev.args = list(pdf = list(encoding = "WinAnsi", useDingbats = FALSE)),
-  # fig.keep = "all",
-  # fig.path = file.path("fig_output", paste0(gsub("\\.[Rr]md", "", knitr::current_input()), "_"))
-)
+# change to TRUE to enable global knitting options for automatic saving of all plots as .png and .pdf
+if (FALSE) {
+  knitr::opts_chunk$set(
+    dev = c("png", "pdf"), fig.keep = "all",
+    dev.args = list(pdf = list(encoding = "WinAnsi", useDingbats = FALSE)),
+    fig.path = file.path("fig_output", paste0(gsub("\\.[Rr]md", "", knitr::current_input()), "_"))
+  )
+}
 ```
 
 # Introduction
@@ -170,7 +170,7 @@ iso_plot_continuous_flow_data(
   time_interval = c(1000, 3200),
   # peak labels for all peaks > 2V
   peak_label = iso_format(rt, d13C, signif = 3),
-  peak_label_size = 3,
+  peak_label_options = list(size = 3),
   peak_label_filter = amp44 > 2000
 ) +
   # customize resulting ggplot

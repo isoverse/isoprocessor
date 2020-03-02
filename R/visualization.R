@@ -79,11 +79,21 @@ iso_plot_continuous_flow_data.iso_file_list <- function(
   rt = default(rt), rt_start = default(rt_start), rt_end = default(rt_end),
   rt_unit = NULL,
   peak_marker = FALSE, peak_bounds = FALSE, peak_bgrd = FALSE,
-  peak_label = NULL, peak_label_filter = NULL, peak_label_size = 2, peak_label_repel = 1) {
+  peak_label = NULL, peak_label_filter = NULL,
+  peak_label_options = list(
+    size = peak_label_size,
+    force = peak_label_repel
+  ),
+  peak_label_size = 2, peak_label_repel = 1) {
 
   # safety checks
   if(!iso_is_continuous_flow(iso_files))
     stop("iso_plot_continuous_flow_data can only plot continuous flow iso_files", call. = FALSE)
+
+  # deprecated updates
+  if (!missing(peak_label_size) || !missing(peak_label_repel)) {
+    warning("'peak_label_size' and 'peak_label_repel' are now part of the more flexible 'peak_label_options' parameter (as 'size' and 'force', respectively) that is passed on to ?geom_label_repel. Please use 'peak_label_options' directly to avoid this warning.", immediate. = TRUE, call. = FALSE)
+  }
 
   # need peak table?
   peak_table_quo <- enquo(peak_table)
@@ -125,8 +135,7 @@ iso_plot_continuous_flow_data.iso_file_list <- function(
     peak_bounds = peak_bounds,
     peak_label = !!peak_label_quo,
     peak_label_filter = !!enquo(peak_label_filter),
-    peak_label_size = peak_label_size,
-    peak_label_repel = peak_label_repel
+    peak_label_options = peak_label_options
   )
 }
 
@@ -141,17 +150,28 @@ iso_plot_continuous_flow_data.iso_file_list <- function(
 #' @param peak_bgrd NOT YET IMPLEMENTED whether to show the background of identified peaks from start to end retention times. Only works if a \code{peak_table} was provided that has \code{bgrdX_start} and \code{bgrdX_end} columns in the same units as the raw data.
 #' @param peak_label whether to label identified peaks. Any valid column or complex expression is supported and ALL columns in the provided \code{peak_table} can be used in this expression. The easiest way to generate well constructed peak labels is via the \code{\link{iso_format}} function. To provide more space for peak labels, it is sometimes useful to use a \code{zoom} value smaller than 1 to zoom out a bit, e.g. \code{zoom = 0.9}. If peak labels overlap, consider changing \code{peak_label_size} and/or \code{peak_label_repel}. Note that this only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_label} is set but no peaks were identified. Also note that peaks whose value at the peak retention time is not visible on the panel due to e.g. a high \code{zoom} value will not have a visible label either.
 #' @param peak_label_filter a filter for the peak labels (if supplied). Can be useful for highlighting only a subset of peaks with peak labels (e.g. only one data trace, or only those in a certain portion of the chromatogram). Only interpreted if \code{peak_table} is set.
-#' @param peak_label_size the font size for the peak labels. Depends largely on how much data is shown and how busy the chromatograms are. Default is a rather small font size (2), adjust as needed.
-#' @param peak_label_repel how strongly the labels repel each other. Increase the value if large labels overlap (e.g. to 5 or 10).
+#' @param peak_label_options styling options to be used for the \link[ggrepel]{geom_text_repel} peak labels. All parameters suppored by \link[ggrepel]{geom_text_repel} are allowed. Particularly useful ones are \code{size}, \code{force}, \code{nudge_x}, \code{nudge_y}, \code{segment.color} ("black" is set by default, switch to \code{NULL} to get the same as the color aesthetic), \code{segment.size} and \code{segment.alpha}.
+#' @param peak_label_size deprecated - please use \code{peak_label_options(size = 5)} instead.
+#' @param peak_label_repel deprecated - please use \code{peak_label_options(force = 2)} instead.
 #' @export
 iso_plot_continuous_flow_data.data.frame <- function(
   df, panel = data, color = file_id, linetype = NULL, label = file_id,
   peak_marker = FALSE, peak_bounds = FALSE, peak_bgrd = FALSE,
-  peak_label = NULL, peak_label_filter = NULL, peak_label_size = 2, peak_label_repel = 1
+  peak_label = NULL, peak_label_filter = NULL,
+  peak_label_options = list(
+    size = peak_label_size,
+    force = peak_label_repel
+  ),
+  peak_label_size = 2, peak_label_repel = 1
   ) {
 
   # check for data
   if (nrow(df) == 0) stop("no data provided", call. = FALSE)
+
+  # deprecated updates
+  if (!missing(peak_label_size) || !missing(peak_label_repel)) {
+    warning("'peak_label_size' and 'peak_label_repel' are now part of the more flexible 'peak_label_options' parameter (as 'size' and 'force', respectively) that is passed on to ?geom_label_repel. Please use 'peak_label_options' directly to avoid this warning.", immediate. = TRUE, call. = FALSE)
+  }
 
   # check for time column
   time_info <- find_time_column(df)
@@ -252,28 +272,33 @@ iso_plot_continuous_flow_data.data.frame <- function(
       } %>%
       nrow()
 
+    # labels
     if (has_any_labels > 0) {
-      p <- p +
-        ggrepel::geom_label_repel(
-          data = function(df)
-            dplyr::filter(df, peak_marker) %>%
-            {
-              if(!quo_is_null(peak_label_filter_quo))
-                dplyr::filter(., !!peak_label_filter_quo)
-              else
-                .
-            },
-          mapping = aes_(label = aes_quos$peak_label),
-          show.legend = FALSE,
-          force = peak_label_repel,
-          #box.padding = 1,
-          min.segment.length = 0,
-          size = peak_label_size,
-          segment.color = "black",
-          segment.alpha = 0.5,
-          segment.size = 0.5,
-          direction = "both"
-        )
+
+      # default arguments for geom_label_repel
+      args <- list(
+        data = function(df)
+          dplyr::filter(df, peak_marker) %>%
+          {
+            if(!quo_is_null(peak_label_filter_quo))
+              dplyr::filter(., !!peak_label_filter_quo)
+            else
+              .
+          },
+        mapping = aes_(label = aes_quos$peak_label),
+        force = 1,
+        min.segment.length = 0,
+        size = 2,
+        segment.color = "black",
+        segment.alpha = 0.5,
+        segment.size = 0.5,
+        direction = "both"
+      ) %>%
+        # modify if any passed in by user
+        modifyList(peak_label_options)
+
+      p <- p + do.call(ggrepel::geom_label_repel, args = args)
+
     }
   }
 
@@ -1009,6 +1034,8 @@ iso_plot_data <- function(
   add_geom_quos <- rlang::enquos(...)
   add_geom_quos <- add_geom_quos[!purrr::map_lgl(add_geom_quos, rlang::quo_is_null)]
   add_geoms <- map(add_geom_quos, rlang::eval_tidy)
+  add_geom_quos <- add_geom_quos[!purrr::map_lgl(add_geoms, is.null)]
+  add_geoms <- add_geoms[!purrr::map_lgl(add_geoms, is.null)]
   if (!all(good <- purrr::map_lgl(add_geoms, ~is(.x, "Layer")))) {
     dot_exprs <- purrr::map_chr(add_geom_quos[!good], rlang::quo_text)
     dot_names <- names(add_geoms[!good])
