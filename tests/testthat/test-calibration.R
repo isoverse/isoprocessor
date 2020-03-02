@@ -4,11 +4,13 @@ context("Calibration")
 
 test_that("test that standard addition works properly", {
 
-  expect_error(iso_add_standards(), "no data table")
+  expect_error(iso_add_standards(), "missing parameters")
+  expect_error(iso_add_standards(42), "not defined")
   expect_error(iso_add_standards(tibble()), "no standards table")
   expect_error(iso_add_standards(tibble(), tibble()), "unknown column")
 
   # FIXME: elaborate on test cases
+  # especially for standards added inside iso files
 
 })
 

@@ -1,31 +1,101 @@
-# PREPARING -----
+# STANDARDS ----
 
 #' Add calibration standards
 #'
-#' @param dt data table
+#' Convenience function to add calibration standards to a continuous flow peak table (standalone or inside an isofiles object).
+#'
+#' @param ... S3 method placeholder parameters, see class specific functions for details on parameters
+#' @export
+iso_add_standards <- function(...) {
+  UseMethod("iso_add_standards")
+}
+
+#' @export
+iso_add_standards.default <- function(...) {
+  if(length(list(...)) == 0) stop("missing parameters", call. = FALSE)
+  stop("this function is not defined for objects of type '",
+       class(..1)[1], "'", call. = FALSE)
+}
+
+#' @export
+iso_add_standards.iso_file <- function(iso_files, ...) {
+  iso_add_standards(iso_as_file_list(iso_files), ...)[[1]]
+}
+
+#' @rdname iso_add_standards
+#' @inheritParams iso_show_default_processor_parameters
+#' @param iso_files collection of continuous flow iso_file objects
 #' @param stds standards data frame
 #' @param match_by what column(s) to match the standards by
 #' @param is_std_peak new column that holds information about which ones are standard peaks (i.e. have known isotopic values)
-#' @param is_standard renamed to \code{is_std_peak} because the naming caused too much confusion, will be removed in future versions, please use \code{is_std_peak} instead
-#' @inheritParams iso_show_default_processor_parameters
-#' @return data frame with standards data frame merged in and the following information column added:
+#' @return iso files with standards data frame merged into the peak table and the following information column added:
 #' \itemize{
-#' \item{\code{is standard}: }{a logical TRUE/FALSE indicating which data table entry is a standard}
+#' \item{\code{is_std_peak}: }{a logical TRUE/FALSE indicating which data table entry is a standard}
 #' }
+#' @inheritParams iso_show_default_processor_parameters
+#' @export
+iso_add_standards.iso_file_list <- function(
+  iso_files, stds, match_by = default(std_match_by), is_std_peak = default(is_std_peak), quiet = default(quiet)) {
+
+  # continuous flow file check
+  if (!isoreader::iso_is_continuous_flow(iso_files))
+    stop("peak tables can only exist in continuous flow files", call. = FALSE)
+
+  # get peak table
+  peak_table <- iso_get_peak_table(iso_files, quiet = TRUE)
+  if (nrow(peak_table) == 0) return(iso_files)
+
+  # see if match_by column comes from file info
+  match_by_quo <- resolve_defaults(enquo(match_by))
+  file_info <- iso_get_file_info(iso_files, quiet = TRUE)
+  match_by_cols <- get_column_names(file_info, match_by = match_by_quo, n_reqs = list(match_by = "*"), cols_must_exist = FALSE, warn = FALSE)$match_by
+  if (length(match_by_cols) > 0) {
+    match_by_cols <- stringr::str_subset(match_by_cols, fixed("file_id"), negate = TRUE)
+    peak_table <- dplyr::left_join(dplyr::select(file_info, file_id, !!!match_by_cols), peak_table, by = "file_id")
+  }
+
+  # add standards
+  peak_table_with_standards <-
+    peak_table %>%
+    iso_add_standards(
+      stds = stds,
+      match_by = !!match_by_quo,
+      is_std_peak = !!enquo(is_std_peak),
+      quiet = quiet
+    )
+
+  # remove extra file info columns again
+  if (length(match_by_cols) > 0) {
+    peak_table_with_standards <- dplyr::select(peak_table_with_standards, !!!map(match_by_cols, ~quo(-!!sym(.x))))
+  }
+
+  # assign peak table (note: go for direct assigment even if it generates some
+  # NAs in columns that differ between iso_files, at this point if files are
+  # processed together they should have similar enough peak tables and it's too
+  # risky potentially missing an updated column)
+  return(iso_set_peak_table(iso_files, peak_table_with_standards, quiet = TRUE))
+
+}
+
+#' @rdname iso_add_standards
+#' @param dt data frame with the peak table
+#' @param is_standard renamed to \code{is_std_peak} because the naming caused too much confusion, will be removed in future versions, please use \code{is_std_peak} instead
 #' @family calibration functions
 #' @export
-iso_add_standards <- function(dt, stds, match_by = default(std_match_by), is_std_peak = default(is_std_peak), quiet = default(quiet), is_standard = NULL) {
+iso_add_standards.data.frame <- function(dt, stds, match_by = default(std_match_by), is_std_peak = default(is_std_peak), quiet = default(quiet), is_standard = NULL) {
 
   # make sure params supplied
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   if (missing(stds)) stop("no standards table supplied", call. = FALSE)
+  if (missing(match_by)) stop("match_by parameter must be supplied", call. = FALSE)
   if (!missing(is_standard)) {
     stop("the parameter is_standard was renamed to is_std_peak to avoid confusion, please use is_std_peak instead", call. = FALSE)
   }
 
   # column names allowing standard and NSE
-  dt_cols <- get_column_names(dt, match_by = enquo(match_by), n_reqs = list(match_by = "+"))
-  stds_cols <- get_column_names(stds, match_by = enquo(match_by), n_reqs = list(match_by = "+"))
+  match_by_quo <- enquo(match_by)
+  dt_cols <- get_column_names(dt, match_by = match_by_quo, n_reqs = list(match_by = "+"))
+  stds_cols <- get_column_names(stds, match_by = match_by_quo, n_reqs = list(match_by = "+"))
   new_cols <- get_new_column_names(is_std_peak = enquo(is_std_peak))
 
   # select standards
@@ -47,6 +117,8 @@ iso_add_standards <- function(dt, stds, match_by = default(std_match_by), is_std
   }
   return(dt_w_stds)
 }
+
+# PREPARING -----
 
 #' Prepare data set for calibration
 #'
