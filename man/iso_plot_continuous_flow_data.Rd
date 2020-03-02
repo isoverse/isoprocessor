@@ -99,7 +99,7 @@ iso_plot_continuous_flow_data(...)
 
 \item{peak_label_filter}{a filter for the peak labels (if supplied). Can be useful for highlighting only a subset of peaks with peak labels (e.g. only one data trace, or only those in a certain portion of the chromatogram). Only interpreted if \code{peak_table} is set.}
 
-\item{peak_label_options}{styling options to be used for the \link[ggrepel]{geom_text_repel} peak labels. All parameters suppored by \link[ggrepel]{geom_text_repel} are allowed. Particularly useful ones are \code{size}, \code{force}, \code{nudge_x}, \code{nudge_y}, \code{segment.color} ("black" is set by default, switch to \code{NULL} to get the same as the color aesthetic), \code{segment.size} and \code{segment.alpha}.}
+\item{peak_label_options}{styling options to be used for the \link[ggrepel]{geom_label_repel} peak labels. All parameters suppored by \link[ggrepel]{geom_label_repel} are allowed. Particularly useful ones are \code{size}, \code{force}, \code{nudge_x}, \code{nudge_y}, \code{segment.color} ("black" is set by default, switch to \code{NULL} to get the same as the color aesthetic), \code{segment.size} and \code{segment.alpha}.}
 
 \item{peak_label_size}{deprecated - please use \code{peak_label_options(size = 5)} instead.}
 

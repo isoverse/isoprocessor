@@ -150,7 +150,7 @@ iso_plot_continuous_flow_data.iso_file_list <- function(
 #' @param peak_bgrd NOT YET IMPLEMENTED whether to show the background of identified peaks from start to end retention times. Only works if a \code{peak_table} was provided that has \code{bgrdX_start} and \code{bgrdX_end} columns in the same units as the raw data.
 #' @param peak_label whether to label identified peaks. Any valid column or complex expression is supported and ALL columns in the provided \code{peak_table} can be used in this expression. The easiest way to generate well constructed peak labels is via the \code{\link{iso_format}} function. To provide more space for peak labels, it is sometimes useful to use a \code{zoom} value smaller than 1 to zoom out a bit, e.g. \code{zoom = 0.9}. If peak labels overlap, consider changing \code{peak_label_size} and/or \code{peak_label_repel}. Note that this only works if a \code{peak_table} was provided to identify the peaks and will issue a warning if \code{peak_label} is set but no peaks were identified. Also note that peaks whose value at the peak retention time is not visible on the panel due to e.g. a high \code{zoom} value will not have a visible label either.
 #' @param peak_label_filter a filter for the peak labels (if supplied). Can be useful for highlighting only a subset of peaks with peak labels (e.g. only one data trace, or only those in a certain portion of the chromatogram). Only interpreted if \code{peak_table} is set.
-#' @param peak_label_options styling options to be used for the \link[ggrepel]{geom_text_repel} peak labels. All parameters suppored by \link[ggrepel]{geom_text_repel} are allowed. Particularly useful ones are \code{size}, \code{force}, \code{nudge_x}, \code{nudge_y}, \code{segment.color} ("black" is set by default, switch to \code{NULL} to get the same as the color aesthetic), \code{segment.size} and \code{segment.alpha}.
+#' @param peak_label_options styling options to be used for the \link[ggrepel]{geom_label_repel} peak labels. All parameters suppored by \link[ggrepel]{geom_label_repel} are allowed. Particularly useful ones are \code{size}, \code{force}, \code{nudge_x}, \code{nudge_y}, \code{segment.color} ("black" is set by default, switch to \code{NULL} to get the same as the color aesthetic), \code{segment.size} and \code{segment.alpha}.
 #' @param peak_label_size deprecated - please use \code{peak_label_options(size = 5)} instead.
 #' @param peak_label_repel deprecated - please use \code{peak_label_options(force = 2)} instead.
 #' @export
@@ -292,7 +292,8 @@ iso_plot_continuous_flow_data.data.frame <- function(
         segment.color = "black",
         segment.alpha = 0.5,
         segment.size = 0.5,
-        direction = "both"
+        direction = "both",
+        show.legend = FALSE
       ) %>%
         # modify if any passed in by user
         modifyList(peak_label_options)
@@ -1741,7 +1742,7 @@ iso_mark_outliers <- function(p, condition = NULL, plus_minus_value = NULL, plus
       ggrepel::geom_text_repel(
         data = find_outliers,
         mapping = aes_q(label = label_quo), hjust = -0.3, vjust = 0.5,
-        min.segment.length = 0, color = color
+        min.segment.length = 0, color = color, show.legend = FALSE
       )
   }
 
