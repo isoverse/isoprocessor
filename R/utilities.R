@@ -959,7 +959,7 @@ evaluate_range <- function(
   # terms tibble
   terms <-
     tibble(
-      term = map_chr(terms_quos, rlang::as_label),
+      term = map_chr(terms_quos, rlang::as_label) %>% unname(),
       q = terms_quos
     )
 
@@ -1027,17 +1027,17 @@ evaluate_range <- function(
           # evaluate ranges
           terms_evals <- terms %>%
             # find data values for each term
-            mutate(..values.. = map(q, ~
+            mutate(..values.. = map(q, ~{
               mutate(
                 model_data,
-                value = rlang::eval_tidy(.x, data = model_data) %>% as.numeric()) %>%
-                select(..data_id.., value)
-              )
+                value = rlang::eval_tidy(.x, data = model_data) %>% as.numeric()
+              ) %>% select(..data_id.., value)
+            }) %>% unname()
             ) %>%
             # remove quos
             select(-q) %>%
             # figure out if it's within our outside range
-            unnest(..values..) %>%
+            tidyr::unnest(cols = ..values..) %>%
             left_join(.y, by = "term") %>%
             mutate(
               in_range = case_when(

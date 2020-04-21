@@ -89,7 +89,7 @@ test_that("test that plot dual inlet works properly", {
   expect_error(iso_plot_raw_data(di), "no raw data in supplied iso_files")
 
   # make test raw data
-  di$raw_data <- data_frame(type = rep(c("standard", "sample"), each = 5), cycle = rep(1:5, times = 2), v44.mV = runif(10), v46.mV = runif(10))
+  di$raw_data <- tibble(type = rep(c("standard", "sample"), each = 5), cycle = rep(1:5, times = 2), v44.mV = runif(10), v46.mV = runif(10))
 
   # test for errors
   expect_error(iso_plot_dual_inlet_data(di, data = 45), "data not available")

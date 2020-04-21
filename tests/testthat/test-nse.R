@@ -2,7 +2,7 @@ context("Standard and non-standard evaluation")
 
 test_that("Testing expression checks", {
 
-  df <- as_data_frame(mtcars) %>% tibble::rownames_to_column()
+  df <- as_tibble(mtcars) %>% tibble::rownames_to_column()
 
   # basic errors
   expect_error(check_expressions(), "no data frame supplied")

@@ -194,8 +194,6 @@ iso_set_peak_table_automatically_from_vendor_data_table <- function(iso_files, q
     software = c("Isodat"),
     func = c("iso_set_peak_table_from_isodat_vendor_data_table")
   )
-
-  # safety check
   stopifnot(purrr::map_lgl(funcs$func, exists, where = "package:isoprocessor", mode = "function"))
 
   # single file
@@ -213,7 +211,7 @@ iso_set_peak_table_automatically_from_vendor_data_table <- function(iso_files, q
     dplyr::left_join(funcs, by = "software")
 
   # safety checks
-  if (nrow(miss <- filter(software_file_ids, purrr::map_lgl(func, is.null))) > 0) {
+  if (nrow(miss <- filter(software_file_ids, purrr::map_lgl(func, is.null) | is.na(func))) > 0) {
     glue::glue(
       "no specialized function available (yet) for using vendor data tables ",
       "from the following software: ", paste(miss$software, collapse = ", ")) %>%
@@ -221,7 +219,7 @@ iso_set_peak_table_automatically_from_vendor_data_table <- function(iso_files, q
   }
 
   # apply functions
-  apply_software_files_ids <- filter(software_file_ids, !purrr::map_lgl(func, is.null))
+  apply_software_files_ids <- filter(software_file_ids, !purrr::map_lgl(func, is.null), !is.na(func))
   if (nrow(apply_software_files_ids) > 0) {
     for (i in 1:nrow(apply_software_files_ids)) {
       iso_files[apply_software_files_ids$file_ids[[i]]] <-
