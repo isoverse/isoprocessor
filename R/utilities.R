@@ -791,8 +791,8 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
               d_prediction <-
                 tibble(
                   ..rn.. = d$..rn..,
-                  ..estimate.. = if (calculate_error) pred$fit else pred,
-                  ..se.. = if (calculate_error) pred$se.fit else NA_real_,
+                  ..estimate.. = if (calculate_error) unname(pred$fit) else unname(pred),
+                  ..se.. = if (calculate_error) unname(pred$se.fit) else NA_real_,
                   ..problem.. = NA_character_
                 )
             } else {
