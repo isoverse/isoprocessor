@@ -81,7 +81,7 @@ iso_get_default_processor_parameters <- function() {
   if (length(func_params) > 0) {
     bind_rows(
       regular_params,
-      tibble(parameter = names(func_params), value = map_chr(func_params, as_label))
+      tibble(parameter = names(func_params), value = map_chr(func_params, as_label) %>% unname())
     ) %>% return()
   } else
     return(regular_params)

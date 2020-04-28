@@ -107,8 +107,8 @@ test_that("regression functions work properly", {
     c(name = NA, x = NA, y = NA, z = "z", in_reg = NA, residual = "z")
   )
   expect_equal( # data
-    df_w_models %>% select(name, model_data) %>% unnest(model_data) %>% select(-in_reg, -residual),
-    test_df
+    df_w_models %>% select(name, model_data) %>% unnest(model_data) %>% select(-in_reg, -residual) %>% arrange(name, x),
+    test_df %>% arrange(name, x)
   )
 
   # single model nested outcome
@@ -368,7 +368,7 @@ test_that("test that range evaluation works", {
     bind_rows(
       test_df %>% group_by(name) %>% summarize(term = "x", units = NA, min = min(x, na.rm = TRUE), max = max(x, na.rm = TRUE)),
       test_df %>% group_by(name) %>% summarize(term = "y", units = "y", min = min(as.numeric(y), na.rm = TRUE), max = max(as.numeric(y), na.rm = TRUE))
-    )
+    ) %>% arrange(name, term)
   )
 
   # different range scenario
@@ -402,7 +402,7 @@ test_that("test that range evaluation works", {
         } %>%
         mutate(name = "a"),
       tibble(name = "b", term = c("x", "y", "x * y"))
-    )
+    ) %>% select(name, everything()) %>% arrange(name, term)
   )
 
 })

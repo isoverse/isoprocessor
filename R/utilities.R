@@ -544,7 +544,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
         data <- .x
         check_expressions(data, filter_quo)
         nrow(filter(data, !!filter_quo))
-      }),
+      }) %>% unname(),
       !!dt_new_cols$model_enough_data := ..n_data_points.. >= min_n_datapoints,
       !!dt_new_cols$model_data_points := ..n_data_points..,
       # fit the model if there is any data
@@ -557,7 +557,8 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
         map2_lgl(!!sym(dt_new_cols$model_fit), !!sym(dt_new_cols$model_enough_data),
                  ~if (.y) {
                    !any(coef(.x) %>% as.list() %>% map_lgl(is.na))
-                  } else FALSE),
+                  } else FALSE
+        ) %>% unname(),
       # get the coefficients
       !!dt_new_cols$model_coefs := map2(
         !!sym(dt_new_cols$model_fit), !!sym(dt_new_cols$model_enough_data),
@@ -995,11 +996,15 @@ evaluate_range <- function(
                 terms %>%
                 mutate(
                   values = map(q, ~rlang::eval_tidy(.x, data = d_in_calib)),
-                  units = map_chr(values, iso_get_units),
-                  min = map_dbl(values, ~.x %>%
-                                  { if(is.numeric(.)) { as.numeric(min(., na.rm = TRUE)) } else { NA_real_} }),
-                  max = map_dbl(values, ~.x %>%
-                                  { if(is.numeric(.)) { as.numeric(max(., na.rm = TRUE)) } else { NA_real_} })
+                  units = map_chr(values, iso_get_units) %>% unname(),
+                  min = map_dbl(
+                    values, ~.x %>%
+                      { if(is.numeric(.)) { as.numeric(min(., na.rm = TRUE)) } else { NA_real_} }) %>%
+                    unname(),
+                  max = map_dbl(
+                    values, ~.x %>%
+                      { if(is.numeric(.)) { as.numeric(max(., na.rm = TRUE)) } else { NA_real_} }) %>%
+                    unname()
                 ) %>%
                 select(-q, -values),
               error = function(e) {
