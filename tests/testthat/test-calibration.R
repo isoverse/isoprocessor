@@ -24,18 +24,21 @@ test_that("test that calibration prep works properly", {
   expect_error(iso_prepare_for_calibration(tibble(), group_by = bla), "unknown column")
 
   # simple nesting
-  expect_message(out <- iso_prepare_for_calibration(ggplot2::mpg), "nesting the entire dataset")
+  dset <- ggplot2::mpg %>% mutate(rowid = row_number())
+  expect_message(out <- iso_prepare_for_calibration(dset), "nesting the entire dataset")
   expect_equal(names(out), "all_data")
-  expect_equal(out %>% unnest(all_data), ggplot2::mpg)
+  expect_equal(out %>% unnest(all_data) %>% arrange(rowid), dset %>% arrange(rowid))
 
   # grouped nesting
-  expect_message(out <- iso_prepare_for_calibration(ggplot2::mpg, group_by = cyl), "grouping.*cyl")
+  expect_message(out <- iso_prepare_for_calibration(dset, group_by = cyl), "grouping.*cyl")
   expect_equal(names(out), c("cyl", "all_data"))
-  expect_equal(out %>% unnest(all_data), ggplot2::mpg)
+  expect_equal(out %>% unnest(all_data) %>% arrange(rowid),
+               dset %>% select(cyl, everything())  %>% arrange(rowid))
 
-  expect_message(out <- iso_prepare_for_calibration(ggplot2::mpg, group_by = c(cyl, drv)), "grouping.*cyl.*drv")
+  expect_message(out <- iso_prepare_for_calibration(dset, group_by = c(cyl, drv)), "grouping.*cyl.*drv")
   expect_equal(names(out), c("cyl", "drv", "all_data"))
-  expect_equal(out %>% unnest(all_data), ggplot2::mpg)
+  expect_equal(out %>% unnest(all_data) %>% arrange(rowid),
+               dset %>% select(cyl, drv, everything()) %>% arrange(rowid))
 
 })
 

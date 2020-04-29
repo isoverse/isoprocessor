@@ -305,8 +305,10 @@ iso_map_peaks.data.frame <- function(
   # clean up map id
   if (multiple_maps) {
     all_data <- dplyr::rename(all_data, !!peak_table_cols$map_id := ..map_id..)
+    front_cols <- c(peak_table_cols$file_id, peak_table_cols$map_id, pm_cols$compound, new_cols$peak_info)
   } else {
     all_data <- dplyr::select(all_data, -..map_id..)
+    front_cols <- c(peak_table_cols$file_id, pm_cols$compound, new_cols$peak_info)
   }
 
   # return
@@ -318,7 +320,7 @@ iso_map_peaks.data.frame <- function(
       !!new_cols$n_matches := ..n_matches..,
       !!new_cols$n_overlapping := ..n_overlapping..) %>%
     # put the file id, map id and compound information at the front
-    select(peak_table_cols$file_id, pm_cols$compound, new_cols$peak_info, everything()) %>%
+    select(front_cols, everything()) %>%
     # re-arrange by retention time
     arrange(!!!map(peak_table_cols$file_id, sym), !!sym(peak_table_cols$rt))
 }

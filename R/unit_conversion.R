@@ -486,7 +486,7 @@ scale_signals <- function(data, signal_cols, to, R = c(), R_units = "GOhm", quie
 
   # data scaling
   signal_scaling <-
-    data_frame(
+    tibble(
       col_name = signal_cols,
       col_scale = sapply(cols_units, `[[`, "si_scaling"),
       col_idx = cols_idx,

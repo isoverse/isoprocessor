@@ -258,7 +258,7 @@ calculate_backgrounds <- function(data, method, signal_pattern = "^[vi]\\d+", bg
         # calculate linear regressions for the signal through time and predict backgrounds based on it
         m <- lm(y ~ time,
                 data = bgrds %>% rename_(.dots = c(time, sig_cols[i]) %>% setNames(c("time", "y"))))
-        sdf[[bg_cols[i]]] <- predict(m, data_frame(time = sdf[[time]]))
+        sdf[[bg_cols[i]]] <- predict(m, tibble(time = sdf[[time]]))
       }
       return(sdf)
     }

@@ -1,24 +1,26 @@
 Package: isoprocessor
 Title: IRMS data processor
 Description: Data processing and reduction pipelines for isotope ratio mass spectrometry (IRMS) data
-Version: 0.6.5
+Version: 0.6.6
 Authors@R: person("Sebastian", "Kopf", email = "sebastian.kopf@colorado.edu",
     role = c("aut", "cre"))
 URL: https://github.com/isoverse/isoprocessor
 BugReports: https://github.com/isoverse/isoprocessor/issues
 Depends: 
     R (>= 3.5.0),
-    isoreader (>= 1.1.4)
+    isoreader (>= 1.2.0)
 Imports:
     methods,
     stats,
     utils,
-    rlang,
-    glue,
-    tidyselect,
-    tibble,
-    dplyr (>= 0.7.4),
+    magrittr,
+    rlang (>= 0.4.5),
+    tidyselect (>= 1.0.0),
+    vctrs (>= 0.2.4),
+    tibble (>= 3.0.0),
+    dplyr (>= 0.8.5),
     tidyr (>= 1.0.0),
+    glue,
     stringr,
     purrr,
     forcats,

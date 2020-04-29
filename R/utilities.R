@@ -544,7 +544,7 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
         data <- .x
         check_expressions(data, filter_quo)
         nrow(filter(data, !!filter_quo))
-      }),
+      }) %>% unname(),
       !!dt_new_cols$model_enough_data := ..n_data_points.. >= min_n_datapoints,
       !!dt_new_cols$model_data_points := ..n_data_points..,
       # fit the model if there is any data
@@ -557,7 +557,8 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
         map2_lgl(!!sym(dt_new_cols$model_fit), !!sym(dt_new_cols$model_enough_data),
                  ~if (.y) {
                    !any(coef(.x) %>% as.list() %>% map_lgl(is.na))
-                  } else FALSE),
+                  } else FALSE
+        ) %>% unname(),
       # get the coefficients
       !!dt_new_cols$model_coefs := map2(
         !!sym(dt_new_cols$model_fit), !!sym(dt_new_cols$model_enough_data),
@@ -791,8 +792,8 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
               d_prediction <-
                 tibble(
                   ..rn.. = d$..rn..,
-                  ..estimate.. = if (calculate_error) pred$fit else pred,
-                  ..se.. = if (calculate_error) pred$se.fit else NA_real_,
+                  ..estimate.. = if (calculate_error) unname(pred$fit) else unname(pred),
+                  ..se.. = if (calculate_error) unname(pred$se.fit) else NA_real_,
                   ..problem.. = NA_character_
                 )
             } else {
@@ -959,7 +960,7 @@ evaluate_range <- function(
   # terms tibble
   terms <-
     tibble(
-      term = map_chr(terms_quos, rlang::as_label),
+      term = map_chr(terms_quos, rlang::as_label) %>% unname(),
       q = terms_quos
     )
 
@@ -995,11 +996,15 @@ evaluate_range <- function(
                 terms %>%
                 mutate(
                   values = map(q, ~rlang::eval_tidy(.x, data = d_in_calib)),
-                  units = map_chr(values, iso_get_units),
-                  min = map_dbl(values, ~.x %>%
-                                  { if(is.numeric(.)) { as.numeric(min(., na.rm = TRUE)) } else { NA_real_} }),
-                  max = map_dbl(values, ~.x %>%
-                                  { if(is.numeric(.)) { as.numeric(max(., na.rm = TRUE)) } else { NA_real_} })
+                  units = map_chr(values, iso_get_units) %>% unname(),
+                  min = map_dbl(
+                    values, ~.x %>%
+                      { if(is.numeric(.)) { as.numeric(min(., na.rm = TRUE)) } else { NA_real_} }) %>%
+                    unname(),
+                  max = map_dbl(
+                    values, ~.x %>%
+                      { if(is.numeric(.)) { as.numeric(max(., na.rm = TRUE)) } else { NA_real_} }) %>%
+                    unname()
                 ) %>%
                 select(-q, -values),
               error = function(e) {
@@ -1027,17 +1032,17 @@ evaluate_range <- function(
           # evaluate ranges
           terms_evals <- terms %>%
             # find data values for each term
-            mutate(..values.. = map(q, ~
+            mutate(..values.. = map(q, ~{
               mutate(
                 model_data,
-                value = rlang::eval_tidy(.x, data = model_data) %>% as.numeric()) %>%
-                select(..data_id.., value)
-              )
+                value = rlang::eval_tidy(.x, data = model_data) %>% as.numeric()
+              ) %>% select(..data_id.., value)
+            }) %>% unname()
             ) %>%
             # remove quos
             select(-q) %>%
             # figure out if it's within our outside range
-            unnest(..values..) %>%
+            tidyr::unnest(cols = ..values..) %>%
             left_join(.y, by = "term") %>%
             mutate(
               in_range = case_when(

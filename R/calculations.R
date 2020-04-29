@@ -78,7 +78,8 @@ iso_calculate_ratios.data.frame <- function(df, ratios, quiet = default(quiet)) 
   mass_lookup_df <- names(df) %>%
     stringr::str_subset(mass_column_pattern) %>%
     stringr::str_match(mass_column_pattern) %>%
-    as_tibble(.name_repair = ~c("col", "type", "mass", "units"))
+    {colnames(.) <- c("col", "type", "mass", "units"); .} %>%
+    as_tibble()
 
   # calculation columns
   calc_columns <-
@@ -145,7 +146,7 @@ generate_ratio_column_names <- function(ratios) {
   ratio_pattern <- "^(\\d+)/(\\d+)$"
   ratios %>%
     stringr::str_match(ratio_pattern) %>%
-    { data_frame(column = str_c("r",.[,1]), ratio = .[,1], top = .[,2], bot = .[,3]) }
+    { tibble(column = str_c("r",.[,1]), ratio = .[,1], top = .[,2], bot = .[,3]) }
 }
 
 # iso_calculate_ratios <- function(iso_files, ratios, quiet = default(quiet)) {
@@ -164,7 +165,7 @@ generate_ratio_column_names <- function(ratios) {
 #   }
 #   ratio_columns <- ratios %>%
 #     stringr::str_match(ratio_pattern) %>%
-#     { data_frame(column = str_c("r",.[,1]), ratio = .[,1], top = .[,2], bot = .[,3]) }
+#     { tibble(column = str_c("r",.[,1]), ratio = .[,1], top = .[,2], bot = .[,3]) }
 #
 #   # information
 #   if (!quiet) {

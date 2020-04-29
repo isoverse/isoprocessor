@@ -94,7 +94,7 @@ test_that("test that time conversion works for iso_files", {
 
   # test data
   cf$read_options$raw_data <- TRUE
-  cf$raw_data <- data_frame(tp = 1:10, time.s = tp*0.2)
+  cf$raw_data <- tibble(tp = 1:10, time.s = tp*0.2)
   expect_message(result <- iso_convert_time(cf, to = "min", quiet = FALSE), "converting time")
   expect_true(iso_is_file(result))
   expect_silent(iso_convert_time(cf, to = "min", quiet = TRUE))
@@ -122,16 +122,16 @@ test_that("test that singal scaling works", {
   expect_error(scale_signals(5), "data has to be supplied as a data frame")
 
   # other parameters  supplied
-  expect_error(scale_signals(data_frame()), ".* parameters required")
-  expect_error(scale_signals(data_frame(), c()), ".* required")
-  expect_error(scale_signals(data_frame(), "v44.mV"), ".* required")
-  expect_error(scale_signals(data_frame(), "v44.mV", "nA", c()), "resistance values have to be a named numeric vector")
-  expect_error(scale_signals(data_frame(), "v44.mV", "nA", c(1)), "resistance values have to be a named numeric vector")
-  expect_error(scale_signals(data_frame(), "v44.mV", "nA", c(R2 = "text")), "resistance values have to be a named numeric vector")
+  expect_error(scale_signals(tibble()), ".* parameters required")
+  expect_error(scale_signals(tibble(), c()), ".* required")
+  expect_error(scale_signals(tibble(), "v44.mV"), ".* required")
+  expect_error(scale_signals(tibble(), "v44.mV", "nA", c()), "resistance values have to be a named numeric vector")
+  expect_error(scale_signals(tibble(), "v44.mV", "nA", c(1)), "resistance values have to be a named numeric vector")
+  expect_error(scale_signals(tibble(), "v44.mV", "nA", c(R2 = "text")), "resistance values have to be a named numeric vector")
 
   # signal columns
   test_data <-
-    data_frame(
+    tibble(
       v44.mV = c(1:10)*1000,
       v45.mV = c(1:10)*5000,
       v46.V = c(1:10),

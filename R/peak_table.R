@@ -192,8 +192,9 @@ iso_set_peak_table_automatically_from_vendor_data_table <- function(iso_files, q
   # available functions
   funcs <- tibble(
     software = c("Isodat"),
-    func = c(iso_set_peak_table_from_isodat_vendor_data_table)
+    func = c("iso_set_peak_table_from_isodat_vendor_data_table")
   )
+  stopifnot(purrr::map_lgl(funcs$func, exists, where = "package:isoprocessor", mode = "function"))
 
   # single file
   is_single <- iso_is_file(iso_files)
@@ -210,7 +211,7 @@ iso_set_peak_table_automatically_from_vendor_data_table <- function(iso_files, q
     dplyr::left_join(funcs, by = "software")
 
   # safety checks
-  if (nrow(miss <- filter(software_file_ids, purrr::map_lgl(func, is.null))) > 0) {
+  if (nrow(miss <- filter(software_file_ids, purrr::map_lgl(func, is.null) | is.na(func))) > 0) {
     glue::glue(
       "no specialized function available (yet) for using vendor data tables ",
       "from the following software: ", paste(miss$software, collapse = ", ")) %>%
@@ -218,11 +219,14 @@ iso_set_peak_table_automatically_from_vendor_data_table <- function(iso_files, q
   }
 
   # apply functions
-  apply_software_files_ids <- filter(software_file_ids, !purrr::map_lgl(func, is.null))
+  apply_software_files_ids <- filter(software_file_ids, !purrr::map_lgl(func, is.null), !is.na(func))
   if (nrow(apply_software_files_ids) > 0) {
     for (i in 1:nrow(apply_software_files_ids)) {
-      iso_files[apply_software_files_ids[[i, "file_ids"]]] <-
-        apply_software_files_ids[[i, "func"]](iso_files[apply_software_files_ids[[i, "file_ids"]]], quiet = quiet)
+      iso_files[apply_software_files_ids$file_ids[[i]]] <-
+        do.call(
+          apply_software_files_ids$func[[i]],
+          args = list(iso_files[apply_software_files_ids$file_ids[[i]]], quiet = quiet)
+        )
     }
   }
 
@@ -264,7 +268,7 @@ iso_set_peak_table_from_isodat_vendor_data_table <- function(iso_files, quiet = 
                   "d\\1" = "^d (\\d+[^/])\\/(\\d+).*$",
                   "at\\1" = "^AT\\% (\\d+[^/]*)\\/(\\d+).*$")
 
-  iso_set_peak_table_from_vendor_data_table(
+    iso_set_peak_table_from_vendor_data_table(
     iso_files,
     direct_rename = direct_rename,
     regex_rename = regex_rename,
