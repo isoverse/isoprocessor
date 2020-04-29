@@ -43,7 +43,7 @@
 
 
 <meta property="og:title" content="Add calibration standards — iso_add_standards" />
-<meta property="og:description" content="Add calibration standards" />
+<meta property="og:description" content="Convenience function to add calibration standards to a continuous flow peak table (standalone or inside an isofiles object)." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -86,7 +86,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">isoprocessor</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.4</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="in active development">0.6.6</span>
       </span>
     </div>
 
@@ -146,10 +146,22 @@
     </div>
 
     <div class="ref-description">
-    <p>Add calibration standards</p>
+    <p>Convenience function to add calibration standards to a continuous flow peak table (standalone or inside an isofiles object).</p>
     </div>
 
-    <pre class="usage"><span class='fu'>iso_add_standards</span>(
+    <pre class="usage"><span class='fu'>iso_add_standards</span>(<span class='no'>...</span>)
+
+<span class='co'># S3 method for iso_file_list</span>
+<span class='fu'>iso_add_standards</span>(
+  <span class='no'>iso_files</span>,
+  <span class='no'>stds</span>,
+  <span class='kw'>match_by</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>std_match_by</span>),
+  <span class='kw'>is_std_peak</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>is_std_peak</span>),
+  <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>quiet</span>)
+)
+
+<span class='co'># S3 method for data.frame</span>
+<span class='fu'>iso_add_standards</span>(
   <span class='no'>dt</span>,
   <span class='no'>stds</span>,
   <span class='kw'>match_by</span> <span class='kw'>=</span> <span class='fu'>default</span>(<span class='no'>std_match_by</span>),
@@ -162,8 +174,12 @@
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>dt</th>
-      <td><p>data table</p></td>
+      <th>...</th>
+      <td><p>S3 method placeholder parameters, see class specific functions for details on parameters</p></td>
+    </tr>
+    <tr>
+      <th>iso_files</th>
+      <td><p>collection of continuous flow iso_file objects</p></td>
     </tr>
     <tr>
       <th>stds</th>
@@ -182,6 +198,10 @@
       <td><p>whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.</p></td>
     </tr>
     <tr>
+      <th>dt</th>
+      <td><p>data frame with the peak table</p></td>
+    </tr>
+    <tr>
       <th>is_standard</th>
       <td><p>renamed to <code>is_std_peak</code> because the naming caused too much confusion, will be removed in future versions, please use <code>is_std_peak</code> instead</p></td>
     </tr>
@@ -189,8 +209,8 @@
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>data frame with standards data frame merged in and the following information column added:</p><ul>
-<li><p><code>is standard</code>: a logical TRUE/FALSE indicating which data table entry is a standard</p></li>
+    <p>iso files with standards data frame merged into the peak table and the following information column added:</p><ul>
+<li><p><code>is_std_peak</code>: a logical TRUE/FALSE indicating which data table entry is a standard</p></li>
 </ul>
 
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
