@@ -340,7 +340,7 @@ iso_generate_calibration <- function(dt, model, calibration = "",
       )
     plural <- if (length(models) > 1) "s" else ""
     glue("Info: generating {calib_vars$calib_name}calibration based on {length(models)} model{plural} ({collapse(models, ', ')}) ",
-         "for {nrow(dt)} data group(s) with standards filter '{as_label(filter_quo)}'. ",
+         "for {nrow(dt)} data group(s) with standards filter '{get_quo_text(filter_quo)}'. ",
          "Storing residuals in new column '{calib_vars$residual}'. ",
          "Storing calibration info in new column '{calib_vars$in_reg}'.") %>%
       message()
