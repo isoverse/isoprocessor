@@ -1,5 +1,14 @@
 # utility functions that make it easier to support both standard and non-standard evaluation
 
+# turn quo and expr into text in a controlled way
+# this is because rlang::as_label cuts too short
+get_quo_text <- function(q) {
+  stopifnot(rlang::is_quosure(q) || rlang::is_expression(q))
+  rlang::expr_text(q) %>%
+    stringr::str_replace("\n.*$", "...") %>%
+    stringr::str_remove("^~")
+}
+
 # resolve default cols in a list of quos
 # note: since these functions are within isoreader, they need to receive quos instead of expressions,
 # otherwise they will try to use the local default function leading to the wrong results!
