@@ -4,8 +4,10 @@
 # isoprocessor <a href='http://isoprocessor.isoverse.org'><img src='man/figures/isoprocessor_logo_thumb.png' align="right" height="138.5"/></a>
 
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/isoprocessor)](https://cran.r-project.org/package=isoprocessor)
-[![Git\_Hub\_Version](https://img.shields.io/badge/GitHub-0.6.4-orange.svg?style=flat-square)](https://github.com/isoverse/isoprocessor/commits)
+[![Git\_Hub\_Version](https://img.shields.io/badge/GitHub-0.6.7-orange.svg?style=flat-square)](https://github.com/isoverse/isoprocessor/commits)
 [![Documentation](https://img.shields.io/badge/docs-online-green.svg)](http://isoprocessor.isoverse.org/)
+[![R build
+status](https://github.com/isoverse/isoprocessor/workflows/R-CMD-check/badge.svg)](https://github.com/isoverse/isoprocessor/actions?workflow=R-CMD-check)
 [![Build
 Status](https://travis-ci.org/isoverse/isoprocessor.svg?branch=master)](https://travis-ci.org/isoverse/isoprocessor)
 [![AppVeyor Build
