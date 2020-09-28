@@ -576,7 +576,8 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
       # get the summary
       !!dt_new_cols$model_summary :=
         map2(!!sym(dt_new_cols$model_fit), !!sym(dt_new_cols$model_enough_data),
-             ~if (.y) { as_tibble(glance(.x)) } else { NULL })
+             # NOTE: broom does not make sure all columns are unnamed which can cause downstream problems, hence the manual unname
+             ~if (.y) { as_tibble(glance(.x)) %>% dplyr::mutate_all(unname) } else { NULL })
     )
 
   # warnings
@@ -847,11 +848,11 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
                     # process outcome
                     if (is.null(out$error) && calculate_error) {
                       # with error estimates
-                      estimate <- out$result$estimate
-                      se <- out$result$se
+                      estimate <- unname(out$result$estimate)
+                      se <- unname(out$result$se)
                     } else if (is.null(out$error)) {
                       # no error estimates
-                      estimate <- out$result
+                      estimate <- unname(out$result)
                     } else if (str_detect(out$error$message, "not found in the search interval")) {
                       problem <- glue(
                         "No solution for '{var}' in the interval {range[1] - range_tolerance * diff(range)} ",

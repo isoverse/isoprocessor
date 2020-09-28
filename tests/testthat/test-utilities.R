@@ -120,7 +120,7 @@ test_that("regression functions work properly", {
   expect_equal(df_w_nested_models$model_data_points, c(10, 10))
 
   # single model with filter
-  expect_error(nested_test_df %>% run_regression(model = lm(y ~ x), model_filter_condition = DNE < 0.5), "not a valid expression")
+  expect_error(nested_test_df %>% run_regression(model = lm(y ~ x), model_filter_condition = DNE < 0.5), class = "dplyr:::mutate_error")
   expect_s3_class(df_w_models <- nested_test_df %>% run_regression(model = lm(y ~ x), model_filter_condition = y < 0.5) , "tbl")
   expect_equal(df_w_models$model_enough_data, c(TRUE, TRUE))
   expect_equal(df_w_models$model_data_points, c(6, 2))
@@ -252,7 +252,7 @@ test_that("applying regressions work properly", {
 
   # out of range troubles for the different data sets and models
   expect_warning(
-    out_x2 <- df_w_models %>% filter(name == "a", model_name == "m2") %>% apply_regression(x2, predict_range = c(-10, -9.999)),
+    out_x2 <- df_w_models %>% filter(model_name == "m2") %>% apply_regression(x2, predict_range = c(-10, -9.999)),
     "potential fit is too far outside the calibration range"
   )
 
@@ -344,7 +344,7 @@ test_that("test that range evaluation works", {
   df_w_nested_models <- nested_test_df %>% run_regression(model = lm(y ~ x), nest_model = TRUE)
 
   # term errors
-  expect_error(evaluate_range(df_w_models, DNE), "not all.*terms are valid")
+  expect_error(evaluate_range(df_w_models, DNE), "not all.*terms are valid", class = "dplyr:::mutate_error")
 
   # range evaluation columns
   expect_is(df_w_models_ranges <- df_w_models %>% evaluate_range(x, y), "tbl")
