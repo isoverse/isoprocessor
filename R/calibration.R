@@ -506,9 +506,11 @@ iso_evaluate_calibration_range <- function(dt, ..., calibration = last_calibrati
 
   # information
   if (!quiet) {
+    n_models <- length(unique(dt[[calib_vars$model_name]]))
     glue("Info: evaluating range for terms ",
          "'{glue::glue_collapse(map_chr(terms_quos, rlang::as_label), sep = \"', '\", last = \"' and '\")}' ",
-         "in {calib_vars$calib_name}calibration for {nrow(dt)} data group(s); ",
+         "in {calib_vars$calib_name}calibration ",
+         "for {nrow(dt)/n_models} data group(s) in {n_models} model(s); ",
          "storing resulting summary for each data entry in new column '{calib_vars$in_range}'.") %>%
       message()
   }
@@ -560,9 +562,11 @@ iso_apply_calibration <- function(dt, predict, calibration = last_calibration(dt
 
   # information
   if (!quiet) {
+    n_models <- length(unique(dt[[calib_vars$model_name]]))
     glue::glue(
       "Info: applying {calib_vars$calib_name}calibration ",
-      "to infer '{as_label(pred_quo)}' for {nrow(dt)} data group(s); ",
+      "to infer '{as_label(pred_quo)}' ",
+      "for {nrow(dt)/n_models} data group(s) in {n_models} model(s); ",
       "storing resulting value in new column '{as_label(pred_col_quo)}'",
       if (calculate_error) " and estimated error in new column '{as_label(pred_se_col_quo)}'" else "",
       ". This may take a moment... ") %>%
