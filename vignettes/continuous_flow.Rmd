@@ -33,8 +33,7 @@ cf_files <-
   iso_read_continuous_flow(
     iso_get_reader_example("continuous_flow_example.cf"),
     iso_get_reader_example("continuous_flow_example.iarc"),
-    iso_get_reader_example("continuous_flow_example.dxf"),
-    iso_get_reader_example("linearity_example.dxf")
+    iso_get_reader_example("continuous_flow_example.dxf")
   )
 ```
 

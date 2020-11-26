@@ -1,5 +1,5 @@
 ---
-title: "EA-IRMS data processing example"
+title: "EA-IRMS data processing example: carbon"
 subtitle: "bulk carbon isotopes"
 date: "`r Sys.Date()`"
 output: 

@@ -1,5 +1,5 @@
 ---
-title: "GC-IRMS data processing example"
+title: "GC-IRMS data processing example: carbon"
 subtitle: "carbon isotopes in alkanes"
 date: "`r Sys.Date()`"
 output: 

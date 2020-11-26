@@ -34,7 +34,6 @@ library(isoprocessor)
 di_files <- 
   iso_read_dual_inlet(
     iso_get_reader_example("dual_inlet_example.did"),
-    iso_get_reader_example("dual_inlet_example2.did"),
     iso_get_reader_example("dual_inlet_example.caf")
   )
 ```
@@ -50,10 +49,10 @@ iso_plot_dual_inlet_data(di_files)
 All customization options are described in the function help (`?iso_plot_dual_inlet_data`) and include, for example, plotting only a specific subset of masses:
 
 ```{r "select_masses", fig.width = 10, fig.asp = 0.3}
-# plot just masses 2, 44 and 45
+# plot just masses 44 and 45
 iso_plot_dual_inlet_data(
   di_files,
-  data = c("28", "44", "45")
+  data = c("44", "45")
 )
 ```
 
@@ -64,13 +63,13 @@ For dual inlet applications isotope ratios calculated using the recorded ion int
 ```{r "ratios", fig.width = 8, fig.asp = 1}
 di_files <-
   di_files %>% 
-  # calculate 46/44, 45/44 and 32/28 (O2/N2) ratios
-  iso_calculate_ratios(ratios = c("46/44", "45/44", "32/28"))
+  # calculate 46/44 and 45/44 ratios
+  iso_calculate_ratios(ratios = c("46/44", "45/44"))
 
 iso_plot_dual_inlet_data(
   di_files,
   # visualize ratios
-  data = c("45/44", "46/44", "32/28"),
+  data = c("45/44", "46/44"),
   # panel the ratios vs. type (standard/sample)
   panel = data ~ type,
   # color by the file info stored in Identifier 1
@@ -82,17 +81,17 @@ iso_plot_dual_inlet_data(
 
 In addition, isoprocessor provides a dynamic raw delta calculation function (`iso_calculate_deltas()`) that calculates direct or bracketed sample-standard delta values as described in the function help. See code below for a few examples:
 
-```{r "deltas", fig.width = 8, fig.asp = 1}
+```{r "deltas", fig.width = 8, fig.asp = 0.5}
 di_files <-
   di_files %>% 
-  # calculate 46/44, 45/44 and 32/28 (O2/N2) deltas
-  iso_calculate_deltas(deltas = c("d46/44", "d45/44", "d32/28"), 
+  # calculate 46/44 and 45/44 deltas
+  iso_calculate_deltas(deltas = c("d46/44", "d45/44"), 
                        bracket = TRUE, in_permil = TRUE)
 
 iso_plot_dual_inlet_data(
   di_files,
   # visualize deltas together with one of the ratios
-  data = c("45/44", "d45/44", "d46/44", "d32/28"),
+  data = c("45/44", "d45/44", "d46/44"),
   # color by the file info stored in Identifier 1
   color = `Identifier 1`
 )
