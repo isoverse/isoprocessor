@@ -1695,16 +1695,9 @@ iso_mark_outliers <- function(p, condition = NULL, plus_minus_value = NULL, plus
   # safety checks
   if (use_condition + use_value + use_sd > 1) {
     stop("more than one cutoff defined: please provide only one of 'condition', 'plus_minus_value', or 'plus_minus_sd'", call. = FALSE)
-    # CONTINUE HERE
   } else if (use_condition + use_value + use_sd == 0) {
     stop("no cutoff provided: please provide one of 'condition', 'plus_minus_value', or 'plus_minus_sd'", call. = FALSE)
   }
-
-  # need numeric single cutoffs
-  if (use_value)
-    stopifnot(is.numeric(plus_minus_value) && length(plus_minus_value) == 1L)
-  if (use_sd)
-    stopifnot(is.numeric(plus_minus_sd) && length(plus_minus_sd) == 1L)
 
   # find relevant active aesthetics
   active_aes <- c("colour", "group") %>% intersect(names(p$mapping))
@@ -1726,14 +1719,10 @@ iso_mark_outliers <- function(p, condition = NULL, plus_minus_value = NULL, plus
         dplyr::ungroup(df) %>%
           dplyr::mutate(!!!mutate_quos) %>%
           dplyr::group_by(!!!unname(group_quos)) %>%
-          dplyr::mutate(
-            mean = base::mean(!!p$mapping$y),
-            sd = stats::sd(!!p$mapping$y),
-            is_outlier =
-              if (use_sd)
-                !!quo(abs(!!p$mapping$y - mean) > !!plus_minus_sd * sd)
-              else
-                !!quo(abs(!!p$mapping$y - mean) > !!plus_minus_value)
+          iso_identify_outliers(
+            y = !!p$mapping$y,
+            plus_minus_value = plus_minus_value,
+            plus_minus_sd = plus_minus_sd
           ) %>%
           dplyr::ungroup() %>%
           dplyr::filter(is_outlier)
