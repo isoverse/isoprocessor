@@ -25,12 +25,12 @@ below to see their documentation.
 \describe{
   \item{dplyr}{\code{\link[dplyr]{filter}}}
 
-  \item{isoreader}{\code{\link[isoreader]{extract_substring}}, \code{\link[isoreader]{extract_word}}, \code{\link[isoreader]{iso_format}}, \code{\link[isoreader]{iso_turn_info_messages_off}}, \code{\link[isoreader]{iso_turn_info_messages_on}}}
+  \item{isoreader}{\code{\link[isoreader]{extract_substring}}, \code{\link[isoreader]{extract_word}}, \code{\link[isoreader]{iso_format}}, \code{\link[isoreader:iso_info_messages]{iso_turn_info_messages_off}}, \code{\link[isoreader:iso_info_messages]{iso_turn_info_messages_on}}}
 
-  \item{magrittr}{\code{\link[magrittr]{\%>\%}}}
+  \item{magrittr}{\code{\link[magrittr:pipe]{\%>\%}}}
 
-  \item{readr}{\code{\link[readr]{parse_datetime}}, \code{\link[readr]{parse_double}}, \code{\link[readr]{parse_integer}}, \code{\link[readr]{parse_logical}}, \code{\link[readr]{parse_number}}}
+  \item{readr}{\code{\link[readr]{parse_datetime}}, \code{\link[readr:parse_atomic]{parse_double}}, \code{\link[readr:parse_atomic]{parse_integer}}, \code{\link[readr:parse_atomic]{parse_logical}}, \code{\link[readr]{parse_number}}}
 
-  \item{tidyr}{\code{\link[tidyr]{unnest}}}
+  \item{tidyr}{\code{\link[tidyr:nest]{unnest}}}
 }}
 
