@@ -1,5 +1,5 @@
 ---
-title: "GC-IRMS data processing example"
+title: "GC-IRMS data processing example: carbon"
 subtitle: "carbon isotopes in alkanes"
 date: "`r Sys.Date()`"
 output: 
@@ -548,7 +548,7 @@ stds_w_calibs %>%
     select_from_coefs = 
       c(term, estimate, SE = std.error, signif),
     select_from_summary = 
-      c(fit_R2 = adj.r.squared, fit_RMSD = deviance, residual_df = df.residual)) %>%
+      c(fit_R2 = adj.r.squared, fit_RSD = sigma, residual_df = df.residual)) %>%
   arrange(term) %>% 
   knitr::kable(digits = 4)
 
@@ -630,7 +630,7 @@ global_calibs %>%
     select_from_coefs = 
       c(term, estimate, SE = std.error, signif),
     select_from_summary = 
-      c(fit_R2 = adj.r.squared, fit_RMSD = deviance, residual_df = df.residual)) %>%
+      c(fit_R2 = adj.r.squared, fit_RSD = sigma, residual_df = df.residual)) %>%
   arrange(term) %>% 
   knitr::kable(digits = 4)
 

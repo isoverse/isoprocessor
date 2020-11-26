@@ -95,48 +95,6 @@ iso_generate_summary_table <- function(...) {
   iso_summarize_data_table(...)
 }
 
-# FIXME: write units tests
-#' Summarize a data table
-#'
-#' Convenience function to summarize means and standard deviations for one or multiple data columns. Use \link[dplyr]{group_by} prior to calling this function to generate the data table for individual subsets of the data. The generated data table always includes an \code{n} column with the number of records per group. If no column(s) are specified, will automatically summarize all columns except for the grouping columns.
-#'
-#' @param dt data table, can already have a group_by if so desired
-#' @param ... which data columns to include in data overview. All \link[dplyr]{select} style syntax is supported (including on the fly renaming). If no columns are specified, will summarize all numeric columns (excluding any grouping columns).
-#' @param cutoff the minimum number of records per group in order to include the group
-#' @export
-iso_summarize_data_table <- function(dt, ..., cutoff = 1) {
-
-  # get column selectors
-  dots <- quos(...)
-  if (length(dots) == 0) dots <- quos(everything())
-
-  # find columns
-  grp_vars <- dplyr::group_vars(dt) %>% { setNames(., .) }
-  vars <- tidyselect::vars_select(names(dt), !!!dots) %>%
-    # exclude grouping variables
-    { .[!. %in% grp_vars] } %>%
-    # only numeric
-    { .[purrr::map_lgl(., ~is.numeric(dt[[.x]]))] }
-
-  # safety check
-  if (length(vars) == 0)
-    stop("no data columns provided, please select at least 1", call. = FALSE)
-
-  # generate mutate quos
-  summarize_funcs <-
-    tibble(var = names(vars)) %>% tidyr::crossing(tibble(func = c("mean", "sd"))) %>%
-    dplyr::mutate(name = paste(var, func)) %>%
-    with(purrr::map2(var, func, ~quo((!!.y)(!!sym(.x), na.rm = TRUE))) %>% setNames(name))
-
-  # generate summary
-  dt %>%
-    dplyr::select(!!!c(grp_vars, vars)) %>%
-    dplyr::summarize(n = dplyr::n(), !!!summarize_funcs) %>%
-    dplyr::filter(n >= cutoff) %>%
-    dplyr::ungroup()
-}
-
-
 # nesting ======
 
 # @note: consider deprecating and replacing with direct nest command (nest now supports the dplyr select semantics just as well)
@@ -576,30 +534,41 @@ run_regression <- function(dt, model, nest_model = FALSE, min_n_datapoints = 1,
       # get the summary
       !!dt_new_cols$model_summary :=
         map2(!!sym(dt_new_cols$model_fit), !!sym(dt_new_cols$model_enough_data),
-             ~if (.y) { as_tibble(glance(.x)) } else { NULL })
+             # NOTE: broom does not make sure all columns are unnamed which can cause downstream problems, hence the manual unname
+             ~if (.y) { as_tibble(glance(.x)) %>% dplyr::mutate_all(unname) } else { NULL })
     )
 
   # warnings
   if ((not_enough <- sum(!data_w_models[[dt_new_cols$model_enough_data]])) > 0) {
 
+    data_not_enough <- data_w_models %>%
+      dplyr::mutate(..row_nr.. = dplyr::row_number()) %>%
+      dplyr::filter(!(!!rlang::sym(dt_new_cols$model_enough_data)))
+
+    # get grouping information by using the columns before the nested data
+    group_cols <- head(names(dplyr::select(data_not_enough, 1:dt_cols$model_data)), -1)
+    grp_labels <- do.call(
+      paste,
+      args = c(list(sep = ", "), purrr::map(group_cols, ~paste0(.x, "='", data_not_enough[[.x]], "'")))
+    )
+
     glue("{not_enough} of {nrow(data_w_models)} regressions have insufficient ",
          "degrees of freedom (not enough data given the regression models and/or ",
-         "requested minimum number of data points):\n - ",
-         # note: difficult to account for groupings here but it's important to provide some information
-         paste(
-           sprintf("model %d ('%s'): %s", 1:nrow(data_w_models),
-                   data_w_models[[dt_new_cols$model_name]],
-                   ifelse(
-                     data_w_models[[dt_new_cols$model_enough_data]],
-                     sprintf("%d data points (enough)", data_w_models$..n_data_points..),
-                     sprintf("%d data points (NOT enough)", data_w_models$..n_data_points..)
-                   )),
-           collapse = "\n - "
-         ),
-         "\nPlease double check that all peaks are mapped correctly ",
+         "requested minimum number of data points). ",
+         "Please double check that all peaks are mapped correctly ",
          "(see ?iso_get_problematic_peak_mappings and ",
          "?iso_summarize_peak_mappings) and that the filter condition ",
-         "('{as_label(filter_quo)}') is correct. ") %>%
+         "('{as_label(filter_quo)}') is correct.",
+         "\n - ",
+         # note: difficult to account for groupings here but it's important to provide some information
+         paste(
+           sprintf("data set %d (%s), model '%s' has only %d calibration data points which is not enough",
+                   data_not_enough$..row_nr.., grp_labels,
+                   data_not_enough[[dt_new_cols$model_name]],
+                   data_not_enough$..n_data_points..
+           ),
+           collapse = "\n - "
+         )) %>%
     warning(immediate. = TRUE, call. = FALSE)
   }
 
@@ -847,11 +816,11 @@ apply_regression <- function(dt, predict, nested_model = FALSE, calculate_error 
                     # process outcome
                     if (is.null(out$error) && calculate_error) {
                       # with error estimates
-                      estimate <- out$result$estimate
-                      se <- out$result$se
+                      estimate <- unname(out$result$estimate)
+                      se <- unname(out$result$se)
                     } else if (is.null(out$error)) {
                       # no error estimates
-                      estimate <- out$result
+                      estimate <- unname(out$result)
                     } else if (str_detect(out$error$message, "not found in the search interval")) {
                       problem <- glue(
                         "No solution for '{var}' in the interval {range[1] - range_tolerance * diff(range)} ",

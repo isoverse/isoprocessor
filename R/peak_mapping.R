@@ -274,11 +274,19 @@ iso_map_peaks.data.frame <- function(
     n_missing_matches <- all_data %>% filter(!!sym(new_cols$is_missing)) %>% nrow()
 
     # ambiguous peaks breakdown
-    ambiguous <- matched_peaks %>% filter(!!sym(new_cols$is_ambiguous)) %>%
-      group_by(..peak_id..) %>%
-      summarize(..n_overlapping.. = max(..n_overlapping..),
-                ..n_matches.. = max(..n_matches..)) %>%
-      ungroup()
+    ambiguous <- matched_peaks %>%
+      filter(!!sym(new_cols$is_ambiguous))
+    if (nrow(ambiguous) > 0) {
+      ambiguous <- ambiguous %>%
+        group_by(..peak_id..) %>%
+        summarize(..n_overlapping.. = max(..n_overlapping..),
+                  ..n_matches.. = max(..n_matches..)) %>%
+        ungroup()
+    } else {
+      ambiguous <- ambiguous %>%
+        mutate(..n_overlapping.. = numeric(0), ..n_matches.. = numeric(0))
+    }
+
     n_ambiguous_peaks <- ambiguous %>% simplification
     n_multiple_and_overlapping <- ambiguous %>% filter(..n_overlapping.. > 1 & ..n_matches.. > 1) %>% simplification
     n_multiple_matches <- ambiguous %>% filter(..n_overlapping.. <= 1 & ..n_matches.. > 1) %>% simplification

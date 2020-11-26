@@ -259,9 +259,19 @@ test_that("marking x range works", {
 
 test_that("marking value range works", {
 
-  p <- ggplot2::ggplot(ggplot2::mpg) + ggplot2::aes(hwy, cty) + ggplot2::geom_point()
+  p <- ggplot2::ggplot(ggplot2::mpg) + ggplot2::aes(hwy, cty, color = drv) + ggplot2::geom_point()
   expect_error(iso_mark_value_range(), "no base plot")
   expect_warning(iso_mark_value_range(p, sd = 1), "renamed")
+
+  # check for color overwrite behaviour
+  expect_error(iso_mark_value_range(p, color = x), "must be a single fixed color")
+  expect_error(iso_mark_value_range(p, color = 5), "must be a single fixed color")
+  expect_equal(iso_mark_value_range(p)$layers[[1]]$mapping$colour %>% as_label(), "colour")
+  expect_null(iso_mark_value_range(p)$layers[[1]]$layers[[1]]$aes_params$colour)
+  expect_equal(iso_mark_value_range(p, color = NULL)$layers[[1]]$mapping$colour %>% as_label(), "colour")
+  expect_null(iso_mark_value_range(p, color = NULL)$layers[[1]]$layers[[1]]$aes_params$colour)
+  expect_equal(iso_mark_value_range(p, color = "black")$layers[[1]]$mapping$colour %>% as_label(), "NULL")
+  expect_equal(iso_mark_value_range(p, color = "black")$layers[[1]]$aes_params$colour, "black")
 
 })
 

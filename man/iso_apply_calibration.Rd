@@ -10,6 +10,8 @@ iso_apply_calibration(
   calibration = last_calibration(dt),
   predict_range = NULL,
   calculate_error = FALSE,
+  predicted_value = suffix(enexpr(predict), "_pred"),
+  predicted_error = suffix(sym(predicted_value), "_se"),
   quiet = default(quiet)
 )
 }
@@ -24,14 +26,17 @@ iso_apply_calibration(
 
 \item{calculate_error}{whether to estimate the standard error from the calibration. Stores the result in the new \code{predict_error} column. If the \code{predict} variable is a dependent variable, will do so using the Wald method (as described in \link[investr]{invest}). Note that error calculation for dependent variables slows this function down a fair bit and is therefore disabled by default.}
 
+\item{predicted_value}{the name of the column for the predicted value. By default the name of the \code{predict} column with suffix \code{_pred}. Only needs to be set if this default is not suitable.}
+
+\item{predicted_error}{the name of the column for the predicted error. By default \code{predicted_value} with suffix \code{_se}, i.e. the name of the \code{predict} column with suffix \code{_pred_se}. Only needs to be set if this default is not suitable.}
+
 \item{quiet}{whether to display (quiet=FALSE) or silence (quiet = TRUE) information messages.}
 }
 \value{
 the data table with the following columns added to the nested \code{all_data} \:
 \itemize{
-  \item{\code{predict} column with suffix \code{_pred}: }{the predicted value from applying the calibration}
-  \item{\code{predict} column with suffix \code{_pred_se}: }{the error of the predicated value propagated from the calibration. Only created if \code{calculate_error = TRUE}.}
-  \item{\code{predict} column with suffix \code{_pred_in_range}: }{reports whether a data entry is within the range of the calibration by checking whether ALL dependent and independent variables in the regression model are within the range of the calibration - is set to FALSE if any(!) of them are not - i.e. this column provides information on whether new values are extrapolated beyond a calibration model and treat the extrapolated ones with the appropriate care. Note that all missing predicted values (due to missing parameters) are also automatically flagged as not in range}
+  \item{\code{predicted_value} column, usually \code{predict} column name with suffix \code{_pred}: }{the predicted value from applying the calibration}
+  \item{code{predicted_value} column, usually \code{predict} column name with suffix \code{_pred_se}: }{the error of the predicated value propagated from the calibration. Only created if \code{calculate_error = TRUE}.}
 }
 }
 \description{

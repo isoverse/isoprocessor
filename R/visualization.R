@@ -1554,13 +1554,20 @@ iso_mark_x_range <- function(p, condition, color = NA, fill = "gray", alpha = 0.
 #' @param plus_minus_value which fixed value intervals to show (mean +/- fixed), by default none are included.
 #' @param plus_minus_sd which standard deviation intervals to show (mean +/- sd), by default +/- 1 and +/-2 population std. deviations. To omit these intervals, set \code{sd = c()}.
 #' @param sd renamed to the more descriptive \code{plus_minus_sd}
+#' @param color use to override inherited color aesthetics with a fixed value and thus create value ranges that average across all data points in a panel (for this to work, make sure the group aesthetic of the parent plot does NOT include the color aesthetic). Has to be a valid color string, e.g. \code{"black"} or \code{"#ffab05"}. If omitted or \code{color = NULL}, the color aesthetic from the plot is inherited (the default behavior).
 #' @family plot functions
 #' @export
-iso_mark_value_range <- function(p, mean = TRUE, plus_minus_value = c(), plus_minus_sd = sd, sd = 1:2) {
+iso_mark_value_range <- function(p, mean = TRUE, plus_minus_value = c(), plus_minus_sd = sd, sd = 1:2, color = NULL) {
 
   # safety checks
   if (missing(p)) stop("no base plot provided. If piping to this function make sure to use '%>%' instead of '+'.", call. = FALSE)
   if (length(sd) > 0 && !is.numeric(sd)) stop("the 'sd' parameter must be numeric", call. = FALSE)
+  color_expr <- rlang::enexpr(color)
+  if (!rlang::is_missing(color_expr) && !rlang::is_syntactic_literal(color_expr))
+    stop("if set, the 'color' parameter for value ranges must be a single fixed color (e.g.\"black\")", call. = FALSE)
+  color <- rlang::eval_tidy(color_expr)
+  if (!is.null(color) && (length(color) != 1L || !is.character(color)))
+    stop("if set, the 'color' parameter for value ranges must be a single fixed color (e.g. \"black\")", call. = FALSE)
 
   # warnings
   if (!missing(sd)) {
@@ -1569,8 +1576,11 @@ iso_mark_value_range <- function(p, mean = TRUE, plus_minus_value = c(), plus_mi
 
   # find relevant active aesthetics
   mark_mean <- mean
-  active_aes <- c("colour", "group") %>% intersect(names(p$mapping))
   mutate_quos <- rlang::quos(colour = 1, group = 1)
+  if (is.null(color))
+    active_aes <- c("colour", "group") %>% intersect(names(p$mapping))
+  else
+    active_aes <- c("group") %>% intersect(names(p$mapping))
   mutate_quos[active_aes] <- map(active_aes, ~p$mapping[[.x]])
   group_quos <- quos(colour, group)
 
@@ -1600,42 +1610,43 @@ iso_mark_value_range <- function(p, mean = TRUE, plus_minus_value = c(), plus_mi
     aes_map <- ggplot2::aes(
       yintercept = y,
       colour = colour, linetype = line,
-      fill = NULL, shape = NULL, group = ..group..
+      fill = NULL, shape = NULL, group = group
     )
   } else {
     aes_map <- ggplot2::aes(
       yintercept = y,
       linetype = line,
-      fill = NULL, shape = NULL, group = ..group..
+      color = NULL, fill = NULL, shape = NULL, group = group
     )
   }
 
   # add mean and std_devs lines
-  p$layers <-
-    c(
-      geom_hline(
-        data = function(df) {
-          dplyr::ungroup(df) %>%
-            dplyr::mutate(!!!mutate_quos) %>%
-            dplyr::group_by(!!!unname(group_quos)) %>%
-            dplyr::summarize(
-              mean = base::mean(!!p$mapping$y),
-              sd = stats::sd(!!p$mapping$y),
-              `bar(x)` = mean,
-              !!!value_quos,
-              !!!std_devs_quos
-            ) %>%
-            dplyr::ungroup() %>%
-            tidyr::gather(key = "line", value = "y", starts_with("bar")) %>%
-            dplyr::filter(!!mark_mean | line != "bar(x)") %>%
-            dplyr::mutate(
-              line = stringr::str_replace(line, "[+-]", "%+-%") %>% factor() %>% forcats::fct_inorder()
-            )
-        },
-        mapping = aes_map
-      ),
-      p$layers
-    )
+  calc_ranges <- function(df) {
+    dplyr::ungroup(df) %>%
+      dplyr::mutate(!!!mutate_quos) %>%
+      dplyr::group_by(!!!unname(group_quos)) %>%
+      dplyr::summarize(
+        mean = base::mean(!!p$mapping$y),
+        sd = stats::sd(!!p$mapping$y),
+        `bar(x)` = mean,
+        !!!value_quos,
+        !!!std_devs_quos
+      ) %>%
+      dplyr::ungroup() %>%
+      tidyr::gather(key = "line", value = "y", starts_with("bar")) %>%
+      dplyr::filter(!!mark_mean | line != "bar(x)") %>%
+      dplyr::mutate(
+        line = stringr::str_replace(line, "[+-]", "%+-%") %>% factor() %>% forcats::fct_inorder()
+      )
+  }
+
+  # add layer
+  if (!is.null(color)) {
+    new_layer <- geom_hline(data = calc_ranges, mapping = aes_map, color = color)
+  } else {
+    new_layer <- geom_hline(data = calc_ranges, mapping = aes_map)
+  }
+  p$layers <- c(new_layer, p$layers)
 
   # add scale info
   p <- p +
@@ -1684,16 +1695,9 @@ iso_mark_outliers <- function(p, condition = NULL, plus_minus_value = NULL, plus
   # safety checks
   if (use_condition + use_value + use_sd > 1) {
     stop("more than one cutoff defined: please provide only one of 'condition', 'plus_minus_value', or 'plus_minus_sd'", call. = FALSE)
-    # CONTINUE HERE
   } else if (use_condition + use_value + use_sd == 0) {
     stop("no cutoff provided: please provide one of 'condition', 'plus_minus_value', or 'plus_minus_sd'", call. = FALSE)
   }
-
-  # need numeric single cutoffs
-  if (use_value)
-    stopifnot(is.numeric(plus_minus_value) && length(plus_minus_value) == 1L)
-  if (use_sd)
-    stopifnot(is.numeric(plus_minus_sd) && length(plus_minus_sd) == 1L)
 
   # find relevant active aesthetics
   active_aes <- c("colour", "group") %>% intersect(names(p$mapping))
@@ -1715,14 +1719,10 @@ iso_mark_outliers <- function(p, condition = NULL, plus_minus_value = NULL, plus
         dplyr::ungroup(df) %>%
           dplyr::mutate(!!!mutate_quos) %>%
           dplyr::group_by(!!!unname(group_quos)) %>%
-          dplyr::mutate(
-            mean = base::mean(!!p$mapping$y),
-            sd = stats::sd(!!p$mapping$y),
-            is_outlier =
-              if (use_sd)
-                !!quo(abs(!!p$mapping$y - mean) > !!plus_minus_sd * sd)
-              else
-                !!quo(abs(!!p$mapping$y - mean) > !!plus_minus_value)
+          iso_identify_outliers(
+            y = !!p$mapping$y,
+            plus_minus_value = plus_minus_value,
+            plus_minus_sd = plus_minus_sd
           ) %>%
           dplyr::ungroup() %>%
           dplyr::filter(is_outlier)
