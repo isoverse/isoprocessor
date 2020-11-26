@@ -536,25 +536,35 @@ iso_evaluate_calibration_range <- function(dt, ..., calibration = last_calibrati
 #' @inheritParams apply_regression
 #' @param dt nested data table with \code{all_data} and calibration columns (see \link{iso_generate_calibration})
 #' @param calibration name of the calibration to apply, must match the name used in \link{iso_generate_calibration} (if any)
+#' @param predicted_value the name of the column for the predicted value. By default the name of the \code{predict} column with suffix \code{_pred}. Only needs to be set if this default is not suitable.
+#' @param predicted_error the name of the column for the predicted error. By default \code{predicted_value} with suffix \code{_se}, i.e. the name of the \code{predict} column with suffix \code{_pred_se}. Only needs to be set if this default is not suitable.
 #' @inheritParams iso_show_default_processor_parameters
 #' @return the data table with the following columns added to the nested \code{all_data} \:
 #' \itemize{
-#'   \item{\code{predict} column with suffix \code{_pred}: }{the predicted value from applying the calibration}
-#'   \item{\code{predict} column with suffix \code{_pred_se}: }{the error of the predicated value propagated from the calibration. Only created if \code{calculate_error = TRUE}.}
-#'   \item{\code{predict} column with suffix \code{_pred_in_range}: }{reports whether a data entry is within the range of the calibration by checking whether ALL dependent and independent variables in the regression model are within the range of the calibration - is set to FALSE if any(!) of them are not - i.e. this column provides information on whether new values are extrapolated beyond a calibration model and treat the extrapolated ones with the appropriate care. Note that all missing predicted values (due to missing parameters) are also automatically flagged as not in range}
+#'   \item{\code{predicted_value} column, usually \code{predict} column name with suffix \code{_pred}: }{the predicted value from applying the calibration}
+#'   \item{code{predicted_value} column, usually \code{predict} column name with suffix \code{_pred_se}: }{the error of the predicated value propagated from the calibration. Only created if \code{calculate_error = TRUE}.}
 #' }
 #' @family calibration functions
 #' @export
-iso_apply_calibration <- function(dt, predict, calibration = last_calibration(dt), predict_range = NULL,
-                                  calculate_error = FALSE, quiet = default(quiet)) {
+iso_apply_calibration <- function(dt, predict,
+                                  calibration = last_calibration(dt),
+                                  predict_range = NULL,
+                                  calculate_error = FALSE,
+                                  predicted_value = suffix(enexpr(predict), "_pred"),
+                                  predicted_error = suffix(sym(predicted_value), "_se"),
+                                  quiet = default(quiet)) {
 
   # safety checks
   if (missing(dt)) stop("no data table supplied", call. = FALSE)
   if (missing(predict)) stop("no variable to predict specified", call. = FALSE)
   pred_quo <- enquo(predict)
-  pred_col_quo <- pred_quo %>% as_label() %>% str_c("_pred") %>% sym()
-  pred_se_col_quo <- pred_quo %>% as_label() %>% str_c("_pred_se") %>% sym()
-  pred_se_in_range_quo <- pred_quo %>% as_label() %>% str_c("_pred_in_range") %>% sym()
+  suffix <- function(pred_quo, suffix) { sprintf("%s%s", as_label(pred_quo), suffix) }
+  if (!is.character(predicted_value))
+    stop("predicted_value must be a string indicating the name of the predicted value column", call. = FALSE)
+  if (!is.character(predicted_error))
+    stop("predicted_error must be a string indicating the name of the predicted error column", call. = FALSE)
+  pred_col_quo <- sym(predicted_value)
+  pred_se_col_quo <- sym(predicted_error)
   calib_vars <- get_calibration_vars(calibration)
   check_calibration_cols(dt, calib_vars$model_params)
   if (!has_regression_fit(dt, calibration = calibration))

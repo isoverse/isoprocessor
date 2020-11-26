@@ -140,6 +140,12 @@ test_that("test default behavior of calibrations", {
   expect_message(iso_apply_calibration(df_calib, hwy), "applying calibration to infer.*hwy.*2 data group.*in 1 model.*resulting value.*hwy_pred")
   expect_message(iso_apply_calibration(df_calibs, hwy), "applying calibration to infer.*hwy.*2 data group.*in 2 model.*resulting value.*hwy_pred")
   expect_message(iso_apply_calibration(df_calib, hwy, calculate_error = TRUE), "applying calibration to infer.*hwy.*2 data group.*resulting value.*hwy_pred.*estimated error.*hwy_pred_se")
+  expect_message(iso_apply_calibration(df_calib, hwy, calculate_error = TRUE, predicted_value = "my_value"),
+                 "applying calibration to infer.*hwy.*2 data group.*resulting value.*my_value.*estimated error.*my_value_se")
+  expect_message(iso_apply_calibration(df_calib, hwy, calculate_error = TRUE, predicted_error = "my_error"),
+                 "applying calibration to infer.*hwy.*2 data group.*resulting value.*hwy_pred.*estimated error.*my_error")
+  expect_message(iso_apply_calibration(df_calib, hwy, calculate_error = TRUE, predicted_value = "my_value", predicted_error = "my_error"),
+                 "applying calibration to infer.*hwy.*2 data group.*resulting value.*my_value.*estimated error.*my_error")
   expect_message(iso_apply_calibration(df_calibs, hwy, calculate_error = TRUE), "applying calibration to infer.*hwy.*2 data group.*resulting value.*hwy_pred.*estimated error.*hwy_pred_se")
   expect_message(iso_apply_calibration(df_calib, cty), "applying calibration to infer.*cty.*2 data group.*1 model.*resulting value.*cty_pred")
   expect_message(iso_apply_calibration(df_calibs, cty), "applying calibration to infer.*cty.*2 data group.*.*2 model.*resulting value.*cty_pred")
