@@ -42,7 +42,7 @@ iso_export_calibration_to_excel <- function(
     stop("additional data (...) must be named data frames", call. = FALSE)
 
   # path
-  filepath <- isoreader:::get_export_filepath(filepath, "xlsx")
+  filepath <- isoreader:::get_export_filepath(filepath, ".xlsx")
 
   # info
   if (!quiet) {
@@ -106,3 +106,70 @@ iso_export_calibration_to_excel <- function(
 
   return(invisible(calibs_df))
 }
+
+
+#' Export data to Excel
+#'
+#' This is a convenience function to export data to Excel. Use \link{iso_export_calibration_to_excel} for a more specific export function for isoprocessor calibrations.
+#'
+#' @param filepath the path where to store the Excel file.
+#' @param ... named list of data frames (each will get its own tab)
+#' @param with_explicit_units whether to include units in all column names
+#' @export
+iso_export_data_to_excel <- function(..., filepath, with_explicit_units = TRUE, quiet = default(quiet)) {
+
+  # safety checks
+  if (missing(filepath)) {
+    stop("'filepath' parameter must be set", call. = FALSE)
+  }
+
+  # data sets
+  datasets <- list(...)
+  if (length(datasets) == 0)
+    stop("no data sets provided", call. = FALSE)
+
+  if (!all(purrr::map_lgl(datasets, is.data.frame)))
+    stop("data sets must be provided as data frames", call. = FALSE)
+
+  if (is.null(names(datasets)) || any(names(datasets) == ""))
+    stop("data sets must be provided as named arguments", call. = FALSE)
+
+
+   # explicit units
+  with_units <- function(x) {
+    if (with_explicit_units) iso_make_units_explicit(x)
+    else x
+  }
+
+  # path
+  filepath <- isoreader:::get_export_filepath(filepath, ".xlsx")
+
+  # info
+  if (!quiet) {
+    glue::glue(
+      "Info: exporting datasets '",
+      glue::glue_collapse(names(datasets), sep = "', '", last = "' and '"),
+      "' into Excel file '{basename(filepath)}'... "
+    ) %>% message(appendLF = FALSE)
+  }
+
+  # make excel workbook
+  wb <- openxlsx::createWorkbook()
+
+  # additional data
+  for (tab in names(datasets)) {
+    isoreader:::add_excel_sheet(wb, tab, with_units(datasets[[tab]]))
+  }
+
+  # write save workbook
+  openxlsx::saveWorkbook(wb, filepath, overwrite = TRUE)
+
+  # info
+  if (!quiet) {
+    message("finished.")
+  }
+
+  return(invisible(NULL))
+}
+
+
