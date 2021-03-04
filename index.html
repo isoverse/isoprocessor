@@ -108,13 +108,12 @@
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
-<p>You can install the dependency <a href="http://isoreader.isoverse.org/">isoreader</a> and <a href="http://isoprocessor.isoverse.org/">isoprocessor</a> itself both from GitHub using the <code>devtools</code> package. Note that while <a href="http://isoprocessor.isoverse.org/">isoprocessor</a> uses some functions from <a href="http://isoreader.isoverse.org/">isoreader</a>, it does NOT require IRMS data to be read with <a href="http://isoreader.isoverse.org/">isoreader</a>, it can be used standalone with raw data obtained differently.</p>
+<p>You can install the <a href="http://isoprocessor.isoverse.org/">isoprocessor</a> package from GitHub using the <code>devtools</code> package. Note that while <a href="http://isoprocessor.isoverse.org/">isoprocessor</a> uses some functions from <a href="http://isoreader.isoverse.org/">isoreader</a>, it does NOT require IRMS data to be read with <a href="http://isoreader.isoverse.org/">isoreader</a>, it can be used standalone with raw data obtained differently.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># installs the development tools package if not yet installed</span>
 <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"devtools"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span> 
 
-<span class="co"># installs the newest version of isoreader and isoprocessor</span>
-<span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"isoverse/isoreader"</span><span class="op">)</span>
+<span class="co"># installs the newest version of isoprocessor</span>
 <span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"isoverse/isoprocessor"</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="update" class="section level2">
@@ -190,11 +189,9 @@
 <h2>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://cran.r-project.org/package=isoprocessor"><img src="http://www.r-pkg.org/badges/version/isoprocessor" alt="CRAN_Status_Badge"></a></li>
-<li><a href="https://github.com/isoverse/isoprocessor/commits"><img src="https://img.shields.io/badge/GitHub-0.6.7-orange.svg?style=flat-square" alt="Git_Hub_Version"></a></li>
+<li><a href="https://github.com/isoverse/isoprocessor/commits"><img src="https://img.shields.io/badge/GitHub-0.6.11-orange.svg?style=flat-square" alt="Git_Hub_Version"></a></li>
 <li><a href="http://isoprocessor.isoverse.org/"><img src="https://img.shields.io/badge/docs-online-green.svg" alt="Documentation"></a></li>
 <li><a href="https://github.com/isoverse/isoprocessor/actions?workflow=R-CMD-check"><img src="https://github.com/isoverse/isoprocessor/workflows/R-CMD-check/badge.svg" alt="R build status"></a></li>
-<li><a href="https://travis-ci.org/isoverse/isoprocessor"><img src="https://travis-ci.org/isoverse/isoprocessor.svg?branch=master" alt="Build Status"></a></li>
-<li><a href="https://ci.appveyor.com/project/KopfLab/isoprocessor"><img src="https://ci.appveyor.com/api/projects/status/github/isoverse/isoprocessor?branch=master&amp;svg=true" alt="AppVeyor Build Status"></a></li>
 <li><a href="https://mybinder.org/v2/gh/isoverse/isoprocessor/binder?urlpath=rstudio"><img src="https://img.shields.io/badge/launch-RStudio-blue.svg" alt="Binder"></a></li>
 <li><a href="https://mybinder.org/v2/gh/isoverse/isoprocessor/binder?urlpath=lab"><img src="https://img.shields.io/badge/launch-Jupyter-orange.svg" alt="Binder"></a></li>
 </ul>
