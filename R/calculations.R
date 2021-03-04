@@ -149,63 +149,6 @@ generate_ratio_column_names <- function(ratios) {
     { tibble(column = str_c("r",.[,1]), ratio = .[,1], top = .[,2], bot = .[,3]) }
 }
 
-# iso_calculate_ratios <- function(iso_files, ratios, quiet = default(quiet)) {
-#
-#   # safety checks
-#   if(!iso_is_object(iso_files)) stop("can only calculate ratios for iso files", call. = FALSE)
-#   if(missing(ratios) || is.null(ratios)) stop("no ratios provided for ratio calculations", call. = FALSE)
-#   if(!is.logical(quiet)) stop("quiet must be TRUE or FALSE - make sure to pass ratios as a vector, not separate arguments", call. = FALSE)
-#   single_file <- iso_is_file(iso_files) # to make sure return is the same as supplied
-#   iso_files <- iso_as_file_list(iso_files)
-#
-#   # ratios
-#   ratio_pattern <- "^(\\d+)/(\\d+)$"
-#   if (!all(ok <- str_detect(ratios, ratio_pattern))) {
-#     stop("invalid ratio(s): ", str_c(ratios[!ok], collapse = ", "), call. = FALSE)
-#   }
-#   ratio_columns <- ratios %>%
-#     stringr::str_match(ratio_pattern) %>%
-#     { tibble(column = str_c("r",.[,1]), ratio = .[,1], top = .[,2], bot = .[,3]) }
-#
-#   # information
-#   if (!quiet) {
-#     stringr::str_interp("Info: calculating ratio(s) in $[d]{n} data file(s): ${ratios}",
-#                list(n = length(iso_files), ratios = str_c(ratios, collapse =", "))) %>% message()
-#   }
-#
-#   # make sure data is provided
-#   isoreader:::check_read_options(iso_files, "raw_data")
-#
-#   # calculate ratios for all iso_files
-#   mass_column_pattern <- "^[vi](\\d+)\\.(.*)$"
-#   calculate_iso_file_ratios <- function(iso_file) {
-#
-#     if (iso_file$read_options$raw_data && nrow(iso_file$raw_data) > 0) {
-#       # generate mass lookup
-#       mass_lookup <- names(iso_file$raw_data) %>%
-#         stringr::str_subset(mass_column_pattern) %>%
-#         stringr::str_match(mass_column_pattern) %>%
-#         { setNames(.[,1], .[,2]) }
-#
-#       # generate ratios
-#       for (i in 1:nrow(ratio_columns)) {
-#         if (!is.na(top <- mass_lookup[ratio_columns$top[i]]) && !is.na(bot <- mass_lookup[ratio_columns$bot[i]]))
-#           iso_file$raw_data[[ratio_columns$column[i]]] <- iso_file$raw_data[[top]] / iso_file$raw_data[[bot]]
-#       }
-#     }
-#
-#     return(iso_file)
-#   }
-#
-#   # apply calculations
-#   iso_files <- iso_files %>% lapply(calculate_iso_file_ratios) %>% iso_as_file_list()
-#
-#   # return single (if passed in as single)
-#   if (single_file) return (iso_files[[1]])
-#   return(iso_files)
-# }
-
-
 # calculate deltas =====
 
 #' Calculate deltas
