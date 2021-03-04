@@ -994,7 +994,7 @@ iso_plot_calibration_range <- function(...) {
 #' @param group what to group by, multiple columns allowed (combine with \code{paste(...)}), usually not necessary if groupings are fully defined through other aesthetics
 #' @param color variable to use for color aesthetic for the plot or constant value for the point and line color
 #' @param fill variable to use for the fill aesthetic of the plot or constant value for the point fill
-#' @param shape variable to use for shape aesthetic for the plot or constant vlaue for the point shape
+#' @param shape variable to use for shape aesthetic for the plot or constant value for the point shape
 #' @param size variable to use for size aesthetic for the plot or constant value for the points size
 #' @param linetype variable to use for linetype aesthetic for the plot or constant value for the line type
 #' @param alpha variable to use for the opacity aesthetic for the plot or constant value for the point and line opacity (1 = 100\% opaque, 0 = completely transparent)
@@ -1309,6 +1309,8 @@ iso_plot_data <- function(
       manual_quos <- c(manual_quos, quos(color = !!quos_values$color))
     if (quos_manual$fill)
       manual_quos <- c(manual_quos, quos(fill = !!quos_values$fill))
+    if (quos_manual$shape)
+      manual_quos <- c(manual_quos, quos(shape = !!quos_values$shape))
     # create geom_point
     if (length(manual_quos) > 0 && length(aes_quos) > 0) {
       point_quo <- quo(geom_point(mapping = aes(!!!aes_quos), !!!manual_quos))
