@@ -20,8 +20,6 @@ version <- as.character(packageVersion("isoprocessor"))
 [![Git_Hub_Version](https://img.shields.io/badge/GitHub-`r version`-orange.svg?style=flat-square)](https://github.com/isoverse/isoprocessor/commits)
 [![Documentation](https://img.shields.io/badge/docs-online-green.svg)](http://isoprocessor.isoverse.org/)
 [![R build status](https://github.com/isoverse/isoprocessor/workflows/R-CMD-check/badge.svg)](https://github.com/isoverse/isoprocessor/actions?workflow=R-CMD-check)
-[![Build Status](https://travis-ci.org/isoverse/isoprocessor.svg?branch=master)](https://travis-ci.org/isoverse/isoprocessor)
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/isoverse/isoprocessor?branch=master&svg=true)](https://ci.appveyor.com/project/KopfLab/isoprocessor)
 [![Binder](https://img.shields.io/badge/launch-RStudio-blue.svg)](https://mybinder.org/v2/gh/isoverse/isoprocessor/binder?urlpath=rstudio)
 [![Binder](https://img.shields.io/badge/launch-Jupyter-orange.svg)](https://mybinder.org/v2/gh/isoverse/isoprocessor/binder?urlpath=lab)
 
@@ -33,14 +31,13 @@ Existing functionality includes signal conversion (voltage to current and back),
 
 ## Installation
 
-You can install the dependency [isoreader](http://isoreader.isoverse.org/) and [isoprocessor](http://isoprocessor.isoverse.org/) itself both from GitHub using the `devtools` package. Note that while [isoprocessor](http://isoprocessor.isoverse.org/) uses some functions from [isoreader](http://isoreader.isoverse.org/), it does NOT require IRMS data to be read with [isoreader](http://isoreader.isoverse.org/), it can be used standalone with raw data obtained differently.
+You can install the [isoprocessor](http://isoprocessor.isoverse.org/) package from GitHub using the `devtools` package. Note that while [isoprocessor](http://isoprocessor.isoverse.org/) uses some functions from [isoreader](http://isoreader.isoverse.org/), it does NOT require IRMS data to be read with [isoreader](http://isoreader.isoverse.org/), it can be used standalone with raw data obtained differently.
 
 ```{r gh-installation, eval = FALSE}
 # installs the development tools package if not yet installed
 if(!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools") 
 
-# installs the newest version of isoreader and isoprocessor
-devtools::install_github("isoverse/isoreader")
+# installs the newest version of isoprocessor
 devtools::install_github("isoverse/isoprocessor")
 ```
 
