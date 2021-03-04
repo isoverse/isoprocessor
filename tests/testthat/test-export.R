@@ -13,7 +13,6 @@ test_that("test that calibration export works properly", {
   expect_error(iso_export_data_to_excel(), "filepath.*must be set")
   expect_error(iso_export_data_to_excel(filepath = "x"), "no data sets")
   expect_error(iso_export_data_to_excel(42, filepath = "x"), "must be.*data frames")
-  expect_error(iso_export_data_to_excel(tibble(), filepath = "x"), "must be.*named arguments")
 
   # FIXME: continue implementing tests
 

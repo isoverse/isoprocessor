@@ -131,14 +131,15 @@ iso_export_data_to_excel <- function(..., filepath, with_explicit_units = TRUE, 
   if (!all(purrr::map_lgl(datasets, is.data.frame)))
     stop("data sets must be provided as data frames", call. = FALSE)
 
-  if (is.null(names(datasets)) || any(names(datasets) == ""))
-    stop("data sets must be provided as named arguments", call. = FALSE)
-
+  if (is.null(names(datasets)))
+    names(datasets) <- paste0("Sheet", seq_along(datasets))
+  if (any(no_names <- names(datasets) == ""))
+    names(datasets)[no_names] <- paste0("Sheet", seq_along(no_names))
 
    # explicit units
   with_units <- function(x) {
     if (with_explicit_units) iso_make_units_explicit(x)
-    else x
+    else iso_strip_units(x)
   }
 
   # path
