@@ -1,0 +1,233 @@
+---
+title: "How does Isodat calculate R?"
+subtitle: "Example: 66/64 SO2 ratios"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Isodat Calculations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+library(isoreader) # isoreader.isoverse.org
+library(isoprocessor) # isoprocessor.isoverse.org
+library(tidyverse)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+Using isoreader version `r packageVersion("isoreader")` and isoprocessor version `r packageVersion("isoprocessor")`.
+
+# Continuous Flow
+
+## Read Data
+
+```{r}
+iso_files <- iso_read_continuous_flow("data")
+iso_files %>% iso_get_data_summary()
+```
+
+## Chroms
+
+```{r, fig.width = 7, fig.asp = 0.8}
+iso_files %>% 
+  iso_calculate_ratios("66/64") %>% 
+  iso_plot_continuous_flow_data(panel = category, color = data, linetype = `Identifier 1`)
+```
+
+## File Info
+
+```{r}
+iso_files %>% iso_get_file_info(
+  select = c(
+    dt = file_datetime,
+    Analysis,
+    starts_with("Ident"),
+    matches("Method")
+  )
+)
+```
+
+## Resistors
+
+```{r}
+iso_files %>% iso_get_resistors()
+```
+
+## Standards
+
+```{r}
+iso_files %>% iso_get_standards()
+```
+
+## Data Table
+
+```{r}
+iso_files %>% iso_get_vendor_data_table(with_explicit_units = TRUE)
+```
+
+## Calculations
+
+These are the calculations that Isodat does. Not saying they are correct, it's just what it does. 
+
+### Fetch all information
+
+```{r}
+# retrieve data table, resistors and standards, the relevant data for the calculations
+all_data  <-
+  iso_files %>% 
+  iso_get_all_data() %>% 
+  select(file_id, resistors, standards, vendor_data_table)
+all_data
+```
+
+### Do the calculations
+
+```{r}
+# calculations
+calculations <- 
+  all_data %>% 
+  # unpack the vendor data table
+  unnest(vendor_data_table) %>% 
+  # do each set of calculations within each file
+  group_by(file_id) %>% 
+  # do all the calculations
+  # only columns required for all of the following are rIntensity 64 
+  #   and rIntensity 66 (+ resistors and standards)
+  mutate(
+    # rIntensity All is just the sum of the r(ecorded) intensities
+    `rIntensity All new` = `rIntensity 64` + `rIntensity 66`,
+    # the intensity of the major ion is just scaled from mVs to Vs
+    `Intensity 64 new` = `rIntensity 64` / 1000,
+    # the other intensities are scaled by the resistor ratio to account for 
+    #   different signal amplification
+    resistor_ratio = map_dbl(
+      resistors, 
+      ~with(.x, R.Ohm[mass == "64"] / R.Ohm[mass == "66"])),
+    `Intensity 66 new` = `rIntensity 66` / 1000 * resistor_ratio,
+    # IntensityAll then again is just the some of the scaled intensities
+    `Intensity All new` = `Intensity 64 new` + `Intensity 66 new`,
+    # the r(ecorded) ratio is just based on the r(ecorded)Intensities
+    `rR 66SO2/64SO2 new` = `rIntensity 66` / `rIntensity 64`,
+    # whereas the actual Ratio is based on known reference ratios and linear 
+    # extrapolation (as far as I can tell) between the reference peaks
+    ## 1. known isotopic composition of the ref peaks (Rps)
+    `Rps 66SO2/64SO2 new` = map2_dbl(
+      standards, `Is Ref.?`,
+        # nb 1: they only calculate this for reference peaks (silly anyways, 
+        #       it's always the same!)
+        # nb 2: the SO2 ref gas here (SO2_zero) was defined with delta of 0 in 
+        #       both S and O, hence using the ref ratios directly in the following calculation
+        # nb 3: note that isodat does not consider the isotopologue 64=32+17+17 
+        #       so their ratio is actually slightly wrong!! 
+        ~ with(.x, ratio_value[ratio_name == "R 34S/32S"] + 
+                    2 * ratio_value[ratio_name == "R 18O/16O"])
+        # correct would be the following (but the difference is in the 7th digit, 
+        #    see for yourself what difference it makes in the final deltas):
+        #~ with(.x, ratio_value[ratio_name == "R 34S/32S"] + 2 * ratio_value[ratio_name == "R 18O/16O"] + ratio_value[ratio_name == "R 17O/16O"]^2)
+       ),
+    ## 2. linearly extrapolated ref ratio at all retention times
+    ref_ratio_at_Rt = 
+      lm(y ~ x, 
+         data = tibble(
+           x = Rt[`Is Ref.?` == 1], 
+           y = `rR 66SO2/64SO2 new`[`Is Ref.?` == 1])) %>% 
+      predict(newdata = tibble(x = Rt)) %>% 
+      as.numeric(),
+    ## 3. resulting calculated 66/64 ratio (note that since these relie on rR only, 
+    #     the whole resistor shenanegans are not actually necessary)
+    `R 66SO2/64SO2 new` = `rR 66SO2/64SO2 new` / ref_ratio_at_Rt * `Rps 66SO2/64SO2 new`,
+    # the delta value is then just calculated based on the standard definition R/R - 1)
+    `d 66SO2/64SO2 new` = ((`R 66SO2/64SO2 new` / `Rps 66SO2/64SO2 new` - 1) * 1000) %>% 
+      # due to inacuracies at the 10^-13 level in most machine calculations, rounding to 10 digits
+      round(10),
+    # or more elegantly directly from the rR and extrapolated ref ratios
+    `d 66SO2/64SO2 new2` = ((`rR 66SO2/64SO2 new` / ref_ratio_at_Rt - 1) * 1000) %>% round(10)
+  ) %>% 
+  ungroup() 
+```
+
+### Compare
+
+Now let's compare all the isodat values with what we got. The suffix `new` indicates what we calculated
+
+```{r}
+# look at new rIntensity calculations --> identical? yes
+calculations %>% select(Nr., starts_with("rIntensity")) %>% rmarkdown::paged_table()
+
+# look at new Intensity calculations --> identical? yes
+calculations %>% select(Nr., starts_with("Intensity")) %>% rmarkdown::paged_table()
+
+# look at new ratio calculations --> identical? yes
+calculations %>% select(Nr., matches("R(ps)? 66")) %>% rmarkdown::paged_table()
+
+# look at delta calculations --> identical? yes
+calculations %>% select(Nr., starts_with("d 66")) %>% rmarkdown::paged_table()
+```
+
+
+# Dual Inlet
+
+## Read Data
+
+Using isoreader version `r packageVersion("isoreader")`.
+
+```{r}
+iso_files <- iso_read_dual_inlet("data")
+iso_files %>% iso_get_data_summary()
+```
+
+## Voltages
+
+```{r, fig.width = 7, fig.asp = 0.7}
+iso_files %>% 
+  iso_calculate_ratios("45/44") %>% 
+  iso_plot_dual_inlet_data()
+```
+
+## Data Table
+
+```{r}
+iso_files %>% iso_get_vendor_data_table(with_explicit_units = TRUE)
+```
+
+## Calculations
+
+```{r}
+# calculate ratios
+ratios <- 
+  iso_files %>% 
+  iso_calculate_ratios(c("45/44", "46/44")) %>% 
+  iso_get_raw_data() %>% 
+  select(file_id, type, cycle, starts_with("r"))
+ratios
+  
+# get bracketing standards
+pre_standard <- ratios %>% filter(type == "standard", cycle < max(cycle)) %>% mutate(cycle = cycle + 1)
+post_standard <- ratios %>% filter(type == "standard", cycle > min(cycle))
+standards <- left_join(pre_standard, post_standard, by = c("file_id", "cycle", "type"))
+
+# calculate deltas based on average of bracketing standards
+deltas <- ratios %>% filter(type == "sample") %>% 
+  left_join(standards, by = c("file_id", "cycle")) %>% 
+  mutate(
+    `d45/44` = (2 * `r45/44` / (`r45/44.x` + `r45/44.y`) - 1) * 1e3,
+    `d46/44` = (2 * `r46/44` / (`r46/44.x` + `r46/44.y`) - 1) * 1e3
+  ) %>% 
+  select(file_id, cycle, starts_with("d"))
+deltas
+```
+
+## Compare
+
+Compare this with the vendor data table.
+
+```{r}
+# check identical --> correct
+deltas %>% 
+  left_join(iso_get_vendor_data_table(iso_files), by = c("file_id", "cycle")) %>% 
+  rmarkdown::paged_table()
+```
+
+delta 18O and delta 15N can be calculated from delta 45 and delta 46 with 17O correction (e.g. using Jan Kaiser and Thomas Röckmann in "Correction of mass spectrometric isotope ratio measurements for isobaric isotopologues of O2, CO, CO2, N2O and SO2",Rapid Communications in Mass Spectrometry, 2008, 3997–4008). 
+
+Note that both the delta calcluations and 17O correction will be available through functions in [isoprocessor](isoprocessor.isoverse.org) at some point (might be already, this file may be out of date).
