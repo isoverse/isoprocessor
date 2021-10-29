@@ -80,7 +80,7 @@
 <ul class="nav navbar-nav navbar-right">
 <li>
   <a href="https://github.com/isoverse/isoprocessor">
-    <span class="fas fa-github fa-lg"></span>
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -100,7 +100,7 @@
       <h1 data-toc-skip>GC-IRMS data processing example: carbon</h1>
             <h3 class="subtitle">carbon isotopes in alkanes</h3>
             
-            <h4 class="date">2021-03-04</h4>
+            <h4 class="date">2021-10-29</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/isoverse/isoprocessor/blob/master/vignettes/gc_irms_example_carbon.Rmd"><code>vignettes/gc_irms_example_carbon.Rmd</code></a></small>
       <div class="hidden name"><code>gc_irms_example_carbon.Rmd</code></div>
@@ -114,7 +114,7 @@
 <a href="#introduction" class="anchor"></a>Introduction</h1>
 <p>This is an example of a data processing pipeline for compound-specific Gas Chromatography Isotope Ratio Mass Spectrometry (GC-IRMS) carbon isotope measurements. It can be downloaded as a template (or just to see the plain-text code) by following the <code>Source</code> link above. Knitting for stand-alone data analysis works best to <code>HTML</code> rather than the website rendering you see here. To make this formatting change simply delete line #6 in the template file (the line that says <code>rmarkdown::html_vignette:</code>).</p>
 <p>Note that all code chunks that contain a critical step towards the final data (i.e. do more than visualization or a data summary) are marked with <code>(*)</code> in the header to make it easier to follow all key steps during interactive use.</p>
-<p>This example was run using <strong><a href="http://isoreader.kopflab.org">isoreader</a> version 1.3.0</strong> and <strong><a href="http://isoprocessor.kopflab.org/">isoprocessor</a> version 0.6.11</strong>. If you want to reproduce the example, please make sure that you have these or newer versions of both packages installed:</p>
+<p>This example was run using <strong><a href="http://isoreader.kopflab.org">isoreader</a> version 1.3.1</strong> and <strong><a href="http://isoprocessor.kopflab.org/">isoprocessor</a> version 0.6.11</strong>. If you want to reproduce the example, please make sure that you have these or newer versions of both packages installed:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># restart your R session (this command only works in RStudio)</span>
 <span class="fu">.rs.restartR</span><span class="op">(</span><span class="op">)</span>
@@ -130,10 +130,10 @@
 <h1 class="hasAnchor">
 <a href="#load-packages" class="anchor"></a>Load packages</h1>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span> <span class="co"># general data wrangling and plotting</span>
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span> <span class="co"># general data wrangling and plotting</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/isoverse/isoreader">isoreader</a></span><span class="op">)</span> <span class="co"># reading the raw data files</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/isoverse/isoprocessor">isoprocessor</a></span><span class="op">)</span> <span class="co"># processing the data</span></code></pre></div>
-<p>This analysis was run using <a href="http://isoreader.kopflab.org">isoreader</a> version 1.3.0 and <a href="http://isoprocessor.kopflab.org/">isoprocessor</a> version 0.6.11.</p>
+<p>This analysis was run using <a href="http://isoreader.kopflab.org">isoreader</a> version 1.3.1 and <a href="http://isoprocessor.kopflab.org/">isoprocessor</a> version 0.6.11.</p>
 <p>For use as a data processing template, please follow the <code>Source</code> link above, download the raw file and adapt as needed. Knitting for stand-alone data analysis works best to <code>HTML</code> rather than the in-package default <code>html_vignette</code>.</p>
 <p>All code chunks that contain a critical step towards the final data (i.e. do more than visualization or a data summary) are marked with <code>(*)</code> in the header to make it easier to follow all key steps during interactive use.</p>
 </div>
@@ -158,9 +158,9 @@
   <span class="co"># filter out files with read errors (e.g. from aborted analysis)</span>
   <span class="fu"><a href="https://rdrr.io/pkg/isoreader/man/iso_filter_files_with_problems.html">iso_filter_files_with_problems</a></span><span class="op">(</span><span class="op">)</span>
 <span class="co">#&gt; Info: preparing to read 1 data files (all will be cached), setting up 1 par...</span>
-<span class="co">#&gt; Info (process 1): reading file 'gc_irms_example_carbon.cf.rds' with '.cf.rd...</span>
-<span class="co">#&gt; Info (process 1): loaded 45 data files from R Data Storage</span>
-<span class="co">#&gt; Info: finished reading 1 files in 2.90 secs</span>
+<span class="co">#&gt; Process 1: reading file 'gc_irms_example_carbon.cf.rds' with '.cf.rds' read...</span>
+<span class="co">#&gt; Process 1: loaded 45 data files from R Data Storage</span>
+<span class="co">#&gt; Info: finished reading 1 files in 2.37 secs</span>
 <span class="co">#&gt; Info: removing 0/45 files that have any error (keeping 45)</span></code></pre></div>
 </div>
 <div id="process-file-info-peak-table" class="section level2">
@@ -1377,7 +1377,7 @@
 <span class="co"># - switch to eval=TRUE in the options of this chunk to include in knit</span>
 <span class="co"># - this should work for all plots in this example processing file</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://plotly-r.com">plotly</a></span><span class="op">)</span>
-<span class="fu"><a href="https://docs.ropensci.org/plotly/reference/ggplotly.html">ggplotly</a></span><span class="op">(</span>dynamicTicks <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<span class="fu"><a href="https://rdrr.io/pkg/plotly/man/ggplotly.html">ggplotly</a></span><span class="op">(</span>dynamicTicks <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="evaluate-signal-yield" class="section level2">
 <h2 class="hasAnchor">
@@ -3170,7 +3170,7 @@
     <span class="co"># include data summary as an additional useful tab</span>
     `data summary` <span class="op">=</span> <span class="va">peak_data_summary</span>
   <span class="op">)</span>
-<span class="co">#&gt; Info: exporting calibrations into Excel '20210304_gc_irms_example_carbon_export.xlsx'...</span>
+<span class="co">#&gt; Info: exporting calibrations into Excel '20211029_gc_irms_example_carbon_export.xlsx'...</span>
 <span class="co">#&gt; Info: retrieving all data</span>
 <span class="co">#&gt; Info: retrieving all coefficient information for calibration</span>
 <span class="co">#&gt; Info: retrieving all summary information for calibration</span>
