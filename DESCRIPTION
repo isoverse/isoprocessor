@@ -35,6 +35,7 @@ Suggests:
     tidyverse,
     testthat,
     knitr,
+    markdown,
     rmarkdown,
     plotly,
     covr

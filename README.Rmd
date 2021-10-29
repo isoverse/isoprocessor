@@ -57,7 +57,7 @@ Troubleshooting note: depending on your workspace and operating system, you may 
  - for a full reference of all available functions, see the **[Function Reference](http://isoprocessor.isoverse.org/reference/)**
  - for an example of how to work with continuos flow data, see the vignette on **[Continuous Flow](http://isoprocessor.isoverse.org/articles/continuous_flow.html)**
  - for an example of how to work with dual inlet data, see the vignette on **[Dual Inlet](http://isoprocessor.isoverse.org/articles/dual_inlet.html)**
- - for an example of how Thermo Isodat in particular calculates isotope ratios for standard continuous flow and dual inlet data, see the **[Isodat calculations notebook](http://isoprocessor.isoverse.org/other/how_isodat_calculates_R.html)**
+ - for an example of how Thermo Isodat in particular calculates isotope ratios for standard continuous flow and dual inlet data, see the **[Isodat calculations notebook](http://isoprocessor.isoverse.org/articles/isodat_calculations.html)**
  - additional vignettes on data reduction and calibration are in the works:
     - example 1: **[bulk carbon isotope analysis](http://isoprocessor.isoverse.org/articles/ea_irms_example_carbon.html)**
     - example 2: **[compound specific carbon isotope analysis](http://isoprocessor.isoverse.org/articles/gc_irms_example_carbon.html)**
